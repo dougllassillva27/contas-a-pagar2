@@ -1,8 +1,12 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// CORREÇÃO CRÍTICA: Força o driver a interpretar DECIMAL/NUMERIC como Número, não String
+types.setTypeParser(1700, (val) => {
+  return val === null ? null : parseFloat(val);
+});
 
 // Em produção (Render), usaremos a variável de ambiente DATABASE_URL.
-// Localmente, você pode criar um arquivo .env ou colocar sua string aqui para testar.
-const connectionString = process.env.DATABASE_URL || 'postgres://seu_usuario:senha@localhost:5432/gestao_financeira';
+const connectionString = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_8HBgTYfS7sZb@ep-icy-fire-ainq8c31-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 
 const pool = new Pool({
   connectionString,
@@ -11,5 +15,5 @@ const pool = new Pool({
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
-  getClient: () => pool.connect(), // Para transações
+  getClient: () => pool.connect(),
 };
