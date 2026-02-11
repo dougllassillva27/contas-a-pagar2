@@ -5,12 +5,11 @@ class FinanceiroRepository {
     this.initOrdemTable();
   }
 
-  // --- AUTENTICAÇÃO & USUÁRIOS ---
-
+  // --- USUÁRIOS ---
   async obterUsuarioPorLogin(login) {
     try {
       const result = await db.query('SELECT * FROM Usuarios WHERE Login = $1', [login]);
-      return result.rows[0];
+      return result.rows[0]; // Retorna: { id, nome, login, senhahash }
     } catch (err) {
       return null;
     }
@@ -26,8 +25,6 @@ class FinanceiroRepository {
   }
 
   async initOrdemTable() {
-    // No Postgres, a criação de tabelas idealmente é feita via script SQL inicial,
-    // mas mantemos aqui para garantir que não quebre se faltar.
     try {
       await db.query(`
                 CREATE TABLE IF NOT EXISTS OrdemCards (
@@ -56,14 +53,14 @@ class FinanceiroRepository {
                 Ordem
         `;
     const result = await db.query(query, [userId, month, year]);
-    return result.rows;
+    return result.rows; // Retorna chaves minúsculas: nometerceiro, valor, etc.
   }
 
   // --- FATURA MANUAL ---
   async getFaturaManual(userId, month, year) {
     try {
       const result = await db.query('SELECT Valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
-      return result.rows[0]?.valor || 0; // Postgres retorna campos em minúsculo por padrão
+      return result.rows[0]?.valor || 0;
     } catch (err) {
       return 0;
     }
@@ -82,7 +79,7 @@ class FinanceiroRepository {
   // --- ORDEM CARDS ---
   async getOrdemCards(userId) {
     const result = await db.query('SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC', [userId]);
-    return result.rows;
+    return result.rows; // Retorna: nome, ordem
   }
 
   async saveOrdemCards(userId, listaNomes) {
@@ -90,7 +87,6 @@ class FinanceiroRepository {
     try {
       await client.query('BEGIN');
       await client.query('DELETE FROM OrdemCards WHERE UsuarioId = $1', [userId]);
-
       for (let i = 0; i < listaNomes.length; i++) {
         await client.query('INSERT INTO OrdemCards (Nome, Ordem, UsuarioId) VALUES ($1, $2, $3)', [listaNomes[i], i, userId]);
       }
@@ -105,15 +101,13 @@ class FinanceiroRepository {
 
   // --- DASHBOARD ---
   async getDashboardTotals(userId, month, year) {
-    // COALESCE substitui ISNULL
-    // ::numeric casta para garantir operações matemáticas corretas
     const query = `
             SELECT 
-                COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END), 0) AS "TotalRendas",
-                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0) AS "TotalContas",
-                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') AND Status = 'PENDENTE' THEN Valor ELSE 0 END), 0) AS "FaltaPagar",
+                COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END), 0) AS totalrendas,
+                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0) AS totalcontas,
+                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') AND Status = 'PENDENTE' THEN Valor ELSE 0 END), 0) AS faltapagar,
                 COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END) - 
-                       SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0) AS "SaldoPrevisto"
+                       SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0) AS saldoprevisto
             FROM Lancamentos
             WHERE UsuarioId = $1 
               AND EXTRACT(MONTH FROM DataVencimento) = $2 
@@ -159,18 +153,14 @@ class FinanceiroRepository {
               AND EXTRACT(MONTH FROM DataVencimento) = $2 
               AND EXTRACT(YEAR FROM DataVencimento) = $3
         `;
-
     const params = [userId, month, year];
-
     if (pessoa === userName) {
       query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
     } else {
       query += ' AND NomeTerceiro = $4';
       params.push(pessoa);
     }
-
     query += ' ORDER BY Ordem ASC';
-
     const result = await db.query(query, params);
     return result.rows;
   }
@@ -178,9 +168,9 @@ class FinanceiroRepository {
   async getResumoPessoas(userId, month, year, userName) {
     const query = `
             SELECT 
-                CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN $4 ELSE NomeTerceiro END AS "Pessoa", 
-                SUM(CASE WHEN Status = 'PENDENTE' THEN Valor ELSE 0 END) AS "Total", 
-                CASE WHEN COUNT(*) = SUM(CASE WHEN Status = 'PAGO' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS "TodosPagos" 
+                CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN $4 ELSE NomeTerceiro END AS pessoa, 
+                SUM(CASE WHEN Status = 'PENDENTE' THEN Valor ELSE 0 END) AS total, 
+                CASE WHEN COUNT(*) = SUM(CASE WHEN Status = 'PAGO' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS todospagos 
             FROM Lancamentos 
             WHERE UsuarioId = $1 
               AND Tipo = 'CARTAO' 
@@ -200,14 +190,11 @@ class FinanceiroRepository {
   // --- CRUD ---
   async addLancamento(userId, dados) {
     const dataVencimento = dados.dataBase ? new Date(dados.dataBase) : new Date();
-
-    // Subquery para pegar a ordem máxima adaptada para Postgres
     const query = `
             INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
             (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
         `;
-
     await db.query(query, [userId, dados.descricao, dados.valor, dados.tipo, dados.categoria, dados.status || 'PENDENTE', dataVencimento, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null]);
   }
 
@@ -228,14 +215,12 @@ class FinanceiroRepository {
               AND EXTRACT(YEAR FROM DataVencimento) = $4
         `;
     const params = [novoStatus, userId, month, year];
-
     if (pessoa === userName) {
       query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
     } else {
       query += ' AND NomeTerceiro = $5';
       params.push(pessoa);
     }
-
     await db.query(query, params);
   }
 
@@ -280,7 +265,6 @@ class FinanceiroRepository {
   async copyMonth(userId, currentMonth, currentYear) {
     const client = await db.getClient();
     try {
-      // Logica de data igual
       let nextMonth = currentMonth + 1;
       let nextYear = currentYear;
       if (nextMonth > 12) {
@@ -303,16 +287,13 @@ class FinanceiroRepository {
       if (itemsToCopy.length === 0) return;
 
       await client.query('BEGIN');
-
       for (const item of itemsToCopy) {
-        let novoParcelaAtual = item.parcelaatual; // Postgres retorna minusculo
+        let novoParcelaAtual = item.parcelaatual; // Atenção: minusculo no Postgres
         let totalParcelas = item.totalparcelas;
-
         if (novoParcelaAtual && totalParcelas) {
           if (novoParcelaAtual >= totalParcelas) continue;
           novoParcelaAtual = novoParcelaAtual + 1;
         }
-
         const oldDate = new Date(item.datavencimento);
         const day = oldDate.getDate() || 10;
         const newDate = new Date(nextYear, nextMonth - 1, day);
