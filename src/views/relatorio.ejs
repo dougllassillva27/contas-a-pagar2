@@ -7,249 +7,63 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="favicon.ico?v=1"/> 
     <style>
-        :root {
-            --primary: #1e1e1e;
-            --secondary: #666;
-            --accent: #3878e1;
-            --border: #ddd;
-            --bg: #fff;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #555; /* Fundo cinza na tela para destacar a folha */
-            margin: 0;
-            padding: 20px;
-            color: #000;
-            -webkit-print-color-adjust: exact;
-        }
-
-        .page {
-            background: white;
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            padding: 20mm;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        /* --- CABEÇALHO --- */
-        .header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .header .subtitle {
-            font-size: 14px;
-            color: var(--secondary);
-            margin-top: 5px;
-        }
-
-        .header-total {
-            text-align: right;
-        }
-
-        .header-total span {
-            display: block;
-            font-size: 12px;
-            color: var(--secondary);
-            text-transform: uppercase;
-        }
-
-        .header-total strong {
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        /* --- GRUPOS DE PESSOAS --- */
-        .group {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-        }
-
-        .group-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f4f4f4;
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .group-header h2 {
-            margin: 0;
-            font-size: 16px;
-            text-transform: uppercase;
-        }
-
-        .group-header .group-total {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        /* --- TABELA --- */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        th, td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            text-align: left;
-        }
-
-        th {
-            text-transform: uppercase;
-            font-size: 11px;
-            color: var(--secondary);
-            font-weight: 600;
-            border-bottom: 1px solid #ccc;
-        }
-
-        td.value-col {
-            text-align: right;
-            width: 120px;
-            font-feature-settings: "tnum";
-            font-variant-numeric: tabular-nums;
-        }
-
-        tr.pago {
-            color: #888;
-            font-style: italic;
-        }
-
-        tr.pago td.value-col::after {
-            content: ' (Pago)';
-            font-size: 10px;
-            margin-left: 5px;
-        }
-
-        /* --- RODAPÉ --- */
-        .footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 11px;
-            color: #999;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-
-        /* --- BOTÃO FLUTUANTE DE IMPRESSÃO (Só na tela) --- */
-        .fab-print {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--accent);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            cursor: pointer;
-            border: none;
-            font-size: 24px;
-            transition: transform 0.2s;
-        }
+        /* ... (Estilos CSS iguais ao anterior) ... */
+        :root { var(--primary: #1e1e1e; var(--secondary: #666; var(--accent: #3878e1; var(--border: #ddd; var(--bg: #fff; }
+        body { font-family: 'Inter', sans-serif; background: #555; margin: 0; padding: 20px; color: #000; -webkit-print-color-adjust: exact; }
+        .page { background: white; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 20mm; box-shadow: 0 0 15px rgba(0,0,0,0.3); box-sizing: border-box; position: relative; }
+        .header { border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        .header .subtitle { font-size: 14px; color: var(--secondary); margin-top: 5px; }
+        .header-total { text-align: right; }
+        .header-total span { display: block; font-size: 12px; color: var(--secondary); text-transform: uppercase; }
+        .header-total strong { font-size: 20px; color: var(--accent); }
+        .group { margin-bottom: 30px; page-break-inside: avoid; }
+        .group-header { display: flex; justify-content: space-between; align-items: center; background-color: #f4f4f4; padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
+        .group-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; }
+        .group-header .group-total { font-weight: bold; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { text-transform: uppercase; font-size: 11px; color: var(--secondary); font-weight: 600; border-bottom: 1px solid #ccc; }
+        td.value-col { text-align: right; width: 120px; font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+        tr.pago { color: #888; font-style: italic; }
+        tr.pago td.value-col::after { content: ' (Pago)'; font-size: 10px; margin-left: 5px; }
+        .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+        .fab-print { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; border: none; font-size: 24px; transition: transform 0.2s; }
         .fab-print:hover { transform: scale(1.1); }
-
-        /* --- ESTILOS DE IMPRESSÃO --- */
-        @media print {
-            body { 
-                background: white; 
-                padding: 0; 
-                margin: 0;
-            }
-            .page {
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                box-shadow: none;
-                min-height: auto;
-            }
-            .fab-print { display: none; }
-            .group { page-break-inside: avoid; }
-        }
+        @media print { body { background: white; padding: 0; margin: 0; } .page { width: 100%; margin: 0; padding: 0; box-shadow: none; min-height: auto; } .fab-print { display: none; } .group { page-break-inside: avoid; } }
     </style>
 </head>
 <body>
-
     <button class="fab-print" onclick="window.print()" title="Imprimir">🖨️</button>
-
     <div class="page">
         <div class="header">
-            <div>
-                <h1>Relatório de Fatura</h1>
-                <div class="subtitle"><%= mes %> de <%= ano %></div>
-            </div>
-            <div class="header-total">
-                <span>Total Geral</span>
-                <strong>R$ <%= totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></strong>
-            </div>
+            <div><h1>Relatório de Fatura</h1><div class="subtitle"><%= mes %> de <%= ano %></div></div>
+            <div class="header-total"><span>Total Geral</span><strong>R$ <%= totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></strong></div>
         </div>
-
         <% Object.keys(dados).forEach(pessoa => { 
             const grupo = dados[pessoa];
             if (grupo.itens.length > 0) {
         %>
             <div class="group">
-                <div class="group-header">
-                    <h2><%= pessoa %></h2>
-                    <span class="group-total">R$ <%= grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
-                </div>
+                <div class="group-header"><h2><%= pessoa %></h2><span class="group-total">R$ <%= grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></div>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Descrição</th>
-                            <th style="text-align:right">Valor</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Descrição</th><th style="text-align:right">Valor</th></tr></thead>
                     <tbody>
                         <% grupo.itens.forEach(item => { %>
-                            <tr class="<%= item.Status === 'PAGO' ? 'pago' : '' %>">
-                                <td>
-                                    <%= item.Descricao %>
-                                    <% if(item.ParcelaAtual && item.TotalParcelas) { %>
-                                        <span style="font-size:11px; color:#666; margin-left:5px;">
-                                            (<%= String(item.ParcelaAtual).padStart(2,'0') %>/<%= String(item.TotalParcelas).padStart(2,'0') %>)
-                                        </span>
+                            <tr class="<%= item.status === 'PAGO' ? 'pago' : '' %>">
+                                <td><%= item.descricao %> 
+                                    <% if(item.parcelaatual && item.totalparcelas) { %>
+                                        <span style="font-size:11px; color:#666; margin-left:5px;">(<%= String(item.parcelaatual).padStart(2,'0') %>/<%= String(item.totalparcelas).padStart(2,'0') %>)</span>
                                     <% } %>
                                 </td>
-                                <td class="value-col">
-                                    R$ <%= item.Valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
-                                </td>
+                                <td class="value-col">R$ <%= item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                             </tr>
                         <% }) %>
                     </tbody>
                 </table>
             </div>
-        <% 
-            }
-        }) %>
-
-        <div class="footer">
-            Gerado automaticamente pelo sistema Gestão Financeira em <%= new Date().toLocaleDateString('pt-BR') %> às <%= new Date().toLocaleTimeString('pt-BR') %>
-        </div>
+        <% } }) %>
+        <div class="footer">Gerado automaticamente pelo sistema Gestão Financeira em <%= new Date().toLocaleDateString('pt-BR') %> às <%= new Date().toLocaleTimeString('pt-BR') %></div>
     </div>
-
 </body>
 </html>

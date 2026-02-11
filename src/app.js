@@ -24,76 +24,14 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
-  next();
-});
-
-// --- FUNÇÃO AUXILIAR SEGURA ---
+// FUNÇÃO SEGURA PARA VALORES
 const parseValor = (v) => {
   if (!v) return 0.0;
   const str = String(v);
-  // Remove R$, pontos e troca vírgula por ponto
   return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
 };
 
-// --- ROTAS ---
-
-app.get('/relatorio', async (req, res) => {
-  if (!req.session.user) return res.redirect('/login');
-  try {
-    const userId = req.session.user.id;
-    const userName = req.session.user.nome;
-    const hoje = new Date();
-    const mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
-    const ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
-
-    const itens = await repo.getRelatorioMensal(userId, mes, ano);
-
-    const agrupado = {};
-    agrupado[userName] = { itens: [], total: 0 };
-
-    itens.forEach((item) => {
-      const pessoa = item.NomeTerceiro || userName;
-      if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
-      agrupado[pessoa].itens.push(item);
-      agrupado[pessoa].total += item.Valor;
-    });
-
-    const dataRef = new Date(ano, mes - 1, 1);
-    let nomeMes = dataRef.toLocaleString('pt-BR', { month: 'long' });
-    nomeMes = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-
-    const titulo = `Gestão Financeira - ${nomeMes} ${ano}`;
-
-    res.render('relatorio', {
-      dados: agrupado,
-      mes: nomeMes,
-      ano: ano,
-      titulo: titulo,
-      totalGeral: itens.reduce((acc, i) => acc + i.Valor, 0),
-    });
-  } catch (err) {
-    res.status(500).send('Erro ao gerar relatório: ' + err.message);
-  }
-});
-
-app.get('/switch/:id', async (req, res) => {
-  try {
-    const targetId = parseInt(req.params.id);
-    const user = await repo.getUsuarioById(targetId);
-    if (user) {
-      req.session.user = { id: user.Id, nome: user.Nome, login: user.Login };
-      req.session.authenticated = true;
-    }
-    res.redirect('/');
-  } catch (err) {
-    res.redirect('/');
-  }
-});
-
+// --- ROTAS DE AUTENTICAÇÃO ---
 app.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('login', { error: null });
@@ -105,7 +43,8 @@ app.post('/login', async (req, res) => {
     try {
       const user = await repo.getUsuarioById(1);
       if (user) {
-        req.session.user = { id: user.Id, nome: user.Nome, login: user.Login };
+        // CORREÇÃO: POSTGRES RETORNA MINUSCULO (user.id, user.nome)
+        req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
       return res.render('login', { error: 'Usuário principal não encontrado!' });
@@ -122,12 +61,13 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+// Middleware
 async function authMiddleware(req, res, next) {
   if (req.session && req.session.user) return next();
   try {
     const dodo = await repo.getUsuarioById(1);
     if (dodo) {
-      req.session.user = { id: dodo.Id, nome: dodo.Nome, login: dodo.Login };
+      req.session.user = { id: dodo.id, nome: dodo.nome, login: dodo.login };
       req.session.authenticated = true;
       return next();
     }
@@ -136,15 +76,66 @@ async function authMiddleware(req, res, next) {
   }
   res.redirect('/login');
 }
-
 app.use(authMiddleware);
+
+// --- ROTA DE TROCA DE USUÁRIO ---
+app.get('/switch/:id', async (req, res) => {
+  try {
+    const targetId = parseInt(req.params.id);
+    const user = await repo.getUsuarioById(targetId);
+    if (user) {
+      req.session.user = { id: user.id, nome: user.nome, login: user.login };
+      req.session.authenticated = true;
+    }
+    res.redirect('/');
+  } catch (err) {
+    res.redirect('/');
+  }
+});
+
+// --- ROTA DE RELATÓRIO ---
+app.get('/relatorio', async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const userName = req.session.user.nome;
+    const hoje = new Date();
+    const mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
+    const ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
+
+    const itens = await repo.getRelatorioMensal(userId, mes, ano);
+
+    const agrupado = {};
+    agrupado[userName] = { itens: [], total: 0 };
+
+    itens.forEach((item) => {
+      // CORREÇÃO: nometerceiro (minúsculo)
+      const pessoa = item.nometerceiro || userName;
+      if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
+      agrupado[pessoa].itens.push(item);
+      agrupado[pessoa].total += item.valor; // valor minúsculo
+    });
+
+    const dataRef = new Date(ano, mes - 1, 1);
+    let nomeMes = dataRef.toLocaleString('pt-BR', { month: 'long' });
+    nomeMes = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+
+    res.render('relatorio', {
+      dados: agrupado,
+      mes: nomeMes,
+      ano: ano,
+      titulo: `Relatório - ${nomeMes} ${ano}`,
+      totalGeral: itens.reduce((acc, i) => acc + i.valor, 0),
+    });
+  } catch (err) {
+    res.status(500).send('Erro relatório: ' + err.message);
+  }
+});
 
 // --- ROTA DASHBOARD ---
 app.get('/', async (req, res) => {
   try {
     const userId = req.session.user.id;
     const userName = req.session.user.nome;
-
     const hoje = new Date();
     let mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
     let ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
@@ -161,25 +152,27 @@ app.get('/', async (req, res) => {
 
     const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal] = await Promise.all([repo.getDashboardTotals(userId, mes, ano), repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano), repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano), repo.getAnotacoes(userId), repo.getResumoPessoas(userId, mes, ano, userName), repo.getDadosTerceiros(userId, mes, ano), repo.getOrdemCards(userId), repo.getFaturaManual(userId, mes, ano)]);
 
+    // Processamento para Frontend (tudo minúsculo vindo do banco)
     const terceirosMap = {};
     dadosTerceirosRaw.forEach((item) => {
-      const nome = item.NomeTerceiro;
+      const nome = item.nometerceiro; // minúsculo
       if (!terceirosMap[nome]) {
         terceirosMap[nome] = { nome: nome, totalCartao: 0, itensCartao: [], itensFixas: [], totalFixas: 0, totalGeral: 0 };
       }
-      if (item.Status === 'PENDENTE') {
-        terceirosMap[nome].totalGeral += item.Valor;
-        if (item.Tipo === 'CARTAO') terceirosMap[nome].totalCartao += item.Valor;
-        else if (item.Tipo === 'FIXA') terceirosMap[nome].totalFixas += item.Valor;
+      if (item.status === 'PENDENTE') {
+        // status minúsculo
+        terceirosMap[nome].totalGeral += item.valor;
+        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += item.valor;
+        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += item.valor;
       }
-      if (item.Tipo === 'FIXA') terceirosMap[nome].itensFixas.push(item);
-      else if (item.Tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);
+      if (item.tipo === 'FIXA') terceirosMap[nome].itensFixas.push(item);
+      else if (item.tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);
     });
 
     const ordemMap = {};
     if (ordemCardsRaw && ordemCardsRaw.length > 0)
       ordemCardsRaw.forEach((o) => {
-        ordemMap[o.Nome] = o.Ordem;
+        ordemMap[o.nome] = o.ordem;
       });
 
     const listaTerceiros = Object.values(terceirosMap).sort((a, b) => {
@@ -202,7 +195,7 @@ app.get('/', async (req, res) => {
       faturaManual: faturaManualVal,
     });
   } catch (err) {
-    res.status(500).send('Erro ao carregar dashboard: ' + err.message);
+    res.status(500).send('Erro dashboard: ' + err.message);
   }
 });
 
@@ -304,17 +297,15 @@ app.post('/api/lancamentos/reorder', async (req, res) => {
   }
 });
 
-// --- CRUD UNITÁRIO (COM RETORNO DE ERRO JSON) ---
+// --- CRUD UNITÁRIO ---
 app.post('/api/lancamentos', async (req, res) => {
   try {
     const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year } = req.body;
-
     let dbTipo = '',
       dbStatus = 'PENDENTE',
       pAtual = null,
       pTotal = null,
       dbCategoria = null;
-
     if (tipo_transacao === 'RENDA') {
       dbTipo = 'RENDA';
       dbStatus = 'PAGO';
@@ -329,26 +320,11 @@ app.post('/api/lancamentos', async (req, res) => {
         }
       }
     }
-
     let dataBase = new Date();
-    if (context_month && context_year) {
-      dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
-    }
-
-    await repo.addLancamento(req.session.user.id, {
-      descricao: (descricao || '').trim(),
-      valor: parseValor(valor),
-      tipo: dbTipo,
-      categoria: dbCategoria,
-      status: dbStatus,
-      parcelaAtual: pAtual,
-      totalParcelas: pTotal,
-      nomeTerceiro: nome_terceiro || null,
-      dataBase: dataBase,
-    });
+    if (context_month && context_year) dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
+    await repo.addLancamento(req.session.user.id, { descricao: (descricao || '').trim(), valor: parseValor(valor), tipo: dbTipo, categoria: dbCategoria, status: dbStatus, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null, dataBase: dataBase });
     res.json({ success: true });
   } catch (err) {
-    // AQUI: Devolve o erro exato para o front mostrar no F12
     res.status(500).json({ error: err.message });
   }
 });
@@ -372,16 +348,7 @@ app.put('/api/lancamentos/:id', async (req, res) => {
       dbCategoria = sub_tipo;
     } else if (sub_tipo === 'Fixa') dbTipo = 'FIXA';
     else dbTipo = 'CARTAO';
-
-    await repo.updateLancamento(req.session.user.id, req.params.id, {
-      descricao,
-      valor: parseValor(valor),
-      tipo: dbTipo,
-      categoria: dbCategoria,
-      parcelaAtual: pAtual,
-      totalParcelas: pTotal,
-      nomeTerceiro: nome_terceiro || null,
-    });
+    await repo.updateLancamento(req.session.user.id, req.params.id, { descricao, valor: parseValor(valor), tipo: dbTipo, categoria: dbCategoria, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -405,4 +372,4 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
