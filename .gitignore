@@ -7,3 +7,6 @@ migrate.js
 db.js
 postgre_conection.md
 reverse-migrate.sql
+.env
+.DS_Store
+.env

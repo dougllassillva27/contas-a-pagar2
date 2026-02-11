@@ -1,3 +1,6 @@
+// CARREGA VARIÁVEIS DE AMBIENTE (.env)
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -6,7 +9,9 @@ const repo = require('./repositories/FinanceiroRepository');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SENHA_MESTRA = '@Dodo@@Xp6yp4zq';
+
+// LÊ A SENHA DO .ENV (OU USA UMA PADRÃO SE NÃO ACHAR)
+const SENHA_MESTRA = process.env.SENHA_MESTRA || 'senha_padrao_insegura';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -15,13 +20,13 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Configuração de Sessão (Na nuvem, isso reseta se o servidor reiniciar)
+// Configuração de Sessão
 app.use(
   session({
-    secret: 'segredo-financeiro-dodo-2026',
+    secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, // Mude para true se tiver HTTPS configurado com proxy, mas false funciona bem no Render free
+    cookie: { secure: false },
   })
 );
 
@@ -32,13 +37,11 @@ const parseValor = (v) => {
   return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
 };
 
-// --- MIDDLEWARE DE PROTEÇÃO (CORRIGIDO: SEM AUTO-LOGIN) ---
+// --- MIDDLEWARE DE PROTEÇÃO ---
 async function authMiddleware(req, res, next) {
-  // Se já tem usuário na sessão, permite passar
   if (req.session && req.session.user) {
     return next();
   }
-  // Se não tem, manda pro login (REMOVEU O BLOCO DE AUTO-LOGIN AQUI)
   res.redirect('/login');
 }
 
@@ -50,9 +53,10 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { password } = req.body;
+
+  // COMPARA COM A VARIÁVEL DE AMBIENTE
   if (password === SENHA_MESTRA) {
     try {
-      // Loga sempre como o usuário principal (ID 1 - Dodo) inicialmente
       const user = await repo.getUsuarioById(1);
       if (user) {
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
@@ -102,7 +106,6 @@ app.get('/relatorio', async (req, res) => {
     const itens = await repo.getRelatorioMensal(userId, mes, ano);
 
     const agrupado = {};
-    // Garante que o dono aparece
     agrupado[userName] = { itens: [], total: 0 };
 
     itens.forEach((item) => {
@@ -110,7 +113,6 @@ app.get('/relatorio', async (req, res) => {
       if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
 
       agrupado[pessoa].itens.push(item);
-      // CORREÇÃO: Garante que é número antes de somar
       agrupado[pessoa].total += Number(item.valor);
     });
 
@@ -123,7 +125,6 @@ app.get('/relatorio', async (req, res) => {
       mes: nomeMes,
       ano: ano,
       titulo: `Relatório - ${nomeMes} ${ano}`,
-      // CORREÇÃO: Soma segura
       totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0),
     });
   } catch (err) {
@@ -159,7 +160,6 @@ app.get('/', async (req, res) => {
         terceirosMap[nome] = { nome: nome, totalCartao: 0, itensCartao: [], itensFixas: [], totalFixas: 0, totalGeral: 0 };
       }
       if (item.status === 'PENDENTE') {
-        // CORREÇÃO: Converte para Number para evitar concatenação de string
         const valorNumerico = Number(item.valor);
         terceirosMap[nome].totalGeral += valorNumerico;
         if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += valorNumerico;
@@ -372,4 +372,4 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
