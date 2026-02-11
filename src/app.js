@@ -43,7 +43,6 @@ app.post('/login', async (req, res) => {
     try {
       const user = await repo.getUsuarioById(1);
       if (user) {
-        // CORREÇÃO: POSTGRES RETORNA MINUSCULO (user.id, user.nome)
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
@@ -78,7 +77,6 @@ async function authMiddleware(req, res, next) {
 }
 app.use(authMiddleware);
 
-// --- ROTA DE TROCA DE USUÁRIO ---
 app.get('/switch/:id', async (req, res) => {
   try {
     const targetId = parseInt(req.params.id);
@@ -93,7 +91,6 @@ app.get('/switch/:id', async (req, res) => {
   }
 });
 
-// --- ROTA DE RELATÓRIO ---
 app.get('/relatorio', async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -108,11 +105,11 @@ app.get('/relatorio', async (req, res) => {
     agrupado[userName] = { itens: [], total: 0 };
 
     itens.forEach((item) => {
-      // CORREÇÃO: nometerceiro (minúsculo)
       const pessoa = item.nometerceiro || userName;
       if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
       agrupado[pessoa].itens.push(item);
-      agrupado[pessoa].total += item.valor; // valor minúsculo
+      // CORREÇÃO CRÍTICA: Number() para evitar concatenação
+      agrupado[pessoa].total += Number(item.valor);
     });
 
     const dataRef = new Date(ano, mes - 1, 1);
@@ -124,14 +121,13 @@ app.get('/relatorio', async (req, res) => {
       mes: nomeMes,
       ano: ano,
       titulo: `Relatório - ${nomeMes} ${ano}`,
-      totalGeral: itens.reduce((acc, i) => acc + i.valor, 0),
+      totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0), // CORREÇÃO CRÍTICA
     });
   } catch (err) {
     res.status(500).send('Erro relatório: ' + err.message);
   }
 });
 
-// --- ROTA DASHBOARD ---
 app.get('/', async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -152,18 +148,18 @@ app.get('/', async (req, res) => {
 
     const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal] = await Promise.all([repo.getDashboardTotals(userId, mes, ano), repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano), repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano), repo.getAnotacoes(userId), repo.getResumoPessoas(userId, mes, ano, userName), repo.getDadosTerceiros(userId, mes, ano), repo.getOrdemCards(userId), repo.getFaturaManual(userId, mes, ano)]);
 
-    // Processamento para Frontend (tudo minúsculo vindo do banco)
     const terceirosMap = {};
     dadosTerceirosRaw.forEach((item) => {
-      const nome = item.nometerceiro; // minúsculo
+      const nome = item.nometerceiro;
       if (!terceirosMap[nome]) {
         terceirosMap[nome] = { nome: nome, totalCartao: 0, itensCartao: [], itensFixas: [], totalFixas: 0, totalGeral: 0 };
       }
       if (item.status === 'PENDENTE') {
-        // status minúsculo
-        terceirosMap[nome].totalGeral += item.valor;
-        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += item.valor;
-        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += item.valor;
+        // CORREÇÃO CRÍTICA: Number() para evitar concatenação de texto
+        const val = Number(item.valor);
+        terceirosMap[nome].totalGeral += val;
+        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += val;
+        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += val;
       }
       if (item.tipo === 'FIXA') terceirosMap[nome].itensFixas.push(item);
       else if (item.tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);

@@ -3,3 +3,4 @@ error.log
 Single user/
 nssm.exe
 service.log
+migrate.js
