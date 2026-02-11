@@ -1,14 +1,22 @@
-# 💸 Gestão Financeira Pessoal
+# 💸 Gestão Financeira Pessoal (Cloud Edition)
 
-Um sistema web robusto e performático para controle de contas a pagar, gestão de cartão de crédito e organização financeira familiar, rodando localmente.
+Um sistema web robusto e acessível de qualquer lugar para controle de
+contas a pagar, gestão de cartão de crédito e organização financeira
+familiar. Agora migrado para a nuvem com **PostgreSQL**!
 
 ---
 
 ## 📖 Sobre o Projeto
 
-Este projeto foi desenvolvido para substituir planilhas complexas por uma interface visual intuitiva e focada em **Contas a Pagar**. Ele permite gerenciar não apenas as finanças pessoais (**Dodo**), mas também segregar gastos de terceiros (familiares) que utilizam o mesmo cartão de crédito, facilitando a cobrança e o controle no final do mês.
+Este projeto substitui planilhas complexas por uma interface visual
+intuitiva e focada em **Contas a Pagar**. Ele permite gerenciar não
+apenas as finanças pessoais, mas também segregar gastos de terceiros
+(familiares) que utilizam o mesmo cartão de crédito.
 
-O sistema roda localmente para garantir **privacidade total dos dados** e **performance instantânea**.
+Originalmente criado em SQL Server local, o projeto foi modernizado para
+**PostgreSQL** e hospedado no **Render/Neon**, permitindo acesso via
+celular ou desktop de qualquer lugar, mantendo a privacidade e a
+performance.
 
 ---
 
@@ -16,151 +24,216 @@ O sistema roda localmente para garantir **privacidade total dos dados** e **perf
 
 ### 📊 Dashboard & Controle
 
-- **Visão Geral:** Cards com Total de Rendas, Total de Contas, Falta Pagar e Saldo Previsto.
-- **Contas Fixas:** Gestão de despesas recorrentes (Água, Luz, Internet).
-- **Cartão de Crédito:** Controle detalhado com suporte a parcelamento (ex: `01/10`).
-- **Bloco de Notas:** Área de anotações persistente (salva automaticamente).
+- **Visão Geral:** Cards com Total de Rendas (com modo privacidade
+  👁️), Total de Contas, Falta Pagar e Saldo Previsto.
+- **Contas Fixas:** Gestão de despesas recorrentes (Água, Luz,
+  Internet).
+- **Cartão de Crédito:** Controle detalhado com suporte a parcelamento
+  (ex: `01/10`).
+- **Bloco de Notas:** Área de anotações persistente.
 
 ### 👥 Gestão de Terceiros
 
-- **Painéis Individuais:** Separação automática de gastos por pessoa (ex: Mãe, Vô, Casa).
-- **Totalizadores:** Visualização rápida de quanto cada terceiro deve no mês.
+- **Painéis Individuais:** Separação automática de gastos por pessoa
+  (ex: Mãe, Vô, Casa).
+- **Totalizadores:** Visualização rápida de quanto cada terceiro deve
+  no mês.
 
 ### ✨ UX/UI (Experiência do Usuário)
 
-- **Drag & Drop:** Organize a prioridade das contas e a ordem dos cards de terceiros arrastando e soltando.
-- **Modais Responsivos:** Adição e edição de lançamentos sem recarregar a página.
-- **Dark Mode:** Interface moderna e confortável para uso noturno.
-- **Scroll Fino:** Barras de rolagem estilizadas e minimalistas.
+- **Drag & Drop:** Organize a prioridade das contas arrastando e
+  soltando.
+- **Modais Responsivos:** Adição e edição rápida sem recarregar a
+  página.
+- **Dark Mode:** Interface moderna e confortável.
+- **Impressão A4:** Layout otimizado (CSS print) para gerar relatórios
+  de cobrança em PDF.
 
 ### ⚙️ Ferramentas Avançadas
 
-- **Copiar Mês:** Duplica contas fixas e parcelas pendentes para o mês seguinte automaticamente.
-- **Backup:** Exportação completa dos dados para JSON com um clique.
-- **Segurança:** Login com senha para acesso restrito.
-- **Impressão:** Layout otimizado para imprimir relatórios de cobrança.
+- **Copiar Mês:** Duplica contas fixas e parcelas pendentes para o mês
+  seguinte.
+- **Backup:** Exportação dos dados (JSON) para segurança local.
+- **Fatura App:** Campo para comparar o valor calculado pelo sistema
+  vs valor real do App do banco.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **Backend:** Node.js com Express
-- **Database:** SQL Server (MSSQL)
-- **Frontend:** EJS (Template Engine), CSS3 puro (Variáveis, Flexbox e Grid)
-- **Autenticação:** Express-Session
+- **Database:** PostgreSQL (Hospedado no Neon.tech)
+- **Hospedagem:** Render.com (Plano Gratuito)
+- **Frontend:** EJS, CSS3 (Variáveis, Grid Layout)
+- **Driver:** `pg` (node-postgres)
 
 ---
 
 ## 📝 Pré-requisitos
 
-Antes de começar, você precisa ter instalado:
-
-- Node.js (versão LTS recomendada)
-- SQL Server (Express ou Developer)
+Para rodar ou modificar o projeto, você precisa: - **Node.js** (v18 ou
+superior) - Conta no **GitHub** (para deploy) - Conta no **Neon.tech**
+(Banco de dados gratuito) - Conta no **Render.com** (Hospedagem
+gratuita)
 
 ---
 
-## 🚀 Instalação e Configuração
+## 🚀 Instalação e Configuração (Local)
 
-### 1️⃣ Clonar ou Baixar
+Se quiser rodar no seu PC para desenvolvimento:
 
-Extraia os arquivos do projeto em uma pasta de sua preferência  
-Exemplo: `C:\Projetos\GestaoFinanceira`
+### 1️⃣ Clonar o Repositório
+
+```bash
+git clone https://github.com/dougllassillva27/contas-a-pagar2.git
+cd contas-a-pagar2
+```
 
 ### 2️⃣ Instalar Dependências
-
-No terminal, dentro da pasta do projeto:
 
 ```bash
 npm install
 ```
 
-### 3️⃣ Configurar Banco de Dados
+### 3️⃣ Configurar Banco de Dados (PostgreSQL)
 
-1. Abra seu gerenciador de banco (SSMS, DBeaver ou Azure Data Studio).
-2. Abra o arquivo `schema.sql` (na raiz do projeto).
-3. Execute todo o script para criar o banco **GestaoFinanceira** e as tabelas:
-   - `Lancamentos`
-   - `Anotacoes`
-   - `OrdemCards`
+Crie um banco de dados no Neon ou no seu Postgres Local.
 
-### 4️⃣ Configurar Variáveis de Ambiente
+Rode o script de criação das tabelas (SQL) no seu gerenciador de banco:
 
-Crie um arquivo `.env` na raiz do projeto:
+```sql
+CREATE TABLE Usuarios (
+    Id SERIAL PRIMARY KEY,
+    Nome VARCHAR(50),
+    Login VARCHAR(50),
+    SenhaHash VARCHAR(255)
+);
+
+CREATE TABLE Lancamentos (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT,
+    Descricao VARCHAR(255),
+    Valor DECIMAL(18,2),
+    Tipo VARCHAR(20),
+    Categoria VARCHAR(50),
+    Status VARCHAR(20),
+    DataVencimento DATE,
+    ParcelaAtual INT,
+    TotalParcelas INT,
+    NomeTerceiro VARCHAR(100),
+    Ordem INT
+);
+
+CREATE TABLE Anotacoes (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT,
+    Conteudo TEXT
+);
+
+CREATE TABLE OrdemCards (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT,
+    Nome VARCHAR(255),
+    Ordem INT
+);
+
+CREATE TABLE FaturaManual (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT,
+    Mes INT,
+    Ano INT,
+    Valor DECIMAL(18,2)
+);
+
+INSERT INTO Usuarios (Nome, Login, SenhaHash)
+VALUES ('Admin', 'admin', 'HASH_DA_SENHA');
+```
+
+### 4️⃣ Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz ou configure no seu sistema:
 
 ```env
-DB_USER=seu_usuario_sql
-DB_PASS=sua_senha_sql
-DB_SERVER=NOME-DO-PC\INSTANCIA
-DB_NAME=GestaoFinanceira
-PORT=80
+DATABASE_URL=postgres://usuario:senha@endpoint-neon.tech/neondb?sslmode=require
+PORT=3000
 ```
 
----
-
-## ▶️ Como Rodar
-
-### Modo Padrão
-
-```bash
-node src/app.js
-```
-
-Ou:
+### 5️⃣ Rodar
 
 ```bash
 npm start
 ```
 
-### 🌐 Acessando
+Acesse: http://localhost:3000
 
-- Porta 80 → http://localhost
-- Porta 3000 → http://localhost:3000
+---
 
-**Senha Padrão:** `XXXX`
+## ☁️ Como Fazer Deploy (Colocar Online)
 
-> Pode ser alterada editando a constante `SENHA_MESTRA` em `src/app.js`
+### Passo 1: GitHub
+
+Suba seu código para um repositório no GitHub.
+
+### Passo 2: Neon.tech (Banco)
+
+- Crie um projeto no Neon.
+- Copie a Connection String (começa com `postgres://...`).
+- Vá no "SQL Editor" do Neon e rode o script de criação das tabelas.
+
+### Passo 3: Render.com (App)
+
+- Crie um **New Web Service**.
+
+- Conecte seu repositório do GitHub.
+
+- Em **Build Command**, use:
+
+      npm install
+
+- Em **Start Command**, use:
+
+      node src/app.js
+
+- Em **Environment Variables**, adicione:
+  - `DATABASE_URL` = (Sua string de conexão do Neon)
+  - `NODE_VERSION` = 18 (ou 20)
+
+Pronto! Seu sistema estará online. 🌍
 
 ---
 
 ## 📂 Estrutura do Projeto
 
-```text
-/
-├── public/
-│   └── css/
-│       └── style.css
-├── src/
-│   ├── config/
-│   │   └── db.js
-│   ├── repositories/
-│   │   └── FinanceiroRepository.js
-│   ├── views/
-│   │   ├── index.ejs
-│   │   └── login.ejs
-│   └── app.js
-├── .env
-├── schema.sql
-└── package.json
-```
+    /
+    ├── public/
+    │   ├── css/style.css
+    │   └── js/
+    ├── src/
+    │   ├── config/
+    │   │   └── db.js
+    │   ├── repositories/
+    │   │   └── FinanceiroRepository.js
+    │   ├── views/
+    │   │   ├── index.ejs
+    │   │   ├── login.ejs
+    │   │   └── relatorio.ejs
+    │   └── app.js
+    ├── .gitignore
+    ├── package.json
+    └── README.md
 
 ---
 
 ## 💡 Dicas de Uso
 
-- **Criação Rápida:** Modal já abre com foco na descrição.
-- **Parcelas:** Use o formato `Atual/Total` (ex: `1/10`).
-- **Mover Cards:** Arraste pelo título do card.
-- **Impressão:** Ideal para gerar PDF e enviar no WhatsApp da família.
+- **Privacidade:** Clique no "olhinho" no card de Rendas para
+  esconder/mostrar o valor (salva a preferência no navegador).
+- **Impressão:** O botão "Imprimir" gera um relatório limpo, ideal
+  para salvar em PDF.
+- **Login:** O sistema pode desconectar automaticamente no plano free
+  do Render. Basta logar novamente.
 
 ---
 
-## 🔒 Backup e Segurança
-
-- **Backup:** Botão no topo gera `.json` com todos os dados.
-- **Rede Local:** Acesse pelo celular via IP local  
-  Exemplo: `http://192.168.0.15`
-
----
-
-Desenvolvido para uso pessoal com foco em **Clean Code**, **Performance** e **Controle Financeiro Consciente**. 💸
+Desenvolvido com foco em Clean Code, Performance e Liberdade Geográfica.
+💸
