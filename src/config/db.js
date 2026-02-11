@@ -1,12 +1,17 @@
 const { Pool, types } = require('pg');
 
-// CORREÇÃO CRÍTICA: Força o driver a interpretar DECIMAL/NUMERIC como Número, não String
+// Força o driver a interpretar DECIMAL/NUMERIC como Número, não String
 types.setTypeParser(1700, (val) => {
   return val === null ? null : parseFloat(val);
 });
 
-// Em produção (Render), usaremos a variável de ambiente DATABASE_URL.
-const connectionString = process.env.DATABASE_URL || 'XXXXXXXXXXXXXXX';
+// LÊ A URL DO .ENV
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ ERRO: DATABASE_URL não definida no arquivo .env');
+  process.exit(1);
+}
 
 const pool = new Pool({
   connectionString,
