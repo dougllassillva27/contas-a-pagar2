@@ -6,7 +6,7 @@ types.setTypeParser(1700, (val) => {
 });
 
 // Em produção (Render), usaremos a variável de ambiente DATABASE_URL.
-const connectionString = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_8HBgTYfS7sZb@ep-icy-fire-ainq8c31-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const connectionString = process.env.DATABASE_URL || 'XXXXXXXXXXXXXXX';
 
 const pool = new Pool({
   connectionString,
