@@ -5,11 +5,10 @@ class FinanceiroRepository {
     this.initOrdemTable();
   }
 
-  // --- USUÁRIOS ---
   async obterUsuarioPorLogin(login) {
     try {
       const result = await db.query('SELECT * FROM Usuarios WHERE Login = $1', [login]);
-      return result.rows[0]; // Retorna: { id, nome, login, senhahash }
+      return result.rows[0];
     } catch (err) {
       return null;
     }
@@ -39,7 +38,6 @@ class FinanceiroRepository {
     }
   }
 
-  // --- RELATÓRIO ---
   async getRelatorioMensal(userId, month, year) {
     const query = `
             SELECT * FROM Lancamentos 
@@ -53,14 +51,14 @@ class FinanceiroRepository {
                 Ordem
         `;
     const result = await db.query(query, [userId, month, year]);
-    return result.rows; // Retorna chaves minúsculas: nometerceiro, valor, etc.
+    return result.rows;
   }
 
-  // --- FATURA MANUAL ---
   async getFaturaManual(userId, month, year) {
     try {
       const result = await db.query('SELECT Valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
-      return result.rows[0]?.valor || 0;
+      // Garante retorno float
+      return parseFloat(result.rows[0]?.valor) || 0;
     } catch (err) {
       return 0;
     }
@@ -76,10 +74,9 @@ class FinanceiroRepository {
     }
   }
 
-  // --- ORDEM CARDS ---
   async getOrdemCards(userId) {
     const result = await db.query('SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC', [userId]);
-    return result.rows; // Retorna: nome, ordem
+    return result.rows;
   }
 
   async saveOrdemCards(userId, listaNomes) {
@@ -99,15 +96,15 @@ class FinanceiroRepository {
     }
   }
 
-  // --- DASHBOARD ---
+  // CORREÇÃO: Adicionado ::float para garantir numero
   async getDashboardTotals(userId, month, year) {
     const query = `
             SELECT 
-                COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END), 0) AS totalrendas,
-                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0) AS totalcontas,
-                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') AND Status = 'PENDENTE' THEN Valor ELSE 0 END), 0) AS faltapagar,
+                COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END), 0)::float AS totalrendas,
+                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0)::float AS totalcontas,
+                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') AND Status = 'PENDENTE' THEN Valor ELSE 0 END), 0)::float AS faltapagar,
                 COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END) - 
-                       SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0) AS saldoprevisto
+                       SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0)::float AS saldoprevisto
             FROM Lancamentos
             WHERE UsuarioId = $1 
               AND EXTRACT(MONTH FROM DataVencimento) = $2 
@@ -117,7 +114,6 @@ class FinanceiroRepository {
     return result.rows[0];
   }
 
-  // --- LISTAGENS ---
   async getLancamentosPorTipo(userId, tipo, month, year) {
     const query = `
             SELECT * FROM Lancamentos 
@@ -165,11 +161,12 @@ class FinanceiroRepository {
     return result.rows;
   }
 
+  // CORREÇÃO: Adicionado ::float
   async getResumoPessoas(userId, month, year, userName) {
     const query = `
             SELECT 
                 CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN $4 ELSE NomeTerceiro END AS pessoa, 
-                SUM(CASE WHEN Status = 'PENDENTE' THEN Valor ELSE 0 END) AS total, 
+                SUM(CASE WHEN Status = 'PENDENTE' THEN Valor ELSE 0 END)::float AS total, 
                 CASE WHEN COUNT(*) = SUM(CASE WHEN Status = 'PAGO' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS todospagos 
             FROM Lancamentos 
             WHERE UsuarioId = $1 
@@ -187,7 +184,6 @@ class FinanceiroRepository {
     return this.getLancamentosPorTipo(userId, 'RENDA', month, year);
   }
 
-  // --- CRUD ---
   async addLancamento(userId, dados) {
     const dataVencimento = dados.dataBase ? new Date(dados.dataBase) : new Date();
     const query = `
@@ -246,7 +242,7 @@ class FinanceiroRepository {
 
   async getAnotacoes(userId) {
     const result = await db.query('SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 LIMIT 1', [userId]);
-    return result.rows[0]?.conteudo || ''; // Postgres retorna minusculo
+    return result.rows[0]?.conteudo || '';
   }
 
   async updateAnotacoes(userId, texto) {
@@ -288,7 +284,7 @@ class FinanceiroRepository {
 
       await client.query('BEGIN');
       for (const item of itemsToCopy) {
-        let novoParcelaAtual = item.parcelaatual; // Atenção: minusculo no Postgres
+        let novoParcelaAtual = item.parcelaatual;
         let totalParcelas = item.totalparcelas;
         if (novoParcelaAtual && totalParcelas) {
           if (novoParcelaAtual >= totalParcelas) continue;
