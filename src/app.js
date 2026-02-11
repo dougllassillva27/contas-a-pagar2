@@ -1,0 +1,408 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const path = require('path');
+const repo = require('./repositories/FinanceiroRepository');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const SENHA_MESTRA = '@Dodo@@Xp6yp4zq';
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+  session({
+    secret: 'segredo-financeiro-dodo-2026',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
+
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
+// --- FUNÇÃO AUXILIAR SEGURA ---
+const parseValor = (v) => {
+  if (!v) return 0.0;
+  const str = String(v);
+  // Remove R$, pontos e troca vírgula por ponto
+  return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
+};
+
+// --- ROTAS ---
+
+app.get('/relatorio', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  try {
+    const userId = req.session.user.id;
+    const userName = req.session.user.nome;
+    const hoje = new Date();
+    const mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
+    const ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
+
+    const itens = await repo.getRelatorioMensal(userId, mes, ano);
+
+    const agrupado = {};
+    agrupado[userName] = { itens: [], total: 0 };
+
+    itens.forEach((item) => {
+      const pessoa = item.NomeTerceiro || userName;
+      if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
+      agrupado[pessoa].itens.push(item);
+      agrupado[pessoa].total += item.Valor;
+    });
+
+    const dataRef = new Date(ano, mes - 1, 1);
+    let nomeMes = dataRef.toLocaleString('pt-BR', { month: 'long' });
+    nomeMes = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+
+    const titulo = `Gestão Financeira - ${nomeMes} ${ano}`;
+
+    res.render('relatorio', {
+      dados: agrupado,
+      mes: nomeMes,
+      ano: ano,
+      titulo: titulo,
+      totalGeral: itens.reduce((acc, i) => acc + i.Valor, 0),
+    });
+  } catch (err) {
+    res.status(500).send('Erro ao gerar relatório: ' + err.message);
+  }
+});
+
+app.get('/switch/:id', async (req, res) => {
+  try {
+    const targetId = parseInt(req.params.id);
+    const user = await repo.getUsuarioById(targetId);
+    if (user) {
+      req.session.user = { id: user.Id, nome: user.Nome, login: user.Login };
+      req.session.authenticated = true;
+    }
+    res.redirect('/');
+  } catch (err) {
+    res.redirect('/');
+  }
+});
+
+app.get('/login', (req, res) => {
+  if (req.session.user) return res.redirect('/');
+  res.render('login', { error: null });
+});
+
+app.post('/login', async (req, res) => {
+  const { password } = req.body;
+  if (password === SENHA_MESTRA) {
+    try {
+      const user = await repo.getUsuarioById(1);
+      if (user) {
+        req.session.user = { id: user.Id, nome: user.Nome, login: user.Login };
+        return res.redirect('/');
+      }
+      return res.render('login', { error: 'Usuário principal não encontrado!' });
+    } catch (err) {
+      return res.render('login', { error: 'Erro de banco: ' + err.message });
+    }
+  } else {
+    res.render('login', { error: 'Senha incorreta!' });
+  }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
+async function authMiddleware(req, res, next) {
+  if (req.session && req.session.user) return next();
+  try {
+    const dodo = await repo.getUsuarioById(1);
+    if (dodo) {
+      req.session.user = { id: dodo.Id, nome: dodo.Nome, login: dodo.Login };
+      req.session.authenticated = true;
+      return next();
+    }
+  } catch (err) {
+    console.error('Erro AutoLogin:', err);
+  }
+  res.redirect('/login');
+}
+
+app.use(authMiddleware);
+
+// --- ROTA DASHBOARD ---
+app.get('/', async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const userName = req.session.user.nome;
+
+    const hoje = new Date();
+    let mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
+    let ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
+
+    const dataAtual = new Date(ano, mes - 1, 1);
+    const dataAnterior = new Date(ano, mes - 2, 1);
+    const dataProxima = new Date(ano, mes, 1);
+
+    const nav = {
+      atual: { month: mes, year: ano, dateObj: dataAtual },
+      ant: { month: dataAnterior.getMonth() + 1, year: dataAnterior.getFullYear() },
+      prox: { month: dataProxima.getMonth() + 1, year: dataProxima.getFullYear() },
+    };
+
+    const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal] = await Promise.all([repo.getDashboardTotals(userId, mes, ano), repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano), repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano), repo.getAnotacoes(userId), repo.getResumoPessoas(userId, mes, ano, userName), repo.getDadosTerceiros(userId, mes, ano), repo.getOrdemCards(userId), repo.getFaturaManual(userId, mes, ano)]);
+
+    const terceirosMap = {};
+    dadosTerceirosRaw.forEach((item) => {
+      const nome = item.NomeTerceiro;
+      if (!terceirosMap[nome]) {
+        terceirosMap[nome] = { nome: nome, totalCartao: 0, itensCartao: [], itensFixas: [], totalFixas: 0, totalGeral: 0 };
+      }
+      if (item.Status === 'PENDENTE') {
+        terceirosMap[nome].totalGeral += item.Valor;
+        if (item.Tipo === 'CARTAO') terceirosMap[nome].totalCartao += item.Valor;
+        else if (item.Tipo === 'FIXA') terceirosMap[nome].totalFixas += item.Valor;
+      }
+      if (item.Tipo === 'FIXA') terceirosMap[nome].itensFixas.push(item);
+      else if (item.Tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);
+    });
+
+    const ordemMap = {};
+    if (ordemCardsRaw && ordemCardsRaw.length > 0)
+      ordemCardsRaw.forEach((o) => {
+        ordemMap[o.Nome] = o.Ordem;
+      });
+
+    const listaTerceiros = Object.values(terceirosMap).sort((a, b) => {
+      const ordA = ordemMap[a.nome] !== undefined ? ordemMap[a.nome] : 9999;
+      const ordB = ordemMap[b.nome] !== undefined ? ordemMap[b.nome] : 9999;
+      if (ordA !== ordB) return ordA - ordB;
+      return a.nome.localeCompare(b.nome);
+    });
+
+    res.render('index', {
+      totais,
+      fixas,
+      cartao,
+      anotacoes,
+      resumoPessoas,
+      nav,
+      terceiros: listaTerceiros,
+      query: req.query,
+      user: req.session.user,
+      faturaManual: faturaManualVal,
+    });
+  } catch (err) {
+    res.status(500).send('Erro ao carregar dashboard: ' + err.message);
+  }
+});
+
+// --- APIs GERAIS ---
+app.post('/api/anotacoes', async (req, res) => {
+  try {
+    await repo.updateAnotacoes(req.session.user.id, req.body.conteudo);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/rendas', async (req, res) => {
+  try {
+    const m = req.query.month || new Date().getMonth() + 1;
+    const y = req.query.year || new Date().getFullYear();
+    const rendas = await repo.getDetalhesRendas(req.session.user.id, m, y);
+    res.json(rendas);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/cartao/:pessoa', async (req, res) => {
+  try {
+    const m = req.query.month || new Date().getMonth() + 1;
+    const y = req.query.year || new Date().getFullYear();
+    const itens = await repo.getLancamentosCartaoPorPessoa(req.session.user.id, req.params.pessoa, m, y, req.session.user.nome);
+    res.json(itens);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/backup', async (req, res) => {
+  try {
+    const data = await repo.getAllDataForBackup(req.session.user.id);
+    const fileName = `backup_${req.session.user.login}_${new Date().toISOString().split('T')[0]}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    res.send(JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('Erro no backup:', err);
+    res.status(500).send('Erro ao gerar backup');
+  }
+});
+app.post('/api/fatura-manual', async (req, res) => {
+  try {
+    const { valor, month, year } = req.body;
+    await repo.saveFaturaManual(req.session.user.id, parseInt(month), parseInt(year), parseValor(valor));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/cards/reorder', async (req, res) => {
+  try {
+    const { nomes } = req.body;
+    await repo.saveOrdemCards(req.session.user.id, nomes);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/lancamentos/copiar', async (req, res) => {
+  try {
+    const month = parseInt(req.body.month);
+    const year = parseInt(req.body.year);
+    await repo.copyMonth(req.session.user.id, month, year);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.delete('/api/lancamentos/mes', async (req, res) => {
+  try {
+    const month = parseInt(req.query.month);
+    const year = parseInt(req.query.year);
+    if (isNaN(month) || isNaN(year)) return res.status(400).json({ error: 'Inválido' });
+    await repo.deleteMonth(req.session.user.id, month, year);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/lancamentos/status-pessoa', async (req, res) => {
+  try {
+    await repo.updateStatusBatchPessoa(req.session.user.id, req.body.pessoa, req.body.status, req.body.month, req.body.year, req.session.user.nome);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/lancamentos/reorder', async (req, res) => {
+  try {
+    const { itens } = req.body;
+    await repo.reorderLancamentos(req.session.user.id, itens);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- CRUD UNITÁRIO (COM RETORNO DE ERRO JSON) ---
+app.post('/api/lancamentos', async (req, res) => {
+  try {
+    const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year } = req.body;
+
+    let dbTipo = '',
+      dbStatus = 'PENDENTE',
+      pAtual = null,
+      pTotal = null,
+      dbCategoria = null;
+
+    if (tipo_transacao === 'RENDA') {
+      dbTipo = 'RENDA';
+      dbStatus = 'PAGO';
+      dbCategoria = sub_tipo;
+    } else {
+      dbTipo = sub_tipo === 'Fixa' ? 'FIXA' : 'CARTAO';
+      if (sub_tipo === 'Parcelada' && parcelas) {
+        const p = parcelas.split('/');
+        if (p.length === 2) {
+          pAtual = parseInt(p[0]);
+          pTotal = parseInt(p[1]);
+        }
+      }
+    }
+
+    let dataBase = new Date();
+    if (context_month && context_year) {
+      dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
+    }
+
+    await repo.addLancamento(req.session.user.id, {
+      descricao: (descricao || '').trim(),
+      valor: parseValor(valor),
+      tipo: dbTipo,
+      categoria: dbCategoria,
+      status: dbStatus,
+      parcelaAtual: pAtual,
+      totalParcelas: pTotal,
+      nomeTerceiro: nome_terceiro || null,
+      dataBase: dataBase,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    // AQUI: Devolve o erro exato para o front mostrar no F12
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/lancamentos/:id', async (req, res) => {
+  try {
+    const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro } = req.body;
+    let pAtual = null,
+      pTotal = null;
+    if (sub_tipo === 'Parcelada' && parcelas) {
+      const parts = parcelas.split('/');
+      if (parts.length === 2) {
+        pAtual = parseInt(parts[0]);
+        pTotal = parseInt(parts[1]);
+      }
+    }
+    let dbTipo = 'CARTAO',
+      dbCategoria = null;
+    if (tipo_transacao === 'RENDA') {
+      dbTipo = 'RENDA';
+      dbCategoria = sub_tipo;
+    } else if (sub_tipo === 'Fixa') dbTipo = 'FIXA';
+    else dbTipo = 'CARTAO';
+
+    await repo.updateLancamento(req.session.user.id, req.params.id, {
+      descricao,
+      valor: parseValor(valor),
+      tipo: dbTipo,
+      categoria: dbCategoria,
+      parcelaAtual: pAtual,
+      totalParcelas: pTotal,
+      nomeTerceiro: nome_terceiro || null,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/lancamentos/:id', async (req, res) => {
+  try {
+    await repo.deleteLancamento(req.session.user.id, req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.patch('/api/lancamentos/:id/status', async (req, res) => {
+  try {
+    await repo.updateStatus(req.session.user.id, req.params.id, req.body.status);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
