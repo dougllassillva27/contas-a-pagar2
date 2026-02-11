@@ -15,23 +15,34 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Configuração de Sessão (Na nuvem, isso reseta se o servidor reiniciar)
 app.use(
   session({
     secret: 'segredo-financeiro-dodo-2026',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: { secure: false }, // Mude para true se tiver HTTPS configurado com proxy, mas false funciona bem no Render free
   })
 );
 
-// FUNÇÃO SEGURA PARA VALORES
+// Função auxiliar para garantir números
 const parseValor = (v) => {
   if (!v) return 0.0;
   const str = String(v);
   return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
 };
 
-// --- ROTAS DE AUTENTICAÇÃO ---
+// --- MIDDLEWARE DE PROTEÇÃO (CORRIGIDO: SEM AUTO-LOGIN) ---
+async function authMiddleware(req, res, next) {
+  // Se já tem usuário na sessão, permite passar
+  if (req.session && req.session.user) {
+    return next();
+  }
+  // Se não tem, manda pro login (REMOVEU O BLOCO DE AUTO-LOGIN AQUI)
+  res.redirect('/login');
+}
+
+// --- ROTAS PÚBLICAS (LOGIN) ---
 app.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('login', { error: null });
@@ -41,12 +52,13 @@ app.post('/login', async (req, res) => {
   const { password } = req.body;
   if (password === SENHA_MESTRA) {
     try {
+      // Loga sempre como o usuário principal (ID 1 - Dodo) inicialmente
       const user = await repo.getUsuarioById(1);
       if (user) {
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
-      return res.render('login', { error: 'Usuário principal não encontrado!' });
+      return res.render('login', { error: 'Usuário principal não encontrado no banco!' });
     } catch (err) {
       return res.render('login', { error: 'Erro de banco: ' + err.message });
     }
@@ -60,22 +72,10 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-// Middleware
-async function authMiddleware(req, res, next) {
-  if (req.session && req.session.user) return next();
-  try {
-    const dodo = await repo.getUsuarioById(1);
-    if (dodo) {
-      req.session.user = { id: dodo.id, nome: dodo.nome, login: dodo.login };
-      req.session.authenticated = true;
-      return next();
-    }
-  } catch (err) {
-    console.error('Erro AutoLogin:', err);
-  }
-  res.redirect('/login');
-}
+// Aplica a proteção em todas as rotas abaixo
 app.use(authMiddleware);
+
+// --- ROTAS PROTEGIDAS ---
 
 app.get('/switch/:id', async (req, res) => {
   try {
@@ -102,13 +102,15 @@ app.get('/relatorio', async (req, res) => {
     const itens = await repo.getRelatorioMensal(userId, mes, ano);
 
     const agrupado = {};
+    // Garante que o dono aparece
     agrupado[userName] = { itens: [], total: 0 };
 
     itens.forEach((item) => {
       const pessoa = item.nometerceiro || userName;
       if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
+
       agrupado[pessoa].itens.push(item);
-      // CORREÇÃO CRÍTICA: Number() para evitar concatenação
+      // CORREÇÃO: Garante que é número antes de somar
       agrupado[pessoa].total += Number(item.valor);
     });
 
@@ -121,7 +123,8 @@ app.get('/relatorio', async (req, res) => {
       mes: nomeMes,
       ano: ano,
       titulo: `Relatório - ${nomeMes} ${ano}`,
-      totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0), // CORREÇÃO CRÍTICA
+      // CORREÇÃO: Soma segura
+      totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0),
     });
   } catch (err) {
     res.status(500).send('Erro relatório: ' + err.message);
@@ -132,6 +135,7 @@ app.get('/', async (req, res) => {
   try {
     const userId = req.session.user.id;
     const userName = req.session.user.nome;
+
     const hoje = new Date();
     let mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
     let ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
@@ -155,11 +159,11 @@ app.get('/', async (req, res) => {
         terceirosMap[nome] = { nome: nome, totalCartao: 0, itensCartao: [], itensFixas: [], totalFixas: 0, totalGeral: 0 };
       }
       if (item.status === 'PENDENTE') {
-        // CORREÇÃO CRÍTICA: Number() para evitar concatenação de texto
-        const val = Number(item.valor);
-        terceirosMap[nome].totalGeral += val;
-        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += val;
-        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += val;
+        // CORREÇÃO: Converte para Number para evitar concatenação de string
+        const valorNumerico = Number(item.valor);
+        terceirosMap[nome].totalGeral += valorNumerico;
+        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += valorNumerico;
+        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += valorNumerico;
       }
       if (item.tipo === 'FIXA') terceirosMap[nome].itensFixas.push(item);
       else if (item.tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);
@@ -368,4 +372,4 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
+app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
