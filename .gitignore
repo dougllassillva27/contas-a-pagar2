@@ -6,3 +6,4 @@ service.log
 migrate.js
 db.js
 postgre_conection.md
+reverse-migrate.sql
