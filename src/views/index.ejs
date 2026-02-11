@@ -66,8 +66,9 @@
         <div class="card" onclick="abrirModalRendasDetalhes()" style="position: relative;">
             <span class="material-icons card-icon-eye" id="iconEyeRendas" onclick="toggleRendas(event)">visibility</span>
             <h3>Total de Rendas</h3>
-            <p class="valor azul" id="valorRendas">R$ <%= totais.totalrendas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            <p class="valor azul" id="valorRendas">R$ <%= Number(totais.totalrendas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
             <script>
+                // Garante que o blur seja aplicado visualmente se necessário
                 if (localStorage.getItem('hideRendas') === 'true') {
                     const el = document.getElementById('valorRendas');
                     const ic = document.getElementById('iconEyeRendas');
@@ -79,16 +80,16 @@
 
         <div class="card">
             <h3>Suas Contas</h3>
-            <p class="valor vermelho">R$ <%= totais.totalcontas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            <p class="valor vermelho">R$ <%= Number(totais.totalcontas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
         </div>
         <div class="card">
             <h3>Falta Pagar</h3>
-            <p class="valor laranja">R$ <%= totais.faltapagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            <p class="valor laranja">R$ <%= Number(totais.faltapagar).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
         </div>
         <div class="card">
             <h3>Seu Saldo</h3>
-            <p class="valor <%= totais.saldoprevisto < 0 ? 'vermelho' : 'verde' %>">
-                R$ <%= totais.saldoprevisto.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+            <p class="valor <%= Number(totais.saldoprevisto) < 0 ? 'vermelho' : 'verde' %>">
+                R$ <%= Number(totais.saldoprevisto).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
             </p>
         </div>
     </section>
@@ -111,7 +112,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Contas Fixas</h2>
-                <span class="total-panel">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + i.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
                 <table class="list-table">
@@ -121,9 +122,9 @@
                             <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
                             <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
                             <td><%= item.descricao %></td>
-                            <td class="text-right">R$ <%= item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                            <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                             <td class="actions">
-                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
+                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
                                 <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                             </td>
                         </tr>
@@ -136,7 +137,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Suas Contas Cartão</h2>
-                <span class="total-panel vermelho">R$ <%= cartao.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + i.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel vermelho">R$ <%= cartao.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
                 <table class="list-table">
@@ -153,9 +154,9 @@
                                     </small>
                                 <% } %>
                             </td>
-                            <td class="text-right">R$ <%= item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                            <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                             <td class="actions">
-                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
+                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
                                 <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                             </td>
                         </tr>
@@ -168,14 +169,14 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Cartão de Crédito</h2>
-                <span class="total-panel azul">R$ <%= resumoPessoas.reduce((acc, i) => acc + i.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel azul">R$ <%= resumoPessoas.reduce((acc, i) => acc + Number(i.total), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
 
             <div class="app-compare-wrapper">
                 <span class="app-compare-label">Cartão de Crédito - APP:</span>
                 <input type="text" 
                        class="app-compare-input" 
-                       value="R$ <%= faturaManual.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>" 
+                       value="R$ <%= Number(faturaManual).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>" 
                        onblur="salvarFaturaManual(this)"
                        onfocus="limparMascara(this)"
                        onkeypress="handleEnterFatura(event, this)">
@@ -202,7 +203,7 @@
                                        style="transform: scale(0.8); vertical-align: middle;"> Marcar todas
                             </td>
                             <td class="text-right" style="font-weight: bold; color: var(--red);">
-                                R$ <%= pessoa.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                R$ <%= Number(pessoa.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
                             </td>
                         </tr>
                         <% }) %>
@@ -225,14 +226,14 @@
                             <span class="material-icons" style="font-size:18px; color:var(--text-secondary);">drag_indicator</span>
                             <h2 style="color: var(--text-primary);"><%= pessoa.nome %></h2>
                         </div>
-                        <span class="header-total-mes">Total do mês: <span>R$ <%= pessoa.totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></span>
+                        <span class="header-total-mes">Total do mês: <span>R$ <%= Number(pessoa.totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></span>
                     </div>
 
                     <div style="background: rgba(56, 120, 225, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <small style="color: var(--blue); font-weight: bold; text-transform: uppercase; font-size: 0.75rem;">Total Cartão</small>
                             <div style="font-size: 1.4rem; font-weight: bold; color: var(--text-primary);">
-                                R$ <%= pessoa.totalCartao.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                R$ <%= Number(pessoa.totalCartao).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
                             </div>
                         </div>
                         <button class="btn-secondary" style="border: none; background: rgba(0,0,0,0.2);" 
@@ -244,7 +245,7 @@
                     <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="font-size: 0.9rem; color: var(--text-secondary);">Contas Fixas</h3>
                         <span style="font-size: 0.9rem; font-weight: bold; color: var(--red);">
-                            R$ <%= pessoa.totalFixas.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                            R$ <%= Number(pessoa.totalFixas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
                         </span>
                     </div>
 
@@ -259,9 +260,9 @@
                                         <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
                                         <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
                                         <td><%= item.descricao %></td>
-                                        <td class="text-right">R$ <%= item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                                        <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                         <td class="actions">
-                                            <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, '<%= pessoa.nome %>')">edit</span>
+                                            <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, '<%= pessoa.nome %>')">edit</span>
                                             <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                                         </td>
                                     </tr>
@@ -274,6 +275,29 @@
             <% }) %>
         </div>
     <% } %>
+
+    <div class="modal-overlay confirm-overlay" id="modalAviso">
+        <div class="modal-box" style="max-width:400px;text-align:center;">
+            <span class="material-icons" style="font-size:48px;color:var(--blue);margin-bottom:15px;">info</span>
+            <h2 id="msgAvisoTitulo">Aviso</h2>
+            <p id="msgAvisoTexto" style="color:var(--text-secondary);margin:10px 0 20px;">Mensagem...</p>
+            <div class="confirm-actions" style="justify-content:center;">
+                <button class="btn-primary" onclick="fecharModalAviso()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay confirm-overlay" id="modalConfirmacaoAcao">
+        <div class="modal-box" style="max-width:400px;text-align:center;">
+            <span class="material-icons" id="iconConfirmacao" style="font-size:48px;color:var(--orange);margin-bottom:15px;">help</span>
+            <h2 id="tituloConfirmacao">Tem certeza?</h2>
+            <p id="textoConfirmacao" style="color:var(--text-secondary);margin:10px 0 20px;">...</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="fecharConfirmacaoAcao()">Cancelar</button>
+                <button class="btn-primary" id="btnConfirmarAcao">Sim, Confirmar</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="modalAdicionar">
         <div class="modal-box">
@@ -326,29 +350,6 @@
             </div>
             <div class="scroll-wrapper modal-scroll"> 
                 <table class="list-table"><tbody class="drag-container" id="listaCartaoPessoaConteudo"></tbody></table>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay confirm-overlay" id="modalAviso">
-        <div class="modal-box" style="max-width:400px;text-align:center;">
-            <span class="material-icons" style="font-size:48px;color:var(--blue);margin-bottom:15px;">info</span>
-            <h2 id="msgAvisoTitulo">Aviso</h2>
-            <p id="msgAvisoTexto" style="color:var(--text-secondary);margin:10px 0 20px;">Mensagem...</p>
-            <div class="confirm-actions" style="justify-content:center;">
-                <button class="btn-primary" onclick="fecharModalAviso()">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay confirm-overlay" id="modalConfirmacaoAcao">
-        <div class="modal-box" style="max-width:400px;text-align:center;">
-            <span class="material-icons" id="iconConfirmacao" style="font-size:48px;color:var(--orange);margin-bottom:15px;">help</span>
-            <h2 id="tituloConfirmacao">Tem certeza?</h2>
-            <p id="textoConfirmacao" style="color:var(--text-secondary);margin:10px 0 20px;">...</p>
-            <div class="confirm-actions">
-                <button class="btn-cancel" onclick="fecharConfirmacaoAcao()">Cancelar</button>
-                <button class="btn-primary" id="btnConfirmarAcao">Sim, Confirmar</button>
             </div>
         </div>
     </div>
@@ -581,13 +582,13 @@
                 const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`); 
                 const itens = await res.json(); 
                 
-                const total = itens.reduce((acc, item) => acc + item.valor, 0);
+                const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
                 document.getElementById('totalModalCartao').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
 
                 if (itens.length === 0) { container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum lançamento.</td></tr>'; return; } 
                 let html = ''; 
                 itens.forEach(item => { 
-                    const v = item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
+                    const v = Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
                     const safeDesc = item.descricao.replace(/'/g, "\\'"); 
                     const pAtual = item.parcelaatual || ''; 
                     const pTotal = item.totalparcelas || ''; 
@@ -601,7 +602,7 @@
             } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar.</td></tr>'; } 
         }
         
-        async function abrirModalRendasDetalhes() { document.getElementById('modalRendasDetalhes').classList.add('active'); const c = document.getElementById('listaRendasConteudo'); const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); const d = await res.json(); let h = ''; d.forEach(r => { const v = r.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}); const safeDesc = r.descricao.replace(/'/g, "\\'"); h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; }); c.innerHTML = h || 'Vazio'; }
+        async function abrirModalRendasDetalhes() { document.getElementById('modalRendasDetalhes').classList.add('active'); const c = document.getElementById('listaRendasConteudo'); const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); const d = await res.json(); let h = ''; d.forEach(r => { const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); const safeDesc = r.descricao.replace(/'/g, "\\'"); h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; }); c.innerHTML = h || 'Vazio'; }
         
         async function enviarLancamento(e, tipoTransacao) { 
             e.preventDefault(); 
