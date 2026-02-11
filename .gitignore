@@ -4,3 +4,4 @@ Single user/
 nssm.exe
 service.log
 migrate.js
+db.js
