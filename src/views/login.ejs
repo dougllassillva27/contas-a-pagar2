@@ -4,29 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - Gestão Financeira</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico?v=1"/> 
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=1"/>    
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="login-body">
 
     <div class="login-container">
-        <div class="card login-card">
-            <h1 style="margin-bottom: 20px; font-size: 1.5rem;">Acesso Restrito</h1>
+        <div class="login-card">
             
+            <div class="login-icon">
+                <span class="material-icons">lock</span>
+            </div>
+
+            <h2>Bem-vindo de volta</h2>
+            <span class="login-subtitle">Gerencie suas finanças com segurança</span>
+
             <% if (error) { %>
-                <div style="background: rgba(239, 83, 80, 0.1); color: var(--red); padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; border: 1px solid var(--red);">
+                <div class="error-msg">
+                    <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">error</span>
                     <%= error %>
                 </div>
             <% } %>
 
-            <form action="/login" method="POST">
+            <form action="/login" method="POST" class="login-form">
                 <div class="form-group">
-                    <label>Senha Mestra</label>
-                    <input type="password" name="password" class="form-input" placeholder="Digite a senha..." required autofocus>
+                    <label for="password">Digite sua senha de acesso</label>
+                    <input type="password" name="password" id="password" class="login-input" placeholder="••••••••" required autofocus>
                 </div>
-                <button type="submit" class="btn-primary form-btn">Entrar</button>
+                <button type="submit" class="login-btn">Entrar no Sistema</button>
             </form>
+
+            <div class="login-footer">
+                &copy; <%= new Date().getFullYear() %> Gestão Financeira • Acesso Seguro
+            </div>
         </div>
     </div>
 
