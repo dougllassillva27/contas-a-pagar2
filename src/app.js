@@ -1,4 +1,4 @@
-// CARREGA VARIÁVEIS DE AMBIENTE (.env)
+// CARREGA VARIÁVEIS DE AMBIENTE
 require('dotenv').config();
 
 const express = require('express');
@@ -10,8 +10,9 @@ const repo = require('./repositories/FinanceiroRepository');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// LÊ A SENHA DO .ENV (OU USA UMA PADRÃO SE NÃO ACHAR)
-const SENHA_MESTRA = process.env.SENHA_MESTRA || 'senha_padrao_insegura';
+// LÊ A SENHA DO .ENV E REMOVE ESPAÇOS EM BRANCO (.trim())
+// Isso garante que espaços acidentais não quebrem o login
+const SENHA_MESTRA = (process.env.SENHA_MESTRA || 'senha_padrao_insegura').trim();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -20,24 +21,23 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Configuração de Sessão
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: { secure: false }, // Em produção com HTTPS real, o ideal seria true, mas no free tier false evita problemas
   })
 );
 
-// Função auxiliar para garantir números
+// Função auxiliar para tratamento de valores
 const parseValor = (v) => {
   if (!v) return 0.0;
   const str = String(v);
   return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
 };
 
-// --- MIDDLEWARE DE PROTEÇÃO ---
+// --- MIDDLEWARE DE PROTEÇÃO (SEM AUTO-LOGIN) ---
 async function authMiddleware(req, res, next) {
   if (req.session && req.session.user) {
     return next();
@@ -52,27 +52,27 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-  const { password } = req.body;
+  // Pega a senha e remove espaços das pontas
+  const passwordDigitada = (req.body.password || '').trim();
 
-  // --- ADICIONE ESTAS 2 LINHAS PARA TESTAR ---
-  console.log('Senha digitada:', password);
-  console.log('Senha esperada pelo sistema:', SENHA_MESTRA);
-  // -------------------------------------------
-
-  // COMPARA COM A VARIÁVEL DE AMBIENTE
-  if (password === SENHA_MESTRA) {
+  // COMPARAÇÃO SEGURA
+  if (passwordDigitada === SENHA_MESTRA) {
     try {
       const user = await repo.getUsuarioById(1);
       if (user) {
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
-      return res.render('login', { error: 'Usuário principal não encontrado no banco!' });
+      return res.render('login', { error: 'Usuário principal não encontrado no banco de dados!' });
     } catch (err) {
-      return res.render('login', { error: 'Erro de banco: ' + err.message });
+      console.error('Erro Login:', err);
+      return res.render('login', { error: 'Erro de conexão com o banco.' });
     }
   } else {
-    res.render('login', { error: 'Senha incorreta!' });
+    // Delay artificial para evitar Brute Force (opcional, mas boa prática)
+    setTimeout(() => {
+      res.render('login', { error: 'Senha incorreta!' });
+    }, 500);
   }
 });
 
@@ -133,7 +133,8 @@ app.get('/relatorio', async (req, res) => {
       totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0),
     });
   } catch (err) {
-    res.status(500).send('Erro relatório: ' + err.message);
+    console.error('Erro Relatório:', err);
+    res.status(500).send('Erro ao gerar relatório.');
   }
 });
 
@@ -165,10 +166,10 @@ app.get('/', async (req, res) => {
         terceirosMap[nome] = { nome: nome, totalCartao: 0, itensCartao: [], itensFixas: [], totalFixas: 0, totalGeral: 0 };
       }
       if (item.status === 'PENDENTE') {
-        const valorNumerico = Number(item.valor);
-        terceirosMap[nome].totalGeral += valorNumerico;
-        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += valorNumerico;
-        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += valorNumerico;
+        const val = Number(item.valor);
+        terceirosMap[nome].totalGeral += val;
+        if (item.tipo === 'CARTAO') terceirosMap[nome].totalCartao += val;
+        else if (item.tipo === 'FIXA') terceirosMap[nome].totalFixas += val;
       }
       if (item.tipo === 'FIXA') terceirosMap[nome].itensFixas.push(item);
       else if (item.tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);
@@ -200,7 +201,8 @@ app.get('/', async (req, res) => {
       faturaManual: faturaManualVal,
     });
   } catch (err) {
-    res.status(500).send('Erro dashboard: ' + err.message);
+    console.error('Erro Dashboard:', err);
+    res.status(500).send('Erro ao carregar dashboard.');
   }
 });
 
@@ -377,4 +379,4 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
+app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
