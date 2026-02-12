@@ -54,6 +54,11 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
   const { password } = req.body;
 
+  // --- ADICIONE ESTAS 2 LINHAS PARA TESTAR ---
+  console.log('Senha digitada:', password);
+  console.log('Senha esperada pelo sistema:', SENHA_MESTRA);
+  // -------------------------------------------
+
   // COMPARA COM A VARIÁVEL DE AMBIENTE
   if (password === SENHA_MESTRA) {
     try {
