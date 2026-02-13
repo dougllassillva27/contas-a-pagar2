@@ -49,6 +49,11 @@ body {
   padding: 30px;
 }
 
+/* --- CORREÇÃO DO SCROLL (TRAVAR FUNDO) --- */
+body.no-scroll {
+  overflow: hidden; /* Isso impede que a página atrás do modal role */
+}
+
 /* Tipografia */
 h1,
 h2,
