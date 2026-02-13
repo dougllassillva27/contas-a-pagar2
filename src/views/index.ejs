@@ -390,8 +390,56 @@
         const currentMonth = <%= nav.atual.month %>;
         const currentYear = <%= nav.atual.year %>;
 
+        // --- SISTEMA DE CONTROLE DE MODAL (HISTORY API & SCROLL LOCK) ---
+        let isBackNavigation = false;
+
+        // Função para abrir modal: Trava scroll e cria histórico
+        function registerModalOpen() {
+            document.body.classList.add('no-scroll');
+            // Empurra um estado no histórico para habilitar o botão "Voltar"
+            history.pushState({ modal: true }, '', '');
+        }
+
+        // Função para fechar modal: Libera scroll e limpa histórico
+        function handleModalClose() {
+            document.body.classList.remove('no-scroll');
+            // Se NÃO foi clicado no botão voltar (foi no X ou fora), removemos o estado do histórico manualmente
+            if (!isBackNavigation && history.state && history.state.modal) {
+                history.back();
+            }
+        }
+
+        // Ouvinte do botão "Voltar" do navegador/celular
+        window.addEventListener('popstate', () => {
+            const activeModal = document.querySelector('.modal-overlay.active');
+            if (activeModal) {
+                isBackNavigation = true; // Marca que veio do botão voltar
+                // Descobre qual modal fechar
+                if (activeModal.id === 'modalConfirmar') fecharConfirmacao();
+                else if (activeModal.id === 'modalAviso') fecharModalAviso();
+                else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
+                else fecharModais();
+                isBackNavigation = false; // Reseta a flag
+            }
+        });
+
+        // Ouvinte da tecla ESC (PC)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const activeModal = document.querySelector('.modal-overlay.active');
+                if (activeModal) {
+                    if (activeModal.id === 'modalConfirmar') fecharConfirmacao();
+                    else if (activeModal.id === 'modalAviso') fecharModalAviso();
+                    else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
+                    else fecharModais();
+                }
+            }
+        });
+
+        // --- FUNÇÕES DE ABERTURA (ATUALIZADAS COM registerModalOpen) ---
+        
         async function abrirModalUltimas() {
-            document.body.classList.add('no-scroll'); // TRAVAR SCROLL
+            registerModalOpen(); // ADD
             document.getElementById('modalUltimasContas').classList.add('active');
             const tbody = document.getElementById('listaUltimasConteudo');
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Carregando...</td></tr>';
@@ -413,58 +461,8 @@
             } catch (err) { console.error(err); tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--red);">Erro ao carregar dados.</td></tr>'; }
         }
 
-        // --- FUNÇÃO PARA ESCONDER/MOSTRAR RENDAS ---
-        function toggleRendas(event) {
-            if(event) event.stopPropagation();
-            const icon = document.getElementById('iconEyeRendas');
-            const html = document.documentElement;
-            
-            if (html.classList.contains('hide-rendas-mode')) {
-                html.classList.remove('hide-rendas-mode');
-                icon.innerText = 'visibility';
-                localStorage.setItem('hideRendas', 'false');
-            } else {
-                html.classList.add('hide-rendas-mode');
-                icon.innerText = 'visibility_off';
-                localStorage.setItem('hideRendas', 'true');
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('hideRendas') === 'true') {
-                const icon = document.getElementById('iconEyeRendas');
-                if(icon) icon.innerText = 'visibility_off';
-            }
-            initDragAndDrop();
-            initCardDragAndDrop();
-        });
-
-        function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
-        function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
-        async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { console.error("❌ ERRO FATURA MANUAL:", data); mostrarAviso("Erro", "Erro ao salvar fatura: " + data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error("❌ ERRO REDE FATURA:", err); } }
-        
-        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
-        async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error("Erro cards:", err); } }
-        
-        function mostrarAviso(titulo, msg) { document.body.classList.add('no-scroll'); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
-        function fecharModalAviso() { document.body.classList.remove('no-scroll'); document.getElementById('modalAviso').classList.remove('active'); }
-        let acaoConfirmadaCallback = null;
-        function abrirConfirmacaoAcao(tipo) { document.body.classList.add('no-scroll'); const modal = document.getElementById('modalConfirmacaoAcao'); const titulo = document.getElementById('tituloConfirmacao'); const texto = document.getElementById('textoConfirmacao'); const btn = document.getElementById('btnConfirmarAcao'); const icon = document.getElementById('iconConfirmacao'); if (tipo === 'COPIAR') { titulo.innerText = "Copiar Contas"; texto.innerText = "Isso copiará todas as contas fixas, rendas e parceladas para o próximo mês. Deseja continuar?"; btn.innerText = "Sim, Copiar"; btn.style.backgroundColor = "var(--blue)"; icon.style.color = "var(--blue)"; icon.innerText = "content_copy"; acaoConfirmadaCallback = executarCopia; } else if (tipo === 'DELETAR') { titulo.innerText = "Limpar Mês"; texto.innerText = "ATENÇÃO: Isso apagará TODOS os lançamentos deste mês permanentemente. Tem certeza?"; btn.innerText = "Sim, Apagar Tudo"; btn.style.backgroundColor = "var(--red)"; icon.style.color = "var(--red)"; icon.innerText = "warning"; acaoConfirmadaCallback = executarDeleteMes; } modal.classList.add('active'); }
-        function fecharConfirmacaoAcao() { document.body.classList.remove('no-scroll'); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
-        document.getElementById('btnConfirmarAcao').onclick = function() { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
-        function fazerBackup() { window.location.href = '/api/backup'; }
-        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); const data = await res.json(); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } else { console.error("❌ ERRO COPIAR:", data); mostrarAviso("Erro", "Erro ao copiar: " + (data.error || "Desconhecido")); } } catch(err) { console.error("❌ ERRO REDE COPIAR:", err); mostrarAviso("Erro", "Falha na comunicação."); } }
-        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); const data = await res.json(); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } else { console.error("❌ ERRO DELETAR:", data); mostrarAviso("Erro", "Erro ao deletar: " + (data.error || "Desconhecido")); } } catch(err) { console.error("❌ ERRO REDE DELETAR:", err); mostrarAviso("Erro", "Falha na comunicação."); } }
-        async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erro desconhecido"); window.location.reload(); } catch (err) { console.error("❌ ERRO STATUS:", err); mostrarAviso("Erro", "Erro ao atualizar status"); checkbox.checked = !checkbox.checked; } }
-        async function alternarStatusPessoa(checkbox, pessoa) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch('/api/lancamentos/status-pessoa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pessoa: pessoa, status: novoStatus, month: currentMonth, year: currentYear }) }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erro desconhecido"); window.location.reload(); } catch (err) { console.error("❌ ERRO STATUS LOTE:", err); mostrarAviso("Erro", "Erro ao atualizar lote"); checkbox.checked = !checkbox.checked; } }
-        function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
-        function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
-        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
-        function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
-        function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
-        
         async function abrirModalCartaoPessoa(pessoa) { 
-            document.body.classList.add('no-scroll'); // TRAVAR SCROLL
+            registerModalOpen(); // ADD
             document.getElementById('modalDetalhesCartao').classList.add('active'); 
             document.getElementById('tituloModalCartao').innerText = `Cartão - ${pessoa}`; 
             document.getElementById('totalModalCartao').innerText = ""; 
@@ -492,48 +490,25 @@
             } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar.</td></tr>'; } 
         }
         
-        async function abrirModalRendasDetalhes() { document.body.classList.add('no-scroll'); document.getElementById('modalRendasDetalhes').classList.add('active'); const c = document.getElementById('listaRendasConteudo'); const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); const d = await res.json(); let h = ''; d.forEach(r => { const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); const safeDesc = r.descricao.replace(/'/g, "\\'"); h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; }); c.innerHTML = h || 'Vazio'; }
-        
-        async function enviarLancamento(e, tipoTransacao) { 
-            e.preventDefault(); 
-            const form = e.target; 
-            const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; 
-            const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; 
-            if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } 
-            
-            try { 
-                let url = '/api/lancamentos'; 
-                let method = 'POST'; 
-                if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } 
-                
-                const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); 
-                const data = await res.json(); // Pega a resposta JSON
-
-                if(res.ok) {
-                    window.location.reload(); 
-                } else {
-                    console.group("❌ ERRO NO SERVIDOR DETALHADO");
-                    console.error("Status:", res.status);
-                    console.error("Mensagem:", data.error);
-                    console.error("Dados enviados:", dados);
-                    console.groupEnd();
-                    mostrarAviso("Erro", 'Ocorreu um erro ao salvar.\n\nDetalhe técnico: ' + data.error); 
-                }
-            } catch(err) { 
-                console.error("❌ ERRO DE REDE/FETCH:", err); 
-            } 
+        async function abrirModalRendasDetalhes() { 
+            registerModalOpen(); // ADD
+            document.getElementById('modalRendasDetalhes').classList.add('active'); 
+            const c = document.getElementById('listaRendasConteudo'); 
+            const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); 
+            const d = await res.json(); 
+            let h = ''; 
+            d.forEach(r => { 
+                const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
+                const safeDesc = r.descricao.replace(/'/g, "\\'"); 
+                h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; 
+            }); 
+            c.innerHTML = h || 'Vazio'; 
         }
 
-        function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) { document.getElementById('modalDetalhesCartao').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Conta"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colRenda').style.display = 'none'; document.getElementById('colConta').style.display = 'block'; document.getElementById('tituloConta').innerText = "Editar Dados"; document.getElementById('btnSalvarConta').innerText = "Salvar Alterações"; document.getElementById('contaId').value = id; document.getElementById('contaDesc').value = desc; document.getElementById('contaValor').value = valor; document.getElementById('contaTipo').value = tipo; document.getElementById('contaTerceiro').value = (nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined') ? nomeTerceiro : ''; if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2,'0') + '/' + String(pTotal).padStart(2,'0'); else document.getElementById('contaParcelas').value = ''; toggleParcelas(); modal.classList.add('active'); }
-        function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
-        function fecharModais() { 
-            document.body.classList.remove('no-scroll'); // LIBERAR SCROLL
-            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); 
-            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; document.getElementById('tituloRenda').innerText = "Nova Renda"; document.getElementById('tituloConta').innerText = "Nova Conta"; document.getElementById('btnSalvarRenda').innerText = "+ Adicionar Renda"; document.getElementById('btnSalvarConta').innerText = "+ Adicionar Conta"; toggleParcelas(); }, 300); 
-        }
         function abrirModalAdicionar() { 
-            fecharModais(); 
-            document.body.classList.add('no-scroll'); // TRAVAR SCROLL
+            // Fecha outros possíveis modais antes para evitar conflito de histórico
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            registerModalOpen(); // ADD
             document.getElementById('formRenda').reset(); 
             document.getElementById('formConta').reset(); 
             document.getElementById('rendaId').value = ""; 
@@ -544,13 +519,108 @@
             document.getElementById('modalAdicionar').classList.add('active');
             setTimeout(() => { document.getElementById('contaDesc').focus(); }, 100);
         }
+
+        function abrirConfirmacaoAcao(tipo) { 
+            registerModalOpen(); // ADD
+            const modal = document.getElementById('modalConfirmacaoAcao'); const titulo = document.getElementById('tituloConfirmacao'); const texto = document.getElementById('textoConfirmacao'); const btn = document.getElementById('btnConfirmarAcao'); const icon = document.getElementById('iconConfirmacao'); 
+            if (tipo === 'COPIAR') { titulo.innerText = "Copiar Contas"; texto.innerText = "Isso copiará todas as contas fixas, rendas e parceladas para o próximo mês. Deseja continuar?"; btn.innerText = "Sim, Copiar"; btn.style.backgroundColor = "var(--blue)"; icon.style.color = "var(--blue)"; icon.innerText = "content_copy"; acaoConfirmadaCallback = executarCopia; } 
+            else if (tipo === 'DELETAR') { titulo.innerText = "Limpar Mês"; texto.innerText = "ATENÇÃO: Isso apagará TODOS os lançamentos deste mês permanentemente. Tem certeza?"; btn.innerText = "Sim, Apagar Tudo"; btn.style.backgroundColor = "var(--red)"; icon.style.color = "var(--red)"; icon.innerText = "warning"; acaoConfirmadaCallback = executarDeleteMes; } 
+            modal.classList.add('active'); 
+        }
+
+        function mostrarAviso(titulo, msg) { 
+            registerModalOpen(); // ADD
+            document.getElementById('msgAvisoTitulo').innerText = titulo; 
+            document.getElementById('msgAvisoTexto').innerText = msg; 
+            document.getElementById('modalAviso').classList.add('active'); 
+        }
+
+        function confirmarExclusao(id) { 
+            registerModalOpen(); // ADD
+            idExcluir = id; 
+            document.getElementById('modalConfirmar').classList.add('active'); 
+        }
+
+        // --- FUNÇÕES DE FECHAMENTO (ATUALIZADAS COM handleModalClose) ---
+
+        function fecharModais() { 
+            handleModalClose(); // ADD
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); 
+            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; document.getElementById('tituloRenda').innerText = "Nova Renda"; document.getElementById('tituloConta').innerText = "Nova Conta"; document.getElementById('btnSalvarRenda').innerText = "+ Adicionar Renda"; document.getElementById('btnSalvarConta').innerText = "+ Adicionar Conta"; toggleParcelas(); }, 300); 
+        }
+
+        function fecharModalAviso() { 
+            handleModalClose(); // ADD
+            document.getElementById('modalAviso').classList.remove('active'); 
+        }
+
+        function fecharConfirmacaoAcao() { 
+            handleModalClose(); // ADD
+            document.getElementById('modalConfirmacaoAcao').classList.remove('active'); 
+            acaoConfirmadaCallback = null; 
+        }
+
+        function fecharConfirmacao() { 
+            handleModalClose(); // ADD
+            document.getElementById('modalConfirmar').classList.remove('active'); 
+        }
+
+        // --- OUTRAS FUNÇÕES AUXILIARES ---
+        function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) { document.getElementById('modalDetalhesCartao').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Conta"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colRenda').style.display = 'none'; document.getElementById('colConta').style.display = 'block'; document.getElementById('tituloConta').innerText = "Editar Dados"; document.getElementById('btnSalvarConta').innerText = "Salvar Alterações"; document.getElementById('contaId').value = id; document.getElementById('contaDesc').value = desc; document.getElementById('contaValor').value = valor; document.getElementById('contaTipo').value = tipo; document.getElementById('contaTerceiro').value = (nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined') ? nomeTerceiro : ''; if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2,'0') + '/' + String(pTotal).padStart(2,'0'); else document.getElementById('contaParcelas').value = ''; toggleParcelas(); modal.classList.add('active'); }
+        function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
+        
+        let acaoConfirmadaCallback = null;
+        document.getElementById('btnConfirmarAcao').onclick = function() { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
+        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); }
+        
+        // Listener unificado de cliques fora do modal
+        window.onclick = function(e) { 
+            if(e.target.classList.contains('modal-overlay')) { 
+                if(e.target.id == 'modalConfirmar') fecharConfirmacao();
+                else if(e.target.id == 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
+                else if(e.target.id == 'modalAviso') fecharModalAviso();
+                else fecharModais(); 
+            } 
+        }
+
+        // Funções de negócio (manter igual)
+        function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
+        window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
+        function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
+        function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
+        async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { console.error("❌ ERRO FATURA MANUAL:", data); mostrarAviso("Erro", "Erro ao salvar fatura: " + data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error("❌ ERRO REDE FATURA:", err); } }
+        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
+        async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error("Erro cards:", err); } }
+        function fazerBackup() { window.location.href = '/api/backup'; }
+        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); const data = await res.json(); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } else { console.error("❌ ERRO COPIAR:", data); mostrarAviso("Erro", "Erro ao copiar: " + (data.error || "Desconhecido")); } } catch(err) { console.error("❌ ERRO REDE COPIAR:", err); mostrarAviso("Erro", "Falha na comunicação."); } }
+        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); const data = await res.json(); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } else { console.error("❌ ERRO DELETAR:", data); mostrarAviso("Erro", "Erro ao deletar: " + (data.error || "Desconhecido")); } } catch(err) { console.error("❌ ERRO REDE DELETAR:", err); mostrarAviso("Erro", "Falha na comunicação."); } }
+        async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erro desconhecido"); window.location.reload(); } catch (err) { console.error("❌ ERRO STATUS:", err); mostrarAviso("Erro", "Erro ao atualizar status"); checkbox.checked = !checkbox.checked; } }
+        async function alternarStatusPessoa(checkbox, pessoa) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch('/api/lancamentos/status-pessoa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pessoa: pessoa, status: novoStatus, month: currentMonth, year: currentYear }) }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erro desconhecido"); window.location.reload(); } catch (err) { console.error("❌ ERRO STATUS LOTE:", err); mostrarAviso("Erro", "Erro ao atualizar lote"); checkbox.checked = !checkbox.checked; } }
+        function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
+        function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
+        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
+        function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
+        function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
+        
+        async function enviarLancamento(e, tipoTransacao) { 
+            e.preventDefault(); 
+            const form = e.target; 
+            const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; 
+            const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; 
+            if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } 
+            try { 
+                let url = '/api/lancamentos'; 
+                let method = 'POST'; 
+                if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } 
+                const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); 
+                const data = await res.json(); 
+                if(res.ok) { window.location.reload(); } 
+                else { mostrarAviso("Erro", 'Ocorreu um erro ao salvar.\n\nDetalhe técnico: ' + data.error); }
+            } catch(err) { console.error("❌ ERRO DE REDE/FETCH:", err); } 
+        }
         let timeout = null;
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
         let idExcluir = null;
-        function confirmarExclusao(id) { document.body.classList.add('no-scroll'); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
-        function fecharConfirmacao() { document.body.classList.remove('no-scroll'); document.getElementById('modalConfirmar').classList.remove('active'); }
-        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); }
-        window.onclick = function(e) { if(e.target.classList.contains('modal-overlay')) { if(e.target.id == 'modalConfirmar') fecharConfirmacao(); else fecharModais(); } }
     </script>
 </body>
 </html>
