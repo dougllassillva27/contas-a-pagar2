@@ -5,6 +5,7 @@ class FinanceiroRepository {
     this.initOrdemTable();
   }
 
+  // --- USUÁRIOS ---
   async obterUsuarioPorLogin(login) {
     try {
       const result = await db.query('SELECT * FROM Usuarios WHERE Login = $1', [login]);
@@ -38,6 +39,20 @@ class FinanceiroRepository {
     }
   }
 
+  // --- NOVA FUNCIONALIDADE: ÚLTIMOS LANÇAMENTOS ---
+  async getUltimosLancamentos(userId) {
+    // Busca os 20 últimos inseridos (maior ID) independentemente da data de vencimento
+    const query = `
+            SELECT * FROM Lancamentos 
+            WHERE UsuarioId = $1 
+            ORDER BY Id DESC 
+            LIMIT 20
+        `;
+    const result = await db.query(query, [userId]);
+    return result.rows;
+  }
+
+  // --- RELATÓRIO ---
   async getRelatorioMensal(userId, month, year) {
     const query = `
             SELECT * FROM Lancamentos 
@@ -54,10 +69,10 @@ class FinanceiroRepository {
     return result.rows;
   }
 
+  // --- FATURA MANUAL ---
   async getFaturaManual(userId, month, year) {
     try {
       const result = await db.query('SELECT Valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
-      // Garante retorno float
       return parseFloat(result.rows[0]?.valor) || 0;
     } catch (err) {
       return 0;
@@ -74,6 +89,7 @@ class FinanceiroRepository {
     }
   }
 
+  // --- ORDEM CARDS ---
   async getOrdemCards(userId) {
     const result = await db.query('SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC', [userId]);
     return result.rows;
@@ -96,7 +112,7 @@ class FinanceiroRepository {
     }
   }
 
-  // CORREÇÃO: Adicionado ::float para garantir numero
+  // --- DASHBOARD ---
   async getDashboardTotals(userId, month, year) {
     const query = `
             SELECT 
@@ -161,7 +177,6 @@ class FinanceiroRepository {
     return result.rows;
   }
 
-  // CORREÇÃO: Adicionado ::float
   async getResumoPessoas(userId, month, year, userName) {
     const query = `
             SELECT 
