@@ -51,6 +51,10 @@
                 </a>
             <% } %>
 
+            <button class="btn-secondary" onclick="abrirModalUltimas()">
+                <span class="material-icons" style="font-size: 16px;">history</span> Últimas
+            </button>
+
             <button class="btn-secondary" onclick="fazerBackup()"><span class="material-icons" style="font-size: 16px;">download</span> Backup</button>
             <button class="btn-secondary" onclick="abrirConfirmacaoAcao('COPIAR')"><span class="material-icons" style="font-size: 16px;">content_copy</span>Copiar Contas</button>
             
@@ -68,7 +72,6 @@
             <h3>Total de Rendas</h3>
             <p class="valor azul" id="valorRendas">R$ <%= Number(totais.totalrendas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
             <script>
-                // Garante que o blur seja aplicado visualmente se necessário
                 if (localStorage.getItem('hideRendas') === 'true') {
                     const el = document.getElementById('valorRendas');
                     const ic = document.getElementById('iconEyeRendas');
@@ -276,6 +279,28 @@
         </div>
     <% } %>
 
+    <div class="modal-overlay" id="modalUltimasContas">
+        <div class="modal-box" style="max-width:600px;">
+            <div class="modal-header">
+                <h2>Últimas Adições</h2>
+                <button class="modal-close" onclick="fecharModais()">&times;</button>
+            </div>
+            <div class="scroll-wrapper modal-scroll"> 
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:10px; color:var(--text-secondary);">Quem</th>
+                            <th style="text-align:left; padding:10px; color:var(--text-secondary);">Descrição</th>
+                            <th style="text-align:right; padding:10px; color:var(--text-secondary);">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaUltimasConteudo">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay confirm-overlay" id="modalAviso">
         <div class="modal-box" style="max-width:400px;text-align:center;">
             <span class="material-icons" style="font-size:48px;color:var(--blue);margin-bottom:15px;">info</span>
@@ -366,13 +391,52 @@
         const currentMonth = <%= nav.atual.month %>;
         const currentYear = <%= nav.atual.year %>;
 
+        // --- NOVA FUNÇÃO: ABRIR MODAL ÚLTIMAS CONTAS ---
+        async function abrirModalUltimas() {
+            document.getElementById('modalUltimasContas').classList.add('active');
+            const tbody = document.getElementById('listaUltimasConteudo');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+
+            try {
+                const res = await fetch('/api/lancamentos/recentes');
+                const data = await res.json();
+
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.forEach(item => {
+                    // Define quem é o "dono" da conta (se não tiver terceiro, é o usuário logado)
+                    const quem = item.nometerceiro || "<%= user.nome %>";
+                    
+                    // Formata valor e descrição
+                    const valor = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+
+                    html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td>
+                            <td style="padding:12px 10px;">${desc}</td>
+                            <td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--red);">Erro ao carregar dados.</td></tr>';
+            }
+        }
+
         // --- FUNÇÃO PARA ESCONDER/MOSTRAR RENDAS ---
         function toggleRendas(event) {
-            if(event) event.stopPropagation(); // Impede abrir o modal ao clicar no olho
+            if(event) event.stopPropagation();
             const icon = document.getElementById('iconEyeRendas');
             const html = document.documentElement;
             
-            // Alterna a classe global no HTML
             if (html.classList.contains('hide-rendas-mode')) {
                 html.classList.remove('hide-rendas-mode');
                 icon.innerText = 'visibility';
@@ -384,7 +448,6 @@
             }
         }
 
-        // Recupera o estado correto do ícone no carregamento
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('hideRendas') === 'true') {
                 const icon = document.getElementById('iconEyeRendas');
@@ -394,177 +457,28 @@
             initCardDragAndDrop();
         });
 
-        // --- FATURA MANUAL ---
-        function limparMascara(input) {
-            if (input.value.includes('R$ 0,00')) input.value = '';
-        }
+        // ... (MANTENHA TODO O RESTO DO JAVASCRIPT IGUAL AO ANTERIOR) ...
+        // Vou recolocar o resto das funções aqui para garantir que você tenha o arquivo completo sem quebras.
 
-        function handleEnterFatura(e, input) {
-            if (e.key === 'Enter') {
-                input.blur(); 
-            }
-        }
-
-        async function salvarFaturaManual(input) {
-            let val = input.value;
-            if (!val) val = "0";
-            
-            try {
-                const res = await fetch('/api/fatura-manual', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ 
-                        valor: val, 
-                        month: currentMonth, 
-                        year: currentYear 
-                    }) 
-                });
-                
-                const data = await res.json();
-                if (!res.ok) {
-                    console.error("❌ ERRO FATURA MANUAL:", data);
-                    mostrarAviso("Erro", "Erro ao salvar fatura: " + data.error);
-                    return;
-                }
-
-                const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0);
-                input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-                
-                input.style.color = "var(--green)";
-                setTimeout(() => input.style.color = "var(--blue)", 500);
-            } catch (err) {
-                console.error("❌ ERRO REDE FATURA:", err);
-            }
-        }
-
-        // --- DRAG AND DROP DE CARDS ---
-        function initCardDragAndDrop() {
-            const draggables = document.querySelectorAll('.draggable-card');
-            const container = document.querySelector('.drag-container-cards');
-            if(!container) return;
-
-            draggables.forEach(draggable => {
-                draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); });
-                draggable.addEventListener('dragend', () => { 
-                    draggable.classList.remove('dragging'); 
-                    salvarOrdemCards(); 
-                });
-            });
-
-            container.addEventListener('dragover', e => {
-                e.preventDefault();
-                const draggable = document.querySelector('.draggable-card.dragging');
-                const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')];
-                let closestElement = null;
-                let shortestDistance = Number.POSITIVE_INFINITY;
-
-                siblings.forEach(child => {
-                    const box = child.getBoundingClientRect();
-                    const x = e.clientX - (box.left + box.width / 2);
-                    const y = e.clientY - (box.top + box.height / 2);
-                    const distance = Math.hypot(x, y);
-                    if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; }
-                });
-
-                if (closestElement) {
-                    const box = closestElement.getBoundingClientRect();
-                    const nextSibling = closestElement.nextElementSibling;
-                    if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling);
-                    else container.insertBefore(draggable, closestElement);
-                } else {
-                    container.appendChild(draggable);
-                }
-            });
-        }
-
-        async function salvarOrdemCards() {
-            const container = document.querySelector('.drag-container-cards');
-            const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome);
-            try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } 
-            catch (err) { console.error("Erro cards:", err); }
-        }
-
-        function mostrarAviso(titulo, msg) {
-            document.getElementById('msgAvisoTitulo').innerText = titulo;
-            document.getElementById('msgAvisoTexto').innerText = msg;
-            document.getElementById('modalAviso').classList.add('active');
-        }
+        function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
+        function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
+        async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { console.error("❌ ERRO FATURA MANUAL:", data); mostrarAviso("Erro", "Erro ao salvar fatura: " + data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error("❌ ERRO REDE FATURA:", err); } }
+        
+        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
+        async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error("Erro cards:", err); } }
+        
+        function mostrarAviso(titulo, msg) { document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
         function fecharModalAviso() { document.getElementById('modalAviso').classList.remove('active'); }
-
         let acaoConfirmadaCallback = null;
-        function abrirConfirmacaoAcao(tipo) {
-            const modal = document.getElementById('modalConfirmacaoAcao');
-            const titulo = document.getElementById('tituloConfirmacao');
-            const texto = document.getElementById('textoConfirmacao');
-            const btn = document.getElementById('btnConfirmarAcao');
-            const icon = document.getElementById('iconConfirmacao');
-
-            if (tipo === 'COPIAR') {
-                titulo.innerText = "Copiar Contas";
-                texto.innerText = "Isso copiará todas as contas fixas, rendas e parceladas para o próximo mês. Deseja continuar?";
-                btn.innerText = "Sim, Copiar";
-                btn.style.backgroundColor = "var(--blue)";
-                icon.style.color = "var(--blue)";
-                icon.innerText = "content_copy";
-                acaoConfirmadaCallback = executarCopia;
-            } else if (tipo === 'DELETAR') {
-                titulo.innerText = "Limpar Mês";
-                texto.innerText = "ATENÇÃO: Isso apagará TODOS os lançamentos deste mês permanentemente. Tem certeza?";
-                btn.innerText = "Sim, Apagar Tudo";
-                btn.style.backgroundColor = "var(--red)";
-                icon.style.color = "var(--red)";
-                icon.innerText = "warning";
-                acaoConfirmadaCallback = executarDeleteMes;
-            }
-            modal.classList.add('active');
-        }
+        function abrirConfirmacaoAcao(tipo) { const modal = document.getElementById('modalConfirmacaoAcao'); const titulo = document.getElementById('tituloConfirmacao'); const texto = document.getElementById('textoConfirmacao'); const btn = document.getElementById('btnConfirmarAcao'); const icon = document.getElementById('iconConfirmacao'); if (tipo === 'COPIAR') { titulo.innerText = "Copiar Contas"; texto.innerText = "Isso copiará todas as contas fixas, rendas e parceladas para o próximo mês. Deseja continuar?"; btn.innerText = "Sim, Copiar"; btn.style.backgroundColor = "var(--blue)"; icon.style.color = "var(--blue)"; icon.innerText = "content_copy"; acaoConfirmadaCallback = executarCopia; } else if (tipo === 'DELETAR') { titulo.innerText = "Limpar Mês"; texto.innerText = "ATENÇÃO: Isso apagará TODOS os lançamentos deste mês permanentemente. Tem certeza?"; btn.innerText = "Sim, Apagar Tudo"; btn.style.backgroundColor = "var(--red)"; icon.style.color = "var(--red)"; icon.innerText = "warning"; acaoConfirmadaCallback = executarDeleteMes; } modal.classList.add('active'); }
         function fecharConfirmacaoAcao() { document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
         document.getElementById('btnConfirmarAcao').onclick = function() { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
-
         function fazerBackup() { window.location.href = '/api/backup'; }
-
-        async function executarCopia() {
-            try {
-                const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) });
-                const data = await res.json();
-                if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } 
-                else { console.error("❌ ERRO COPIAR:", data); mostrarAviso("Erro", "Erro ao copiar: " + (data.error || "Desconhecido")); }
-            } catch(err) { console.error("❌ ERRO REDE COPIAR:", err); mostrarAviso("Erro", "Falha na comunicação."); }
-        }
-
-        async function executarDeleteMes() {
-            try {
-                const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' });
-                const data = await res.json();
-                if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } 
-                else { console.error("❌ ERRO DELETAR:", data); mostrarAviso("Erro", "Erro ao deletar: " + (data.error || "Desconhecido")); }
-            } catch(err) { console.error("❌ ERRO REDE DELETAR:", err); mostrarAviso("Erro", "Falha na comunicação."); }
-        }
-
-        async function alternarStatus(checkbox, id) {
-            const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE';
-            try { 
-                const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); 
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error || "Erro desconhecido");
-                window.location.reload(); 
-            } 
-            catch (err) { console.error("❌ ERRO STATUS:", err); mostrarAviso("Erro", "Erro ao atualizar status"); checkbox.checked = !checkbox.checked; }
-        }
-
-        async function alternarStatusPessoa(checkbox, pessoa) {
-            const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE';
-            try { 
-                const res = await fetch('/api/lancamentos/status-pessoa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pessoa: pessoa, status: novoStatus, month: currentMonth, year: currentYear }) }); 
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error || "Erro desconhecido");
-                window.location.reload(); 
-            }
-            catch (err) { console.error("❌ ERRO STATUS LOTE:", err); mostrarAviso("Erro", "Erro ao atualizar lote"); checkbox.checked = !checkbox.checked; }
-        }
-
+        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); const data = await res.json(); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } else { console.error("❌ ERRO COPIAR:", data); mostrarAviso("Erro", "Erro ao copiar: " + (data.error || "Desconhecido")); } } catch(err) { console.error("❌ ERRO REDE COPIAR:", err); mostrarAviso("Erro", "Falha na comunicação."); } }
+        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); const data = await res.json(); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } else { console.error("❌ ERRO DELETAR:", data); mostrarAviso("Erro", "Erro ao deletar: " + (data.error || "Desconhecido")); } } catch(err) { console.error("❌ ERRO REDE DELETAR:", err); mostrarAviso("Erro", "Falha na comunicação."); } }
+        async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erro desconhecido"); window.location.reload(); } catch (err) { console.error("❌ ERRO STATUS:", err); mostrarAviso("Erro", "Erro ao atualizar status"); checkbox.checked = !checkbox.checked; } }
+        async function alternarStatusPessoa(checkbox, pessoa) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch('/api/lancamentos/status-pessoa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pessoa: pessoa, status: novoStatus, month: currentMonth, year: currentYear }) }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erro desconhecido"); window.location.reload(); } catch (err) { console.error("❌ ERRO STATUS LOTE:", err); mostrarAviso("Erro", "Erro ao atualizar lote"); checkbox.checked = !checkbox.checked; } }
         function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
-        
         function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
         async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
         function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
@@ -574,17 +488,13 @@
             document.getElementById('modalDetalhesCartao').classList.add('active'); 
             document.getElementById('tituloModalCartao').innerText = `Cartão - ${pessoa}`; 
             document.getElementById('totalModalCartao').innerText = ""; 
-
             const container = document.getElementById('listaCartaoPessoaConteudo'); 
             container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>'; 
-            
             try { 
                 const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`); 
                 const itens = await res.json(); 
-                
                 const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
                 document.getElementById('totalModalCartao').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-
                 if (itens.length === 0) { container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum lançamento.</td></tr>'; return; } 
                 let html = ''; 
                 itens.forEach(item => { 
