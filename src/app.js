@@ -382,4 +382,9 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
+if (require.main === module) {
+  // Só roda o servidor se o arquivo for chamado diretamente (node src/app.js)
+  app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+}
+
+module.exports = app; // Exporta para os testes usarem
