@@ -10,6 +10,7 @@ const repo = require('./repositories/FinanceiroRepository');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// LÊ A SENHA DO .ENV E REMOVE ESPAÇOS EM BRANCO (.trim())
 const SENHA_MESTRA = (process.env.SENHA_MESTRA || 'senha_padrao_insegura').trim();
 
 app.set('view engine', 'ejs');
@@ -24,17 +25,18 @@ app.use(
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: { secure: false }, // Em produção com HTTPS real, o ideal seria true, mas no free tier false evita problemas
   })
 );
 
+// Função auxiliar para tratamento de valores
 const parseValor = (v) => {
   if (!v) return 0.0;
   const str = String(v);
   return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
 };
 
-// --- MIDDLEWARE ---
+// --- MIDDLEWARE DE PROTEÇÃO (SEM AUTO-LOGIN) ---
 async function authMiddleware(req, res, next) {
   if (req.session && req.session.user) {
     return next();
@@ -42,15 +44,17 @@ async function authMiddleware(req, res, next) {
   res.redirect('/login');
 }
 
-// --- ROTAS DE LOGIN ---
+// --- ROTAS PÚBLICAS (LOGIN) ---
 app.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('login', { error: null });
 });
 
 app.post('/login', async (req, res) => {
+  // Pega a senha e remove espaços das pontas
   const passwordDigitada = (req.body.password || '').trim();
 
+  // COMPARAÇÃO SEGURA
   if (passwordDigitada === SENHA_MESTRA) {
     try {
       const user = await repo.getUsuarioById(1);
@@ -58,12 +62,13 @@ app.post('/login', async (req, res) => {
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
-      return res.render('login', { error: 'Usuário principal não encontrado.' });
+      return res.render('login', { error: 'Usuário principal não encontrado no banco de dados!' });
     } catch (err) {
-      console.error('Erro login:', err);
-      return res.render('login', { error: 'Erro de conexão com banco.' });
+      console.error('Erro Login:', err);
+      return res.render('login', { error: 'Erro de conexão com o banco.' });
     }
   } else {
+    // Delay artificial para evitar Brute Force
     setTimeout(() => {
       res.render('login', { error: 'Senha incorreta!' });
     }, 500);
@@ -75,6 +80,7 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+// Aplica a proteção em todas as rotas abaixo
 app.use(authMiddleware);
 
 // --- ROTAS PROTEGIDAS ---
@@ -109,6 +115,7 @@ app.get('/relatorio', async (req, res) => {
     itens.forEach((item) => {
       const pessoa = item.nometerceiro || userName;
       if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
+
       agrupado[pessoa].itens.push(item);
       agrupado[pessoa].total += Number(item.valor);
     });
@@ -125,7 +132,7 @@ app.get('/relatorio', async (req, res) => {
       totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0),
     });
   } catch (err) {
-    console.error('Erro relatório:', err);
+    console.error('Erro Relatório:', err);
     res.status(500).send('Erro ao gerar relatório.');
   }
 });
@@ -199,7 +206,7 @@ app.get('/', async (req, res) => {
 });
 
 // --- APIs GERAIS ---
-// NOVA ROTA: BUSCA OS ÚLTIMOS LANÇAMENTOS DO USUÁRIO
+// ROTA: ÚLTIMOS LANÇAMENTOS
 app.get('/api/lancamentos/recentes', async (req, res) => {
   try {
     const ultimos = await repo.getUltimosLancamentos(req.session.user.id);
@@ -382,9 +389,5 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-if (require.main === module) {
-  // Só roda o servidor se o arquivo for chamado diretamente (node src/app.js)
-  app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
-}
-
-module.exports = app; // Exporta para os testes usarem
+// INICIA O SERVIDOR (Versão Padrão)
+app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
