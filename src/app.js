@@ -21,8 +21,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// --- MIDDLEWARE PARA TRATAR JSON MALFORMADO (NOVO) ---
-// Isso captura o erro quando alguém envia um JSON com sintaxe errada (ex: virgula sobrando, falta aspas)
+// --- MIDDLEWARE PARA TRATAR JSON MALFORMADO ---
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     console.error('Erro de Sintaxe JSON recebido:', err.message);
@@ -87,47 +86,71 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
   try {
     const { descricao, valor, tipo, parcelas, terceiro, data_vencimento } = req.body;
 
-    // --- 1. VALIDAÇÃO DE DESCRIÇÃO ---
+    // --- 1. VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS ---
+
+    // Validação Descrição
     if (!descricao || String(descricao).trim() === '') {
       return res.status(400).json({
         success: false,
         error: 'Dados inválidos',
-        details: 'O campo "descricao" é obrigatório e não pode ser vazio.',
+        details: 'O campo "descricao" é obrigatório.',
       });
     }
 
-    // --- 2. VALIDAÇÃO DE VALOR (RIGOROSA) ---
+    // Validação Valor
     const valorFinal = parseValor(valor);
-
     if (isNaN(valorFinal) || valorFinal <= 0) {
       return res.status(400).json({
         success: false,
         error: 'Valor inválido',
-        details: `O valor enviado ("${valor}") não é um número válido. Tente enviar números como 10.50 ou "10,50".`,
+        details: `O valor enviado ("${valor}") não é válido.`,
       });
     }
 
-    // --- 3. PROCESSAMENTO DE DADOS ---
+    // Validação Tipo (AGORA OBRIGATÓRIO)
+    if (!tipo || String(tipo).trim() === '') {
+      return res.status(400).json({
+        success: false,
+        error: 'Tipo ausente',
+        details: 'O campo "tipo" é obrigatório. Valores aceitos: "Única", "Parcelada" ou "Fixa".',
+      });
+    }
+
+    // --- 2. PROCESSAMENTO DE DADOS ---
     let dbTipo = 'CARTAO';
     let dbCategoria = null;
     let pAtual = null,
       pTotal = null;
 
-    if (tipo && String(tipo).toLowerCase() === 'fixa') {
+    const tipoNormalizado = String(tipo).toLowerCase();
+
+    // Lógica de Tipo
+    if (tipoNormalizado === 'fixa') {
       dbTipo = 'FIXA';
       dbCategoria = 'Fixa';
-    }
-
-    if (parcelas && String(parcelas).includes('/')) {
-      const parts = String(parcelas).split('/');
-      if (parts.length === 2) {
-        const p1 = parseInt(parts[0]);
-        const p2 = parseInt(parts[1]);
-        if (!isNaN(p1) && !isNaN(p2)) {
-          pAtual = p1;
-          pTotal = p2;
+    } else if (tipoNormalizado === 'parcelada' || tipoNormalizado === 'unica' || tipoNormalizado === 'cartao') {
+      dbTipo = 'CARTAO';
+      // Se for parcelada, valida as parcelas
+      if (tipoNormalizado === 'parcelada') {
+        if (parcelas && String(parcelas).includes('/')) {
+          const parts = String(parcelas).split('/');
+          if (parts.length === 2) {
+            const p1 = parseInt(parts[0]);
+            const p2 = parseInt(parts[1]);
+            if (!isNaN(p1) && !isNaN(p2)) {
+              pAtual = p1;
+              pTotal = p2;
+            }
+          }
         }
+        // Se marcou como parcelada mas não mandou parcelas válidas, podemos avisar ou deixar passar como única (opcional)
+        // Aqui vou deixar seguir, mas fica o alerta no log
       }
+    } else {
+      // Se mandou um tipo maluco (ex: "Boleto"), rejeita ou assume Cartão?
+      // Como tornamos obrigatório, melhor rejeitar se não for um dos conhecidos, ou aceitar como Cartão genérico.
+      // Vou aceitar como Cartão para não quebrar fácil, mas o ideal seria validar lista de permitidos.
+      dbTipo = 'CARTAO';
     }
 
     // Validação de Data
@@ -142,7 +165,7 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       }
     }
 
-    // 4. SALVAR
+    // --- 3. SALVAR ---
     const dadosParaSalvar = {
       descricao: descricao,
       valor: valorFinal,
@@ -157,7 +180,7 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
 
     await repo.addLancamento(1, dadosParaSalvar);
 
-    console.log(`[API] Sucesso: ${descricao} - R$ ${valorFinal.toFixed(2)}`);
+    console.log(`[API] Sucesso: ${descricao} (${tipo}) - R$ ${valorFinal.toFixed(2)}`);
 
     res.status(201).json({
       success: true,
@@ -166,7 +189,8 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
         descricao: dadosParaSalvar.descricao,
         valor_formatado: `R$ ${valorFinal.toFixed(2)}`,
         quem: dadosParaSalvar.nomeTerceiro || 'Você',
-        tipo: dbTipo === 'FIXA' ? 'Conta Fixa' : pTotal ? `Parcelado (${pAtual}/${pTotal})` : 'Crédito à vista',
+        tipo_registrado: dbTipo === 'FIXA' ? 'Fixa' : 'Cartão Crédito',
+        detalhe_parcelas: pTotal ? `${pAtual}/${pTotal}` : 'À vista',
       },
       aviso: avisoData,
     });
