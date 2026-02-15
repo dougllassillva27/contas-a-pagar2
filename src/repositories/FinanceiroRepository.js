@@ -39,20 +39,13 @@ class FinanceiroRepository {
     }
   }
 
-  // --- NOVA FUNCIONALIDADE: ÚLTIMOS LANÇAMENTOS ---
+  // --- DASHBOARD E LISTAGENS ---
   async getUltimosLancamentos(userId) {
-    // Busca os 20 últimos inseridos (maior ID) independentemente da data de vencimento
-    const query = `
-            SELECT * FROM Lancamentos 
-            WHERE UsuarioId = $1 
-            ORDER BY Id DESC 
-            LIMIT 20
-        `;
+    const query = `SELECT * FROM Lancamentos WHERE UsuarioId = $1 ORDER BY Id DESC LIMIT 20`;
     const result = await db.query(query, [userId]);
     return result.rows;
   }
 
-  // --- RELATÓRIO ---
   async getRelatorioMensal(userId, month, year) {
     const query = `
             SELECT * FROM Lancamentos 
@@ -69,7 +62,6 @@ class FinanceiroRepository {
     return result.rows;
   }
 
-  // --- FATURA MANUAL ---
   async getFaturaManual(userId, month, year) {
     try {
       const result = await db.query('SELECT Valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
@@ -81,7 +73,6 @@ class FinanceiroRepository {
 
   async saveFaturaManual(userId, month, year, valor) {
     const check = await db.query('SELECT Id FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
-
     if (check.rows.length > 0) {
       await db.query('UPDATE FaturaManual SET Valor = $4 WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year, valor]);
     } else {
@@ -89,7 +80,6 @@ class FinanceiroRepository {
     }
   }
 
-  // --- ORDEM CARDS ---
   async getOrdemCards(userId) {
     const result = await db.query('SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC', [userId]);
     return result.rows;
@@ -112,7 +102,6 @@ class FinanceiroRepository {
     }
   }
 
-  // --- DASHBOARD ---
   async getDashboardTotals(userId, month, year) {
     const query = `
             SELECT 
@@ -199,6 +188,7 @@ class FinanceiroRepository {
     return this.getLancamentosPorTipo(userId, 'RENDA', month, year);
   }
 
+  // --- CRUD ---
   async addLancamento(userId, dados) {
     const dataVencimento = dados.dataBase ? new Date(dados.dataBase) : new Date();
     const query = `
