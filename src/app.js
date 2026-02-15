@@ -80,15 +80,13 @@ const apiAuth = (req, res, next) => {
     }, 500);
   }
 };
-
 // ROTA: Cadastrar Lançamento via Externa
 app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
   try {
-    const { descricao, valor, tipo, parcelas, terceiro, data_vencimento } = req.body;
+    // ADICIONADO: usuario_id na desestruturação
+    const { descricao, valor, tipo, parcelas, terceiro, data_vencimento, usuario_id } = req.body;
 
     // --- 1. VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS ---
-
-    // Validação Descrição
     if (!descricao || String(descricao).trim() === '') {
       return res.status(400).json({
         success: false,
@@ -97,7 +95,6 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       });
     }
 
-    // Validação Valor
     const valorFinal = parseValor(valor);
     if (isNaN(valorFinal) || valorFinal <= 0) {
       return res.status(400).json({
@@ -107,16 +104,15 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       });
     }
 
-    // Validação Tipo (AGORA OBRIGATÓRIO)
     if (!tipo || String(tipo).trim() === '') {
       return res.status(400).json({
         success: false,
         error: 'Tipo ausente',
-        details: 'O campo "tipo" é obrigatório. Valores aceitos: "Única", "Parcelada" ou "Fixa".',
+        details: 'O campo "tipo" é obrigatório.',
       });
     }
 
-    // --- 2. PROCESSAMENTO DE DADOS ---
+    // --- 2. PROCESSAMENTO ---
     let dbTipo = 'CARTAO';
     let dbCategoria = null;
     let pAtual = null,
@@ -124,46 +120,31 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
 
     const tipoNormalizado = String(tipo).toLowerCase();
 
-    // Lógica de Tipo
     if (tipoNormalizado === 'fixa') {
       dbTipo = 'FIXA';
       dbCategoria = 'Fixa';
-    } else if (tipoNormalizado === 'parcelada' || tipoNormalizado === 'unica' || tipoNormalizado === 'cartao') {
+    } else if (['parcelada', 'unica', 'cartao'].includes(tipoNormalizado)) {
       dbTipo = 'CARTAO';
-      // Se for parcelada, valida as parcelas
-      if (tipoNormalizado === 'parcelada') {
-        if (parcelas && String(parcelas).includes('/')) {
-          const parts = String(parcelas).split('/');
-          if (parts.length === 2) {
-            const p1 = parseInt(parts[0]);
-            const p2 = parseInt(parts[1]);
-            if (!isNaN(p1) && !isNaN(p2)) {
-              pAtual = p1;
-              pTotal = p2;
-            }
-          }
+      if (tipoNormalizado === 'parcelada' && parcelas && String(parcelas).includes('/')) {
+        const parts = String(parcelas).split('/');
+        if (parts.length === 2) {
+          pAtual = parseInt(parts[0]);
+          pTotal = parseInt(parts[1]);
         }
-        // Se marcou como parcelada mas não mandou parcelas válidas, podemos avisar ou deixar passar como única (opcional)
-        // Aqui vou deixar seguir, mas fica o alerta no log
       }
-    } else {
-      // Se mandou um tipo maluco (ex: "Boleto"), rejeita ou assume Cartão?
-      // Como tornamos obrigatório, melhor rejeitar se não for um dos conhecidos, ou aceitar como Cartão genérico.
-      // Vou aceitar como Cartão para não quebrar fácil, mas o ideal seria validar lista de permitidos.
-      dbTipo = 'CARTAO';
     }
 
-    // Validação de Data
     let dataBase = new Date();
     let avisoData = null;
     if (data_vencimento) {
       const d = new Date(data_vencimento);
-      if (!isNaN(d.getTime())) {
-        dataBase = d;
-      } else {
-        avisoData = "A 'data_vencimento' enviada era inválida, usamos a data de hoje.";
-      }
+      if (!isNaN(d.getTime())) dataBase = d;
+      else avisoData = 'Data inválida, usamos hoje.';
     }
+
+    // --- NOVO: DEFINIÇÃO DO USUÁRIO ---
+    // Se vier usuario_id, usa ele. Se não, usa 1 (Dodo).
+    const idUsuarioFinal = usuario_id ? parseInt(usuario_id) : 1;
 
     // --- 3. SALVAR ---
     const dadosParaSalvar = {
@@ -178,29 +159,24 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       status: 'PENDENTE',
     };
 
-    await repo.addLancamento(1, dadosParaSalvar);
+    // Passamos o idUsuarioFinal em vez do número 1 fixo
+    await repo.addLancamento(idUsuarioFinal, dadosParaSalvar);
 
-    console.log(`[API] Sucesso: ${descricao} (${tipo}) - R$ ${valorFinal.toFixed(2)}`);
+    console.log(`[API] Sucesso (User ${idUsuarioFinal}): ${descricao} - R$ ${valorFinal.toFixed(2)}`);
 
     res.status(201).json({
       success: true,
       message: 'Conta cadastrada com sucesso!',
       data: {
+        dono: idUsuarioFinal === 1 ? 'Dodo' : 'Vitoria', // Apenas visual
         descricao: dadosParaSalvar.descricao,
-        valor_formatado: `R$ ${valorFinal.toFixed(2)}`,
-        quem: dadosParaSalvar.nomeTerceiro || 'Você',
-        tipo_registrado: dbTipo === 'FIXA' ? 'Fixa' : 'Cartão Crédito',
-        detalhe_parcelas: pTotal ? `${pAtual}/${pTotal}` : 'À vista',
+        valor: `R$ ${valorFinal.toFixed(2)}`,
       },
       aviso: avisoData,
     });
   } catch (err) {
     console.error('Erro Crítico API:', err);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno no servidor',
-      details: err.message,
-    });
+    res.status(500).json({ success: false, error: 'Erro interno', details: err.message });
   }
 });
 
