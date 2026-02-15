@@ -30,10 +30,22 @@ app.use(
   })
 );
 
+// --- FUNÇÃO AUXILIAR DE VALOR MELHORADA ---
 const parseValor = (v) => {
-  if (!v) return 0.0;
-  const str = String(v);
-  return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
+  if (v === undefined || v === null) return NaN;
+  if (typeof v === 'number') return v;
+
+  // Converte para string e limpa R$ e espaços
+  const str = String(v).replace('R$', '').trim();
+
+  if (str === '') return NaN;
+
+  // Lógica para aceitar "1.000,00" (BR) ou "1000.00" (US)
+  // Remove todos os pontos (separador de milhar) e troca vírgula por ponto
+  const cleanStr = str.replace(/\./g, '').replace(',', '.');
+
+  const num = parseFloat(cleanStr);
+  return isNaN(num) ? NaN : num;
 };
 
 // ==============================================================================
@@ -44,16 +56,16 @@ const parseValor = (v) => {
 const apiAuth = (req, res, next) => {
   const tokenRecebido = req.headers['x-api-key'];
 
+  // Verifica se o token existe e se bate com o do .env
   if (tokenRecebido && tokenRecebido === API_TOKEN) {
     next();
   } else {
-    setTimeout(() => {
-      res.status(401).json({
-        success: false,
-        message: 'Ops! Acesso negado.',
-        details: 'A chave da API (x-api-key) está incorreta ou ausente.',
-      });
-    }, 500);
+    // Retorna JSON erro 401 em vez de HTML
+    res.status(401).json({
+      success: false,
+      error: 'Acesso negado',
+      details: 'A chave da API (x-api-key) está incorreta ou ausente.',
+    });
   }
 };
 
@@ -62,56 +74,52 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
   try {
     const { descricao, valor, tipo, parcelas, terceiro, data_vencimento } = req.body;
 
-    // 1. VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS
-    if (!descricao || descricao.trim() === '') {
+    // --- 1. VALIDAÇÃO DE DESCRIÇÃO ---
+    if (!descricao || String(descricao).trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Erro: Descrição ausente!',
-        details: 'Por favor, envie o campo "descricao" no JSON.',
+        error: 'Dados inválidos',
+        details: 'O campo "descricao" é obrigatório e não pode ser vazio.',
       });
     }
 
-    if (valor === undefined || valor === null || valor === '') {
+    // --- 2. VALIDAÇÃO DE VALOR (RIGOROSA) ---
+    // Tenta converter. Se vier "abcd", vira NaN.
+    const valorFinal = parseValor(valor);
+
+    if (isNaN(valorFinal) || valorFinal <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Erro: Valor ausente!',
-        details: 'Por favor, envie o campo "valor" no JSON.',
+        error: 'Valor inválido',
+        details: `O valor enviado ("${valor}") não é um número válido. Tente enviar números como 10.50 ou "10,50".`,
       });
     }
 
-    // 2. VALIDAÇÃO DE NÚMERO
-    // Tenta converter string "150,50" ou "150.50" para float
-    let valorFinal = parseValor(valor);
-    if (typeof valor === 'number') valorFinal = valor;
-
-    if (isNaN(valorFinal)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Erro: Valor inválido!',
-        details: `O valor "${valor}" não parece ser um número válido.`,
-      });
-    }
-
-    // 3. PROCESSAMENTO DE DADOS
+    // --- 3. PROCESSAMENTO DE PARCELAS/TIPO ---
     let dbTipo = 'CARTAO';
     let dbCategoria = null;
     let pAtual = null,
       pTotal = null;
 
-    if (tipo && tipo.toLowerCase() === 'fixa') {
+    if (tipo && String(tipo).toLowerCase() === 'fixa') {
       dbTipo = 'FIXA';
       dbCategoria = 'Fixa';
     }
 
-    if (parcelas && parcelas.includes('/')) {
-      const parts = parcelas.split('/');
+    // Trata parcelas "01/10"
+    if (parcelas && String(parcelas).includes('/')) {
+      const parts = String(parcelas).split('/');
       if (parts.length === 2) {
-        pAtual = parseInt(parts[0]);
-        pTotal = parseInt(parts[1]);
+        const p1 = parseInt(parts[0]);
+        const p2 = parseInt(parts[1]);
+        if (!isNaN(p1) && !isNaN(p2)) {
+          pAtual = p1;
+          pTotal = p2;
+        }
       }
     }
 
-    // Validação de Data (Se enviada errada, usa hoje)
+    // --- 4. VALIDAÇÃO DE DATA ---
     let dataBase = new Date();
     let avisoData = null;
     if (data_vencimento) {
@@ -119,11 +127,11 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       if (!isNaN(d.getTime())) {
         dataBase = d;
       } else {
-        avisoData = 'A data enviada era inválida, usamos a data de hoje.';
+        avisoData = "A 'data_vencimento' enviada era inválida, usamos a data de hoje.";
       }
     }
 
-    // 4. SALVAR
+    // Monta o objeto
     const dadosParaSalvar = {
       descricao: descricao,
       valor: valorFinal,
@@ -136,22 +144,30 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       status: 'PENDENTE',
     };
 
+    // Salva no Banco (ID 1 = Dodo)
     await repo.addLancamento(1, dadosParaSalvar);
 
-    console.log(`[API] Nova conta criada: ${descricao} - R$ ${valorFinal.toFixed(2)}`);
+    console.log(`[API] Sucesso: ${descricao} - R$ ${valorFinal.toFixed(2)}`);
 
-    // 5. RESPOSTA DE SUCESSO AMIGÁVEL
+    // --- 5. RESPOSTA DE SUCESSO (201 Created) ---
     res.status(201).json({
       success: true,
-      message: `Show! A conta '${descricao}' foi cadastrada com sucesso.`,
-      valor: `R$ ${valorFinal.toFixed(2)}`,
-      aviso: avisoData, // Só aparece se a data estava errada
+      message: 'Conta cadastrada com sucesso!',
+      data: {
+        id_referencia: dadosParaSalvar.id, // O repo atual não retorna ID no insert, mas ok
+        descricao: dadosParaSalvar.descricao,
+        valor_formatado: `R$ ${valorFinal.toFixed(2)}`,
+        quem: dadosParaSalvar.nomeTerceiro || 'Você',
+        tipo: dbTipo === 'FIXA' ? 'Conta Fixa' : pTotal ? `Parcelado (${pAtual}/${pTotal})` : 'Crédito à vista',
+      },
+      aviso: avisoData,
     });
   } catch (err) {
-    console.error('Erro API:', err);
+    console.error('Erro Crítico API:', err);
+    // Retorna JSON mesmo em erro 500
     res.status(500).json({
       success: false,
-      message: 'Ops! Ocorreu um erro interno no servidor.',
+      error: 'Erro interno no servidor',
       details: err.message,
     });
   }
@@ -201,7 +217,7 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-// Aplica proteção nas rotas abaixo
+// Aplica proteção nas rotas WEB abaixo
 app.use(authMiddleware);
 
 // --- ROTAS PROTEGIDAS (WEB) ---
@@ -433,7 +449,7 @@ app.post('/api/lancamentos/reorder', async (req, res) => {
   }
 });
 
-// --- CRUD UNITÁRIO ---
+// --- CRUD UNITÁRIO (WEB) ---
 app.post('/api/lancamentos', async (req, res) => {
   try {
     const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year } = req.body;
