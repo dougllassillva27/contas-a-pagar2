@@ -10,8 +10,9 @@ const repo = require('./repositories/FinanceiroRepository');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// LÊ A SENHA DO .ENV E REMOVE ESPAÇOS EM BRANCO (.trim())
+// CONFIGURAÇÕES DE SEGURANÇA
 const SENHA_MESTRA = (process.env.SENHA_MESTRA || 'senha_padrao_insegura').trim();
+const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -25,18 +26,112 @@ app.use(
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, // Em produção com HTTPS real, o ideal seria true, mas no free tier false evita problemas
+    cookie: { secure: false },
   })
 );
 
-// Função auxiliar para tratamento de valores
 const parseValor = (v) => {
   if (!v) return 0.0;
   const str = String(v);
   return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0.0;
 };
 
-// --- MIDDLEWARE DE PROTEÇÃO (SEM AUTO-LOGIN) ---
+// ==============================================================================
+// 🔌 INTEGRAÇÃO EXTERNA (API)
+// ==============================================================================
+
+// Middleware de Segurança para API (Verifica o Token)
+const apiAuth = (req, res, next) => {
+  const tokenRecebido = req.headers['x-api-key'];
+
+  if (tokenRecebido && tokenRecebido === API_TOKEN) {
+    next(); // Token válido, pode passar
+  } else {
+    // Delay artificial para evitar ataques de força bruta
+    setTimeout(() => {
+      res.status(401).json({
+        success: false,
+        error: 'Acesso negado: API Key inválida ou ausente.',
+      });
+    }, 500);
+  }
+};
+
+// ROTA: Cadastrar Lançamento via Externa (Postman/Atalhos)
+app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
+  try {
+    // 1. Recebe os dados do JSON
+    const { descricao, valor, tipo, parcelas, terceiro, data_vencimento } = req.body;
+
+    // 2. Validação Básica
+    if (!descricao || !valor) {
+      return res.status(400).json({ success: false, error: 'Campos obrigatórios: descricao, valor' });
+    }
+
+    // 3. Processamento de Dados
+    let pAtual = null,
+      pTotal = null;
+    let dbCategoria = null;
+    let dbTipo = 'CARTAO'; // Padrão é cartão
+
+    // Trata Tipo (Fixa ou Cartão)
+    if (tipo && tipo.toLowerCase() === 'fixa') {
+      dbTipo = 'FIXA';
+      dbCategoria = 'Fixa';
+    }
+
+    // Trata Parcelas (Ex: "01/10")
+    if (parcelas && parcelas.includes('/')) {
+      const parts = parcelas.split('/');
+      if (parts.length === 2) {
+        pAtual = parseInt(parts[0]);
+        pTotal = parseInt(parts[1]);
+      }
+    }
+
+    // Trata Valor (aceita número ou string "100.50")
+    const valorFinal = typeof valor === 'string' ? parseFloat(valor) : valor;
+
+    // Trata Data (Opcional, padrão hoje)
+    let dataBase = new Date();
+    if (data_vencimento) {
+      dataBase = new Date(data_vencimento); // Formato YYYY-MM-DD
+    }
+
+    // 4. Monta objeto para o repositório
+    const dadosParaSalvar = {
+      descricao: descricao,
+      valor: valorFinal,
+      tipo: dbTipo,
+      categoria: dbCategoria,
+      parcelaAtual: pAtual,
+      totalParcelas: pTotal,
+      nomeTerceiro: terceiro || null,
+      dataBase: dataBase,
+      status: 'PENDENTE',
+    };
+
+    // 5. Salva no Banco (ID 1 = Dodo como padrão)
+    await repo.addLancamento(1, dadosParaSalvar);
+
+    console.log(`[API] Nova conta criada: ${descricao} - R$ ${valorFinal}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Lançamento criado com sucesso via API!',
+      data: dadosParaSalvar,
+    });
+  } catch (err) {
+    console.error('Erro API:', err);
+    res.status(500).json({ success: false, error: 'Erro interno no servidor: ' + err.message });
+  }
+});
+
+// ==============================================================================
+// 🌐 SISTEMA WEB (Middlewares e Rotas de Navegador)
+// ==============================================================================
+
+// Middleware de Login (Web)
 async function authMiddleware(req, res, next) {
   if (req.session && req.session.user) {
     return next();
@@ -44,17 +139,15 @@ async function authMiddleware(req, res, next) {
   res.redirect('/login');
 }
 
-// --- ROTAS PÚBLICAS (LOGIN) ---
+// --- ROTAS PÚBLICAS ---
 app.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('login', { error: null });
 });
 
 app.post('/login', async (req, res) => {
-  // Pega a senha e remove espaços das pontas
   const passwordDigitada = (req.body.password || '').trim();
 
-  // COMPARAÇÃO SEGURA
   if (passwordDigitada === SENHA_MESTRA) {
     try {
       const user = await repo.getUsuarioById(1);
@@ -62,13 +155,12 @@ app.post('/login', async (req, res) => {
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
-      return res.render('login', { error: 'Usuário principal não encontrado no banco de dados!' });
+      return res.render('login', { error: 'Usuário principal não encontrado.' });
     } catch (err) {
       console.error('Erro Login:', err);
       return res.render('login', { error: 'Erro de conexão com o banco.' });
     }
   } else {
-    // Delay artificial para evitar Brute Force
     setTimeout(() => {
       res.render('login', { error: 'Senha incorreta!' });
     }, 500);
@@ -80,10 +172,10 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-// Aplica a proteção em todas as rotas abaixo
+// Aplica proteção nas rotas abaixo (exceto as de API que já tratamos antes)
 app.use(authMiddleware);
 
-// --- ROTAS PROTEGIDAS ---
+// --- ROTAS PROTEGIDAS (WEB) ---
 
 app.get('/switch/:id', async (req, res) => {
   try {
@@ -115,7 +207,6 @@ app.get('/relatorio', async (req, res) => {
     itens.forEach((item) => {
       const pessoa = item.nometerceiro || userName;
       if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
-
       agrupado[pessoa].itens.push(item);
       agrupado[pessoa].total += Number(item.valor);
     });
@@ -205,8 +296,7 @@ app.get('/', async (req, res) => {
   }
 });
 
-// --- APIs GERAIS ---
-// ROTA: ÚLTIMOS LANÇAMENTOS
+// --- APIs INTERNAS (Web - Ajax) ---
 app.get('/api/lancamentos/recentes', async (req, res) => {
   try {
     const ultimos = await repo.getUltimosLancamentos(req.session.user.id);
@@ -389,5 +479,4 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-// INICIA O SERVIDOR (Versão Padrão)
-app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
