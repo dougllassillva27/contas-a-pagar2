@@ -21,6 +21,20 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// --- MIDDLEWARE PARA TRATAR JSON MALFORMADO (NOVO) ---
+// Isso captura o erro quando alguém envia um JSON com sintaxe errada (ex: virgula sobrando, falta aspas)
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    console.error('Erro de Sintaxe JSON recebido:', err.message);
+    return res.status(400).json({
+      success: false,
+      error: 'JSON Malformado',
+      details: 'O corpo da sua requisição contém erros de sintaxe (ex: falta aspas, vírgulas erradas ou formato inválido).',
+    });
+  }
+  next();
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
@@ -41,7 +55,6 @@ const parseValor = (v) => {
   if (str === '') return NaN;
 
   // Lógica para aceitar "1.000,00" (BR) ou "1000.00" (US)
-  // Remove todos os pontos (separador de milhar) e troca vírgula por ponto
   const cleanStr = str.replace(/\./g, '').replace(',', '.');
 
   const num = parseFloat(cleanStr);
@@ -56,16 +69,16 @@ const parseValor = (v) => {
 const apiAuth = (req, res, next) => {
   const tokenRecebido = req.headers['x-api-key'];
 
-  // Verifica se o token existe e se bate com o do .env
   if (tokenRecebido && tokenRecebido === API_TOKEN) {
     next();
   } else {
-    // Retorna JSON erro 401 em vez de HTML
-    res.status(401).json({
-      success: false,
-      error: 'Acesso negado',
-      details: 'A chave da API (x-api-key) está incorreta ou ausente.',
-    });
+    setTimeout(() => {
+      res.status(401).json({
+        success: false,
+        error: 'Acesso negado',
+        details: 'A chave da API (x-api-key) está incorreta ou ausente.',
+      });
+    }, 500);
   }
 };
 
@@ -84,7 +97,6 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
     }
 
     // --- 2. VALIDAÇÃO DE VALOR (RIGOROSA) ---
-    // Tenta converter. Se vier "abcd", vira NaN.
     const valorFinal = parseValor(valor);
 
     if (isNaN(valorFinal) || valorFinal <= 0) {
@@ -95,7 +107,7 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       });
     }
 
-    // --- 3. PROCESSAMENTO DE PARCELAS/TIPO ---
+    // --- 3. PROCESSAMENTO DE DADOS ---
     let dbTipo = 'CARTAO';
     let dbCategoria = null;
     let pAtual = null,
@@ -106,7 +118,6 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       dbCategoria = 'Fixa';
     }
 
-    // Trata parcelas "01/10"
     if (parcelas && String(parcelas).includes('/')) {
       const parts = String(parcelas).split('/');
       if (parts.length === 2) {
@@ -119,7 +130,7 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       }
     }
 
-    // --- 4. VALIDAÇÃO DE DATA ---
+    // Validação de Data
     let dataBase = new Date();
     let avisoData = null;
     if (data_vencimento) {
@@ -131,7 +142,7 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       }
     }
 
-    // Monta o objeto
+    // 4. SALVAR
     const dadosParaSalvar = {
       descricao: descricao,
       valor: valorFinal,
@@ -144,17 +155,14 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       status: 'PENDENTE',
     };
 
-    // Salva no Banco (ID 1 = Dodo)
     await repo.addLancamento(1, dadosParaSalvar);
 
     console.log(`[API] Sucesso: ${descricao} - R$ ${valorFinal.toFixed(2)}`);
 
-    // --- 5. RESPOSTA DE SUCESSO (201 Created) ---
     res.status(201).json({
       success: true,
       message: 'Conta cadastrada com sucesso!',
       data: {
-        id_referencia: dadosParaSalvar.id, // O repo atual não retorna ID no insert, mas ok
         descricao: dadosParaSalvar.descricao,
         valor_formatado: `R$ ${valorFinal.toFixed(2)}`,
         quem: dadosParaSalvar.nomeTerceiro || 'Você',
@@ -164,7 +172,6 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Erro Crítico API:', err);
-    // Retorna JSON mesmo em erro 500
     res.status(500).json({
       success: false,
       error: 'Erro interno no servidor',
