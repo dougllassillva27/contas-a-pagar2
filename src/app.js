@@ -37,50 +37,72 @@ const parseValor = (v) => {
 };
 
 // ==============================================================================
-// 🔌 INTEGRAÇÃO EXTERNA (API)
+// 🔌 INTEGRAÇÃO EXTERNA (API - Postman / Bruno)
 // ==============================================================================
 
-// Middleware de Segurança para API (Verifica o Token)
+// Middleware de Segurança da API
 const apiAuth = (req, res, next) => {
   const tokenRecebido = req.headers['x-api-key'];
 
   if (tokenRecebido && tokenRecebido === API_TOKEN) {
-    next(); // Token válido, pode passar
+    next();
   } else {
-    // Delay artificial para evitar ataques de força bruta
     setTimeout(() => {
       res.status(401).json({
         success: false,
-        error: 'Acesso negado: API Key inválida ou ausente.',
+        message: 'Ops! Acesso negado.',
+        details: 'A chave da API (x-api-key) está incorreta ou ausente.',
       });
     }, 500);
   }
 };
 
-// ROTA: Cadastrar Lançamento via Externa (Postman/Atalhos)
+// ROTA: Cadastrar Lançamento via Externa
 app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
   try {
-    // 1. Recebe os dados do JSON
     const { descricao, valor, tipo, parcelas, terceiro, data_vencimento } = req.body;
 
-    // 2. Validação Básica
-    if (!descricao || !valor) {
-      return res.status(400).json({ success: false, error: 'Campos obrigatórios: descricao, valor' });
+    // 1. VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS
+    if (!descricao || descricao.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Erro: Descrição ausente!',
+        details: 'Por favor, envie o campo "descricao" no JSON.',
+      });
     }
 
-    // 3. Processamento de Dados
+    if (valor === undefined || valor === null || valor === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Erro: Valor ausente!',
+        details: 'Por favor, envie o campo "valor" no JSON.',
+      });
+    }
+
+    // 2. VALIDAÇÃO DE NÚMERO
+    // Tenta converter string "150,50" ou "150.50" para float
+    let valorFinal = parseValor(valor);
+    if (typeof valor === 'number') valorFinal = valor;
+
+    if (isNaN(valorFinal)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Erro: Valor inválido!',
+        details: `O valor "${valor}" não parece ser um número válido.`,
+      });
+    }
+
+    // 3. PROCESSAMENTO DE DADOS
+    let dbTipo = 'CARTAO';
+    let dbCategoria = null;
     let pAtual = null,
       pTotal = null;
-    let dbCategoria = null;
-    let dbTipo = 'CARTAO'; // Padrão é cartão
 
-    // Trata Tipo (Fixa ou Cartão)
     if (tipo && tipo.toLowerCase() === 'fixa') {
       dbTipo = 'FIXA';
       dbCategoria = 'Fixa';
     }
 
-    // Trata Parcelas (Ex: "01/10")
     if (parcelas && parcelas.includes('/')) {
       const parts = parcelas.split('/');
       if (parts.length === 2) {
@@ -89,16 +111,19 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       }
     }
 
-    // Trata Valor (aceita número ou string "100.50")
-    const valorFinal = typeof valor === 'string' ? parseFloat(valor) : valor;
-
-    // Trata Data (Opcional, padrão hoje)
+    // Validação de Data (Se enviada errada, usa hoje)
     let dataBase = new Date();
+    let avisoData = null;
     if (data_vencimento) {
-      dataBase = new Date(data_vencimento); // Formato YYYY-MM-DD
+      const d = new Date(data_vencimento);
+      if (!isNaN(d.getTime())) {
+        dataBase = d;
+      } else {
+        avisoData = 'A data enviada era inválida, usamos a data de hoje.';
+      }
     }
 
-    // 4. Monta objeto para o repositório
+    // 4. SALVAR
     const dadosParaSalvar = {
       descricao: descricao,
       valor: valorFinal,
@@ -111,19 +136,24 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       status: 'PENDENTE',
     };
 
-    // 5. Salva no Banco (ID 1 = Dodo como padrão)
     await repo.addLancamento(1, dadosParaSalvar);
 
-    console.log(`[API] Nova conta criada: ${descricao} - R$ ${valorFinal}`);
+    console.log(`[API] Nova conta criada: ${descricao} - R$ ${valorFinal.toFixed(2)}`);
 
+    // 5. RESPOSTA DE SUCESSO AMIGÁVEL
     res.status(201).json({
       success: true,
-      message: 'Lançamento criado com sucesso via API!',
-      data: dadosParaSalvar,
+      message: `Show! A conta '${descricao}' foi cadastrada com sucesso.`,
+      valor: `R$ ${valorFinal.toFixed(2)}`,
+      aviso: avisoData, // Só aparece se a data estava errada
     });
   } catch (err) {
     console.error('Erro API:', err);
-    res.status(500).json({ success: false, error: 'Erro interno no servidor: ' + err.message });
+    res.status(500).json({
+      success: false,
+      message: 'Ops! Ocorreu um erro interno no servidor.',
+      details: err.message,
+    });
   }
 });
 
@@ -131,7 +161,6 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
 // 🌐 SISTEMA WEB (Middlewares e Rotas de Navegador)
 // ==============================================================================
 
-// Middleware de Login (Web)
 async function authMiddleware(req, res, next) {
   if (req.session && req.session.user) {
     return next();
@@ -172,7 +201,7 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-// Aplica proteção nas rotas abaixo (exceto as de API que já tratamos antes)
+// Aplica proteção nas rotas abaixo
 app.use(authMiddleware);
 
 // --- ROTAS PROTEGIDAS (WEB) ---
