@@ -1,22 +1,30 @@
 # 💸 Gestão Financeira Pessoal (Cloud Edition)
 
-Um sistema web robusto e acessível de qualquer lugar para controle de
+Sistema web robusto e acessível de qualquer lugar para controle de
 contas a pagar, gestão de cartão de crédito e organização financeira
-familiar. Agora migrado para a nuvem com **PostgreSQL**!
+familiar.
+
+Migrado para a nuvem utilizando **PostgreSQL**, com deploy em **Render**
+e banco hospedado no **Neon**, permitindo acesso via celular ou desktop
+de qualquer lugar, mantendo privacidade e performance.
 
 ---
 
 ## 📖 Sobre o Projeto
 
-Este projeto substitui planilhas complexas por uma interface visual
-intuitiva e focada em **Contas a Pagar**. Ele permite gerenciar não
-apenas as finanças pessoais, mas também segregar gastos de terceiros
-(familiares) que utilizam o mesmo cartão de crédito.
+Este projeto nasceu para substituir planilhas complexas por uma
+interface visual, intuitiva e focada em **Contas a Pagar**.
 
-Originalmente criado em SQL Server local, o projeto foi modernizado para
-**PostgreSQL** e hospedado no **Render/Neon**, permitindo acesso via
-celular ou desktop de qualquer lugar, mantendo a privacidade e a
-performance.
+Permite:
+
+- Controle financeiro pessoal mensal
+- Separação de gastos de terceiros (familiares que utilizam o mesmo
+  cartão)
+- Organização por prioridade (ordem customizável)
+- Comparação de fatura real vs sistema
+
+Originalmente desenvolvido em SQL Server local, foi modernizado para
+PostgreSQL e arquitetura cloud.
 
 ---
 
@@ -24,65 +32,93 @@ performance.
 
 ### 📊 Dashboard & Controle
 
-- **Visão Geral:** Cards com Total de Rendas (com modo privacidade
-  👁️), Total de Contas, Falta Pagar e Saldo Previsto.
-- **Contas Fixas:** Gestão de despesas recorrentes (Água, Luz,
-  Internet).
-- **Cartão de Crédito:** Controle detalhado com suporte a parcelamento
-  (ex: `01/10`).
-- **Bloco de Notas:** Área de anotações persistente.
+- **Visão Geral**
+  - Total de Rendas (com modo privacidade 👁️)
+  - Total de Contas
+  - Falta Pagar
+  - Saldo Previsto
+- **Contas Fixas**
+  - Água
+  - Luz
+  - Internet
+  - Outras recorrentes
+- **Cartão de Crédito**
+  - Controle com parcelamento (`01/10`)
+  - Controle por mês
+  - Separação por pessoa
+- **Bloco de Notas**
+  - Persistente por usuário
+
+---
 
 ### 👥 Gestão de Terceiros
 
-- **Painéis Individuais:** Separação automática de gastos por pessoa
-  (ex: Mãe, Vô, Casa).
-- **Totalizadores:** Visualização rápida de quanto cada terceiro deve
-  no mês.
+- Painéis individuais automáticos (ex: Mãe, Vô, Casa)
+- Totalizador mensal por pessoa
+- Separação clara de responsabilidade financeira
+- Organização visual independente
+
+---
 
 ### ✨ UX/UI (Experiência do Usuário)
 
-- **Drag & Drop:** Organize a prioridade das contas arrastando e
-  soltando.
-- **Modais Responsivos:** Adição e edição rápida sem recarregar a
-  página.
-- **Dark Mode:** Interface moderna e confortável.
-- **Impressão A4:** Layout otimizado (CSS print) para gerar relatórios
-  de cobrança em PDF.
+- **Menu de Contexto Híbrido**
+  - Desktop: Botão direito
+  - Mobile: Double Tap
+
+- **Drag & Drop**
+  - Reordenação de prioridade
+
+- **Modais Responsivos**
+  - Edição sem reload
+
+- **Dark Mode**
+
+- **Mobile First**
+  - Otimizado para smartphones (ex: Galaxy S23)
+  - Bloqueio de seleção acidental de texto
+
+- **Impressão A4**
+  - CSS print
+  - Ideal para gerar PDF de cobrança
+
+---
 
 ### ⚙️ Ferramentas Avançadas
 
-- **Copiar Mês:** Duplica contas fixas e parcelas pendentes para o mês
-  seguinte.
-- **Backup:** Exportação dos dados (JSON) para segurança local.
-- **Fatura App:** Campo para comparar o valor calculado pelo sistema
-  vs valor real do App do banco.
+- **Copiar Mês**
+  - Replica contas fixas
+  - Replica parcelas pendentes
+- **Backup JSON**
+  - Exportação manual de segurança
+- **Fatura Manual**
+  - Campo para comparar valor calculado vs valor do app do banco
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Backend:** Node.js com Express
-- **Database:** PostgreSQL (Hospedado no Neon.tech)
+- **Backend:** Node.js + Express
+- **Database:** PostgreSQL (Neon.tech)
 - **Hospedagem:** Render.com (Plano Gratuito)
-- **Frontend:** EJS, CSS3 (Variáveis, Grid Layout)
-- **Driver:** `pg` (node-postgres)
+- **Frontend:** EJS + CSS3 (Grid Layout + Variáveis)
+- **Driver:** pg (node-postgres)
 
 ---
 
 ## 📝 Pré-requisitos
 
-Para rodar ou modificar o projeto, você precisa: - **Node.js** (v18 ou
-superior) - Conta no **GitHub** (para deploy) - Conta no **Neon.tech**
-(Banco de dados gratuito) - Conta no **Render.com** (Hospedagem
-gratuita)
+- Node.js v18+
+- Git
+- Conta GitHub
+- Conta Neon (PostgreSQL)
+- Conta Render
 
 ---
 
-## 🚀 Instalação e Configuração (Local)
+## 🚀 Instalação e Configuração Local
 
-Se quiser rodar no seu PC para desenvolvimento:
-
-### 1️⃣ Clonar o Repositório
+### 1️⃣ Clonar
 
 ```bash
 git clone https://github.com/dougllassillva27/contas-a-pagar2.git
@@ -95,11 +131,9 @@ cd contas-a-pagar2
 npm install
 ```
 
-### 3️⃣ Configurar Banco de Dados (PostgreSQL)
+### 3️⃣ Criar Banco de Dados
 
-Crie um banco de dados no Neon ou no seu Postgres Local.
-
-Rode o script de criação das tabelas (SQL) no seu gerenciador de banco:
+Execute o script SQL:
 
 ```sql
 CREATE TABLE Usuarios (
@@ -149,14 +183,22 @@ INSERT INTO Usuarios (Nome, Login, SenhaHash)
 VALUES ('Admin', 'admin', 'HASH_DA_SENHA');
 ```
 
+---
+
 ### 4️⃣ Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz ou configure no seu sistema:
+Crie `.env`:
 
 ```env
 DATABASE_URL=postgres://usuario:senha@endpoint-neon.tech/neondb?sslmode=require
 PORT=3000
+SESSION_SECRET=seu_segredo_aqui
+SENHA_MESTRA=sua_senha_aqui
+API_TOKEN=seu_token_api
+NODE_VERSION=18
 ```
+
+---
 
 ### 5️⃣ Rodar
 
@@ -164,41 +206,48 @@ PORT=3000
 npm start
 ```
 
-Acesse: http://localhost:3000
+Acesse:
+
+http://localhost:3000
 
 ---
 
-## ☁️ Como Fazer Deploy (Colocar Online)
+## ☁️ Deploy (Render + Neon)
 
-### Passo 1: GitHub
+### GitHub
 
-Suba seu código para um repositório no GitHub.
+Suba o repositório.
 
-### Passo 2: Neon.tech (Banco)
+### Neon
 
-- Crie um projeto no Neon.
-- Copie a Connection String (começa com `postgres://...`).
-- Vá no "SQL Editor" do Neon e rode o script de criação das tabelas.
+- Criar projeto
+- Copiar connection string
+- Executar script SQL
 
-### Passo 3: Render.com (App)
+### Render
 
-- Crie um **New Web Service**.
+- New Web Service
+- Build Command:
 
-- Conecte seu repositório do GitHub.
+```{=html}
+<!-- -->
+```
 
-- Em **Build Command**, use:
+    npm install
 
-      npm install
+- Start Command:
 
-- Em **Start Command**, use:
+```{=html}
+<!-- -->
+```
 
-      node src/app.js
+    node src/app.js
 
-- Em **Environment Variables**, adicione:
-  - `DATABASE_URL` = (Sua string de conexão do Neon)
-  - `NODE_VERSION` = 18 (ou 20)
-
-Pronto! Seu sistema estará online. 🌍
+- Variáveis:
+  - DATABASE_URL
+  - NODE_VERSION
+  - SESSION_SECRET
+  - SENHA_MESTRA
 
 ---
 
@@ -209,10 +258,8 @@ Pronto! Seu sistema estará online. 🌍
     │   ├── css/style.css
     │   └── js/
     ├── src/
-    │   ├── config/
-    │   │   └── db.js
-    │   ├── repositories/
-    │   │   └── FinanceiroRepository.js
+    │   ├── config/db.js
+    │   ├── repositories/FinanceiroRepository.js
     │   ├── views/
     │   │   ├── index.ejs
     │   │   ├── login.ejs
@@ -226,12 +273,20 @@ Pronto! Seu sistema estará online. 🌍
 
 ## 💡 Dicas de Uso
 
-- **Privacidade:** Clique no "olhinho" no card de Rendas para
-  esconder/mostrar o valor (salva a preferência no navegador).
-- **Impressão:** O botão "Imprimir" gera um relatório limpo, ideal
-  para salvar em PDF.
-- **Login:** O sistema pode desconectar automaticamente no plano free
-  do Render. Basta logar novamente.
+- Use o modo privacidade para esconder valores
+- Double Tap no mobile para ações rápidas
+- Use "Imprimir" para gerar PDF
+- Plano free pode hibernar --- basta relogar
+
+---
+
+## 🎯 Objetivos do Projeto
+
+- Simplicidade operacional
+- Performance
+- Organização visual
+- Independência geográfica
+- Código limpo e manutenível
 
 ---
 
