@@ -62,21 +62,6 @@ class FinanceiroRepository {
     return result.rows;
   }
 
-  // NOVO MÉTODO: Suporte para nomes dinâmicos (Corrige erro 404/SyntaxError)
-  async getRelatorioMensalPorPessoa(userId, nome, month, year) {
-    const query = `
-        SELECT * FROM Lancamentos 
-        WHERE UsuarioId = $1 
-          AND NomeTerceiro = $2 
-          AND Tipo = 'CARTAO' 
-          AND EXTRACT(MONTH FROM DataVencimento) = $3 
-          AND EXTRACT(YEAR FROM DataVencimento) = $4
-        ORDER BY DataVencimento ASC, Id ASC
-    `;
-    const result = await db.query(query, [userId, nome, month, year]);
-    return result.rows;
-  }
-
   async getFaturaManual(userId, month, year) {
     try {
       const result = await db.query('SELECT Valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
@@ -258,6 +243,19 @@ class FinanceiroRepository {
 
   async deleteLancamento(userId, id) {
     await db.query('DELETE FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2', [id, userId]);
+  }
+
+  // MÉTODO: Excluir por Pessoa (Inclusivo para 'Próprio')
+  async deleteLancamentosPorPessoa(userId, pessoa, month, year, userName) {
+    let query = `DELETE FROM Lancamentos WHERE UsuarioId = $1 AND Tipo = 'CARTAO' AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3`;
+    const params = [userId, month, year];
+    if (pessoa === userName) {
+      query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
+    } else {
+      query += ' AND NomeTerceiro = $4';
+      params.push(pessoa);
+    }
+    await db.query(query, params);
   }
 
   async getAnotacoes(userId) {

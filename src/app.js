@@ -169,7 +169,7 @@ async function authMiddleware(req, res, next) {
   res.redirect('/login');
 }
 
-// ROTA DINÂMICA: Corrige o erro 404 e SyntaxError para nomes novos inseridos via App
+// ROTA DINÂMICA: Busca detalhes por pessoa
 app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
   try {
     const { nome } = req.params;
@@ -180,8 +180,7 @@ app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
     const lancamentos = await repo.getLancamentosCartaoPorPessoa(userId, nome, parseInt(month), parseInt(year), userName);
     res.json(lancamentos);
   } catch (err) {
-    console.error('Erro ao buscar detalhes por pessoa:', err);
-    res.status(500).json({ error: 'Erro ao carregar detalhes.' });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -342,6 +341,22 @@ app.delete('/api/lancamentos/mes', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// NOVA ROTA: Excluir por Pessoa (Lote)
+app.delete('/api/lancamentos/pessoa/:nome', authMiddleware, async (req, res) => {
+  try {
+    const { nome } = req.params;
+    const { month, year } = req.query;
+    const userId = req.session.user.id;
+    const userName = req.session.user.nome;
+
+    await repo.deleteLancamentosPorPessoa(userId, nome, parseInt(month), parseInt(year), userName);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/lancamentos/status-pessoa', async (req, res) => {
   try {
     await repo.updateStatusBatchPessoa(req.session.user.id, req.body.pessoa, req.body.status, req.body.month, req.body.year, req.session.user.nome);
