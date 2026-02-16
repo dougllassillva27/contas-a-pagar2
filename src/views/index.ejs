@@ -462,9 +462,9 @@
         const currentMonth = <%= nav.atual.month %>;
         const currentYear = <%= nav.atual.year %>;
         let isBackNavigation = false;
-        let pessoaSelecionadaContexto = null;
         
         // DECLARAÇÃO ÚNICA DE VARIÁVEIS GLOBAIS
+        let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
         let lastTap = 0; // Controle para detectar double tap
@@ -492,8 +492,8 @@
             const now = new Date().getTime();
             const timesince = now - lastTap;
             
+            // Detecta se o segundo toque ocorreu em menos de 300ms
             if ((timesince < 300) && (timesince > 0)) {
-                // Se o segundo toque ocorrer em menos de 300ms
                 if(e.cancelable) e.preventDefault(); 
                 abrirMenuContexto(e, pessoa);
             }
@@ -564,7 +564,7 @@
 
         document.getElementById('btnConfirmarAcao').onclick = () => { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
 
-        // --- OUTRAS FUNÇÕES ---
+        // --- OUTRAS FUNÇÕES (MANTIDAS) ---
         async function abrirModalUltimas() {
             registerModalOpen();
             document.getElementById('modalUltimasContas').classList.add('active');
@@ -642,20 +642,6 @@
         function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) { document.getElementById('modalDetalhesCartao').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Conta"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colRenda').style.display = 'none'; document.getElementById('colConta').style.display = 'block'; document.getElementById('tituloConta').innerText = "Editar Dados"; document.getElementById('btnSalvarConta').innerText = "Salvar Alterações"; document.getElementById('contaId').value = id; document.getElementById('contaDesc').value = desc; document.getElementById('contaValor').value = valor; document.getElementById('contaTipo').value = tipo; document.getElementById('contaTerceiro').value = (nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined') ? nomeTerceiro : ''; if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2,'0') + '/' + String(pTotal).padStart(2,'0'); else document.getElementById('contaParcelas').value = ''; toggleParcelas(); modal.classList.add('active'); }
         function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
         
-        // CORREÇÃO: Remover declaração duplicada e garantir inicialização única
-        document.getElementById('btnConfirmarAcao').onclick = function() { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
-        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); }
-        
-        window.onclick = function(e) { 
-            if(e.target.classList.contains('modal-overlay')) { 
-                if(e.target.id == 'modalConfirmar') fecharConfirmacao();
-                else if(e.target.id == 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
-                else if(e.target.id == 'modalAviso') fecharModalAviso();
-                else fecharModais(); 
-            }
-            if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
-        }
-
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
         window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
         function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
@@ -676,8 +662,12 @@
         async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
         let timeout = null;
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
-        let idExcluir = null;
+        
         function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
+        function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
+        function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
+        // CORREÇÃO: Garante que o handler do botão de exclusão só seja atribuído uma vez no final do script
+        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
     </script>
 </body>
 </html>
