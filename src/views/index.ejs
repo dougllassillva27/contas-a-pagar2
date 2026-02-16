@@ -28,7 +28,19 @@
         .draggable-card:active { cursor: grabbing; }
         .draggable-card.dragging { opacity: 0.4; border: 2px dashed var(--blue); transform: scale(0.98); }
 
-        /* Estilos do Menu de Contexto Otimizado vvvv */
+        /* FIX PARA MOBILE: BLOQUEIO DE SELEÇÃO E CALLOUT */
+        .trigger-p-nome {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important; /* Impede menu nativo do Android/Chrome */
+            cursor: context-menu;
+            padding: 12px 5px;
+            font-weight: 500;
+            display: block;
+            width: 100%;
+        }
+
+        /* Estilos do Menu de Contexto Otimizado */
         .context-menu {
             position: fixed;
             z-index: 10000;
@@ -227,12 +239,14 @@
                                 <span class="material-icons" style="font-size: 16px; cursor: pointer;" 
                                       onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')">visibility</span>
                             </td>
-                            <td style="font-weight: 500; cursor: context-menu; padding: 12px 5px;" 
-                                oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')"
-                                ontouchstart="handleTouchStart(event, '<%= pessoa.pessoa %>')"
-                                ontouchend="handleTouchEnd()"
-                                ontouchmove="handleTouchEnd()">
-                                <%= pessoa.pessoa %>
+                            <td style="padding:0;">
+                                <span class="trigger-p-nome" 
+                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')"
+                                    ontouchstart="handleTouchStart(event, '<%= pessoa.pessoa %>')"
+                                    ontouchend="handleTouchEnd()"
+                                    ontouchmove="handleTouchEnd()">
+                                    <%= pessoa.pessoa %>
+                                </span>
                             </td>
                             <td class="text-right" style="font-weight: bold; color: var(--red);">
                                 R$ <%= Number(pessoa.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
@@ -496,14 +510,14 @@
         let touchTimer;
 
         function abrirMenuContexto(e, pessoa) {
-            e.preventDefault();
+            if(e.cancelable) e.preventDefault();
             pessoaSelecionadaContexto = pessoa;
             const menu = document.getElementById('customContextMenu');
             menu.style.display = 'block';
             
-            // Posicionamento inteligente (evita sair da tela)
-            let x = (e.pageX || (e.touches && e.touches[0].pageX));
-            let y = (e.pageY || (e.touches && e.touches[0].pageY));
+            // Posição para mouse ou touch
+            let x = e.pageX || (e.touches && e.touches[0].pageX);
+            let y = e.pageY || (e.touches && e.touches[0].pageY);
             
             if (x + 220 > window.innerWidth) x -= 220;
             if (y + 180 > window.innerHeight) y -= 180;
@@ -518,10 +532,12 @@
 
         // Simulação de clique longo no celular (S23)
         function handleTouchStart(e, pessoa) {
+            clearTimeout(touchTimer);
             touchTimer = setTimeout(() => {
+                // Impede seleção e menu nativo no momento que o nosso abre
                 if(e.cancelable) e.preventDefault(); 
                 abrirMenuContexto(e, pessoa);
-            }, 600); // 600ms para disparar o menu
+            }, 700); 
         }
 
         function handleTouchEnd() {
@@ -577,7 +593,7 @@
             } catch(err) { console.error(err); }
         }
 
-        // --- OUTRAS FUNÇÕES (MANTIDAS) ---
+        // --- OUTRAS FUNÇÕES ---
         async function abrirModalUltimas() {
             registerModalOpen();
             document.getElementById('modalUltimasContas').classList.add('active');
@@ -614,10 +630,10 @@
                 let html = ''; 
                 itens.forEach(item => { 
                     const v = Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
-                    const safeDesc = item.descricao.replace(/'/g, "\\'");
+                    const safeDesc = item.descricao.replace(/'/g, "\\'"); 
                     const pAtual = item.parcelaatual || ''; 
                     const pTotal = item.totalparcelas || ''; 
-                    const safePessoa = (item.nometerceiro || '').replace(/'/g, "\\'");
+                    const safePessoa = (item.nometerceiro || '').replace(/'/g, "\\'"); 
                     let parcelasTexto = (item.parcelaatual && item.totalparcelas) ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2,'0')}/${String(item.totalparcelas).padStart(2,'0')})</small>` : ''; 
                     html += `<tr class="draggable-row" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`; 
                 }); 
@@ -635,55 +651,16 @@
             let h = '';
             d.forEach(r => { 
                 const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
-                const safeDesc = r.descricao.replace(/'/g, "\\'");
+                const safeDesc = r.descricao.replace(/'/g, "\\'"); 
                 h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; 
             });
             c.innerHTML = h || 'Vazio'; 
         }
 
-        function abrirModalAdicionar() { 
-            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-            registerModalOpen();
-            document.getElementById('formRenda').reset(); 
-            document.getElementById('formConta').reset(); 
-            document.getElementById('rendaId').value = "";
-            document.getElementById('contaId').value = ""; 
-            document.getElementById('modalGridForm').classList.remove('single-col'); 
-            document.getElementById('colRenda').style.display = 'block'; 
-            document.getElementById('colConta').style.display = 'block'; 
-            document.getElementById('modalAdicionar').classList.add('active');
-            setTimeout(() => { document.getElementById('contaDesc').focus(); }, 100);
-        }
-
-        function abrirConfirmacaoAcao(tipo) { 
-            registerModalOpen();
-            const modal = document.getElementById('modalConfirmacaoAcao'); 
-            const titulo = document.getElementById('tituloConfirmacao'); 
-            const texto = document.getElementById('textoConfirmacao'); 
-            const btn = document.getElementById('btnConfirmarAcao'); 
-            const icon = document.getElementById('iconConfirmacao'); 
-            if (tipo === 'COPIAR') { titulo.innerText = "Copiar Contas"; texto.innerText = "Isso copiará todas as contas fixas, rendas e parceladas para o próximo mês. Deseja continuar?"; btn.innerText = "Sim, Copiar"; btn.style.backgroundColor = "var(--blue)"; icon.style.color = "var(--blue)"; icon.innerText = "content_copy"; acaoConfirmadaCallback = executarCopia; } 
-            else if (tipo === 'DELETAR') { titulo.innerText = "Limpar Mês"; texto.innerText = "ATENÇÃO: Isso apagará TODOS os lançamentos deste mês permanentemente. Tem certeza?"; btn.innerText = "Sim, Apagar Tudo"; btn.style.backgroundColor = "var(--red)"; icon.style.color = "var(--red)"; icon.innerText = "warning"; acaoConfirmadaCallback = executarDeleteMes; } 
-            modal.classList.add('active'); 
-        }
-
-        function mostrarAviso(titulo, msg) { 
-            registerModalOpen();
-            document.getElementById('msgAvisoTitulo').innerText = titulo; 
-            document.getElementById('msgAvisoTexto').innerText = msg; 
-            document.getElementById('modalAviso').classList.add('active'); 
-        }
-
-        function confirmarExclusao(id) { 
-            registerModalOpen();
-            idExcluir = id; 
-            document.getElementById('modalConfirmar').classList.add('active'); 
-        }
-
         function fecharModais() { 
             handleModalClose();
             document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); 
-            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; document.getElementById('tituloRenda').innerText = "Nova Renda"; document.getElementById('tituloConta').innerText = "Nova Conta"; document.getElementById('btnSalvarRenda').innerText = "+ Adicionar Renda"; document.getElementById('btnSalvarConta').innerText = "+ Adicionar Conta"; toggleParcelas(); }, 300); 
+            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; toggleParcelas(); }, 300); 
         }
 
         function fecharModalAviso() { handleModalClose(); document.getElementById('modalAviso').classList.remove('active'); }
@@ -698,16 +675,9 @@
         document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); }
         
         window.onclick = function(e) { 
-            if(e.target.classList.contains('modal-overlay')) { 
-                if(e.target.id == 'modalConfirmar') fecharConfirmacao();
-                else if(e.target.id == 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
-                else if(e.target.id == 'modalAviso') fecharModalAviso();
-                else fecharModais(); 
-            }
+            if(e.target.classList.contains('modal-overlay')) fecharModais(); 
             if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
         }
-
-        let idExcluir = null;
 
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
         window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
@@ -723,12 +693,14 @@
         async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); if(res.ok) window.location.reload(); } catch (err) { console.error(err); } }
         function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
         function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
-        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error(err); } }
+        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
         function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
         function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
         async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
         let timeout = null;
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
+        let idExcluir = null;
+        function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
     </script>
 </body>
 </html>
