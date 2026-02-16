@@ -42,7 +42,7 @@
         }
         .context-menu ul { list-style: none; margin: 0; padding: 0; }
         .context-menu li {
-            padding: 14px 18px; /* Touch target maior para mobile */
+            padding: 14px 18px; 
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -392,7 +392,20 @@
                         <div class="form-group"><label>Valor</label><input type="text" name="valor" id="contaValor" class="form-input" placeholder="R$ 0,00" required></div>
                         <div class="form-group"><label>Tipo de Conta</label><select name="sub_tipo" id="contaTipo" class="form-select" onchange="toggleParcelas()"><option value="Única">Única</option><option value="Parcelada">Parcelada</option><option value="Fixa">Fixa</option></select></div>
                         <div class="form-group" id="grupoParcelas" style="display:none;"><label>Parcelas (Atual/Total)</label><input type="text" name="parcelas" id="contaParcelas" class="form-input" placeholder="00/00" maxlength="5" oninput="mascaraParcela(this)"></div>
-                        <div class="form-group"><label>Nome do Terceiro (Opcional)</label><input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" placeholder="Ex: Mãe, Davi..."></div>
+                        
+                        <div class="form-group"><label>Nome do Terceiro (Opcional)</label>
+                            <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Mãe, Davi...">
+                            <datalist id="nomesTerceiros">
+                                <option value="Mãe">
+                                <option value="Davi">
+                                <option value="Morr">
+                                <option value="Vô">
+                                <option value="Sogra">
+                                <option value="Casa">
+                                <option value="Mandi">
+                            </datalist>
+                        </div>
+
                         <button type="submit" id="btnSalvarConta" class="btn-primary form-btn" style="background-color:#444;">+ Adicionar Conta</button>
                     </form>
                 </div>
@@ -506,6 +519,7 @@
         // Simulação de clique longo no celular (S23)
         function handleTouchStart(e, pessoa) {
             touchTimer = setTimeout(() => {
+                if(e.cancelable) e.preventDefault(); 
                 abrirMenuContexto(e, pessoa);
             }, 600); // 600ms para disparar o menu
         }

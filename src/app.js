@@ -98,7 +98,7 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       success: true,
       message: 'Lançamento Confirmado',
       data: {
-        dono: idUsuarioFinal === 1 ? 'Dodo' : 'Vitoria',
+        dono: idUsuarioFinal === 1 ? 'Dodo' : idUsuarioFinal === 2 ? 'Vitoria' : 'Outro',
         descricao: dadosParaSalvar.descricao,
         valor_formatado: `R$ ${valorFinal.toFixed(2).replace('.', ',')}`,
         quem: dadosParaSalvar.nomeTerceiro || 'Próprio',
@@ -119,8 +119,6 @@ async function authMiddleware(req, res, next) {
   res.redirect('/login');
 }
 
-// --- ROTAS DE DADOS (JSON) ---
-
 // Detalhes do Cartão por Pessoa
 app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
   try {
@@ -133,7 +131,7 @@ app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
   }
 });
 
-// Detalhes de Rendas (RESTAURADA)
+// Detalhes de Rendas
 app.get('/api/rendas', authMiddleware, async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -144,7 +142,7 @@ app.get('/api/rendas', authMiddleware, async (req, res) => {
   }
 });
 
-// Backup de Dados (RESTAURADA)
+// Backup de Dados
 app.get('/api/backup', authMiddleware, async (req, res) => {
   try {
     const data = await repo.getAllDataForBackup(req.session.user.id);
@@ -157,9 +155,7 @@ app.get('/api/backup', authMiddleware, async (req, res) => {
   }
 });
 
-// --- ROTAS DE PÁGINAS ---
-
-// Relatório de Impressão (RESTAURADA)
+// --- ROTA RESTAURADA: RELATÓRIO DE IMPRESSÃO ---
 app.get('/relatorio', authMiddleware, async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -180,6 +176,7 @@ app.get('/relatorio', authMiddleware, async (req, res) => {
       user: req.session.user,
     });
   } catch (err) {
+    console.error('Erro Relatório:', err);
     res.status(500).send('Erro ao carregar relatório.');
   }
 });
@@ -383,21 +380,9 @@ app.post('/api/lancamentos', authMiddleware, async (req, res) => {
       pAtual = parseInt(p[0]);
       pTotal = parseInt(p[1]);
     }
-
     let dataBase = new Date();
     if (context_month && context_year) dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
-
-    await repo.addLancamento(req.session.user.id, {
-      descricao: (descricao || '').trim(),
-      valor: parseValor(valor),
-      tipo: dbTipo,
-      categoria: dbCategoria,
-      status: dbStatus,
-      parcelaAtual: pAtual,
-      totalParcelas: pTotal,
-      nomeTerceiro: nome_terceiro || null,
-      dataBase,
-    });
+    await repo.addLancamento(req.session.user.id, { descricao: (descricao || '').trim(), valor: parseValor(valor), tipo: dbTipo, categoria: dbCategoria, status: dbStatus, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null, dataBase });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -410,21 +395,13 @@ app.put('/api/lancamentos/:id', authMiddleware, async (req, res) => {
     let pAtual = null,
       pTotal = null;
     if (sub_tipo === 'Parcelada' && parcelas) {
-      const p = parcelas.split('/');
-      pAtual = parseInt(p[0]);
-      pTotal = parseInt(p[1]);
+      const parts = parcelas.split('/');
+      pAtual = parseInt(parts[0]);
+      pTotal = parseInt(parts[1]);
     }
     let dbTipo = sub_tipo === 'Fixa' ? 'FIXA' : 'CARTAO';
     if (tipo_transacao === 'RENDA') dbTipo = 'RENDA';
-    await repo.updateLancamento(req.session.user.id, req.params.id, {
-      descricao,
-      valor: parseValor(valor),
-      tipo: dbTipo,
-      categoria: sub_tipo,
-      parcelaAtual: pAtual,
-      totalParcelas: pTotal,
-      nomeTerceiro: nome_terceiro || null,
-    });
+    await repo.updateLancamento(req.session.user.id, req.params.id, { descricao, valor: parseValor(valor), tipo: dbTipo, categoria: sub_tipo, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
