@@ -28,19 +28,19 @@
         .draggable-card:active { cursor: grabbing; }
         .draggable-card.dragging { opacity: 0.4; border: 2px dashed var(--blue); transform: scale(0.98); }
 
-        /* FIX PARA MOBILE: BLOQUEIO DE SELEÇÃO E CALLOUT */
+        /* FIX MOBILE: Bloqueia seleção nativa para permitir Double Tap limpo */
         .trigger-p-nome {
             user-select: none !important;
             -webkit-user-select: none !important;
-            -webkit-touch-callout: none !important; /* Impede menu nativo do Android/Chrome */
-            cursor: context-menu;
+            -webkit-touch-callout: none !important;
+            cursor: pointer;
             padding: 12px 5px;
             font-weight: 500;
             display: block;
             width: 100%;
         }
 
-        /* Estilos do Menu de Contexto Otimizado */
+        /* Menu de Contexto */
         .context-menu {
             position: fixed;
             z-index: 10000;
@@ -465,7 +465,7 @@
         let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
-        let lastTap = 0; // Controle para double tap
+        let lastTap = 0; // Controle para detectar double tap
 
         // --- SISTEMA DE CONTROLE DE MODAL E HISTÓRICO ---
         function registerModalOpen() { document.body.classList.add('no-scroll'); history.pushState({ modal: true }, '', ''); }
@@ -489,8 +489,9 @@
         function handleDoubleTap(e, pessoa) {
             const now = new Date().getTime();
             const timesince = now - lastTap;
+            
+            // Detecta se o segundo toque ocorreu em menos de 300ms
             if ((timesince < 300) && (timesince > 0)) {
-                // Double tap detectado
                 if(e.cancelable) e.preventDefault(); 
                 abrirMenuContexto(e, pessoa);
             }
@@ -520,10 +521,11 @@
 
         window.onclick = (e) => { 
             if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
+            if(e.target.classList.contains('modal-overlay')) fecharModais();
         };
 
         // --- AÇÕES EM LOTE ---
-        async function executarAcaoEmLotePessoa(status) {
+        async function executarAcaoEmLotePessoa(novoStatus) {
             fecharMenuContexto();
             try {
                 const res = await fetch('/api/lancamentos/status-pessoa', {
@@ -560,16 +562,17 @@
 
         document.getElementById('btnConfirmarAcao').onclick = () => { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
 
-        // Outras funções de lógica do sistema (DASHBOARD, CRUD, BACKUP) permanecem inalteradas...
-        function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
+        // --- FUNÇÕES MANTIDAS E CORRIGIDAS ---
+        function toggleParcelas() { const t = document.getElementById('contaTipo').value; document.getElementById('grupoParcelas').style.display = t === 'Parcelada' ? 'block' : 'none'; }
         function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(window.anotTimer); window.anotTimer = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
         function fecharConfirmacaoAcao() { handleModalClose(); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
         function fecharModais() { handleModalClose(); document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+        function fecharConfirmacao() { handleModalClose(); document.getElementById('modalConfirmar').classList.remove('active'); }
         function fazerBackup() { window.location.href = '/api/backup'; }
         function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
         function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
-        async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); window.location.reload(); }
+        async function alternarStatus(checkbox, id) { const status = checkbox.checked ? 'PAGO' : 'PENDENTE'; await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); window.location.reload(); }
         function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
         function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
         async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
@@ -585,6 +588,70 @@
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
         window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
         document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
+
+        // --- CORREÇÃO: Função abrirModalRendasDetalhes que faltava ---
+        async function abrirModalRendasDetalhes() { 
+            registerModalOpen();
+            document.getElementById('modalRendasDetalhes').classList.add('active'); 
+            const c = document.getElementById('listaRendasConteudo');
+            const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); 
+            const d = await res.json(); 
+            let h = '';
+            d.forEach(r => { 
+                const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
+                const safeDesc = r.descricao.replace(/'/g, "\\'"); 
+                h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; 
+            });
+            c.innerHTML = h || 'Vazio'; 
+        }
+
+        async function abrirModalCartaoPessoa(pessoa) { 
+            registerModalOpen();
+            document.getElementById('modalDetalhesCartao').classList.add('active'); 
+            document.getElementById('tituloModalCartao').innerText = `Cartão - ${pessoa}`; 
+            document.getElementById('totalModalCartao').innerText = ""; 
+            const container = document.getElementById('listaCartaoPessoaConteudo'); 
+            container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>'; 
+            try { 
+                const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`); 
+                const itens = await res.json(); 
+                const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
+                document.getElementById('totalModalCartao').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                if (itens.length === 0) { container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum lançamento.</td></tr>'; return; } 
+                let html = ''; 
+                itens.forEach(item => { 
+                    const v = Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
+                    const safeDesc = item.descricao.replace(/'/g, "\\'"); 
+                    const pAtual = item.parcelaatual || ''; 
+                    const pTotal = item.totalparcelas || ''; 
+                    const safePessoa = (item.nometerceiro || '').replace(/'/g, "\\'"); 
+                    let parcelasTexto = (item.parcelaatual && item.totalparcelas) ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2,'0')}/${String(item.totalparcelas).padStart(2,'0')})</small>` : ''; 
+                    html += `<tr class="draggable-row" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`; 
+                }); 
+                container.innerHTML = html; 
+                initDragAndDrop(); 
+            } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>'; } 
+        }
+
+        async function abrirModalUltimas() {
+            registerModalOpen();
+            document.getElementById('modalUltimasContas').classList.add('active');
+            const tbody = document.getElementById('listaUltimasConteudo');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+            try {
+                const res = await fetch('/api/lancamentos/recentes');
+                const data = await res.json();
+                if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>'; return; }
+                let html = '';
+                data.forEach(item => {
+                    const quem = item.nometerceiro || "<%= user.nome %>";
+                    const valor = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+                    html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td><td style="padding:12px 10px;">${desc}</td><td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td></tr>`;
+                });
+                tbody.innerHTML = html;
+            } catch (err) { console.error(err); tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--red);">Erro ao carregar dados.</td></tr>'; }
+        }
     </script>
 </body>
 </html>
