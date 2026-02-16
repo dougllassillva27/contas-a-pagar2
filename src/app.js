@@ -1,4 +1,6 @@
-// CARREGA VARIÁVEIS DE AMBIENTE
+// ==============================================================================
+// 🚀 SETUP INICIAL E IMPORTAÇÕES
+// ==============================================================================
 require('dotenv').config();
 
 const express = require('express');
@@ -10,128 +12,107 @@ const repo = require('./repositories/FinanceiroRepository');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CONFIGURAÇÕES DE SEGURANÇA
+// Configurações de Segurança e Ambiente
 const SENHA_MESTRA = (process.env.SENHA_MESTRA || 'senha_padrao_insegura').trim();
 const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 
+// Configuração da View Engine (EJS)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Configuração de Parseamento (JSON e URL Encoded)
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// --- MIDDLEWARE PARA TRATAR JSON MALFORMADO ---
+// --- MIDDLEWARE: TRATAMENTO DE JSON QUEBRADO ---
+// Evita que o servidor caia se alguém enviar um JSON mal formatado
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    console.error('Erro de Sintaxe JSON recebido:', err.message);
+    console.error('Erro de Sintaxe JSON:', err.message);
     return res.status(400).json({
       success: false,
       error: 'JSON Malformado',
-      details: 'O corpo da sua requisição contém erros de sintaxe (ex: falta aspas, vírgulas erradas ou formato inválido).',
+      details: 'Verifique a sintaxe do JSON enviado (vírgulas, aspas, chaves).',
     });
   }
   next();
 });
 
+// Configuração de Sessão
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: { secure: false }, // Em produção com HTTPS, mude para true
   })
 );
 
-// --- FUNÇÃO AUXILIAR DE VALOR MELHORADA ---
+// --- FUNÇÃO AUXILIAR: FORMATAR VALORES ---
+// Converte "R$ 1.200,50" ou "1200.50" para float JS (1200.50)
 const parseValor = (v) => {
   if (v === undefined || v === null) return NaN;
   if (typeof v === 'number') return v;
 
-  // Converte para string e limpa R$ e espaços
+  // Remove R$ e espaços
   const str = String(v).replace('R$', '').trim();
-
   if (str === '') return NaN;
 
-  // Lógica para aceitar "1.000,00" (BR) ou "1000.00" (US)
+  // Remove pontos de milhar e troca vírgula decimal por ponto
   const cleanStr = str.replace(/\./g, '').replace(',', '.');
 
-  const num = parseFloat(cleanStr);
-  return isNaN(num) ? NaN : num;
+  return parseFloat(cleanStr);
 };
 
 // ==============================================================================
-// 🔌 INTEGRAÇÃO EXTERNA (API - Postman / Bruno)
+// 🔌 INTEGRAÇÃO EXTERNA (API - APP ANDROID / POSTMAN)
 // ==============================================================================
 
-// Middleware de Segurança da API
+// Middleware de Autenticação da API
 const apiAuth = (req, res, next) => {
   const tokenRecebido = req.headers['x-api-key'];
-
   if (tokenRecebido && tokenRecebido === API_TOKEN) {
     next();
   } else {
-    setTimeout(() => {
-      res.status(401).json({
-        success: false,
-        error: 'Acesso negado',
-        details: 'A chave da API (x-api-key) está incorreta ou ausente.',
-      });
-    }, 500);
+    res.status(401).json({
+      success: false,
+      error: 'Acesso Negado',
+      details: 'Token da API inválido ou ausente.',
+    });
   }
 };
 
-// ROTA: Cadastrar Lançamento via Externa
+// ROTA: Cadastrar Lançamento (Usada pelo Atalhos HTTP / MacroDroid)
 app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
   try {
     const { descricao, valor, tipo, parcelas, terceiro, data_vencimento, usuario_id } = req.body;
 
-    // --- 1. VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS ---
+    // --- 1. VALIDAÇÕES ---
 
-    // 1.1 Validação Usuário (AGORA OBRIGATÓRIO)
+    // Validação Usuário (OBRIGATÓRIO)
     if (!usuario_id) {
       return res.status(400).json({
         success: false,
-        error: 'Usuário ausente',
-        details: 'O campo "usuario_id" é obrigatório. Envie 1 para Dodo ou 2 para Vitoria.',
+        error: 'Usuário não informado',
+        details: 'O campo "usuario_id" é obrigatório. Envie 1 (Dodo) ou 2 (Vitoria).',
       });
     }
 
     const idUsuarioFinal = parseInt(usuario_id);
     if (isNaN(idUsuarioFinal) || idUsuarioFinal <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Usuário inválido',
-        details: `O ID de usuário "${usuario_id}" não é válido.`,
-      });
+      return res.status(400).json({ success: false, error: 'ID Inválido', details: 'Usuário inválido.' });
     }
 
-    // 1.2 Validação Descrição
+    // Validação Descrição
     if (!descricao || String(descricao).trim() === '') {
-      return res.status(400).json({
-        success: false,
-        error: 'Descrição inválida',
-        details: 'O campo "descricao" é obrigatório.',
-      });
+      return res.status(400).json({ success: false, error: 'Descrição vazia', details: 'Informe o que foi comprado.' });
     }
 
-    // 1.3 Validação Valor
+    // Validação Valor
     const valorFinal = parseValor(valor);
     if (isNaN(valorFinal) || valorFinal <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Valor inválido',
-        details: `O valor enviado ("${valor}") não é válido.`,
-      });
-    }
-
-    // 1.4 Validação Tipo
-    if (!tipo || String(tipo).trim() === '') {
-      return res.status(400).json({
-        success: false,
-        error: 'Tipo ausente',
-        details: 'O campo "tipo" é obrigatório. Valores aceitos: "Única", "Parcelada" ou "Fixa".',
-      });
+      return res.status(400).json({ success: false, error: 'Valor inválido', details: 'O valor deve ser numérico e maior que zero.' });
     }
 
     // --- 2. PROCESSAMENTO DE DADOS ---
@@ -139,47 +120,32 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
     let dbCategoria = null;
     let pAtual = null,
       pTotal = null;
+    const tipoNorm = String(tipo || '').toLowerCase();
 
-    const tipoNormalizado = String(tipo).toLowerCase();
-
-    // Lógica de Tipo
-    if (tipoNormalizado === 'fixa') {
+    // Lógica de Tipos (Fixa, Parcelada, Única)
+    if (tipoNorm === 'fixa') {
       dbTipo = 'FIXA';
       dbCategoria = 'Fixa';
-    } else if (tipoNormalizado === 'parcelada' || tipoNormalizado === 'unica' || tipoNormalizado === 'cartao') {
+    } else {
       dbTipo = 'CARTAO';
-      // Se for parcelada, valida as parcelas
-      if (tipoNormalizado === 'parcelada') {
-        if (parcelas && String(parcelas).includes('/')) {
-          const parts = String(parcelas).split('/');
-          if (parts.length === 2) {
-            const p1 = parseInt(parts[0]);
-            const p2 = parseInt(parts[1]);
-            if (!isNaN(p1) && !isNaN(p2)) {
-              pAtual = p1;
-              pTotal = p2;
-            }
-          }
+      // Tenta extrair parcelas se vier no formato "1/10"
+      if (tipoNorm === 'parcelada' && parcelas && String(parcelas).includes('/')) {
+        const parts = String(parcelas).split('/');
+        if (parts.length === 2) {
+          pAtual = parseInt(parts[0]);
+          pTotal = parseInt(parts[1]);
         }
       }
-    } else {
-      // Default para evitar erro, mas poderia rejeitar se quisesse ser muito estrito
-      dbTipo = 'CARTAO';
     }
 
-    // Validação de Data
+    // Data de Vencimento (Opcional, default: Hoje)
     let dataBase = new Date();
-    let avisoData = null;
     if (data_vencimento) {
       const d = new Date(data_vencimento);
-      if (!isNaN(d.getTime())) {
-        dataBase = d;
-      } else {
-        avisoData = "A 'data_vencimento' enviada era inválida, usamos a data de hoje.";
-      }
+      if (!isNaN(d.getTime())) dataBase = d;
     }
 
-    // --- 3. SALVAR ---
+    // --- 3. SALVAR NO BANCO ---
     const dadosParaSalvar = {
       descricao: descricao,
       valor: valorFinal,
@@ -194,87 +160,85 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
 
     await repo.addLancamento(idUsuarioFinal, dadosParaSalvar);
 
-    console.log(`[API] Sucesso (User ${idUsuarioFinal}): ${descricao} - R$ ${valorFinal.toFixed(2)}`);
+    console.log(`[API] Nova conta (User ${idUsuarioFinal}): ${descricao} - R$ ${valorFinal.toFixed(2)}`);
 
-    // Resposta de Sucesso
+    // --- 4. RESPOSTA FORMATADA (PARA O SCRIPT DO ANDROID) ---
+    // Aqui garantimos que o JSON tem os campos "bonitos" para o recibo
     res.status(201).json({
       success: true,
-      message: 'Conta cadastrada com sucesso!',
+      message: 'Lançamento Confirmado',
       data: {
-        dono: idUsuarioFinal === 1 ? 'Dodo' : idUsuarioFinal === 2 ? 'Vitoria' : `User ${idUsuarioFinal}`,
+        dono: idUsuarioFinal === 1 ? 'Dodo' : idUsuarioFinal === 2 ? 'Vitoria' : 'Outro',
         descricao: dadosParaSalvar.descricao,
-        valor_formatado: `R$ ${valorFinal.toFixed(2)}`,
+        // Formata R$ 1.250,00 (Brasil)
+        valor_formatado: `R$ ${valorFinal.toFixed(2).replace('.', ',')}`,
         quem: dadosParaSalvar.nomeTerceiro || 'Próprio',
-        tipo_registrado: dbTipo === 'FIXA' ? 'Fixa' : pTotal ? `Parcelado (${pAtual}/${pTotal})` : 'Crédito à vista',
+        // Texto descritivo do tipo
+        detalhe_tipo: dbTipo === 'FIXA' ? 'Conta Fixa' : pTotal ? `Parcelado ${pAtual}/${pTotal}` : 'Crédito à vista',
       },
-      aviso: avisoData,
     });
   } catch (err) {
     console.error('Erro Crítico API:', err);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno no servidor',
-      details: err.message,
-    });
+    res.status(500).json({ success: false, error: 'Erro no Servidor', details: err.message });
   }
 });
 
 // ==============================================================================
-// 🌐 SISTEMA WEB (Middlewares e Rotas de Navegador)
+// 🌐 SISTEMA WEB (DASHBOARD E TELAS)
 // ==============================================================================
 
+// Middleware de Login
 async function authMiddleware(req, res, next) {
-  if (req.session && req.session.user) {
-    return next();
-  }
+  if (req.session && req.session.user) return next();
   res.redirect('/login');
 }
 
-// --- ROTAS PÚBLICAS ---
+// Rota de Login (GET)
 app.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('login', { error: null });
 });
 
+// Rota de Login (POST)
 app.post('/login', async (req, res) => {
   const passwordDigitada = (req.body.password || '').trim();
-
   if (passwordDigitada === SENHA_MESTRA) {
     try {
+      // Loga sempre como ID 1 (Dodo) inicialmente
       const user = await repo.getUsuarioById(1);
       if (user) {
         req.session.user = { id: user.id, nome: user.nome, login: user.login };
         return res.redirect('/');
       }
-      return res.render('login', { error: 'Usuário principal não encontrado.' });
+      return res.render('login', { error: 'Usuário principal não encontrado no banco.' });
     } catch (err) {
-      console.error('Erro Login:', err);
-      return res.render('login', { error: 'Erro de conexão com o banco.' });
+      console.error(err);
+      return res.render('login', { error: 'Erro de conexão com o banco de dados.' });
     }
   } else {
+    // Delay artificial para evitar Brute Force
     setTimeout(() => {
       res.render('login', { error: 'Senha incorreta!' });
     }, 500);
   }
 });
 
+// Logout
 app.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/login');
 });
 
-// Aplica proteção nas rotas WEB abaixo
+// --- APLICA PROTEÇÃO NAS ROTAS ABAIXO ---
 app.use(authMiddleware);
 
-// --- ROTAS PROTEGIDAS (WEB) ---
-
+// Trocar de Usuário (Dodo <-> Vitoria)
 app.get('/switch/:id', async (req, res) => {
   try {
     const targetId = parseInt(req.params.id);
     const user = await repo.getUsuarioById(targetId);
     if (user) {
       req.session.user = { id: user.id, nome: user.nome, login: user.login };
-      req.session.authenticated = true;
     }
     res.redirect('/');
   } catch (err) {
@@ -282,64 +246,29 @@ app.get('/switch/:id', async (req, res) => {
   }
 });
 
-app.get('/relatorio', async (req, res) => {
-  try {
-    const userId = req.session.user.id;
-    const userName = req.session.user.nome;
-    const hoje = new Date();
-    const mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
-    const ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
-
-    const itens = await repo.getRelatorioMensal(userId, mes, ano);
-
-    const agrupado = {};
-    agrupado[userName] = { itens: [], total: 0 };
-
-    itens.forEach((item) => {
-      const pessoa = item.nometerceiro || userName;
-      if (!agrupado[pessoa]) agrupado[pessoa] = { itens: [], total: 0 };
-      agrupado[pessoa].itens.push(item);
-      agrupado[pessoa].total += Number(item.valor);
-    });
-
-    const dataRef = new Date(ano, mes - 1, 1);
-    let nomeMes = dataRef.toLocaleString('pt-BR', { month: 'long' });
-    nomeMes = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-
-    res.render('relatorio', {
-      dados: agrupado,
-      mes: nomeMes,
-      ano: ano,
-      titulo: `Relatório - ${nomeMes} ${ano}`,
-      totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0),
-    });
-  } catch (err) {
-    console.error('Erro Relatório:', err);
-    res.status(500).send('Erro ao gerar relatório.');
-  }
-});
-
+// Dashboard Principal
 app.get('/', async (req, res) => {
   try {
     const userId = req.session.user.id;
     const userName = req.session.user.nome;
-
     const hoje = new Date();
-    let mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
-    let ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
 
+    // Filtros de Mês/Ano
+    const mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
+    const ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
+
+    // Navegação (Mês Anterior / Próximo)
     const dataAtual = new Date(ano, mes - 1, 1);
-    const dataAnterior = new Date(ano, mes - 2, 1);
-    const dataProxima = new Date(ano, mes, 1);
-
     const nav = {
-      atual: { month: mes, year: ano, dateObj: dataAtual },
-      ant: { month: dataAnterior.getMonth() + 1, year: dataAnterior.getFullYear() },
-      prox: { month: dataProxima.getMonth() + 1, year: dataProxima.getFullYear() },
+      atual: { month: mes, year: ano },
+      ant: { month: mes === 1 ? 12 : mes - 1, year: mes === 1 ? ano - 1 : ano },
+      prox: { month: mes === 12 ? 1 : mes + 1, year: mes === 12 ? ano + 1 : ano },
     };
 
+    // Carregamento Paralelo de Dados (Performance)
     const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal] = await Promise.all([repo.getDashboardTotals(userId, mes, ano), repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano), repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano), repo.getAnotacoes(userId), repo.getResumoPessoas(userId, mes, ano, userName), repo.getDadosTerceiros(userId, mes, ano), repo.getOrdemCards(userId), repo.getFaturaManual(userId, mes, ano)]);
 
+    // Processamento dos Cards de Terceiros
     const terceirosMap = {};
     dadosTerceirosRaw.forEach((item) => {
       const nome = item.nometerceiro;
@@ -356,17 +285,17 @@ app.get('/', async (req, res) => {
       else if (item.tipo === 'CARTAO') terceirosMap[nome].itensCartao.push(item);
     });
 
+    // Ordenação Personalizada dos Cards
     const ordemMap = {};
-    if (ordemCardsRaw && ordemCardsRaw.length > 0)
+    if (ordemCardsRaw)
       ordemCardsRaw.forEach((o) => {
         ordemMap[o.nome] = o.ordem;
       });
 
     const listaTerceiros = Object.values(terceirosMap).sort((a, b) => {
-      const ordA = ordemMap[a.nome] !== undefined ? ordemMap[a.nome] : 9999;
-      const ordB = ordemMap[b.nome] !== undefined ? ordemMap[b.nome] : 9999;
-      if (ordA !== ordB) return ordA - ordB;
-      return a.nome.localeCompare(b.nome);
+      const ordA = ordemMap[a.nome] ?? 9999;
+      const ordB = ordemMap[b.nome] ?? 9999;
+      return ordA - ordB || a.nome.localeCompare(b.nome);
     });
 
     res.render('index', {
@@ -383,119 +312,80 @@ app.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('Erro Dashboard:', err);
-    res.status(500).send('Erro ao carregar dashboard.');
+    res.status(500).send('Erro ao carregar dashboard. Verifique os logs.');
   }
 });
 
-// --- APIs INTERNAS (Web - Ajax) ---
+// ==============================================================================
+// 🛠️ ROTAS INTERNAS (AJAX / CRUD WEB)
+// ==============================================================================
+
+// APIs Auxiliares
 app.get('/api/lancamentos/recentes', async (req, res) => {
   try {
-    const ultimos = await repo.getUltimosLancamentos(req.session.user.id);
-    res.json(ultimos);
-  } catch (err) {
-    console.error('Erro ultimos:', err);
-    res.status(500).json({ error: err.message });
+    res.json(await repo.getUltimosLancamentos(req.session.user.id));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
-
 app.post('/api/anotacoes', async (req, res) => {
   try {
     await repo.updateAnotacoes(req.session.user.id, req.body.conteudo);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-app.get('/api/rendas', async (req, res) => {
-  try {
-    const m = req.query.month || new Date().getMonth() + 1;
-    const y = req.query.year || new Date().getFullYear();
-    const rendas = await repo.getDetalhesRendas(req.session.user.id, m, y);
-    res.json(rendas);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-app.get('/api/cartao/:pessoa', async (req, res) => {
-  try {
-    const m = req.query.month || new Date().getMonth() + 1;
-    const y = req.query.year || new Date().getFullYear();
-    const itens = await repo.getLancamentosCartaoPorPessoa(req.session.user.id, req.params.pessoa, m, y, req.session.user.nome);
-    res.json(itens);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-app.get('/api/backup', async (req, res) => {
-  try {
-    const data = await repo.getAllDataForBackup(req.session.user.id);
-    const fileName = `backup_${req.session.user.login}_${new Date().toISOString().split('T')[0]}.json`;
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-    res.send(JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error('Erro no backup:', err);
-    res.status(500).send('Erro ao gerar backup');
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 app.post('/api/fatura-manual', async (req, res) => {
   try {
-    const { valor, month, year } = req.body;
-    await repo.saveFaturaManual(req.session.user.id, parseInt(month), parseInt(year), parseValor(valor));
+    await repo.saveFaturaManual(req.session.user.id, parseInt(req.body.month), parseInt(req.body.year), parseValor(req.body.valor));
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 app.post('/api/cards/reorder', async (req, res) => {
   try {
-    const { nomes } = req.body;
-    await repo.saveOrdemCards(req.session.user.id, nomes);
+    await repo.saveOrdemCards(req.session.user.id, req.body.nomes);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 app.post('/api/lancamentos/copiar', async (req, res) => {
   try {
-    const month = parseInt(req.body.month);
-    const year = parseInt(req.body.year);
-    await repo.copyMonth(req.session.user.id, month, year);
+    await repo.copyMonth(req.session.user.id, parseInt(req.body.month), parseInt(req.body.year));
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 app.delete('/api/lancamentos/mes', async (req, res) => {
   try {
-    const month = parseInt(req.query.month);
-    const year = parseInt(req.query.year);
-    if (isNaN(month) || isNaN(year)) return res.status(400).json({ error: 'Inválido' });
-    await repo.deleteMonth(req.session.user.id, month, year);
+    await repo.deleteMonth(req.session.user.id, parseInt(req.query.month), parseInt(req.query.year));
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 app.post('/api/lancamentos/status-pessoa', async (req, res) => {
   try {
     await repo.updateStatusBatchPessoa(req.session.user.id, req.body.pessoa, req.body.status, req.body.month, req.body.year, req.session.user.nome);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 app.post('/api/lancamentos/reorder', async (req, res) => {
   try {
-    const { itens } = req.body;
-    await repo.reorderLancamentos(req.session.user.id, itens);
+    await repo.reorderLancamentos(req.session.user.id, req.body.itens);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-// --- CRUD UNITÁRIO (WEB) ---
+// CRUD Unitário (Via Modais do Dashboard)
 app.post('/api/lancamentos', async (req, res) => {
   try {
     const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year } = req.body;
@@ -504,6 +394,7 @@ app.post('/api/lancamentos', async (req, res) => {
       pAtual = null,
       pTotal = null,
       dbCategoria = null;
+
     if (tipo_transacao === 'RENDA') {
       dbTipo = 'RENDA';
       dbStatus = 'PAGO';
@@ -518,9 +409,24 @@ app.post('/api/lancamentos', async (req, res) => {
         }
       }
     }
+
     let dataBase = new Date();
-    if (context_month && context_year) dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
-    await repo.addLancamento(req.session.user.id, { descricao: (descricao || '').trim(), valor: parseValor(valor), tipo: dbTipo, categoria: dbCategoria, status: dbStatus, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null, dataBase: dataBase });
+    // Se vier contexto de mês/ano, força a data para aquele mês (dia 10)
+    if (context_month && context_year) {
+      dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
+    }
+
+    await repo.addLancamento(req.session.user.id, {
+      descricao: (descricao || '').trim(),
+      valor: parseValor(valor),
+      tipo: dbTipo,
+      categoria: dbCategoria,
+      status: dbStatus,
+      parcelaAtual: pAtual,
+      totalParcelas: pTotal,
+      nomeTerceiro: nome_terceiro || null,
+      dataBase,
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -532,6 +438,7 @@ app.put('/api/lancamentos/:id', async (req, res) => {
     const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro } = req.body;
     let pAtual = null,
       pTotal = null;
+
     if (sub_tipo === 'Parcelada' && parcelas) {
       const parts = parcelas.split('/');
       if (parts.length === 2) {
@@ -539,14 +446,19 @@ app.put('/api/lancamentos/:id', async (req, res) => {
         pTotal = parseInt(parts[1]);
       }
     }
-    let dbTipo = 'CARTAO',
-      dbCategoria = null;
-    if (tipo_transacao === 'RENDA') {
-      dbTipo = 'RENDA';
-      dbCategoria = sub_tipo;
-    } else if (sub_tipo === 'Fixa') dbTipo = 'FIXA';
-    else dbTipo = 'CARTAO';
-    await repo.updateLancamento(req.session.user.id, req.params.id, { descricao, valor: parseValor(valor), tipo: dbTipo, categoria: dbCategoria, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null });
+
+    let dbTipo = sub_tipo === 'Fixa' ? 'FIXA' : 'CARTAO';
+    if (tipo_transacao === 'RENDA') dbTipo = 'RENDA';
+
+    await repo.updateLancamento(req.session.user.id, req.params.id, {
+      descricao,
+      valor: parseValor(valor),
+      tipo: dbTipo,
+      categoria: sub_tipo,
+      parcelaAtual: pAtual,
+      totalParcelas: pTotal,
+      nomeTerceiro: nome_terceiro || null,
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -557,17 +469,19 @@ app.delete('/api/lancamentos/:id', async (req, res) => {
   try {
     await repo.deleteLancamento(req.session.user.id, req.params.id);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
+
 app.patch('/api/lancamentos/:id/status', async (req, res) => {
   try {
     await repo.updateStatus(req.session.user.id, req.params.id, req.body.status);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
+// Inicialização do Servidor
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
