@@ -80,21 +80,42 @@ const apiAuth = (req, res, next) => {
     }, 500);
   }
 };
+
 // ROTA: Cadastrar Lançamento via Externa
 app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
   try {
-    // ADICIONADO: usuario_id na desestruturação
     const { descricao, valor, tipo, parcelas, terceiro, data_vencimento, usuario_id } = req.body;
 
     // --- 1. VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS ---
+
+    // 1.1 Validação Usuário (AGORA OBRIGATÓRIO)
+    if (!usuario_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Usuário ausente',
+        details: 'O campo "usuario_id" é obrigatório. Envie 1 para Dodo ou 2 para Vitoria.',
+      });
+    }
+
+    const idUsuarioFinal = parseInt(usuario_id);
+    if (isNaN(idUsuarioFinal) || idUsuarioFinal <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Usuário inválido',
+        details: `O ID de usuário "${usuario_id}" não é válido.`,
+      });
+    }
+
+    // 1.2 Validação Descrição
     if (!descricao || String(descricao).trim() === '') {
       return res.status(400).json({
         success: false,
-        error: 'Dados inválidos',
+        error: 'Descrição inválida',
         details: 'O campo "descricao" é obrigatório.',
       });
     }
 
+    // 1.3 Validação Valor
     const valorFinal = parseValor(valor);
     if (isNaN(valorFinal) || valorFinal <= 0) {
       return res.status(400).json({
@@ -104,15 +125,16 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       });
     }
 
+    // 1.4 Validação Tipo
     if (!tipo || String(tipo).trim() === '') {
       return res.status(400).json({
         success: false,
         error: 'Tipo ausente',
-        details: 'O campo "tipo" é obrigatório.',
+        details: 'O campo "tipo" é obrigatório. Valores aceitos: "Única", "Parcelada" ou "Fixa".',
       });
     }
 
-    // --- 2. PROCESSAMENTO ---
+    // --- 2. PROCESSAMENTO DE DADOS ---
     let dbTipo = 'CARTAO';
     let dbCategoria = null;
     let pAtual = null,
@@ -120,31 +142,42 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
 
     const tipoNormalizado = String(tipo).toLowerCase();
 
+    // Lógica de Tipo
     if (tipoNormalizado === 'fixa') {
       dbTipo = 'FIXA';
       dbCategoria = 'Fixa';
-    } else if (['parcelada', 'unica', 'cartao'].includes(tipoNormalizado)) {
+    } else if (tipoNormalizado === 'parcelada' || tipoNormalizado === 'unica' || tipoNormalizado === 'cartao') {
       dbTipo = 'CARTAO';
-      if (tipoNormalizado === 'parcelada' && parcelas && String(parcelas).includes('/')) {
-        const parts = String(parcelas).split('/');
-        if (parts.length === 2) {
-          pAtual = parseInt(parts[0]);
-          pTotal = parseInt(parts[1]);
+      // Se for parcelada, valida as parcelas
+      if (tipoNormalizado === 'parcelada') {
+        if (parcelas && String(parcelas).includes('/')) {
+          const parts = String(parcelas).split('/');
+          if (parts.length === 2) {
+            const p1 = parseInt(parts[0]);
+            const p2 = parseInt(parts[1]);
+            if (!isNaN(p1) && !isNaN(p2)) {
+              pAtual = p1;
+              pTotal = p2;
+            }
+          }
         }
       }
+    } else {
+      // Default para evitar erro, mas poderia rejeitar se quisesse ser muito estrito
+      dbTipo = 'CARTAO';
     }
 
+    // Validação de Data
     let dataBase = new Date();
     let avisoData = null;
     if (data_vencimento) {
       const d = new Date(data_vencimento);
-      if (!isNaN(d.getTime())) dataBase = d;
-      else avisoData = 'Data inválida, usamos hoje.';
+      if (!isNaN(d.getTime())) {
+        dataBase = d;
+      } else {
+        avisoData = "A 'data_vencimento' enviada era inválida, usamos a data de hoje.";
+      }
     }
-
-    // --- NOVO: DEFINIÇÃO DO USUÁRIO ---
-    // Se vier usuario_id, usa ele. Se não, usa 1 (Dodo).
-    const idUsuarioFinal = usuario_id ? parseInt(usuario_id) : 1;
 
     // --- 3. SALVAR ---
     const dadosParaSalvar = {
@@ -159,24 +192,30 @@ app.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
       status: 'PENDENTE',
     };
 
-    // Passamos o idUsuarioFinal em vez do número 1 fixo
     await repo.addLancamento(idUsuarioFinal, dadosParaSalvar);
 
     console.log(`[API] Sucesso (User ${idUsuarioFinal}): ${descricao} - R$ ${valorFinal.toFixed(2)}`);
 
+    // Resposta de Sucesso
     res.status(201).json({
       success: true,
       message: 'Conta cadastrada com sucesso!',
       data: {
-        dono: idUsuarioFinal === 1 ? 'Dodo' : 'Vitoria', // Apenas visual
+        dono: idUsuarioFinal === 1 ? 'Dodo' : idUsuarioFinal === 2 ? 'Vitoria' : `User ${idUsuarioFinal}`,
         descricao: dadosParaSalvar.descricao,
-        valor: `R$ ${valorFinal.toFixed(2)}`,
+        valor_formatado: `R$ ${valorFinal.toFixed(2)}`,
+        quem: dadosParaSalvar.nomeTerceiro || 'Próprio',
+        tipo_registrado: dbTipo === 'FIXA' ? 'Fixa' : pTotal ? `Parcelado (${pAtual}/${pTotal})` : 'Crédito à vista',
       },
       aviso: avisoData,
     });
   } catch (err) {
     console.error('Erro Crítico API:', err);
-    res.status(500).json({ success: false, error: 'Erro interno', details: err.message });
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno no servidor',
+      details: err.message,
+    });
   }
 });
 
