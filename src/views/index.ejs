@@ -38,11 +38,9 @@
             font-weight: 500;
             display: block;
             width: 100%;
-            /* Feedback visual ao tocar */
-            transition: background 0.1s;
         }
         .trigger-p-nome:active {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255,255,255,0.1); /* Feedback visual */
         }
 
         /* Estilos do Menu de Contexto Otimizado */
@@ -73,30 +71,9 @@
         .context-menu li.delete-action { color: var(--red); }
         .context-menu li.delete-action .material-icons { color: var(--red); }
         .context-menu .menu-divider { border-top: 1px solid #444; margin: 6px 0; }
-
-        /* CONSOLE DE DEBUG NA TELA DO CELULAR */
-        #mobile-debug-console {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: #0f0;
-            font-family: monospace;
-            font-size: 10px;
-            padding: 5px;
-            overflow-y: scroll;
-            z-index: 999999;
-            border-top: 2px solid #0f0;
-            pointer-events: none; /* Permite clicar através dele */
-            display: none; /* Oculto por padrão, ativado via JS se precisar */
-        }
     </style>
 </head>
 <body>
-
-    <div id="mobile-debug-console">Console de Debug Iniciado...<br></div>
 
     <header>
         <div class="header-left">
@@ -130,8 +107,6 @@
             </a>
 
             <button class="btn-danger-outline" onclick="abrirConfirmacaoAcao('DELETAR')"><span class="material-icons" style="font-size: 16px;">delete</span>Deletar Mês</button>
-            
-            <button class="btn-secondary" onclick="toggleDebug()" style="opacity: 0.5;">🐞</button>
         </div>
     </header>
 
@@ -489,9 +464,9 @@
     <script>
         const currentMonth = <%= nav.atual.month %>;
         const currentYear = <%= nav.atual.year %>;
-        let isBackNavigation = false;
         
-        // VARIÁVEIS GLOBAIS
+        // DECLARAÇÃO ÚNICA DE VARIÁVEIS GLOBAIS
+        let isBackNavigation = false;
         let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
@@ -514,54 +489,25 @@
             }
         });
 
-        // --- FUNÇÃO DE LOG VISUAL NA TELA (MOBILE DEBUG) ---
-        function logMsg(msg) {
-            const consoleDiv = document.getElementById('mobile-debug-console');
-            if(consoleDiv) {
-                consoleDiv.style.display = 'block';
-                consoleDiv.innerHTML = `<div>> ${msg}</div>` + consoleDiv.innerHTML;
-            }
-            console.log(msg);
-        }
-
-        function toggleDebug() {
-            const consoleDiv = document.getElementById('mobile-debug-console');
-            if(consoleDiv) {
-                consoleDiv.style.display = consoleDiv.style.display === 'none' ? 'block' : 'none';
-            }
-        }
-
-        // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) ---
+        // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) E POSICIONAMENTO CORRIGIDO ---
         function initDoubleTapMobile() {
-            // Seletor para todos os nomes
-            const elementos = document.querySelectorAll('.trigger-p-nome');
             let lastTapTime = 0;
-            const delay = 500; // 500ms para facilitar o double tap
+            const delay = 500; // Tempo aumentado para facilitar o double tap
 
-            elementos.forEach(el => {
+            document.querySelectorAll('.trigger-p-nome').forEach(el => {
                 el.addEventListener('touchend', function(e) {
                     const now = new Date().getTime();
                     const timeSince = now - lastTapTime;
-                    
-                    logMsg(`Toque detectado. Diff: ${timeSince}ms`);
 
+                    // Verifica se é double tap
                     if (timeSince < delay && timeSince > 0) {
-                        logMsg("DOUBLE TAP CONFIRMADO!");
-                        // Previne comportamento padrão (zoom, etc)
                         e.preventDefault();
-                        
                         const pessoa = this.getAttribute('data-pessoa');
-                        if (pessoa) {
-                            abrirMenuContexto(e, pessoa);
-                        } else {
-                            logMsg("Erro: Atributo data-pessoa vazio");
-                        }
-                    } else {
-                        // Primeiro toque
+                        abrirMenuContexto(e, pessoa);
                     }
 
                     lastTapTime = now;
-                }, { passive: false }); // passive: false permite o preventDefault
+                }, { passive: false });
             });
         }
 
@@ -571,20 +517,28 @@
             const menu = document.getElementById('customContextMenu');
             menu.style.display = 'block';
             
-            // Posição ajustada
-            let x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
-            let y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+            // CORREÇÃO CRÍTICA: USAR CLIENTX/CLIENTY PARA POSITION FIXED
+            let x, y;
+            if (e.changedTouches) {
+                // Evento de toque
+                x = e.changedTouches[0].clientX;
+                y = e.changedTouches[0].clientY;
+            } else {
+                // Evento de mouse
+                x = e.clientX;
+                y = e.clientY;
+            }
             
-            // Fallback se não encontrar coordenadas
-            if (!x) x = window.innerWidth / 2 - 100;
+            // Fallback
+            if (!x) x = window.innerWidth / 2;
             if (!y) y = window.innerHeight / 2;
 
+            // Ajuste para não sair da tela
             if (x + 220 > window.innerWidth) x -= 220;
             if (y + 180 > window.innerHeight) y -= 180;
 
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
-            logMsg(`Menu aberto para: ${pessoa} em X:${x} Y:${y}`);
         }
 
         function fecharMenuContexto() {
@@ -721,9 +675,7 @@
             } 
             initDragAndDrop(); 
             initCardDragAndDrop(); 
-            
-            // INICIALIZA O LISTENER DO DOUBLE TAP
-            initDoubleTapMobile();
+            initDoubleTapMobile(); // Inicializa o double tap
         });
 
         function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
@@ -744,7 +696,6 @@
         async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
         let timeout = null;
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
-        
         function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
         function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
         function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
