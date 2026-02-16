@@ -27,6 +27,31 @@
         .draggable-card { cursor: grab; transition: transform 0.2s, opacity 0.2s; }
         .draggable-card:active { cursor: grabbing; }
         .draggable-card.dragging { opacity: 0.4; border: 2px dashed var(--blue); transform: scale(0.98); }
+
+        /* Estilos do Menu de Contexto */
+        .context-menu {
+            position: fixed;
+            z-index: 10000;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            padding: 5px 0;
+            min-width: 200px;
+        }
+        .context-menu ul { list-style: none; margin: 0; padding: 0; }
+        .context-menu li {
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            color: #eee;
+            transition: background 0.2s;
+        }
+        .context-menu li:hover { background: #3a3a3a; }
+        .context-menu li .material-icons { font-size: 20px; color: var(--red); }
     </style>
 </head>
 <body>
@@ -198,7 +223,10 @@
                                 <span class="material-icons" style="font-size: 16px; cursor: pointer;" 
                                       onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')">visibility</span>
                             </td>
-                            <td style="font-weight: 500;"><%= pessoa.pessoa %></td>
+                            <td style="font-weight: 500; cursor: context-menu;" 
+                                oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')">
+                                <%= pessoa.pessoa %>
+                            </td>
                             <td style="text-align: right; color: var(--text-secondary); font-size: 0.8rem; white-space: nowrap;">
                                 <input type="checkbox" 
                                        onchange="alternarStatusPessoa(this, '<%= pessoa.pessoa %>')"
@@ -278,6 +306,15 @@
             <% }) %>
         </div>
     <% } %>
+
+    <div id="customContextMenu" class="context-menu" style="display:none;">
+        <ul>
+            <li onclick="confirmarExclusaoPessoa()">
+                <span class="material-icons">delete_sweep</span>
+                Excluir todas as contas
+            </li>
+        </ul>
+    </div>
 
     <div class="modal-overlay" id="modalUltimasContas">
         <div class="modal-box" style="max-width:600px;">
@@ -426,8 +463,53 @@
                     else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
                     else fecharModais();
                 }
+                fecharMenuContexto();
             }
         });
+
+        // --- LÓGICA DO MENU DE CONTEXTO ---
+        let pessoaSelecionadaContexto = null;
+        function abrirMenuContexto(e, pessoa) {
+            e.preventDefault();
+            pessoaSelecionadaContexto = pessoa;
+            const menu = document.getElementById('customContextMenu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        }
+        function fecharMenuContexto() {
+            document.getElementById('customContextMenu').style.display = 'none';
+        }
+
+        function confirmarExclusaoPessoa() {
+            fecharMenuContexto();
+            registerModalOpen();
+            const titulo = document.getElementById('tituloConfirmacao');
+            const texto = document.getElementById('textoConfirmacao');
+            const btn = document.getElementById('btnConfirmarAcao');
+            const icon = document.getElementById('iconConfirmacao');
+            
+            titulo.innerText = "Excluir Todas Contas";
+            texto.innerText = `CUIDADO: Isso apagará TODAS as contas de cartão de "${pessoaSelecionadaContexto}" deste mês permanentemente. Continuar?`;
+            btn.innerText = "Sim, Excluir Tudo";
+            btn.style.backgroundColor = "var(--red)";
+            icon.style.color = "var(--red)";
+            icon.innerText = "warning";
+            acaoConfirmadaCallback = executarExclusaoPessoa;
+            
+            document.getElementById('modalConfirmacaoAcao').classList.add('active');
+        }
+
+        async function executarExclusaoPessoa() {
+            try {
+                const res = await fetch(`/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' });
+                if(res.ok) { window.location.reload(); } 
+                else {
+                    const data = await res.json();
+                    mostrarAviso("Erro", "Erro ao excluir: " + (data.error || "Desconhecido"));
+                }
+            } catch(err) { console.error(err); mostrarAviso("Erro", "Falha na comunicação."); }
+        }
 
         async function abrirModalUltimas() {
             registerModalOpen();
@@ -452,7 +534,6 @@
             } catch (err) { console.error(err); tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--red);">Erro ao carregar dados.</td></tr>'; }
         }
 
-        // --- CORREÇÃO DA ROTA DINÂMICA COM encodeURIComponent ---
         async function abrirModalCartaoPessoa(pessoa) { 
             registerModalOpen();
             document.getElementById('modalDetalhesCartao').classList.add('active'); 
@@ -461,7 +542,6 @@
             const container = document.getElementById('listaCartaoPessoaConteudo'); 
             container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>'; 
             try { 
-                // encodeURIComponent garante que nomes com espaços ou acentos funcionem
                 const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`); 
                 const itens = await res.json(); 
                 const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
@@ -603,7 +683,8 @@
                 else if(e.target.id == 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
                 else if(e.target.id == 'modalAviso') fecharModalAviso();
                 else fecharModais(); 
-            } 
+            }
+            if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
         }
 
         function toggleRendas(event) { 
