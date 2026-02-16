@@ -38,6 +38,11 @@
             font-weight: 500;
             display: block;
             width: 100%;
+            /* Feedback visual ao tocar */
+            transition: background 0.1s;
+        }
+        .trigger-p-nome:active {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         /* Estilos do Menu de Contexto Otimizado */
@@ -68,9 +73,30 @@
         .context-menu li.delete-action { color: var(--red); }
         .context-menu li.delete-action .material-icons { color: var(--red); }
         .context-menu .menu-divider { border-top: 1px solid #444; margin: 6px 0; }
+
+        /* CONSOLE DE DEBUG NA TELA DO CELULAR */
+        #mobile-debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 5px;
+            overflow-y: scroll;
+            z-index: 999999;
+            border-top: 2px solid #0f0;
+            pointer-events: none; /* Permite clicar através dele */
+            display: none; /* Oculto por padrão, ativado via JS se precisar */
+        }
     </style>
 </head>
 <body>
+
+    <div id="mobile-debug-console">Console de Debug Iniciado...<br></div>
 
     <header>
         <div class="header-left">
@@ -104,6 +130,8 @@
             </a>
 
             <button class="btn-danger-outline" onclick="abrirConfirmacaoAcao('DELETAR')"><span class="material-icons" style="font-size: 16px;">delete</span>Deletar Mês</button>
+            
+            <button class="btn-secondary" onclick="toggleDebug()" style="opacity: 0.5;">🐞</button>
         </div>
     </header>
 
@@ -241,8 +269,8 @@
                             </td>
                             <td style="padding:0;">
                                 <span class="trigger-p-nome" 
-                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')"
-                                    onclick="handleDoubleTap(event, '<%= pessoa.pessoa %>')">
+                                    data-pessoa="<%= pessoa.pessoa %>"
+                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')">
                                     <%= pessoa.pessoa %>
                                 </span>
                             </td>
@@ -463,11 +491,10 @@
         const currentYear = <%= nav.atual.year %>;
         let isBackNavigation = false;
         
-        // DECLARAÇÃO ÚNICA DE VARIÁVEIS GLOBAIS
+        // VARIÁVEIS GLOBAIS
         let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
-        let lastTap = 0; // Controle para detectar double tap
 
         // --- SISTEMA DE CONTROLE DE MODAL E HISTÓRICO ---
         function registerModalOpen() { document.body.classList.add('no-scroll'); history.pushState({ modal: true }, '', ''); }
@@ -487,34 +514,77 @@
             }
         });
 
-        // --- LÓGICA DO MENU DE CONTEXTO E DOUBLE TAP ---
-        function handleDoubleTap(e, pessoa) {
-            const now = new Date().getTime();
-            const timesince = now - lastTap;
-            
-            // Detecta se o segundo toque ocorreu em menos de 300ms
-            if ((timesince < 300) && (timesince > 0)) {
-                if(e.cancelable) e.preventDefault(); 
-                abrirMenuContexto(e, pessoa);
+        // --- FUNÇÃO DE LOG VISUAL NA TELA (MOBILE DEBUG) ---
+        function logMsg(msg) {
+            const consoleDiv = document.getElementById('mobile-debug-console');
+            if(consoleDiv) {
+                consoleDiv.style.display = 'block';
+                consoleDiv.innerHTML = `<div>> ${msg}</div>` + consoleDiv.innerHTML;
             }
-            lastTap = now;
+            console.log(msg);
+        }
+
+        function toggleDebug() {
+            const consoleDiv = document.getElementById('mobile-debug-console');
+            if(consoleDiv) {
+                consoleDiv.style.display = consoleDiv.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) ---
+        function initDoubleTapMobile() {
+            // Seletor para todos os nomes
+            const elementos = document.querySelectorAll('.trigger-p-nome');
+            let lastTapTime = 0;
+            const delay = 500; // 500ms para facilitar o double tap
+
+            elementos.forEach(el => {
+                el.addEventListener('touchend', function(e) {
+                    const now = new Date().getTime();
+                    const timeSince = now - lastTapTime;
+                    
+                    logMsg(`Toque detectado. Diff: ${timeSince}ms`);
+
+                    if (timeSince < delay && timeSince > 0) {
+                        logMsg("DOUBLE TAP CONFIRMADO!");
+                        // Previne comportamento padrão (zoom, etc)
+                        e.preventDefault();
+                        
+                        const pessoa = this.getAttribute('data-pessoa');
+                        if (pessoa) {
+                            abrirMenuContexto(e, pessoa);
+                        } else {
+                            logMsg("Erro: Atributo data-pessoa vazio");
+                        }
+                    } else {
+                        // Primeiro toque
+                    }
+
+                    lastTapTime = now;
+                }, { passive: false }); // passive: false permite o preventDefault
+            });
         }
 
         function abrirMenuContexto(e, pessoa) {
-            if(e.cancelable) e.preventDefault();
+            if(e.cancelable && e.preventDefault) e.preventDefault();
             pessoaSelecionadaContexto = pessoa;
             const menu = document.getElementById('customContextMenu');
             menu.style.display = 'block';
             
-            // Posição para mouse ou touch
-            let x = e.pageX || (e.touches && e.touches[0] ? e.touches[0].pageX : e.clientX);
-            let y = e.pageY || (e.touches && e.touches[0] ? e.touches[0].pageY : e.clientY);
+            // Posição ajustada
+            let x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
+            let y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
             
+            // Fallback se não encontrar coordenadas
+            if (!x) x = window.innerWidth / 2 - 100;
+            if (!y) y = window.innerHeight / 2;
+
             if (x + 220 > window.innerWidth) x -= 220;
             if (y + 180 > window.innerHeight) y -= 180;
 
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
+            logMsg(`Menu aberto para: ${pessoa} em X:${x} Y:${y}`);
         }
 
         function fecharMenuContexto() {
@@ -564,7 +634,7 @@
 
         document.getElementById('btnConfirmarAcao').onclick = () => { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
 
-        // --- OUTRAS FUNÇÕES (MANTIDAS) ---
+        // --- OUTRAS FUNÇÕES ---
         async function abrirModalUltimas() {
             registerModalOpen();
             document.getElementById('modalUltimasContas').classList.add('active');
@@ -613,7 +683,6 @@
             } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>'; } 
         }
 
-        // CORREÇÃO: Função reinserida para evitar ReferenceError
         async function abrirModalRendasDetalhes() { 
             registerModalOpen();
             document.getElementById('modalRendasDetalhes').classList.add('active'); 
@@ -643,7 +712,20 @@
         function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
         
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
-        window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
+        
+        // --- INICIALIZAÇÃO NO DOMContentLoaded (MUDANÇA CRUCIAL) ---
+        window.addEventListener('DOMContentLoaded', () => { 
+            if (localStorage.getItem('hideRendas') === 'true') { 
+                const icon = document.getElementById('iconEyeRendas'); 
+                if(icon) icon.innerText = 'visibility_off'; 
+            } 
+            initDragAndDrop(); 
+            initCardDragAndDrop(); 
+            
+            // INICIALIZA O LISTENER DO DOUBLE TAP
+            initDoubleTapMobile();
+        });
+
         function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
         function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
         
@@ -666,7 +748,6 @@
         function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
         function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
         function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
-        // CORREÇÃO: Garante que o handler do botão de exclusão só seja atribuído uma vez no final do script
         document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
     </script>
 </body>
