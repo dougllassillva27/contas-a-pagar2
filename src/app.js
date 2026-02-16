@@ -1,3 +1,4 @@
+// Versão funcional
 // CARREGA VARIÁVEIS DE AMBIENTE
 require('dotenv').config();
 
