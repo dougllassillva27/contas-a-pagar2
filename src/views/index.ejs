@@ -28,19 +28,19 @@
         .draggable-card:active { cursor: grabbing; }
         .draggable-card.dragging { opacity: 0.4; border: 2px dashed var(--blue); transform: scale(0.98); }
 
-        /* FIX MOBILE: Bloqueia seleção nativa para permitir Double Tap limpo */
+        /* FIX PARA MOBILE: BLOQUEIO DE SELEÇÃO E CALLOUT */
         .trigger-p-nome {
             user-select: none !important;
             -webkit-user-select: none !important;
-            -webkit-touch-callout: none !important;
-            cursor: pointer;
+            -webkit-touch-callout: none !important; /* Impede menu nativo do Android/Chrome */
+            cursor: context-menu;
             padding: 12px 5px;
             font-weight: 500;
             display: block;
             width: 100%;
         }
 
-        /* Menu de Contexto */
+        /* Estilos do Menu de Contexto Otimizado */
         .context-menu {
             position: fixed;
             z-index: 10000;
@@ -240,9 +240,9 @@
                                       onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')">visibility</span>
                             </td>
                             <td style="padding:0;">
-                                <span class="trigger-p-nome" 
-                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')"
-                                    onclick="handleDoubleTap(event, '<%= pessoa.pessoa %>')">
+                                <span class="trigger-p-nome nome-contexto" 
+                                    data-pessoa="<%= pessoa.pessoa %>"
+                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')">
                                     <%= pessoa.pessoa %>
                                 </span>
                             </td>
@@ -465,7 +465,6 @@
         let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
-        let lastTap = 0; // Controle para detectar double tap
 
         // --- SISTEMA DE CONTROLE DE MODAL E HISTÓRICO ---
         function registerModalOpen() { document.body.classList.add('no-scroll'); history.pushState({ modal: true }, '', ''); }
@@ -485,28 +484,36 @@
             }
         });
 
-        // --- LÓGICA DO MENU DE CONTEXTO E DOUBLE TAP ---
-        function handleDoubleTap(e, pessoa) {
-            const now = new Date().getTime();
-            const timesince = now - lastTap;
-            
-            // Detecta se o segundo toque ocorreu em menos de 300ms
-            if ((timesince < 300) && (timesince > 0)) {
-                if(e.cancelable) e.preventDefault(); 
-                abrirMenuContexto(e, pessoa);
-            }
-            lastTap = now;
+        // --- ALTERAÇÃO 3: NOVA LÓGICA DE DOUBLE TAP PARA MOBILE ---
+        function initDoubleTapMobile() {
+            let lastTapTime = 0;
+            const delay = 300;
+
+            document.querySelectorAll('.nome-contexto').forEach(el => {
+                el.addEventListener('touchend', function(e) {
+                    const now = new Date().getTime();
+                    const timeSince = now - lastTapTime;
+
+                    if (timeSince < delay && timeSince > 0) {
+                        e.preventDefault();
+                        const pessoa = this.dataset.pessoa;
+                        abrirMenuContexto(e, pessoa);
+                    }
+
+                    lastTapTime = now;
+                }, { passive: false });
+            });
         }
 
         function abrirMenuContexto(e, pessoa) {
-            if(e.cancelable) e.preventDefault();
+            if(e.cancelable && e.preventDefault) e.preventDefault();
             pessoaSelecionadaContexto = pessoa;
             const menu = document.getElementById('customContextMenu');
             menu.style.display = 'block';
             
-            // Posição para mouse ou touch
-            let x = e.pageX || (e.touches && e.touches[0] ? e.touches[0].pageX : e.clientX);
-            let y = e.pageY || (e.touches && e.touches[0] ? e.touches[0].pageY : e.clientY);
+            // ALTERAÇÃO 4: POSICIONAMENTO MELHORADO
+            let x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
+            let y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
             
             if (x + 220 > window.innerWidth) x -= 220;
             if (y + 180 > window.innerHeight) y -= 180;
@@ -562,47 +569,25 @@
 
         document.getElementById('btnConfirmarAcao').onclick = () => { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
 
-        // --- FUNÇÕES MANTIDAS E CORRIGIDAS ---
-        function toggleParcelas() { const t = document.getElementById('contaTipo').value; document.getElementById('grupoParcelas').style.display = t === 'Parcelada' ? 'block' : 'none'; }
-        function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
-        function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(window.anotTimer); window.anotTimer = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
-        function fecharConfirmacaoAcao() { handleModalClose(); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
-        function fecharModais() { handleModalClose(); document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-        function fecharConfirmacao() { handleModalClose(); document.getElementById('modalConfirmar').classList.remove('active'); }
-        function fazerBackup() { window.location.href = '/api/backup'; }
-        function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
-        function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
-        async function alternarStatus(checkbox, id) { const status = checkbox.checked ? 'PAGO' : 'PENDENTE'; await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); window.location.reload(); }
-        function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
-        function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
-        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
-        async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
-        function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
-        async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { mostrarAviso("Erro", data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error(err); } }
-        function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
-        function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
-        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
-        async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error(err); } }
-        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
-        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
-        function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
-        window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
-        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
-
-        // --- CORREÇÃO: Função abrirModalRendasDetalhes que faltava ---
-        async function abrirModalRendasDetalhes() { 
+        // --- OUTRAS FUNÇÕES ---
+        async function abrirModalUltimas() {
             registerModalOpen();
-            document.getElementById('modalRendasDetalhes').classList.add('active'); 
-            const c = document.getElementById('listaRendasConteudo');
-            const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); 
-            const d = await res.json(); 
-            let h = '';
-            d.forEach(r => { 
-                const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
-                const safeDesc = r.descricao.replace(/'/g, "\\'"); 
-                h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; 
-            });
-            c.innerHTML = h || 'Vazio'; 
+            document.getElementById('modalUltimasContas').classList.add('active');
+            const tbody = document.getElementById('listaUltimasConteudo');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+            try {
+                const res = await fetch('/api/lancamentos/recentes');
+                const data = await res.json();
+                if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>'; return; }
+                let html = '';
+                data.forEach(item => {
+                    const quem = item.nometerceiro || "<%= user.nome %>";
+                    const valor = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+                    html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td><td style="padding:12px 10px;">${desc}</td><td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td></tr>`;
+                });
+                tbody.innerHTML = html;
+            } catch (err) { console.error(err); }
         }
 
         async function abrirModalCartaoPessoa(pessoa) { 
@@ -630,28 +615,74 @@
                 }); 
                 container.innerHTML = html; 
                 initDragAndDrop(); 
-            } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>'; } 
+            } catch (err) { console.error(err); } 
         }
 
-        async function abrirModalUltimas() {
+        async function abrirModalRendasDetalhes() { 
             registerModalOpen();
-            document.getElementById('modalUltimasContas').classList.add('active');
-            const tbody = document.getElementById('listaUltimasConteudo');
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Carregando...</td></tr>';
-            try {
-                const res = await fetch('/api/lancamentos/recentes');
-                const data = await res.json();
-                if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>'; return; }
-                let html = '';
-                data.forEach(item => {
-                    const quem = item.nometerceiro || "<%= user.nome %>";
-                    const valor = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
-                    html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td><td style="padding:12px 10px;">${desc}</td><td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td></tr>`;
-                });
-                tbody.innerHTML = html;
-            } catch (err) { console.error(err); tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--red);">Erro ao carregar dados.</td></tr>'; }
+            document.getElementById('modalRendasDetalhes').classList.add('active'); 
+            const c = document.getElementById('listaRendasConteudo');
+            const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`); 
+            const d = await res.json(); 
+            let h = '';
+            d.forEach(r => { 
+                const v = Number(r.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
+                const safeDesc = r.descricao.replace(/'/g, "\\'"); 
+                h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; 
+            });
+            c.innerHTML = h || 'Vazio'; 
         }
+
+        function fecharModais() { 
+            handleModalClose();
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); 
+            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; toggleParcelas(); }, 300); 
+        }
+
+        function fecharModalAviso() { handleModalClose(); document.getElementById('modalAviso').classList.remove('active'); }
+        function fecharConfirmacaoAcao() { handleModalClose(); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
+        function fecharConfirmacao() { handleModalClose(); document.getElementById('modalConfirmar').classList.remove('active'); }
+
+        function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) { document.getElementById('modalDetalhesCartao').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Conta"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colRenda').style.display = 'none'; document.getElementById('colConta').style.display = 'block'; document.getElementById('tituloConta').innerText = "Editar Dados"; document.getElementById('btnSalvarConta').innerText = "Salvar Alterações"; document.getElementById('contaId').value = id; document.getElementById('contaDesc').value = desc; document.getElementById('contaValor').value = valor; document.getElementById('contaTipo').value = tipo; document.getElementById('contaTerceiro').value = (nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined') ? nomeTerceiro : ''; if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2,'0') + '/' + String(pTotal).padStart(2,'0'); else document.getElementById('contaParcelas').value = ''; toggleParcelas(); modal.classList.add('active'); }
+        function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
+        
+        let acaoConfirmadaCallback = null;
+        document.getElementById('btnConfirmarAcao').onclick = function() { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
+        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); }
+        
+        // --- ALTERAÇÃO 4: INICIALIZAR DOUBLE TAP NO LOAD ---
+        window.addEventListener('DOMContentLoaded', () => { 
+            if (localStorage.getItem('hideRendas') === 'true') { 
+                const icon = document.getElementById('iconEyeRendas'); 
+                if(icon) icon.innerText = 'visibility_off'; 
+            } 
+            initDragAndDrop(); 
+            initCardDragAndDrop(); 
+            initDoubleTapMobile(); // Inicializa o double tap
+        });
+
+        function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
+        
+        function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
+        function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
+        
+        async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { mostrarAviso("Erro", data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error(err); } }
+        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
+        async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error(err); } }
+        function fazerBackup() { window.location.href = '/api/backup'; }
+        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
+        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
+        async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); if(res.ok) window.location.reload(); } catch (err) { console.error(err); } }
+        function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
+        function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
+        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
+        function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
+        function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
+        async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
+        let timeout = null;
+        function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
+        let idExcluir = null;
+        function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
     </script>
 </body>
 </html>
