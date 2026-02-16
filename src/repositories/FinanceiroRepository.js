@@ -1,3 +1,4 @@
+// Versão funcional
 const db = require('../config/db');
 
 class FinanceiroRepository {
