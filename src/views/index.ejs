@@ -33,7 +33,7 @@
             user-select: none !important;
             -webkit-user-select: none !important;
             -webkit-touch-callout: none !important; /* Impede menu nativo do Android/Chrome */
-            cursor: context-menu;
+            cursor: pointer;
             padding: 12px 5px;
             font-weight: 500;
             display: block;
@@ -240,9 +240,9 @@
                                       onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')">visibility</span>
                             </td>
                             <td style="padding:0;">
-                                <span class="trigger-p-nome nome-contexto" 
-                                    data-pessoa="<%= pessoa.pessoa %>"
-                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')">
+                                <span class="trigger-p-nome" 
+                                    oncontextmenu="abrirMenuContexto(event, '<%= pessoa.pessoa %>')"
+                                    onclick="handleDoubleTap(event, '<%= pessoa.pessoa %>')">
                                     <%= pessoa.pessoa %>
                                 </span>
                             </td>
@@ -463,8 +463,11 @@
         const currentYear = <%= nav.atual.year %>;
         let isBackNavigation = false;
         let pessoaSelecionadaContexto = null;
+        
+        // DECLARAÇÃO ÚNICA DE VARIÁVEIS GLOBAIS
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
+        let lastTap = 0; // Controle para detectar double tap
 
         // --- SISTEMA DE CONTROLE DE MODAL E HISTÓRICO ---
         function registerModalOpen() { document.body.classList.add('no-scroll'); history.pushState({ modal: true }, '', ''); }
@@ -484,36 +487,28 @@
             }
         });
 
-        // --- ALTERAÇÃO 3: NOVA LÓGICA DE DOUBLE TAP PARA MOBILE ---
-        function initDoubleTapMobile() {
-            let lastTapTime = 0;
-            const delay = 300;
-
-            document.querySelectorAll('.nome-contexto').forEach(el => {
-                el.addEventListener('touchend', function(e) {
-                    const now = new Date().getTime();
-                    const timeSince = now - lastTapTime;
-
-                    if (timeSince < delay && timeSince > 0) {
-                        e.preventDefault();
-                        const pessoa = this.dataset.pessoa;
-                        abrirMenuContexto(e, pessoa);
-                    }
-
-                    lastTapTime = now;
-                }, { passive: false });
-            });
+        // --- LÓGICA DO MENU DE CONTEXTO E DOUBLE TAP ---
+        function handleDoubleTap(e, pessoa) {
+            const now = new Date().getTime();
+            const timesince = now - lastTap;
+            
+            if ((timesince < 300) && (timesince > 0)) {
+                // Se o segundo toque ocorrer em menos de 300ms
+                if(e.cancelable) e.preventDefault(); 
+                abrirMenuContexto(e, pessoa);
+            }
+            lastTap = now;
         }
 
         function abrirMenuContexto(e, pessoa) {
-            if(e.cancelable && e.preventDefault) e.preventDefault();
+            if(e.cancelable) e.preventDefault();
             pessoaSelecionadaContexto = pessoa;
             const menu = document.getElementById('customContextMenu');
             menu.style.display = 'block';
             
-            // ALTERAÇÃO 4: POSICIONAMENTO MELHORADO
-            let x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
-            let y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+            // Posição para mouse ou touch
+            let x = e.pageX || (e.touches && e.touches[0] ? e.touches[0].pageX : e.clientX);
+            let y = e.pageY || (e.touches && e.touches[0] ? e.touches[0].pageY : e.clientY);
             
             if (x + 220 > window.innerWidth) x -= 220;
             if (y + 180 > window.innerHeight) y -= 180;
@@ -615,9 +610,10 @@
                 }); 
                 container.innerHTML = html; 
                 initDragAndDrop(); 
-            } catch (err) { console.error(err); } 
+            } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>'; } 
         }
 
+        // CORREÇÃO: Função reinserida para evitar ReferenceError
         async function abrirModalRendasDetalhes() { 
             registerModalOpen();
             document.getElementById('modalRendasDetalhes').classList.add('active'); 
@@ -646,23 +642,22 @@
         function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) { document.getElementById('modalDetalhesCartao').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Conta"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colRenda').style.display = 'none'; document.getElementById('colConta').style.display = 'block'; document.getElementById('tituloConta').innerText = "Editar Dados"; document.getElementById('btnSalvarConta').innerText = "Salvar Alterações"; document.getElementById('contaId').value = id; document.getElementById('contaDesc').value = desc; document.getElementById('contaValor').value = valor; document.getElementById('contaTipo').value = tipo; document.getElementById('contaTerceiro').value = (nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined') ? nomeTerceiro : ''; if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2,'0') + '/' + String(pTotal).padStart(2,'0'); else document.getElementById('contaParcelas').value = ''; toggleParcelas(); modal.classList.add('active'); }
         function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
         
-        let acaoConfirmadaCallback = null;
+        // CORREÇÃO: Remover declaração duplicada e garantir inicialização única
         document.getElementById('btnConfirmarAcao').onclick = function() { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
         document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); }
         
-        // --- ALTERAÇÃO 4: INICIALIZAR DOUBLE TAP NO LOAD ---
-        window.addEventListener('DOMContentLoaded', () => { 
-            if (localStorage.getItem('hideRendas') === 'true') { 
-                const icon = document.getElementById('iconEyeRendas'); 
-                if(icon) icon.innerText = 'visibility_off'; 
-            } 
-            initDragAndDrop(); 
-            initCardDragAndDrop(); 
-            initDoubleTapMobile(); // Inicializa o double tap
-        });
+        window.onclick = function(e) { 
+            if(e.target.classList.contains('modal-overlay')) { 
+                if(e.target.id == 'modalConfirmar') fecharConfirmacao();
+                else if(e.target.id == 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
+                else if(e.target.id == 'modalAviso') fecharModalAviso();
+                else fecharModais(); 
+            }
+            if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
+        }
 
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
-        
+        window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
         function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
         function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
         
