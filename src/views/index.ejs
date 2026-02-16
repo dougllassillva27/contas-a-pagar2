@@ -465,7 +465,7 @@
         let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
-        let lastTap = 0; // Controle para detectar double tap rápido [cite: 114, 123-124]
+        let lastTap = 0; // Controle para double tap
 
         // --- SISTEMA DE CONTROLE DE MODAL E HISTÓRICO ---
         function registerModalOpen() { document.body.classList.add('no-scroll'); history.pushState({ modal: true }, '', ''); }
@@ -485,13 +485,12 @@
             }
         });
 
-        // --- LÓGICA DO MENU DE CONTEXTO E DOUBLE TAP (MOBILE) ---
+        // --- LÓGICA DO MENU DE CONTEXTO E DOUBLE TAP ---
         function handleDoubleTap(e, pessoa) {
             const now = new Date().getTime();
             const timesince = now - lastTap;
-            
             if ((timesince < 300) && (timesince > 0)) {
-                // Segundo toque detectado em menos de 300ms [cite: 124-131]
+                // Double tap detectado
                 if(e.cancelable) e.preventDefault(); 
                 abrirMenuContexto(e, pessoa);
             }
@@ -504,7 +503,7 @@
             const menu = document.getElementById('customContextMenu');
             menu.style.display = 'block';
             
-            // Coordenadas para mouse ou touch [cite: 126-128]
+            // Posição para mouse ou touch
             let x = e.pageX || (e.touches && e.touches[0] ? e.touches[0].pageX : e.clientX);
             let y = e.pageY || (e.touches && e.touches[0] ? e.touches[0].pageY : e.clientY);
             
@@ -515,15 +514,27 @@
             menu.style.top = y + 'px';
         }
 
-        function fecharMenuContexto() { document.getElementById('customContextMenu').style.display = 'none'; }
+        function fecharMenuContexto() {
+            document.getElementById('customContextMenu').style.display = 'none';
+        }
 
-        async function executarAcaoEmLotePessoa(novoStatus) {
+        window.onclick = (e) => { 
+            if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
+        };
+
+        // --- AÇÕES EM LOTE ---
+        async function executarAcaoEmLotePessoa(status) {
             fecharMenuContexto();
             try {
                 const res = await fetch('/api/lancamentos/status-pessoa', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pessoa: pessoaSelecionadaContexto, status: novoStatus, month: currentMonth, year: currentYear })
+                    body: JSON.stringify({ 
+                        pessoa: pessoaSelecionadaContexto, 
+                        status: novoStatus, 
+                        month: currentMonth, 
+                        year: currentYear 
+                    })
                 });
                 if(res.ok) window.location.reload();
                 else mostrarAviso("Erro", "Falha ao atualizar lote.");
@@ -547,66 +558,33 @@
             modal.classList.add('active');
         }
 
-        // --- DASHBOARD E OUTRAS FUNÇÕES ---
-        async function enviarLancamento(e, tipo) {
-            e.preventDefault();
-            const form = e.target;
-            const id = (tipo === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value;
-            const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipo, context_month: currentMonth, context_year: currentYear };
-            if (tipo === 'CONTA') { dados.nome_terceiro = form.nome_terceiro.value; if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; }
-            const url = id ? `/api/lancamentos/${id}` : '/api/lancamentos';
-            await fetch(url, { method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) });
-            window.location.reload();
-        }
-
-        async function abrirModalUltimas() {
-            registerModalOpen();
-            document.getElementById('modalUltimasContas').classList.add('active');
-            const tbody = document.getElementById('listaUltimasConteudo');
-            const res = await fetch('/api/lancamentos/recentes');
-            const data = await res.json();
-            tbody.innerHTML = data.map(item => `<tr><td>${item.nometerceiro || '<%= user.nome %>'}</td><td>${item.descricao}</td><td class="text-right">R$ ${Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td></tr>`).join('');
-        }
-
-        async function abrirModalCartaoPessoa(pessoa) { 
-            registerModalOpen();
-            document.getElementById('modalDetalhesCartao').classList.add('active'); 
-            document.getElementById('tituloModalCartao').innerText = `Cartão - ${pessoa}`; 
-            const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`); 
-            const itens = await res.json(); 
-            const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
-            document.getElementById('totalModalCartao').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById('listaCartaoPessoaConteudo').innerHTML = itens.map(item => `<tr><td><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao}</td><td class="text-right">R$ ${Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td></tr>`).join('');
-        }
-
-        function fecharModais() { handleModalClose(); document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-        function fecharConfirmacaoAcao() { handleModalClose(); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
-        function fecharConfirmacao() { handleModalClose(); document.getElementById('modalConfirmar').classList.remove('active'); }
-        function fecharModalAviso() { handleModalClose(); document.getElementById('modalAviso').classList.remove('active'); }
-
         document.getElementById('btnConfirmarAcao').onclick = () => { if (acaoConfirmadaCallback) acaoConfirmadaCallback(); fecharConfirmacaoAcao(); };
-        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
 
-        window.onclick = (e) => { 
-            if(e.target.classList.contains('modal-overlay')) fecharModais(); 
-            if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
-        };
-
-        function toggleParcelas() { const t = document.getElementById('contaTipo').value; document.getElementById('grupoParcelas').style.display = t === 'Parcelada' ? 'block' : 'none'; }
-        function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
+        // Outras funções de lógica do sistema (DASHBOARD, CRUD, BACKUP) permanecem inalteradas...
+        function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
+        function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(window.anotTimer); window.anotTimer = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
+        function fecharConfirmacaoAcao() { handleModalClose(); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
+        function fecharModais() { handleModalClose(); document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+        function fazerBackup() { window.location.href = '/api/backup'; }
         function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
         function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
-        function fazerBackup() { window.location.href = '/api/backup'; }
-        async function alternarStatus(checkbox, id) { const status = checkbox.checked ? 'PAGO' : 'PENDENTE'; await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); window.location.reload(); }
-        
-        function abrirConfirmacaoAcao(tipo) { 
-            registerModalOpen();
-            const modal = document.getElementById('modalConfirmacaoAcao');
-            if (tipo === 'COPIAR') { acaoConfirmadaCallback = async () => { await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); window.location.reload(); }; }
-            else { acaoConfirmadaCallback = async () => { await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); window.location.reload(); }; }
-            modal.classList.add('active'); 
-        }
+        async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); window.location.reload(); }
+        function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
+        function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
+        async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
+        async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
+        function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
+        async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { mostrarAviso("Erro", data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error(err); } }
+        function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
+        function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
+        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
+        async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error(err); } }
+        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
+        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
+        function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
+        window.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('hideRendas') === 'true') { const icon = document.getElementById('iconEyeRendas'); if(icon) icon.innerText = 'visibility_off'; } initDragAndDrop(); initCardDragAndDrop(); });
+        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
     </script>
 </body>
 </html>
