@@ -169,6 +169,22 @@ async function authMiddleware(req, res, next) {
   res.redirect('/login');
 }
 
+// ROTA DINÂMICA: Corrige o erro 404 e SyntaxError para nomes novos inseridos via App
+app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
+  try {
+    const { nome } = req.params;
+    const { month, year } = req.query;
+    const userId = req.session.user.id;
+    const userName = req.session.user.nome;
+
+    const lancamentos = await repo.getLancamentosCartaoPorPessoa(userId, nome, parseInt(month), parseInt(year), userName);
+    res.json(lancamentos);
+  } catch (err) {
+    console.error('Erro ao buscar detalhes por pessoa:', err);
+    res.status(500).json({ error: 'Erro ao carregar detalhes.' });
+  }
+});
+
 app.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('login', { error: null });
@@ -214,7 +230,6 @@ app.get('/switch/:id', async (req, res) => {
   }
 });
 
-// --- ROTA DO DASHBOARD (A CORREÇÃO ESTÁ AQUI) ---
 app.get('/', async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -224,10 +239,9 @@ app.get('/', async (req, res) => {
     const mes = req.query.month ? parseInt(req.query.month) : hoje.getMonth() + 1;
     const ano = req.query.year ? parseInt(req.query.year) : hoje.getFullYear();
 
-    // Correção: Garantir que dateObj seja passado para o EJS
     const dataAtual = new Date(ano, mes - 1, 1);
     const nav = {
-      atual: { month: mes, year: ano, dateObj: dataAtual }, // <--- AQUI ESTAVA FALTANDO dateObj
+      atual: { month: mes, year: ano, dateObj: dataAtual },
       ant: { month: mes === 1 ? 12 : mes - 1, year: mes === 1 ? ano - 1 : ano },
       prox: { month: mes === 12 ? 1 : mes + 1, year: mes === 12 ? ano + 1 : ano },
     };
