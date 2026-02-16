@@ -22,6 +22,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// --- MIDDLEWARE: TRATAMENTO DE JSON QUEBRADO ---
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     console.error('Erro de Sintaxe JSON:', err.message);
@@ -34,6 +35,7 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// Configuração de Sessão
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
@@ -52,7 +54,7 @@ const parseValor = (v) => {
 };
 
 // ==============================================================================
-// 🔌 INTEGRAÇÃO EXTERNA (API)
+// 🔌 INTEGRAÇÃO EXTERNA (API - APP ANDROID / POSTMAN)
 // ==============================================================================
 
 const apiAuth = (req, res, next) => {
@@ -117,6 +119,7 @@ async function authMiddleware(req, res, next) {
   res.redirect('/login');
 }
 
+// Detalhes do Cartão (Usado pelo modal)
 app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
   try {
     const { nome } = req.params;
@@ -127,6 +130,55 @@ app.get('/api/cartao/:nome', authMiddleware, async (req, res) => {
     res.json(lancamentos);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Detalhes de Rendas (Usado pelo modal de rendas)
+app.get('/api/rendas', authMiddleware, async (req, res) => {
+  try {
+    const { month, year } = req.query;
+    const data = await repo.getDetalhesRendas(req.session.user.id, parseInt(month), parseInt(year));
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Backup de Dados
+app.get('/api/backup', authMiddleware, async (req, res) => {
+  try {
+    const data = await repo.getAllDataForBackup(req.session.user.id);
+    res.setHeader('Content-disposition', 'attachment; filename=backup_financeiro.json');
+    res.setHeader('Content-type', 'application/json');
+    res.write(JSON.stringify(data, null, 2));
+    res.end();
+  } catch (e) {
+    res.status(500).send('Erro ao gerar backup.');
+  }
+});
+
+// --- ROTA RESTAURADA: RELATÓRIO DE IMPRESSÃO ---
+app.get('/relatorio', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const userName = req.session.user.nome;
+    const mes = parseInt(req.query.month);
+    const ano = parseInt(req.query.year);
+
+    const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw] = await Promise.all([repo.getDashboardTotals(userId, mes, ano), repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano), repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano), repo.getResumoPessoas(userId, mes, ano, userName), repo.getDadosTerceiros(userId, mes, ano)]);
+
+    res.render('relatorio', {
+      totais,
+      fixas,
+      cartao,
+      resumoPessoas,
+      terceiros: dadosTerceirosRaw,
+      mes,
+      ano,
+      user: req.session.user,
+    });
+  } catch (err) {
+    res.status(500).send('Erro ao gerar relatório.');
   }
 });
 
@@ -145,6 +197,11 @@ app.post('/login', async (req, res) => {
     }
   }
   res.render('login', { error: 'Senha incorreta!' });
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
 });
 
 app.use(authMiddleware);
@@ -211,7 +268,7 @@ app.get('/', async (req, res) => {
   }
 });
 
-// APIs Auxiliares
+// APIs Auxiliares de Atualização
 app.get('/api/lancamentos/recentes', async (req, res) => {
   try {
     res.json(await repo.getUltimosLancamentos(req.session.user.id));
@@ -219,6 +276,7 @@ app.get('/api/lancamentos/recentes', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.post('/api/anotacoes', async (req, res) => {
   try {
     await repo.updateAnotacoes(req.session.user.id, req.body.conteudo);
@@ -227,6 +285,7 @@ app.post('/api/anotacoes', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.post('/api/fatura-manual', async (req, res) => {
   try {
     await repo.saveFaturaManual(req.session.user.id, parseInt(req.body.month), parseInt(req.body.year), parseValor(req.body.valor));
@@ -235,6 +294,7 @@ app.post('/api/fatura-manual', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.post('/api/cards/reorder', async (req, res) => {
   try {
     await repo.saveOrdemCards(req.session.user.id, req.body.nomes);
@@ -243,6 +303,7 @@ app.post('/api/cards/reorder', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.post('/api/lancamentos/copiar', async (req, res) => {
   try {
     await repo.copyMonth(req.session.user.id, parseInt(req.body.month), parseInt(req.body.year));
@@ -251,6 +312,7 @@ app.post('/api/lancamentos/copiar', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.delete('/api/lancamentos/mes', async (req, res) => {
   try {
     await repo.deleteMonth(req.session.user.id, parseInt(req.query.month), parseInt(req.query.year));
@@ -260,7 +322,6 @@ app.delete('/api/lancamentos/mes', async (req, res) => {
   }
 });
 
-// Exclusão Lote Pessoa
 app.delete('/api/lancamentos/pessoa/:nome', authMiddleware, async (req, res) => {
   try {
     const { nome } = req.params;
@@ -290,6 +351,7 @@ app.post('/api/lancamentos/reorder', async (req, res) => {
   }
 });
 
+// CRUD Lançamentos
 app.post('/api/lancamentos', async (req, res) => {
   try {
     const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year } = req.body;
@@ -307,7 +369,6 @@ app.post('/api/lancamentos', async (req, res) => {
       pAtual = parseInt(p[0]);
       pTotal = parseInt(p[1]);
     }
-
     let dataBase = new Date();
     if (context_month && context_year) dataBase = new Date(parseInt(context_year), parseInt(context_month) - 1, 10);
     await repo.addLancamento(req.session.user.id, { descricao: (descricao || '').trim(), valor: parseValor(valor), tipo: dbTipo, categoria: dbCategoria, status: dbStatus, parcelaAtual: pAtual, totalParcelas: pTotal, nomeTerceiro: nome_terceiro || null, dataBase });
@@ -323,9 +384,9 @@ app.put('/api/lancamentos/:id', async (req, res) => {
     let pAtual = null,
       pTotal = null;
     if (sub_tipo === 'Parcelada' && parcelas) {
-      const p = parcelas.split('/');
-      pAtual = parseInt(p[0]);
-      pTotal = parseInt(p[1]);
+      const parts = parcelas.split('/');
+      pAtual = parseInt(parts[0]);
+      pTotal = parseInt(parts[1]);
     }
     let dbTipo = sub_tipo === 'Fixa' ? 'FIXA' : 'CARTAO';
     if (tipo_transacao === 'RENDA') dbTipo = 'RENDA';
@@ -344,6 +405,7 @@ app.delete('/api/lancamentos/:id', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.patch('/api/lancamentos/:id/status', async (req, res) => {
   try {
     await repo.updateStatus(req.session.user.id, req.params.id, req.body.status);
@@ -353,4 +415,4 @@ app.patch('/api/lancamentos/:id/status', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando`));
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
