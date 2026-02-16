@@ -1,25 +1,16 @@
 const db = require('../config/db');
 
-/**
- * FinanceiroRepository
- * Responsável pela persistência de dados seguindo princípios de Clean Code e SRP.
- * @see https://en.wikipedia.org/wiki/Single-responsibility_principle
- */
 class FinanceiroRepository {
   constructor() {
     this.initOrdemTable();
   }
 
-  // ==============================================================================
-  // 🔐 GESTÃO DE USUÁRIOS
-  // ==============================================================================
-
+  // --- USUÁRIOS ---
   async obterUsuarioPorLogin(login) {
     try {
       const result = await db.query('SELECT * FROM Usuarios WHERE Login = $1', [login]);
       return result.rows[0];
     } catch (err) {
-      console.error('Erro obterUsuarioPorLogin:', err);
       return null;
     }
   }
@@ -29,7 +20,6 @@ class FinanceiroRepository {
       const result = await db.query('SELECT * FROM Usuarios WHERE Id = $1', [id]);
       return result.rows[0];
     } catch (err) {
-      console.error('Erro getUsuarioById:', err);
       return null;
     }
   }
@@ -37,22 +27,19 @@ class FinanceiroRepository {
   async initOrdemTable() {
     try {
       await db.query(`
-        CREATE TABLE IF NOT EXISTS OrdemCards (
-            Id SERIAL PRIMARY KEY,
-            Nome VARCHAR(255) NOT NULL,
-            Ordem INT NOT NULL,
-            UsuarioId INT DEFAULT 1
-        )
-      `);
+                CREATE TABLE IF NOT EXISTS OrdemCards (
+                    Id SERIAL PRIMARY KEY,
+                    Nome VARCHAR(255) NOT NULL,
+                    Ordem INT NOT NULL,
+                    UsuarioId INT DEFAULT 1
+                )
+            `);
     } catch (err) {
       console.error('Erro initOrdemTable:', err);
     }
   }
 
-  // ==============================================================================
-  // 📊 DASHBOARD E QUERIES DE LEITURA
-  // ==============================================================================
-
+  // --- DASHBOARD E LISTAGENS ---
   async getUltimosLancamentos(userId) {
     const query = `SELECT * FROM Lancamentos WHERE UsuarioId = $1 ORDER BY Id DESC LIMIT 20`;
     const result = await db.query(query, [userId]);
@@ -61,191 +48,34 @@ class FinanceiroRepository {
 
   async getRelatorioMensal(userId, month, year) {
     const query = `
-      SELECT * FROM Lancamentos 
-      WHERE UsuarioId = $1 
-        AND Tipo = 'CARTAO' 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3
-      ORDER BY 
-          CASE WHEN NomeTerceiro IS NULL OR NomeTerceiro = '' THEN 0 ELSE 1 END, 
-          NomeTerceiro, 
-          Ordem
-    `;
+            SELECT * FROM Lancamentos 
+            WHERE UsuarioId = $1 
+              AND Tipo = 'CARTAO' 
+              AND EXTRACT(MONTH FROM DataVencimento) = $2 
+              AND EXTRACT(YEAR FROM DataVencimento) = $3
+            ORDER BY 
+                CASE WHEN NomeTerceiro IS NULL OR NomeTerceiro = '' THEN 0 ELSE 1 END, 
+                NomeTerceiro, 
+                Ordem
+        `;
     const result = await db.query(query, [userId, month, year]);
     return result.rows;
   }
 
-  async getDashboardTotals(userId, month, year) {
+  // NOVO MÉTODO: Suporte para nomes dinâmicos (Corrige erro 404/SyntaxError)
+  async getRelatorioMensalPorPessoa(userId, nome, month, year) {
     const query = `
-      SELECT 
-          COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END), 0)::float AS totalrendas,
-          COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0)::float AS totalcontas,
-          COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') AND Status = 'PENDENTE' THEN Valor ELSE 0 END), 0)::float AS faltapagar,
-          COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END) - 
-                 SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0)::float AS saldoprevisto
-      FROM Lancamentos
-      WHERE UsuarioId = $1 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3
+        SELECT * FROM Lancamentos 
+        WHERE UsuarioId = $1 
+          AND NomeTerceiro = $2 
+          AND Tipo = 'CARTAO' 
+          AND EXTRACT(MONTH FROM DataVencimento) = $3 
+          AND EXTRACT(YEAR FROM DataVencimento) = $4
+        ORDER BY DataVencimento ASC, Id ASC
     `;
-    const result = await db.query(query, [userId, month, year]);
-    return result.rows[0];
-  }
-
-  async getLancamentosPorTipo(userId, tipo, month, year) {
-    const query = `
-      SELECT * FROM Lancamentos 
-      WHERE UsuarioId = $1 
-        AND Tipo = $2 
-        AND (NomeTerceiro IS NULL OR NomeTerceiro = '') 
-        AND EXTRACT(MONTH FROM DataVencimento) = $3 
-        AND EXTRACT(YEAR FROM DataVencimento) = $4 
-      ORDER BY Ordem ASC
-    `;
-    const result = await db.query(query, [userId, tipo, month, year]);
+    const result = await db.query(query, [userId, nome, month, year]);
     return result.rows;
   }
-
-  async getLancamentosCartaoPorPessoa(userId, pessoa, month, year, userName) {
-    let query = `
-      SELECT * FROM Lancamentos 
-      WHERE UsuarioId = $1 
-        AND Tipo = 'CARTAO' 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3
-    `;
-    const params = [userId, month, year];
-    if (pessoa === userName) {
-      query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
-    } else {
-      query += ' AND NomeTerceiro = $4';
-      params.push(pessoa);
-    }
-    query += ' ORDER BY Ordem ASC';
-    const result = await db.query(query, params);
-    return result.rows;
-  }
-
-  async getResumoPessoas(userId, month, year, userName) {
-    const query = `
-      SELECT 
-          CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN $4 ELSE NomeTerceiro END AS pessoa, 
-          SUM(CASE WHEN Status = 'PENDENTE' THEN Valor ELSE 0 END)::float AS total, 
-          CASE WHEN COUNT(*) = SUM(CASE WHEN Status = 'PAGO' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS todospagos 
-      FROM Lancamentos 
-      WHERE UsuarioId = $1 
-        AND Tipo = 'CARTAO' 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3 
-      GROUP BY NomeTerceiro 
-      ORDER BY CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN 0 ELSE 1 END, NomeTerceiro
-    `;
-    const result = await db.query(query, [userId, month, year, userName]);
-    return result.rows;
-  }
-
-  async getDadosTerceiros(userId, month, year) {
-    const query = `
-      SELECT * FROM Lancamentos 
-      WHERE UsuarioId = $1 
-        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '') 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3 
-      ORDER BY NomeTerceiro, Tipo, Ordem
-    `;
-    const result = await db.query(query, [userId, month, year]);
-    return result.rows;
-  }
-
-  async getDetalhesRendas(userId, month, year) {
-    return this.getLancamentosPorTipo(userId, 'RENDA', month, year);
-  }
-
-  // ==============================================================================
-  // 📝 OPERAÇÕES DE ESCRITA (CRUD)
-  // ==============================================================================
-
-  async addLancamento(userId, dados) {
-    const dataVencimento = dados.dataBase ? new Date(dados.dataBase) : new Date();
-    const query = `
-      INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
-      (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
-    `;
-    await db.query(query, [userId, dados.descricao, dados.valor, dados.tipo, dados.categoria || null, dados.status || 'PENDENTE', dataVencimento, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null]);
-  }
-
-  async updateLancamento(userId, id, dados) {
-    const query = `
-      UPDATE Lancamentos 
-      SET Descricao = $1, Valor = $2, Tipo = $3, Categoria = $4, ParcelaAtual = $5, TotalParcelas = $6, NomeTerceiro = $7 
-      WHERE Id = $8 AND UsuarioId = $9
-    `;
-    await db.query(query, [dados.descricao, dados.valor, dados.tipo, dados.categoria || null, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null, id, userId]);
-  }
-
-  async updateStatus(userId, id, novoStatus) {
-    await db.query('UPDATE Lancamentos SET Status = $1 WHERE Id = $2 AND UsuarioId = $3', [novoStatus, id, userId]);
-  }
-
-  async updateStatusBatchPessoa(userId, pessoa, novoStatus, month, year, userName) {
-    let query = `
-      UPDATE Lancamentos SET Status = $1 
-      WHERE UsuarioId = $2 
-        AND Tipo = 'CARTAO' 
-        AND EXTRACT(MONTH FROM DataVencimento) = $3 
-        AND EXTRACT(YEAR FROM DataVencimento) = $4
-    `;
-    const params = [novoStatus, userId, month, year];
-    if (pessoa === userName) {
-      query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
-    } else {
-      query += ' AND NomeTerceiro = $5';
-      params.push(pessoa);
-    }
-    await db.query(query, params);
-  }
-
-  async deleteLancamento(userId, id) {
-    await db.query('DELETE FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2', [id, userId]);
-  }
-
-  async deleteLancamentosPorPessoa(userId, pessoa, month, year, userName) {
-    let query = `
-      DELETE FROM Lancamentos 
-      WHERE UsuarioId = $1 AND Tipo = 'CARTAO' 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3
-    `;
-    const params = [userId, month, year];
-    if (pessoa === userName) {
-      query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
-    } else {
-      query += ' AND NomeTerceiro = $4';
-      params.push(pessoa);
-    }
-    await db.query(query, params);
-  }
-
-  async reorderLancamentos(userId, itens) {
-    const client = await db.getClient();
-    try {
-      await client.query('BEGIN');
-      for (let i = 0; i < itens.length; i++) {
-        await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [i, itens[i].id, userId]);
-      }
-      await client.query('COMMIT');
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
-  }
-
-  // ==============================================================================
-  // ⚙️ CONFIGURAÇÕES E MANUTENÇÃO
-  // ==============================================================================
 
   async getFaturaManual(userId, month, year) {
     try {
@@ -287,6 +117,149 @@ class FinanceiroRepository {
     }
   }
 
+  async getDashboardTotals(userId, month, year) {
+    const query = `
+            SELECT 
+                COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END), 0)::float AS totalrendas,
+                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0)::float AS totalcontas,
+                COALESCE(SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') AND Status = 'PENDENTE' THEN Valor ELSE 0 END), 0)::float AS faltapagar,
+                COALESCE(SUM(CASE WHEN Tipo = 'RENDA' THEN Valor ELSE 0 END) - 
+                       SUM(CASE WHEN Tipo IN ('FIXA', 'CARTAO') AND (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN Valor ELSE 0 END), 0)::float AS saldoprevisto
+            FROM Lancamentos
+            WHERE UsuarioId = $1 
+              AND EXTRACT(MONTH FROM DataVencimento) = $2 
+              AND EXTRACT(YEAR FROM DataVencimento) = $3
+        `;
+    const result = await db.query(query, [userId, month, year]);
+    return result.rows[0];
+  }
+
+  async getLancamentosPorTipo(userId, tipo, month, year) {
+    const query = `
+            SELECT * FROM Lancamentos 
+            WHERE UsuarioId = $1 
+              AND Tipo = $2 
+              AND (NomeTerceiro IS NULL OR NomeTerceiro = '') 
+              AND EXTRACT(MONTH FROM DataVencimento) = $3 
+              AND EXTRACT(YEAR FROM DataVencimento) = $4 
+            ORDER BY Ordem ASC
+        `;
+    const result = await db.query(query, [userId, tipo, month, year]);
+    return result.rows;
+  }
+
+  async getDadosTerceiros(userId, month, year) {
+    const query = `
+            SELECT * FROM Lancamentos 
+            WHERE UsuarioId = $1 
+              AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '') 
+              AND EXTRACT(MONTH FROM DataVencimento) = $2 
+              AND EXTRACT(YEAR FROM DataVencimento) = $3 
+            ORDER BY NomeTerceiro, Tipo, Ordem
+        `;
+    const result = await db.query(query, [userId, month, year]);
+    return result.rows;
+  }
+
+  async getLancamentosCartaoPorPessoa(userId, pessoa, month, year, userName) {
+    let query = `
+            SELECT * FROM Lancamentos 
+            WHERE UsuarioId = $1 
+              AND Tipo = 'CARTAO' 
+              AND EXTRACT(MONTH FROM DataVencimento) = $2 
+              AND EXTRACT(YEAR FROM DataVencimento) = $3
+        `;
+    const params = [userId, month, year];
+    if (pessoa === userName) {
+      query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
+    } else {
+      query += ' AND NomeTerceiro = $4';
+      params.push(pessoa);
+    }
+    query += ' ORDER BY Ordem ASC';
+    const result = await db.query(query, params);
+    return result.rows;
+  }
+
+  async getResumoPessoas(userId, month, year, userName) {
+    const query = `
+            SELECT 
+                CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN $4 ELSE NomeTerceiro END AS pessoa, 
+                SUM(CASE WHEN Status = 'PENDENTE' THEN Valor ELSE 0 END)::float AS total, 
+                CASE WHEN COUNT(*) = SUM(CASE WHEN Status = 'PAGO' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS todospagos 
+            FROM Lancamentos 
+            WHERE UsuarioId = $1 
+              AND Tipo = 'CARTAO' 
+              AND EXTRACT(MONTH FROM DataVencimento) = $2 
+              AND EXTRACT(YEAR FROM DataVencimento) = $3 
+            GROUP BY NomeTerceiro 
+            ORDER BY CASE WHEN (NomeTerceiro IS NULL OR NomeTerceiro = '') THEN 0 ELSE 1 END, NomeTerceiro
+        `;
+    const result = await db.query(query, [userId, month, year, userName]);
+    return result.rows;
+  }
+
+  async getDetalhesRendas(userId, month, year) {
+    return this.getLancamentosPorTipo(userId, 'RENDA', month, year);
+  }
+
+  // --- CRUD ---
+  async addLancamento(userId, dados) {
+    const dataVencimento = dados.dataBase ? new Date(dados.dataBase) : new Date();
+    const query = `
+            INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
+            (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
+        `;
+    await db.query(query, [userId, dados.descricao, dados.valor, dados.tipo, dados.categoria, dados.status || 'PENDENTE', dataVencimento, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null]);
+  }
+
+  async updateLancamento(userId, id, dados) {
+    await db.query(`UPDATE Lancamentos SET Descricao = $1, Valor = $2, Tipo = $3, Categoria = $4, ParcelaAtual = $5, TotalParcelas = $6, NomeTerceiro = $7 WHERE Id = $8 AND UsuarioId = $9`, [dados.descricao, dados.valor, dados.tipo, dados.categoria, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null, id, userId]);
+  }
+
+  async updateStatus(userId, id, novoStatus) {
+    await db.query('UPDATE Lancamentos SET Status = $1 WHERE Id = $2 AND UsuarioId = $3', [novoStatus, id, userId]);
+  }
+
+  async updateStatusBatchPessoa(userId, pessoa, novoStatus, month, year, userName) {
+    let query = `
+            UPDATE Lancamentos SET Status = $1 
+            WHERE UsuarioId = $2 
+              AND Tipo = 'CARTAO' 
+              AND EXTRACT(MONTH FROM DataVencimento) = $3 
+              AND EXTRACT(YEAR FROM DataVencimento) = $4
+        `;
+    const params = [novoStatus, userId, month, year];
+    if (pessoa === userName) {
+      query += " AND (NomeTerceiro IS NULL OR NomeTerceiro = '')";
+    } else {
+      query += ' AND NomeTerceiro = $5';
+      params.push(pessoa);
+    }
+    await db.query(query, params);
+  }
+
+  async reorderLancamentos(userId, itens) {
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
+      for (let i = 0; i < itens.length; i++) {
+        await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [i, itens[i].id, userId]);
+      }
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async deleteLancamento(userId, id) {
+    await db.query('DELETE FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2', [id, userId]);
+  }
+
   async getAnotacoes(userId) {
     const result = await db.query('SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 LIMIT 1', [userId]);
     return result.rows[0]?.conteudo || '';
@@ -316,34 +289,37 @@ class FinanceiroRepository {
       }
 
       const res = await client.query(
-        `SELECT * FROM Lancamentos 
-         WHERE UsuarioId = $1 
-           AND EXTRACT(MONTH FROM DataVencimento) = $2 
-           AND EXTRACT(YEAR FROM DataVencimento) = $3 
-           AND (Tipo IN ('FIXA', 'RENDA') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))`,
+        `
+                SELECT * FROM Lancamentos 
+                WHERE UsuarioId = $1 
+                  AND EXTRACT(MONTH FROM DataVencimento) = $2 
+                  AND EXTRACT(YEAR FROM DataVencimento) = $3 
+                  AND (Tipo IN ('FIXA', 'RENDA') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))
+            `,
         [userId, currentMonth, currentYear]
       );
 
-      if (res.rows.length === 0) return;
+      const itemsToCopy = res.rows;
+      if (itemsToCopy.length === 0) return;
 
       await client.query('BEGIN');
-      for (const item of res.rows) {
+      for (const item of itemsToCopy) {
         let novoParcelaAtual = item.parcelaatual;
         let totalParcelas = item.totalparcelas;
-
         if (novoParcelaAtual && totalParcelas) {
           if (novoParcelaAtual >= totalParcelas) continue;
           novoParcelaAtual = novoParcelaAtual + 1;
         }
-
         const oldDate = new Date(item.datavencimento);
         const day = oldDate.getDate() || 10;
         const newDate = new Date(nextYear, nextMonth - 1, day);
         const novoStatus = item.tipo === 'RENDA' ? 'PAGO' : 'PENDENTE';
 
         await client.query(
-          `INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          `
+                    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                `,
           [userId, item.descricao, item.valor, item.tipo, item.categoria, novoStatus, newDate, novoParcelaAtual, totalParcelas, item.nometerceiro, item.ordem]
         );
       }
