@@ -41,6 +41,33 @@ class FinanceiroRepository {
     }
   }
 
+  // ✅ NOVO: garante a coluna DataCriacao em Lancamentos (para "Últimas Adições")
+  async initLancamentosDataCriacao() {
+    try {
+      // 1) cria a coluna se não existir
+      await db.query(`
+        ALTER TABLE Lancamentos
+        ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP
+      `);
+
+      // 2) preenche registros antigos que estiverem nulos
+      //    (usa DataVencimento como referência; se não tiver, usa NOW())
+      await db.query(`
+        UPDATE Lancamentos
+        SET DataCriacao = COALESCE(DataCriacao, DataVencimento::timestamp, NOW())
+        WHERE DataCriacao IS NULL
+      `);
+
+      // 3) default para novos registros
+      await db.query(`
+        ALTER TABLE Lancamentos
+        ALTER COLUMN DataCriacao SET DEFAULT NOW()
+      `);
+    } catch (err) {
+      console.error('Erro initLancamentosDataCriacao:', err);
+    }
+  }
+
   // --- DASHBOARD E LISTAGENS ---
   async getUltimosLancamentos(userId) {
     const query = `SELECT * FROM Lancamentos WHERE UsuarioId = $1 ORDER BY Id DESC LIMIT 20`;
