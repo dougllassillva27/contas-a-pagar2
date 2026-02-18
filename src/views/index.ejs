@@ -71,6 +71,52 @@
         .context-menu li.delete-action { color: var(--red); }
         .context-menu li.delete-action .material-icons { color: var(--red); }
         .context-menu .menu-divider { border-top: 1px solid #444; margin: 6px 0; }
+
+        /* ===========================
+           MODAL "ÚLTIMAS ADIÇÕES" (MAIOR + FONTE MAIOR)
+           =========================== */
+        #modalUltimasContas .modal-box {
+            width: min(92vw, 980px);
+            max-width: 980px !important;   /* sobrescreve o inline antigo */
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #modalUltimasContas .modal-header h2 {
+            font-size: 1.2rem;
+        }
+
+        #modalUltimasContas .modal-scroll {
+            max-height: calc(82vh - 80px);
+            overflow: auto;
+        }
+
+        #modalUltimasContas table.list-table {
+            font-size: 14px;
+        }
+
+        #modalUltimasContas thead th {
+            font-size: 13px;
+            padding: 12px 12px !important;
+        }
+
+        #modalUltimasContas tbody td {
+            font-size: 14px;
+            padding: 12px 12px !important;
+        }
+
+        /* Primeira coluna (data) menor e sem quebrar linha */
+        #modalUltimasContas tbody td.col-data {
+            font-size: 12px;
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        /* Descrição pode quebrar melhor */
+        #modalUltimasContas tbody td.col-desc {
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -351,7 +397,7 @@
                 <table class="list-table">
                     <thead>
                         <tr>
-                            <th style="text-align:left; padding:10px; color:var(--text-secondary);">Inserido</th>
+                            <th style="text-align:left; padding:10px; color:var(--text-secondary);">Data adicionado</th>
                             <th style="text-align:left; padding:10px; color:var(--text-secondary);">Quem</th>
                             <th style="text-align:left; padding:10px; color:var(--text-secondary);">Descrição</th>
                             <th style="text-align:right; padding:10px; color:var(--text-secondary);">Valor</th>
@@ -612,10 +658,10 @@
                         : '--/--/----';
 
                     html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding:12px 10px; color:var(--text-secondary); font-size:12px;">${inseridoEm}</td>
-                        <td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td>
-                        <td style="padding:12px 10px;">${desc}</td>
-                        <td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td>
+                        <td class="col-data">${inseridoEm}</td>
+                        <td style="font-weight:500; color:var(--blue);">${quem}</td>
+                        <td class="col-desc">${desc}</td>
+                        <td style="text-align:right; font-weight:bold;">${valor}</td>
                     </tr>`;
                 });
                 tbody.innerHTML = html;
