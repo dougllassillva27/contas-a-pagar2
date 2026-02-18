@@ -4,6 +4,7 @@ const db = require('../config/db');
 class FinanceiroRepository {
   constructor() {
     this.initOrdemTable();
+    this.initLancamentosDataCriacao();
   }
 
   // --- USUÁRIOS ---

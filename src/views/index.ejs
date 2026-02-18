@@ -351,6 +351,7 @@
                 <table class="list-table">
                     <thead>
                         <tr>
+                            <th style="text-align:left; padding:10px; color:var(--text-secondary);">Inserido</th>
                             <th style="text-align:left; padding:10px; color:var(--text-secondary);">Quem</th>
                             <th style="text-align:left; padding:10px; color:var(--text-secondary);">Descrição</th>
                             <th style="text-align:right; padding:10px; color:var(--text-secondary);">Valor</th>
@@ -593,17 +594,29 @@
             registerModalOpen();
             document.getElementById('modalUltimasContas').classList.add('active');
             const tbody = document.getElementById('listaUltimasConteudo');
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Carregando...</td></tr>';
             try {
                 const res = await fetch('/api/lancamentos/recentes');
                 const data = await res.json();
-                if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>'; return; }
+                if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>'; return; }
                 let html = '';
                 data.forEach(item => {
                     const quem = item.nometerceiro || "<%= user.nome %>";
                     const valor = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                     const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
-                    html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);"><td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td><td style="padding:12px 10px;">${desc}</td><td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td></tr>`;
+
+                    // Postgres normalmente devolve como "datacriacao" (lowercase)
+                    const dt = item.datacriacao ? new Date(item.datacriacao) : null;
+                    const inseridoEm = dt
+                        ? `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`
+                        : '--/--/----';
+
+                    html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:12px 10px; color:var(--text-secondary); font-size:12px;">${inseridoEm}</td>
+                        <td style="padding:12px 10px; font-weight:500; color:var(--blue);">${quem}</td>
+                        <td style="padding:12px 10px;">${desc}</td>
+                        <td style="padding:12px 10px; text-align:right; font-weight:bold;">${valor}</td>
+                    </tr>`;
                 });
                 tbody.innerHTML = html;
             } catch (err) { console.error(err); }
