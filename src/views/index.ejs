@@ -20,12 +20,16 @@
         .draggable-row.dragging { opacity: 0.5; background: #333; }
         .drag-handle { cursor: grab; color: var(--text-secondary); }
         .drag-handle:active { cursor: grabbing; color: var(--text-primary); }
+        
+        .drag-handle-card { cursor: grab; }
+        .drag-handle-card:active { cursor: grabbing; }
+
         .terceiros-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; }
         @media (max-width: 1600px) { .terceiros-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 1200px) { .terceiros-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 768px) { .terceiros-grid { grid-template-columns: 1fr; } }
-        .draggable-card { cursor: grab; transition: transform 0.2s, opacity 0.2s; }
-        .draggable-card:active { cursor: grabbing; }
+        
+        .draggable-card { transition: transform 0.2s, opacity 0.2s; }
         .draggable-card.dragging { opacity: 0.4; border: 2px dashed var(--blue); transform: scale(0.98); }
 
         /* FIX PARA MOBILE: BLOQUEIO DE SELEÇÃO E CALLOUT */
@@ -129,7 +133,7 @@
             }
 
             /* melhora experiência de toque ao arrastar */
-            .drag-handle {
+            .drag-handle, .drag-handle-card {
                 touch-action: none;
                 -webkit-user-select: none;
                 user-select: none;
@@ -333,9 +337,9 @@
         <div class="terceiros-grid drag-container-cards">
             <% terceiros.forEach(pessoa => { %>
                 <div class="panel draggable-card" draggable="true" data-nome="<%= pessoa.nome %>">
-                    <div class="panel-header" style="border-bottom: 2px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; cursor: grab;">
+                    <div class="panel-header" style="border-bottom: 2px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="material-icons" style="font-size:18px; color:var(--text-secondary);">drag_indicator</span>
+                            <span class="material-icons drag-handle-card" style="font-size:18px; color:var(--text-secondary);">drag_indicator</span>
                             <h2 style="color: var(--text-primary);"><%= pessoa.nome %></h2>
                         </div>
                         <span class="header-total-mes">Total do mês: <span>R$ <%= Number(pessoa.totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></span>
@@ -775,7 +779,7 @@
         
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
         
-        // --- INICIALIZAÇÃO NO DOMContentLoaded (MUDANÇA CRUCIAL) ---
+        // --- INICIALIZAÇÃO NO DOMContentLoaded ---
         window.addEventListener('DOMContentLoaded', () => { 
             if (localStorage.getItem('hideRendas') === 'true') { 
                 const icon = document.getElementById('iconEyeRendas'); 
@@ -783,16 +787,118 @@
             } 
             initDragAndDrop(); 
             initCardDragAndDrop(); 
-            initDoubleTapMobile(); // Inicializa o double tap
-        
-            initTouchDragAndDrop(); // ✅ drag no celular
+            initTouchCardDragAndDrop(); // ✅ DND Cards Mobile
+            initDoubleTapMobile(); 
+            initTouchDragAndDrop(); // ✅ DND Linhas Mobile
         });
 
         function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
         function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
         
         async function salvarFaturaManual(input) { let val = input.value; if (!val) val = "0"; try { const res = await fetch('/api/fatura-manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) }); const data = await res.json(); if (!res.ok) { mostrarAviso("Erro", data.error); return; } const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0); input.value = num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}); input.style.color = "var(--green)"; setTimeout(() => input.style.color = "var(--blue)", 500); } catch (err) { console.error(err); } }
-        function initCardDragAndDrop() { const draggables = document.querySelectorAll('.draggable-card'); const container = document.querySelector('.drag-container-cards'); if(!container) return; draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); }); container.addEventListener('dragover', e => { e.preventDefault(); const draggable = document.querySelector('.draggable-card.dragging'); const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; let closestElement = null; let shortestDistance = Number.POSITIVE_INFINITY; siblings.forEach(child => { const box = child.getBoundingClientRect(); const x = e.clientX - (box.left + box.width / 2); const y = e.clientY - (box.top + box.height / 2); const distance = Math.hypot(x, y); if (distance < shortestDistance) { shortestDistance = distance; closestElement = child; } }); if (closestElement) { const box = closestElement.getBoundingClientRect(); const nextSibling = closestElement.nextElementSibling; if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, nextSibling); else container.insertBefore(draggable, closestElement); } else { container.appendChild(draggable); } }); }
+
+        // ===========================
+        // ✅ DRAG & DROP CARDS (PC Anti-Flicker)
+        // ===========================
+        function initCardDragAndDrop() { 
+            const draggables = document.querySelectorAll('.draggable-card'); 
+            const container = document.querySelector('.drag-container-cards'); 
+            if(!container) return; 
+            
+            draggables.forEach(draggable => { 
+                draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); 
+                draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); 
+            }); 
+            
+            container.addEventListener('dragover', e => { 
+                e.preventDefault(); 
+                const draggable = document.querySelector('.draggable-card.dragging'); 
+                if(!draggable) return;
+
+                const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')]; 
+                let hoverCard = null; 
+
+                // 🛡️ Bounding Box Collision (Fim do flickering no PC)
+                for (let child of siblings) { 
+                    const box = child.getBoundingClientRect(); 
+                    if (e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom) { 
+                        hoverCard = child; 
+                        break; 
+                    } 
+                } 
+
+                if (hoverCard) { 
+                    const box = hoverCard.getBoundingClientRect(); 
+                    if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, hoverCard.nextSibling); 
+                    else container.insertBefore(draggable, hoverCard); 
+                } 
+            }); 
+        }
+
+        // ===========================
+        // ✅ DRAG & DROP CARDS (MOBILE)
+        // ===========================
+        function initTouchCardDragAndDrop() {
+            if (window.__touchCardDndInicializado) return;
+            window.__touchCardDndInicializado = true;
+
+            let draggingCard = null;
+            let activeContainer = null;
+
+            function onTouchMove(e) {
+                if (!draggingCard || !activeContainer) return;
+                e.preventDefault(); // Impede rolagem enquanto arrasta
+
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+
+                const siblings = [...activeContainer.querySelectorAll('.draggable-card:not(.dragging)')];
+                let hoverCard = null;
+
+                for (let child of siblings) {
+                    const box = child.getBoundingClientRect();
+                    if (touchX >= box.left && touchX <= box.right && touchY >= box.top && touchY <= box.bottom) {
+                        hoverCard = child;
+                        break;
+                    }
+                }
+
+                if (hoverCard) {
+                    const box = hoverCard.getBoundingClientRect();
+                    if (touchX > box.left + box.width / 2) activeContainer.insertBefore(draggingCard, hoverCard.nextSibling);
+                    else activeContainer.insertBefore(draggingCard, hoverCard);
+                }
+            }
+
+            async function onTouchEnd() {
+                if (!draggingCard || !activeContainer) return;
+                draggingCard.classList.remove('dragging');
+                try { await salvarOrdemCards(); } catch (_) {}
+                draggingCard = null;
+                activeContainer = null;
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', onTouchEnd);
+            }
+
+            const container = document.querySelector('.drag-container-cards');
+            if (container) {
+                container.addEventListener('touchstart', (e) => {
+                    // 🛡️ SÓ ativa se tocar no ícone de arrastar
+                    if (!e.target.closest('.drag-handle-card')) return;
+
+                    const card = e.target.closest('.draggable-card');
+                    if (!card) return;
+
+                    draggingCard = card;
+                    activeContainer = container;
+                    draggingCard.classList.add('dragging');
+
+                    document.addEventListener('touchmove', onTouchMove, { passive: false });
+                    document.addEventListener('touchend', onTouchEnd, { passive: true });
+                }, { passive: true });
+            }
+        }
+
         async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error(err); } }
         function fazerBackup() { window.location.href = '/api/backup'; }
         async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
@@ -801,13 +907,10 @@
         function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
         function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
 
-
         // ===========================
-        // ✅ DRAG & DROP NO CELULAR
-        // (HTML5 draggable não funciona bem em touch)
+        // ✅ DRAG & DROP LINHAS (MOBILE)
         // ===========================
         function initTouchDragAndDrop() {
-            // Evita duplicar listeners
             if (window.__touchDndInicializado) return;
             window.__touchDndInicializado = true;
 
@@ -816,8 +919,6 @@
 
             function onTouchMove(e) {
                 if (!draggingRow || !activeContainer) return;
-
-                // Enquanto arrasta, evita scroll da página
                 e.preventDefault();
 
                 const touchY = e.touches[0].clientY;
@@ -839,10 +940,9 @@
                 document.removeEventListener('touchend', onTouchEnd);
             }
 
-            // Delegação por container: funciona também para listas injetadas dinamicamente (ex.: modal pessoa)
             document.querySelectorAll('.drag-container').forEach(container => {
                 container.addEventListener('touchstart', (e) => {
-                    // 🛡️ NOVO: Se o elemento tocado NÃO for o ícone de arrastar, cancela a ação e libera o scroll.
+                    // 🛡️ SÓ ativa se tocar no ícone de arrastar
                     if (!e.target.closest('.drag-handle')) return;
 
                     const row = e.target.closest('.draggable-row');
@@ -852,7 +952,6 @@
                     activeContainer = container;
                     draggingRow.classList.add('dragging');
 
-                    // Move/end no document para não "perder" o drag ao sair da linha
                     document.addEventListener('touchmove', onTouchMove, { passive: false });
                     document.addEventListener('touchend', onTouchEnd, { passive: true });
                 }, { passive: true });
