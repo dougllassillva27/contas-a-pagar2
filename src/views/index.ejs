@@ -118,7 +118,7 @@
             word-break: break-word;
         }
     
-        /* ✅ AJUSTE (SOMENTE CELULAR): valor não quebrar linha no modal "Últimas" */
+        /* ✅ AJUSTES (SOMENTE CELULAR) – Modal "Últimas": valor em uma linha */
         @media (max-width: 768px) {
             #modalUltimasContas thead th.col-valor,
             #modalUltimasContas tbody td.col-valor {
@@ -128,7 +128,7 @@
                 min-width: 92px;
             }
 
-            /* melhora experiência de toque ao arrastar */
+            /* melhora experiência de toque ao arrastar (mobile) */
             .drag-handle {
                 touch-action: none;
                 -webkit-user-select: none;
@@ -676,10 +676,10 @@ async function abrirModalUltimas() {
                 data.forEach(item => {
                     const quem = item.nometerceiro || "<%= user.nome %>";
 
-                    // ✅ Mantém "R$" + valor em uma única linha (usa NBSP do currency pt-BR)
+                    // ✅ "R$ 39,16" não quebra (pt-BR já usa espaço não-quebrável)
                     const valorCurrency = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-                    const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+                    const desc = item.descricao + (item.parcelaatual ? ` (${String(item.parcelaatual).padStart(2,'0')}/${String(item.totalparcelas).padStart(2,'0')})` : '');
 
                     const dt = item.datacriacao ? new Date(item.datacriacao) : null;
                     const inseridoEm = dt
@@ -687,14 +687,14 @@ async function abrirModalUltimas() {
                         : '--/--/----';
 
                     // Segurança básica para strings dentro do onclick
-                    const safeDesc = String(item.descricao || '').replace(/'/g, "\'");
-                    const safePessoa = String(item.nometerceiro || '').replace(/'/g, "\'");
+                    const safeDesc = String(item.descricao || '').replace(/'/g, "\\'");
+                    const safePessoa = String(item.nometerceiro || '').replace(/'/g, "\\'");
 
                     const tipo = item.parcelaatual ? 'Parcelada' : 'Única';
                     const pAtual = item.parcelaatual || '';
                     const pTotal = item.totalparcelas || '';
 
-                    // Para manter o padrão das outras telas, editarConta espera valor sem "R$"
+                    // editarConta espera valor sem "R$"
                     const valorSemMoeda = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
                     html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -717,56 +717,6 @@ async function abrirModalUltimas() {
         }
 
 
-        let html = '';
-
-        data.forEach(item => {
-            const quem = item.nometerceiro || "<%= user.nome %>";
-            const valorFormatado = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-
-            const safeDesc = item.descricao.replace(/'/g, "\\'");
-            const safePessoa = (item.nometerceiro || '').replace(/'/g, "\\'");
-
-            const tipo = item.parcelaatual ? 'Parcelada' : 'Única';
-            const pAtual = item.parcelaatual || '';
-            const pTotal = item.totalparcelas || '';
-
-            const desc = item.descricao + 
-                (item.parcelaatual ? 
-                ` (${String(item.parcelaatual).padStart(2,'0')}/${String(item.totalparcelas).padStart(2,'0')})` 
-                : '');
-
-            const dt = item.datacriacao ? new Date(item.datacriacao) : null;
-            const inseridoEm = dt
-                ? `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`
-                : '--/--/----';
-
-            html += `
-                <tr>
-                    <td class="col-data">${inseridoEm}</td>
-                    <td style="font-weight:500; color:var(--blue);">${quem}</td>
-                    <td class="col-desc">${desc}</td>
-                    <td style="text-align:right; font-weight:bold;">R$ ${valorFormatado}</td>
-                    <td class="actions" style="text-align:center;">
-                        <span class="material-icons" style="font-size:18px; cursor:pointer;"
-                            onclick="editarConta(${item.id}, '${safeDesc}', '${valorFormatado}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')">
-                            edit
-                        </span>
-                        <span class="material-icons" style="font-size:18px; cursor:pointer;"
-                            onclick="confirmarExclusao(${item.id})">
-                            delete
-                        </span>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tbody.innerHTML = html;
-
-    } catch (err) {
-        console.error(err);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Erro ao carregar.</td></tr>';
-    }
-}
 
         async function abrirModalCartaoPessoa(pessoa) { 
             registerModalOpen();
@@ -792,9 +742,9 @@ async function abrirModalUltimas() {
                     html += `<tr class="draggable-row" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`; 
                 }); 
                 container.innerHTML = html; 
-                initDragAndDrop();
-                initTouchDragAndDrop(); 
-            } catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>'; } 
+                initDragAndDrop(); 
+                            initTouchDragAndDrop();
+} catch (err) { console.error(err); container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>'; } 
         }
 
         async function abrirModalRendasDetalhes() { 
@@ -836,9 +786,8 @@ async function abrirModalUltimas() {
             initDragAndDrop(); 
             initCardDragAndDrop(); 
             initDoubleTapMobile(); // Inicializa o double tap
-        
             initTouchDragAndDrop(); // ✅ drag no celular
-});
+        });
 
         function limparMascara(input) { if (input.value.includes('R$ 0,00')) input.value = ''; }
         function handleEnterFatura(e, input) { if (e.key === 'Enter') { input.blur(); } }
@@ -901,7 +850,6 @@ async function abrirModalUltimas() {
                     activeContainer = container;
                     draggingRow.classList.add('dragging');
 
-                    // Move/end no document para não "perder" o drag ao sair da linha
                     document.addEventListener('touchmove', onTouchMove, { passive: false });
                     document.addEventListener('touchend', onTouchEnd, { passive: true });
                 }, { passive: true });
