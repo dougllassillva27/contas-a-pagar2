@@ -44,7 +44,8 @@
             width: 100%;
         }
         .trigger-p-nome:active {
-            background-color: rgba(255,255,255,0.1); /* Feedback visual */
+            background-color: rgba(255,255,255,0.1);
+            /* Feedback visual */
         }
 
         /* Estilos do Menu de Contexto Otimizado */
@@ -61,7 +62,7 @@
         }
         .context-menu ul { list-style: none; margin: 0; padding: 0; }
         .context-menu li {
-            padding: 14px 18px; 
+            padding: 14px 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -535,13 +536,12 @@
     <script>
         const currentMonth = <%= nav.atual.month %>;
         const currentYear = <%= nav.atual.year %>;
-        
         // DECLARAÇÃO ÚNICA DE VARIÁVEIS GLOBAIS
         let isBackNavigation = false;
         let pessoaSelecionadaContexto = null;
         let acaoConfirmadaCallback = null;
         let idExcluir = null;
-
+        
         // --- SISTEMA DE CONTROLE DE MODAL E HISTÓRICO ---
         function registerModalOpen() { document.body.classList.add('no-scroll'); history.pushState({ modal: true }, '', ''); }
         function handleModalClose() { document.body.classList.remove('no-scroll'); if (!isBackNavigation && history.state && history.state.modal) { history.back(); } }
@@ -551,7 +551,7 @@
             if (activeModal) { isBackNavigation = true; if (activeModal.id === 'modalConfirmar') fecharConfirmacao(); else if (activeModal.id === 'modalAviso') fecharModalAviso(); else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao(); else fecharModais(); isBackNavigation = false; }
             fecharMenuContexto();
         });
-
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const activeModal = document.querySelector('.modal-overlay.active');
@@ -559,7 +559,7 @@
                 fecharMenuContexto();
             }
         });
-
+        
         // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) E POSICIONAMENTO CORRIGIDO ---
         function initDoubleTapMobile() {
             let lastTapTime = 0;
@@ -666,7 +666,7 @@
 
             const tbody = document.getElementById('listaUltimasConteudo');
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>';
-
+            
             try {
                 const res = await fetch('/api/lancamentos/recentes');
                 const data = await res.json();
@@ -700,7 +700,6 @@
 
                     // Para manter o padrão das outras telas, editarConta espera valor sem "R$"
                     const valorSemMoeda = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-
                     html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                         <td class="col-data">${inseridoEm}</td>
                         <td style="font-weight:500; color:var(--blue);">${quem}</td>
@@ -726,14 +725,14 @@
             document.getElementById('tituloModalCartao').innerText = `Cartão - ${pessoa}`; 
             document.getElementById('totalModalCartao').innerText = ""; 
             const container = document.getElementById('listaCartaoPessoaConteudo'); 
-            container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>'; 
+            container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>';
             try { 
-                const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`); 
+                const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`);
                 const itens = await res.json(); 
                 const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
                 document.getElementById('totalModalCartao').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
                 if (itens.length === 0) { container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum lançamento.</td></tr>'; return; } 
-                let html = ''; 
+                let html = '';
                 itens.forEach(item => { 
                     const v = Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
                     const safeDesc = item.descricao.replace(/'/g, "\\'"); 
@@ -761,20 +760,50 @@
                 const safeDesc = r.descricao.replace(/'/g, "\\'"); 
                 h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`; 
             });
-            c.innerHTML = h || 'Vazio'; 
+            c.innerHTML = h || 'Vazio';
         }
 
         function fecharModais() { 
             handleModalClose();
             document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); 
-            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; toggleParcelas(); }, 300); 
+            setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; toggleParcelas(); }, 300);
         }
 
         function fecharModalAviso() { handleModalClose(); document.getElementById('modalAviso').classList.remove('active'); }
+        
+        // NOVA FUNÇÃO INJETADA PARA O BOTÃO DE CÓPIA E EXCLUSÃO FUNCIONAREM CORRETAMENTE
+        function abrirConfirmacaoAcao(acao) {
+            registerModalOpen();
+            const modal = document.getElementById('modalConfirmacaoAcao');
+            const titulo = document.getElementById('tituloConfirmacao');
+            const texto = document.getElementById('textoConfirmacao');
+            const icon = document.getElementById('iconConfirmacao');
+            const btn = document.getElementById('btnConfirmarAcao');
+
+            if (acao === 'COPIAR') {
+                titulo.innerText = "Copiar Contas";
+                texto.innerText = "Deseja copiar as contas fixas, parcelas e rendas do mês anterior para o mês atual?";
+                icon.innerText = "content_copy";
+                icon.style.color = "var(--blue)";
+                btn.style.backgroundColor = "var(--blue)";
+                acaoConfirmadaCallback = executarCopia;
+            } else if (acao === 'DELETAR') {
+                titulo.innerText = "Deletar Mês";
+                texto.innerText = "Deseja realmente apagar TODOS os lançamentos deste mês? Esta ação não pode ser desfeita.";
+                icon.innerText = "warning";
+                icon.style.color = "var(--red)";
+                btn.style.backgroundColor = "var(--red)";
+                acaoConfirmadaCallback = executarDeleteMes;
+            }
+
+            modal.classList.add('active');
+        }
+
         function fecharConfirmacaoAcao() { handleModalClose(); document.getElementById('modalConfirmacaoAcao').classList.remove('active'); acaoConfirmadaCallback = null; }
         function fecharConfirmacao() { handleModalClose(); document.getElementById('modalConfirmar').classList.remove('active'); }
 
         function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) { document.getElementById('modalDetalhesCartao').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Conta"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colRenda').style.display = 'none'; document.getElementById('colConta').style.display = 'block'; document.getElementById('tituloConta').innerText = "Editar Dados"; document.getElementById('btnSalvarConta').innerText = "Salvar Alterações"; document.getElementById('contaId').value = id; document.getElementById('contaDesc').value = desc; document.getElementById('contaValor').value = valor; document.getElementById('contaTipo').value = tipo; document.getElementById('contaTerceiro').value = (nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined') ? nomeTerceiro : ''; if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2,'0') + '/' + String(pTotal).padStart(2,'0'); else document.getElementById('contaParcelas').value = ''; toggleParcelas(); modal.classList.add('active'); }
+        
         function editarRenda(id, descricao, valor, categoria) { document.getElementById('modalRendasDetalhes').classList.remove('active'); const modal = document.getElementById('modalAdicionar'); document.getElementById('modalTitulo').innerText = "Editar Renda"; document.getElementById('modalGridForm').classList.add('single-col'); document.getElementById('colConta').style.display = 'none'; document.getElementById('colRenda').style.display = 'block'; document.getElementById('tituloRenda').innerText = "Editar Dados"; document.getElementById('btnSalvarRenda').innerText = "Salvar Alterações"; document.getElementById('rendaId').value = id; document.getElementById('rendaDesc').value = descricao; document.getElementById('rendaValor').value = valor; document.getElementById('rendaCat').value = categoria || 'Salário'; modal.classList.add('active'); }
         
         function toggleRendas(event) { if(event) event.stopPropagation(); const icon = document.getElementById('iconEyeRendas'); const html = document.documentElement; if (html.classList.contains('hide-rendas-mode')) { html.classList.remove('hide-rendas-mode'); icon.innerText = 'visibility'; localStorage.setItem('hideRendas', 'false'); } else { html.classList.add('hide-rendas-mode'); icon.innerText = 'visibility_off'; localStorage.setItem('hideRendas', 'true'); } }
@@ -801,15 +830,14 @@
         // ✅ DRAG & DROP CARDS (PC Anti-Flicker)
         // ===========================
         function initCardDragAndDrop() { 
-            const draggables = document.querySelectorAll('.draggable-card'); 
+            const draggables = document.querySelectorAll('.draggable-card');
             const container = document.querySelector('.drag-container-cards'); 
             if(!container) return; 
             
             draggables.forEach(draggable => { 
                 draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); 
                 draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdemCards(); }); 
-            }); 
-            
+            });
             container.addEventListener('dragover', e => { 
                 e.preventDefault(); 
                 const draggable = document.querySelector('.draggable-card.dragging'); 
@@ -829,10 +857,10 @@
 
                 if (hoverCard) { 
                     const box = hoverCard.getBoundingClientRect(); 
-                    if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, hoverCard.nextSibling); 
+                    if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, hoverCard.nextSibling);
                     else container.insertBefore(draggable, hoverCard); 
                 } 
-            }); 
+            });
         }
 
         // ===========================
@@ -844,7 +872,7 @@
 
             let draggingCard = null;
             let activeContainer = null;
-
+            
             function onTouchMove(e) {
                 if (!draggingCard || !activeContainer) return;
                 e.preventDefault(); // Impede rolagem enquanto arrasta
@@ -854,7 +882,7 @@
 
                 const siblings = [...activeContainer.querySelectorAll('.draggable-card:not(.dragging)')];
                 let hoverCard = null;
-
+                
                 for (let child of siblings) {
                     const box = child.getBoundingClientRect();
                     if (touchX >= box.left && touchX <= box.right && touchY >= box.top && touchY <= box.bottom) {
@@ -900,11 +928,15 @@
         }
 
         async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error(err); } }
+        
         function fazerBackup() { window.location.href = '/api/backup'; }
         async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
         async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
+        
         async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); if(res.ok) window.location.reload(); } catch (err) { console.error(err); } }
+        
         function initDragAndDrop() { const draggables = document.querySelectorAll('.draggable-row'); const containers = document.querySelectorAll('.drag-container'); draggables.forEach(draggable => { draggable.addEventListener('dragstart', () => { draggable.classList.add('dragging'); }); draggable.addEventListener('dragend', () => { draggable.classList.remove('dragging'); salvarOrdem(draggable.parentElement); }); }); containers.forEach(container => { container.ondragover = e => { e.preventDefault(); const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.dragging'); if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); }; }); }
+        
         function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest; }, { offset: Number.NEGATIVE_INFINITY }).element; }
 
         // ===========================
@@ -916,7 +948,7 @@
 
             let draggingRow = null;
             let activeContainer = null;
-
+            
             function onTouchMove(e) {
                 if (!draggingRow || !activeContainer) return;
                 e.preventDefault();
@@ -930,7 +962,6 @@
 
             async function onTouchEnd() {
                 if (!draggingRow || !activeContainer) return;
-
                 draggingRow.classList.remove('dragging');
                 try { await salvarOrdem(activeContainer); } catch (_) {}
                 draggingRow = null;
@@ -959,9 +990,13 @@
         }
 
         async function salvarOrdem(container) { const itens = [...container.querySelectorAll('.draggable-row')].map(row => ({ id: row.dataset.id })); if(itens.length === 0) return; try { await fetch('/api/lancamentos/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ itens }) }); } catch (err) { console.error("Erro", err); } }
+        
         function toggleParcelas() { const tipo = document.getElementById('contaTipo').value; const div = document.getElementById('grupoParcelas'); const input = div.querySelector('input'); if (tipo === 'Parcelada') { div.style.display = 'flex'; input.required = true; } else { div.style.display = 'none'; input.required = false; } }
+        
         function mascaraParcela(input) { let v = input.value.replace(/\D/g, ""); if (v.length > 4) v = v.substring(0, 4); if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, "$1/$2"); input.value = v; }
+        
         async function enviarLancamento(e, tipoTransacao) { e.preventDefault(); const form = e.target; const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value; const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear }; if (tipoTransacao === 'CONTA') { if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value; dados.nome_terceiro = form.nome_terceiro.value; } try { let url = '/api/lancamentos'; let method = 'POST'; if (id) { url = `/api/lancamentos/${id}`; method = 'PUT'; } const res = await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(dados) }); if(res.ok) window.location.reload(); } catch(err) { console.error(err); } }
+        
         let timeout = null;
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
         function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
