@@ -141,6 +141,31 @@
             }
         }
 
+        /* ===========================
+           LOADING SPINNER (Feedback visual)
+           =========================== */
+        #modalLoading .modal-box {
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--blue);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+
     </style>
 </head>
 <body>
@@ -533,6 +558,13 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modalLoading" style="z-index: 100000;">
+        <div class="modal-box">
+            <div class="spinner"></div>
+            <h3 style="color: white; margin-top: 20px; font-weight: 500;">Processando...</h3>
+        </div>
+    </div>
+
     <script>
         const currentMonth = <%= nav.atual.month %>;
         const currentYear = <%= nav.atual.year %>;
@@ -559,6 +591,10 @@
                 fecharMenuContexto();
             }
         });
+
+        // --- FUNÇÕES DO NOVO MODAL DE LOADING ---
+        function mostrarLoading() { document.getElementById('modalLoading').classList.add('active'); }
+        function ocultarLoading() { document.getElementById('modalLoading').classList.remove('active'); }
         
         // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) E POSICIONAMENTO CORRIGIDO ---
         function initDoubleTapMobile() {
@@ -618,7 +654,7 @@
 
         window.onclick = (e) => { 
             if(!e.target.closest('#customContextMenu')) fecharMenuContexto();
-            if(e.target.classList.contains('modal-overlay')) fecharModais();
+            if(e.target.classList.contains('modal-overlay') && e.target.id !== 'modalLoading') fecharModais();
         };
 
         // --- AÇÕES EM LOTE ---
@@ -650,7 +686,9 @@
             btn.style.backgroundColor = "var(--red)";
             document.getElementById('iconConfirmacao').innerText = "warning";
             document.getElementById('iconConfirmacao').style.color = "var(--red)";
+            
             acaoConfirmadaCallback = async () => {
+                mostrarLoading();
                 await fetch(`/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' });
                 window.location.reload();
             };
@@ -765,13 +803,15 @@
 
         function fecharModais() { 
             handleModalClose();
-            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); 
+            document.querySelectorAll('.modal-overlay').forEach(m => {
+                if (m.id !== 'modalLoading') m.classList.remove('active');
+            }); 
             setTimeout(() => { document.getElementById('formRenda').reset(); document.getElementById('formConta').reset(); document.getElementById('rendaId').value = ""; document.getElementById('contaId').value = ""; document.getElementById('modalGridForm').classList.remove('single-col'); document.getElementById('colRenda').style.display = 'block'; document.getElementById('colConta').style.display = 'block'; document.getElementById('modalTitulo').innerText = "Adicionar Lançamento"; toggleParcelas(); }, 300);
         }
 
         function fecharModalAviso() { handleModalClose(); document.getElementById('modalAviso').classList.remove('active'); }
         
-        // NOVA FUNÇÃO INJETADA PARA O BOTÃO DE CÓPIA E EXCLUSÃO FUNCIONAREM CORRETAMENTE
+        // FUNÇÃO DE CONFIRMAÇÃO PARA O BOTÃO DE CÓPIA E EXCLUSÃO
         function abrirConfirmacaoAcao(acao) {
             registerModalOpen();
             const modal = document.getElementById('modalConfirmacaoAcao');
@@ -930,8 +970,43 @@
         async function salvarOrdemCards() { const container = document.querySelector('.drag-container-cards'); const nomes = [...container.querySelectorAll('.draggable-card')].map(card => card.dataset.nome); try { await fetch('/api/cards/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nomes }) }); } catch (err) { console.error(err); } }
         
         function fazerBackup() { window.location.href = '/api/backup'; }
-        async function executarCopia() { try { const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); if(res.ok) { mostrarAviso("Sucesso", "Contas copiadas!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
-        async function executarDeleteMes() { try { const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); if(res.ok) { mostrarAviso("Sucesso", "Mês limpo!"); setTimeout(() => window.location.reload(), 1500); } } catch(err) { console.error(err); } }
+        
+        // --- FUNÇÕES REFEITAS COM LOADING ---
+        async function executarCopia() { 
+            mostrarLoading(); 
+            try { 
+                const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ month: currentMonth, year: currentYear }) }); 
+                ocultarLoading();
+                if(res.ok) { 
+                    mostrarAviso("Sucesso", "Contas copiadas!"); 
+                    setTimeout(() => window.location.reload(), 1500); 
+                } else {
+                    mostrarAviso("Erro", "Falha ao copiar.");
+                }
+            } catch(err) { 
+                ocultarLoading();
+                console.error(err); 
+                mostrarAviso("Erro", "Erro de conexão.");
+            } 
+        }
+
+        async function executarDeleteMes() { 
+            mostrarLoading();
+            try { 
+                const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' }); 
+                ocultarLoading();
+                if(res.ok) { 
+                    mostrarAviso("Sucesso", "Mês limpo!"); 
+                    setTimeout(() => window.location.reload(), 1500); 
+                } else {
+                    mostrarAviso("Erro", "Falha ao limpar o mês.");
+                }
+            } catch(err) { 
+                ocultarLoading();
+                console.error(err); 
+                mostrarAviso("Erro", "Erro de conexão.");
+            } 
+        }
         
         async function alternarStatus(checkbox, id) { const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE'; try { const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) }); if(res.ok) window.location.reload(); } catch (err) { console.error(err); } }
         
@@ -1001,8 +1076,18 @@
         function salvarAnotacao() { const t = document.getElementById('anotacoesArea').value; clearTimeout(timeout); timeout = setTimeout(() => { fetch('/api/anotacoes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({conteudo: t}) }); }, 1000); }
         function mostrarAviso(titulo, msg) { registerModalOpen(); document.getElementById('msgAvisoTitulo').innerText = titulo; document.getElementById('msgAvisoTexto').innerText = msg; document.getElementById('modalAviso').classList.add('active'); }
         function abrirModalAdicionar() { registerModalOpen(); document.getElementById('modalAdicionar').classList.add('active'); }
+        
+        // --- FUNÇÃO DELETAR SINGLE REFEITA COM LOADING ---
         function confirmarExclusao(id) { registerModalOpen(); idExcluir = id; document.getElementById('modalConfirmar').classList.add('active'); }
-        document.getElementById('btnConfirmarExclusao').onclick = async () => { await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); window.location.reload(); };
+        document.getElementById('btnConfirmarExclusao').onclick = async () => { 
+            mostrarLoading();
+            try {
+                await fetch(`/api/lancamentos/${idExcluir}`, {method: 'DELETE'}); 
+                window.location.reload(); 
+            } catch(e) {
+                ocultarLoading();
+            }
+        };
     </script>
 </body>
 </html>
