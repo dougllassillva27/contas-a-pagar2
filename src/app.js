@@ -77,7 +77,12 @@ app.use(authMiddleware);
 app.use(apiRoutes(repo));
 
 // ==============================================================================
-// Iniciar Servidor
+// Iniciar Servidor (apenas quando rodado diretamente, não em testes)
 // ==============================================================================
 
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+}
+
+// Exporta para uso em testes (supertest)
+module.exports = app;
