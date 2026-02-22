@@ -125,13 +125,11 @@
             <label>Nome do Terceiro (Opcional)</label>
             <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Mãe, Davi..." />
             <datalist id="nomesTerceiros">
-              <option value="Mãe"></option>
-              <option value="Davi"></option>
-              <option value="Morr"></option>
-              <option value="Vô"></option>
-              <option value="Sogra"></option>
-              <option value="Casa"></option>
-              <option value="Mandi"></option>
+              <% if (typeof terceirosDistinct !== 'undefined' && terceirosDistinct.length > 0) { %>
+                <% terceirosDistinct.forEach(nome => { %>
+                  <option value="<%= nome %>"></option>
+                <% }) %>
+              <% } %>
             </datalist>
           </div>
 

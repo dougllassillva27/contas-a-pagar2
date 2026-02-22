@@ -7,13 +7,14 @@
 require('dotenv').config();
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
 
 // Módulos internos
+const db = require('./config/db');
 const repo = require('./repositories/FinanceiroRepository');
 const { authMiddleware, createApiAuth } = require('./middlewares/auth');
+const requestLogger = require('./middlewares/logger');
 const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
@@ -33,8 +34,9 @@ const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger);
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo-padrao-dev',
@@ -43,6 +45,20 @@ app.use(
     cookie: { secure: false }, // Em HTTPS, o ideal é secure:true
   })
 );
+
+// ==============================================================================
+// Rotas de Infraestrutura (sem autenticação)
+// ==============================================================================
+
+// Health Check — para monitoramento do Render e uptimerobots
+app.get('/health', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(503).json({ status: 'error', error: 'Database unreachable' });
+  }
+});
 
 // ==============================================================================
 // Montagem de Rotas
