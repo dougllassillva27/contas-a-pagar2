@@ -56,7 +56,13 @@ class FinanceiroRepository {
 
   // --- DASHBOARD E LISTAGENS ---
   async getUltimosLancamentos(userId) {
-    const query = `SELECT * FROM Lancamentos WHERE UsuarioId = $1 ORDER BY Id DESC LIMIT 20`;
+    // ✅ CORREÇÃO: Ordena pela DataCriacao para que cópias de meses passados fiquem retidas no passado
+    const query = `
+        SELECT * FROM Lancamentos 
+        WHERE UsuarioId = $1 
+        ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
+        LIMIT 20
+    `;
     const result = await db.query(query, [userId]);
     return result.rows;
   }
