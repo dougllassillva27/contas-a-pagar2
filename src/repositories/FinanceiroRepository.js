@@ -41,22 +41,13 @@ class FinanceiroRepository {
     }
   }
 
-  // ✅ NOVO: garante a coluna DataCriacao em Lancamentos (para "Últimas Adições")
+  // ✅ GARANTIA DE SEGURANÇA: Apenas cria a coluna se não existir e diz que o padrão é a data atual.
+  // Nenhum UPDATE massivo é rodado aqui.
   async initLancamentosDataCriacao() {
     try {
-      // 1) cria a coluna se não existir
       await db.query(`
         ALTER TABLE Lancamentos
-        ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP
-      `);
-
-      // O script de UPDATE massivo foi expressamente removido daqui para evitar reescrita
-      // de datas em contas antigas caso o servidor reinicie.
-
-      // 2) default para novos registros (aplica-se apenas a contas criadas no futuro)
-      await db.query(`
-        ALTER TABLE Lancamentos
-        ALTER COLUMN DataCriacao SET DEFAULT NOW()
+        ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP DEFAULT NOW()
       `);
     } catch (err) {
       console.error('Erro initLancamentosDataCriacao:', err);
@@ -269,7 +260,6 @@ class FinanceiroRepository {
     await db.query('DELETE FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2', [id, userId]);
   }
 
-  // MÉTODO: Excluir por Pessoa (Inclusivo para 'Próprio')
   async deleteLancamentosPorPessoa(userId, pessoa, month, year, userName) {
     let query = `DELETE FROM Lancamentos WHERE UsuarioId = $1 AND Tipo = 'CARTAO' AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3`;
     const params = [userId, month, year];
@@ -337,12 +327,16 @@ class FinanceiroRepository {
         const newDate = new Date(nextYear, nextMonth - 1, day);
         const novoStatus = item.tipo === 'RENDA' ? 'PAGO' : 'PENDENTE';
 
+        // ✅ NOVO: Garante que a cópia herde a data de criação original
+        // Isso impede que as cópias soterrem as suas contas manuais na janela de 'Últimas Adições'
+        const dataCriacaoOriginal = item.datacriacao ? new Date(item.datacriacao) : new Date();
+
         await client.query(
           `
-                    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 `,
-          [userId, item.descricao, item.valor, item.tipo, item.categoria, novoStatus, newDate, novoParcelaAtual, totalParcelas, item.nometerceiro, item.ordem]
+          [userId, item.descricao, item.valor, item.tipo, item.categoria, novoStatus, newDate, novoParcelaAtual, totalParcelas, item.nometerceiro, item.ordem, dataCriacaoOriginal]
         );
       }
       await client.query('COMMIT');
