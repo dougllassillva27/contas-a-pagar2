@@ -446,7 +446,7 @@
             <table class="list-table">
                 <thead>
                     <tr>
-                        <th style="text-align:left;">Data</th>
+                        <th style="text-align:left;">Data adicionado</th>
                         <th style="text-align:left;">Quem</th>
                         <th style="text-align:left;">Descrição</th>
                         <th class="col-valor" style="text-align:right;">Valor</th>
@@ -723,18 +723,10 @@
 
                     const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
 
-                    // === CORREÇÃO DE UX DAS DATAS ===
-                    // 1. Data em que o registro foi criado no banco
-                    const dtCriacao = item.datacriacao ? new Date(item.datacriacao) : null;
-                    const inseridoEm = dtCriacao
-                        ? `${String(dtCriacao.getDate()).padStart(2,'0')}/${String(dtCriacao.getMonth()+1).padStart(2,'0')}/${dtCriacao.getFullYear()}`
+                    const dt = item.datacriacao ? new Date(item.datacriacao) : null;
+                    const inseridoEm = dt
+                        ? `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`
                         : '--/--/----';
-                        
-                    // 2. Data de vencimento (referência original da conta)
-                    const dtVenc = item.datavencimento ? new Date(item.datavencimento) : null;
-                    const vencEm = dtVenc
-                        ? `${String(dtVenc.getMonth()+1).padStart(2,'0')}/${dtVenc.getFullYear()}`
-                        : '--/----';
 
                     // Segurança básica para strings dentro do onclick
                     const safeDesc = String(item.descricao || '').replace(/'/g, "\\'");
@@ -748,10 +740,7 @@
                     const valorSemMoeda = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                     
                     html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td class="col-data">
-                            <div>${inseridoEm}</div>
-                            <div style="font-size:10px; color:var(--text-secondary); margin-top:2px;">Ref: ${vencEm}</div>
-                        </td>
+                        <td class="col-data">${inseridoEm}</td>
                         <td style="font-weight:500; color:var(--blue);">${quem}</td>
                         <td class="col-desc">${desc}</td>
                         <td class="col-valor" style="text-align:right; font-weight:bold;">${valorCurrency}</td>
