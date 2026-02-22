@@ -1,0 +1,34 @@
+    <header>
+        <div class="header-left">
+            <h1>Painel de <%= nav.atual.dateObj.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }) %></h1>
+            <div class="nav-links">
+                <a href="/?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="nav-btn">‹ Anterior</a>
+                <a href="/" class="nav-btn <%= (!query.month) ? 'active' : '' %>">Mês Atual</a>
+                <a href="/?month=<%= nav.prox.month %>&year=<%= nav.prox.year %>" class="nav-btn">Próximo ›</a>
+            </div>
+        </div>
+        <div class="header-actions">
+            <% if (user.id === 1) { %> 
+                <a href="/switch/2" class="btn-secondary" style="text-decoration:none;">
+                    <span class="material-icons" style="font-size: 16px; color: var(--orange);">people</span> Ir para Vitoria
+                </a>
+            <% } else { %>
+                <a href="/switch/1" class="btn-secondary" style="text-decoration:none;">
+                    <span class="material-icons" style="font-size: 16px; color: var(--blue);">people</span> Ir para Dodo
+                </a>
+            <% } %>
+
+            <button class="btn-secondary" onclick="abrirModalUltimas()">
+                <span class="material-icons" style="font-size: 16px;">history</span> Últimas
+            </button>
+
+            <button class="btn-secondary" onclick="fazerBackup()"><span class="material-icons" style="font-size: 16px;">download</span> Backup</button>
+            <button class="btn-secondary" onclick="abrirConfirmacaoAcao('COPIAR')"><span class="material-icons" style="font-size: 16px;">content_copy</span>Copiar Contas</button>
+            
+            <a href="/relatorio?month=<%= nav.atual.month %>&year=<%= nav.atual.year %>" target="_blank" class="btn-secondary" style="text-decoration:none; display:flex; align-items:center;">
+                <span class="material-icons" style="font-size: 16px;">print</span> Imprimir
+            </a>
+
+            <button class="btn-danger-outline" onclick="abrirConfirmacaoAcao('DELETAR')"><span class="material-icons" style="font-size: 16px;">delete</span>Deletar Mês</button>
+        </div>
+    </header>
