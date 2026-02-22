@@ -251,20 +251,53 @@ Suba o repositório.
 
 ---
 
+## 🏗️ Arquitetura
+
+O projeto segue uma arquitetura **modular** com separação clara de responsabilidades:
+
+| Camada          | Diretório           | Responsabilidade                                       |
+| --------------- | ------------------- | ------------------------------------------------------ |
+| **Entrada**     | `src/app.js`        | Configuração do Express, sessão e montagem dos módulos |
+| **Rotas**       | `src/routes/`       | Handlers de cada grupo de endpoints                    |
+| **Middlewares** | `src/middlewares/`  | Autenticação web (sessão) e API (token)                |
+| **Helpers**     | `src/helpers/`      | Funções utilitárias (parsing de valores, parcelas)     |
+| **Dados**       | `src/repositories/` | Queries SQL e acesso ao banco                          |
+| **Conexão**     | `src/config/`       | Pool de conexão PostgreSQL                             |
+| **Views**       | `src/views/`        | Templates EJS com partials reutilizáveis               |
+| **Frontend**    | `public/`           | CSS, JavaScript do cliente e assets estáticos          |
+
+---
+
 ## 📂 Estrutura do Projeto
 
     /
     ├── public/
-    │   ├── css/style.css
-    │   └── js/
+    │   ├── css/style.css               # Design system (dark mode)
+    │   ├── js/app.js                   # JavaScript do dashboard
+    │   └── favicon.ico
     ├── src/
-    │   ├── config/db.js
-    │   ├── repositories/FinanceiroRepository.js
-    │   ├── views/
-    │   │   ├── index.ejs
-    │   │   ├── login.ejs
-    │   │   └── relatorio.ejs
-    │   └── app.js
+    │   ├── app.js                      # Ponto de entrada (~65 linhas)
+    │   ├── config/
+    │   │   └── db.js                   # Pool PostgreSQL
+    │   ├── helpers/
+    │   │   └── parseHelpers.js         # parseValor, parcelas, etc.
+    │   ├── middlewares/
+    │   │   └── auth.js                 # authMiddleware + apiAuth
+    │   ├── repositories/
+    │   │   └── FinanceiroRepository.js # Camada de dados (queries)
+    │   ├── routes/
+    │   │   ├── publicRoutes.js         # Login / Logout
+    │   │   ├── integrationRoutes.js    # API Android
+    │   │   └── apiRoutes.js            # Dashboard + CRUD + APIs
+    │   └── views/
+    │       ├── index.ejs               # Dashboard principal
+    │       ├── login.ejs               # Tela de login
+    │       ├── relatorio.ejs           # Extrato para impressão
+    │       └── partials/
+    │           ├── head.ejs            # Meta tags, CSS, fonts
+    │           ├── header.ejs          # Barra superior + navegação
+    │           └── modals.ejs          # Todos os modais
+    ├── schema_postgreSQL.sql           # Schema do banco
     ├── .gitignore
     ├── package.json
     └── README.md
