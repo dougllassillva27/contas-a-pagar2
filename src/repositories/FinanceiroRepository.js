@@ -50,15 +50,10 @@ class FinanceiroRepository {
         ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP
       `);
 
-      // 2) preenche registros antigos que estiverem nulos
-      //    (usa DataVencimento como referência; se não tiver, usa NOW())
-      await db.query(`
-        UPDATE Lancamentos
-        SET DataCriacao = COALESCE(DataCriacao, DataVencimento::timestamp, NOW())
-        WHERE DataCriacao IS NULL
-      `);
+      // O script de UPDATE massivo foi expressamente removido daqui para evitar reescrita
+      // de datas em contas antigas caso o servidor reinicie.
 
-      // 3) default para novos registros
+      // 2) default para novos registros (aplica-se apenas a contas criadas no futuro)
       await db.query(`
         ALTER TABLE Lancamentos
         ALTER COLUMN DataCriacao SET DEFAULT NOW()

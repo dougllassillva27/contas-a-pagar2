@@ -738,6 +738,7 @@
 
                     // Para manter o padrão das outras telas, editarConta espera valor sem "R$"
                     const valorSemMoeda = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                    
                     html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                         <td class="col-data">${inseridoEm}</td>
                         <td style="font-weight:500; color:var(--blue);">${quem}</td>
