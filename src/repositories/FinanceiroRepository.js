@@ -56,25 +56,23 @@ class FinanceiroRepository {
 
   // --- DASHBOARD E LISTAGENS ---
   async getUltimosLancamentos(userId) {
-    // ✅ CORREÇÃO: DISTINCT ON agrupa lançamentos com a exata mesma data/hora e descrição.
-    // Como o script de cópia preserva os milissegundos, as cópias se tornam idênticas
-    // neste critério, e o PostgreSQL retorna apenas 1 registro para a tela de Últimas Adições.
+    // ✅ CORREÇÃO DEFINITIVA:
+    // 1. O CTE (WITH Unicos) usa DISTINCT ON truncando a data por segundo.
+    // Isso ignora a perda de milissegundos do JavaScript e força a "cópia" e a "original" a serem vistas como idênticas.
+    // 2. O 'Id ASC' garante que, entre a cópia (ID maior, Parcela 02) e a original (ID menor, Parcela 01),
+    // o sistema mantenha a original para a exibição no histórico de Últimas Adições.
+    // 3. A query final ordena tudo cronologicamente para a UI.
     const query = `
-        SELECT DISTINCT ON (DataCriacao, Descricao) * FROM Lancamentos 
-        WHERE UsuarioId = $1 
-        ORDER BY DataCriacao DESC NULLS LAST, Descricao ASC, Id DESC 
+        WITH Unicos AS (
+            SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao) * FROM Lancamentos 
+            WHERE UsuarioId = $1 
+            ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, Id ASC
+        )
+        SELECT * FROM Unicos 
+        ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
         LIMIT 20
     `;
     const result = await db.query(query, [userId]);
-
-    // Garante a ordenação final cronológica absoluta para a Interface (UI)
-    result.rows.sort((a, b) => {
-      const dA = a.datacriacao ? new Date(a.datacriacao).getTime() : 0;
-      const dB = b.datacriacao ? new Date(b.datacriacao).getTime() : 0;
-      if (dB !== dA) return dB - dA; // Maior data primeiro
-      return b.id - a.id; // Desempate por maior ID
-    });
-
     return result.rows;
   }
 
