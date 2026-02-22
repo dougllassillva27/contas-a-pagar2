@@ -1,0 +1,196 @@
+<%# ================= MENU DE CONTEXTO ================= %>
+<div id="customContextMenu" class="context-menu" style="display: none">
+  <ul>
+    <li onclick="executarAcaoEmLotePessoa('PAGO')">
+      <span class="material-icons" style="color: var(--verde)">check_circle</span>
+      Marcar todas como Pagas
+    </li>
+    <li onclick="executarAcaoEmLotePessoa('PENDENTE')">
+      <span class="material-icons" style="color: var(--orange)">history</span>
+      Marcar todas como Pendentes
+    </li>
+    <div class="menu-divider"></div>
+    <li onclick="confirmarExclusaoPessoa()" class="delete-action">
+      <span class="material-icons">delete_sweep</span>
+      Excluir todas as contas
+    </li>
+  </ul>
+</div>
+
+<%# ================= MODAL: ÚLTIMAS ADIÇÕES ================= %>
+<div class="modal-overlay" id="modalUltimasContas">
+  <div class="modal-box" style="max-width: 600px">
+    <div class="modal-header">
+      <h2>Últimas Adições</h2>
+      <button class="modal-close" onclick="fecharModais()">&times;</button>
+    </div>
+    <div class="scroll-wrapper modal-scroll">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th style="text-align: left">Data adicionado</th>
+            <th style="text-align: left">Quem</th>
+            <th style="text-align: left">Descrição</th>
+            <th class="col-valor" style="text-align: right">Valor</th>
+            <th style="text-align: center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="listaUltimasConteudo"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: AVISO ================= %>
+<div class="modal-overlay confirm-overlay" id="modalAviso">
+  <div class="modal-box" style="max-width: 400px; text-align: center">
+    <span class="material-icons" style="font-size: 48px; color: var(--blue); margin-bottom: 15px">info</span>
+    <h2 id="msgAvisoTitulo">Aviso</h2>
+    <p id="msgAvisoTexto" style="color: var(--text-secondary); margin: 10px 0 20px">Mensagem...</p>
+    <div class="confirm-actions" style="justify-content: center">
+      <button class="btn-primary" onclick="fecharModalAviso()">OK</button>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: CONFIRMAÇÃO DE AÇÃO ================= %>
+<div class="modal-overlay confirm-overlay" id="modalConfirmacaoAcao">
+  <div class="modal-box" style="max-width: 400px; text-align: center">
+    <span class="material-icons" id="iconConfirmacao" style="font-size: 48px; color: var(--orange); margin-bottom: 15px">help</span>
+    <h2 id="tituloConfirmacao">Tem certeza?</h2>
+    <p id="textoConfirmacao" style="color: var(--text-secondary); margin: 10px 0 20px">...</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="fecharConfirmacaoAcao()">Cancelar</button>
+      <button class="btn-primary" id="btnConfirmarAcao">Sim, Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: ADICIONAR / EDITAR LANÇAMENTO ================= %>
+<div class="modal-overlay" id="modalAdicionar">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalTitulo">Adicionar Lançamento</h2>
+      <button class="modal-close" onclick="fecharModais()">&times;</button>
+    </div>
+    <div class="modal-grid" id="modalGridForm">
+      <div class="form-wrapper" id="colRenda">
+        <h3 id="tituloRenda" style="margin-bottom: 20px; color: var(--text-secondary)">Nova Renda</h3>
+        <form id="formRenda" onsubmit="enviarLancamento(event, 'RENDA')">
+          <input type="hidden" name="id" id="rendaId" />
+          <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" name="descricao" id="rendaDesc" class="form-input" placeholder="Ex: Salário" required />
+          </div>
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="text" name="valor" id="rendaValor" class="form-input" placeholder="R$ 0,00" required />
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select name="sub_tipo" id="rendaCat" class="form-select">
+              <option value="Salário">Salário</option>
+              <option value="Extra">Extra</option>
+            </select>
+          </div>
+          <button type="submit" id="btnSalvarRenda" class="btn-primary form-btn">+ Adicionar Renda</button>
+        </form>
+      </div>
+      <div class="form-wrapper" id="colConta">
+        <h3 id="tituloConta" style="margin-bottom: 20px; color: var(--text-secondary)">Nova Conta</h3>
+        <form id="formConta" onsubmit="enviarLancamento(event, 'CONTA')">
+          <input type="hidden" name="id" id="contaId" />
+          <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" name="descricao" id="contaDesc" class="form-input" placeholder="Ex: Netflix" required />
+          </div>
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="text" name="valor" id="contaValor" class="form-input" placeholder="R$ 0,00" required />
+          </div>
+          <div class="form-group">
+            <label>Tipo de Conta</label>
+            <select name="sub_tipo" id="contaTipo" class="form-select" onchange="toggleParcelas()">
+              <option value="Única">Única</option>
+              <option value="Parcelada">Parcelada</option>
+              <option value="Fixa">Fixa</option>
+            </select>
+          </div>
+          <div class="form-group" id="grupoParcelas" style="display: none">
+            <label>Parcelas (Atual/Total)</label>
+            <input type="text" name="parcelas" id="contaParcelas" class="form-input" placeholder="00/00" maxlength="5" oninput="mascaraParcela(this)" />
+          </div>
+
+          <div class="form-group">
+            <label>Nome do Terceiro (Opcional)</label>
+            <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Mãe, Davi..." />
+            <datalist id="nomesTerceiros">
+              <option value="Mãe"></option>
+              <option value="Davi"></option>
+              <option value="Morr"></option>
+              <option value="Vô"></option>
+              <option value="Sogra"></option>
+              <option value="Casa"></option>
+              <option value="Mandi"></option>
+            </datalist>
+          </div>
+
+          <button type="submit" id="btnSalvarConta" class="btn-primary form-btn" style="background-color: #444">+ Adicionar Conta</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: RENDAS DETALHADAS ================= %>
+<div class="modal-overlay" id="modalRendasDetalhes">
+  <div class="modal-box" style="max-width: 500px">
+    <div class="modal-header">
+      <h2>Rendas Detalhadas</h2>
+      <button class="modal-close" onclick="fecharModais()">&times;</button>
+    </div>
+    <div class="scroll-wrapper modal-scroll">
+      <div class="list-header">
+        <span>Descrição</span>
+        <span>Valor</span>
+      </div>
+      <div id="listaRendasConteudo">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: DETALHES CARTÃO ================= %>
+<div class="modal-overlay" id="modalDetalhesCartao">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <div class="modal-title-wrapper">
+        <h2 id="tituloModalCartao">Cartão - Pessoa</h2>
+        <span id="totalModalCartao" style="font-size: 1.2rem; color: var(--red); font-weight: bold"></span>
+      </div>
+      <button class="modal-close" onclick="fecharModais()">&times;</button>
+    </div>
+    <div class="scroll-wrapper modal-scroll">
+      <table class="list-table"><tbody class="drag-container" id="listaCartaoPessoaConteudo"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: CONFIRMAR EXCLUSÃO ================= %>
+<div class="modal-overlay confirm-overlay" id="modalConfirmar">
+  <div class="modal-box" style="max-width: 400px; text-align: center">
+    <span class="material-icons" style="font-size: 48px; color: var(--red); margin-bottom: 15px">warning</span>
+    <h2>Tem certeza?</h2>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="fecharConfirmacao()">Cancelar</button>
+      <button class="btn-delete" id="btnConfirmarExclusao">Sim, Excluir</button>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: LOADING ================= %>
+<div class="modal-overlay" id="modalLoading" style="z-index: 100000">
+  <div class="modal-box">
+    <div class="spinner"></div>
+    <h3 style="color: white; margin-top: 20px; font-weight: 500">Processando...</h3>
+  </div>
+</div>
