@@ -271,15 +271,20 @@ async function abrirModalRendasDetalhes() {
   registerModalOpen();
   document.getElementById('modalRendasDetalhes').classList.add('active');
   const c = document.getElementById('listaRendasConteudo');
-  const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`);
-  const d = await res.json();
-  let h = '';
-  d.forEach((r) => {
-    const v = Number(r.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    const safeDesc = r.descricao.replace(/'/g, "\\'");
-    h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`;
-  });
-  c.innerHTML = h || 'Vazio';
+  try {
+    const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`);
+    const d = await res.json();
+    let h = '';
+    d.forEach((r) => {
+      const v = Number(r.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      const safeDesc = r.descricao.replace(/'/g, "\\'");
+      h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`;
+    });
+    c.innerHTML = h || 'Vazio';
+  } catch (err) {
+    console.error(err);
+    c.innerHTML = '<div style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar rendas.</div>';
+  }
 }
 
 function fecharModais() {
@@ -598,13 +603,61 @@ async function executarDeleteMes() {
   }
 }
 
+// ==============================================================================
+// ✅ STATUS TOGGLE SEM RELOAD
+// Atualiza o checkbox no DOM e busca os totais frescos do servidor.
+// ==============================================================================
 async function alternarStatus(checkbox, id) {
   const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE';
   try {
-    const res = await fetch(`/api/lancamentos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: novoStatus }) });
-    if (res.ok) window.location.reload();
+    const res = await fetch(`/api/lancamentos/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: novoStatus }),
+    });
+    if (!res.ok) {
+      // Reverte se falhou
+      checkbox.checked = !checkbox.checked;
+      return;
+    }
+    // Busca os totais atualizados do servidor e atualiza os cards
+    await atualizarTotais();
   } catch (err) {
+    // Reverte em caso de erro de rede
+    checkbox.checked = !checkbox.checked;
     console.error(err);
+  }
+}
+
+/**
+ * Busca os 4 totais do dashboard via API e atualiza os cards no DOM.
+ * Evita reload completo da página após toggle de status.
+ */
+async function atualizarTotais() {
+  try {
+    const res = await fetch(`/api/dashboard/totals?month=${currentMonth}&year=${currentYear}`);
+    if (!res.ok) return;
+    const t = await res.json();
+
+    const fmt = (n) => 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    const elRendas = document.getElementById('valorRendas');
+    const elContas = document.getElementById('valorContas');
+    const elFalta = document.getElementById('valorFaltaPagar');
+    const elSaldo = document.getElementById('valorSaldo');
+
+    if (elRendas) elRendas.textContent = fmt(t.totalrendas);
+    if (elContas) elContas.textContent = fmt(t.totalcontas);
+    if (elFalta) elFalta.textContent = fmt(t.faltapagar);
+    if (elSaldo) {
+      elSaldo.textContent = fmt(t.saldoprevisto);
+      // Atualiza a cor do saldo (vermelho se negativo, verde se positivo)
+      elSaldo.classList.remove('vermelho', 'verde');
+      elSaldo.classList.add(Number(t.saldoprevisto) < 0 ? 'vermelho' : 'verde');
+    }
+  } catch (err) {
+    // Se falhar, ignora silenciosamente — os totais serão atualizados na próxima navegação
+    console.error('Erro ao atualizar totais:', err);
   }
 }
 

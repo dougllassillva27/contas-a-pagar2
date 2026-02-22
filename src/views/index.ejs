@@ -24,15 +24,15 @@
 
         <div class="card">
             <h3>Suas Contas</h3>
-            <p class="valor vermelho">R$ <%= Number(totais.totalcontas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            <p class="valor vermelho" id="valorContas">R$ <%= Number(totais.totalcontas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
         </div>
         <div class="card">
             <h3>Falta Pagar</h3>
-            <p class="valor laranja">R$ <%= Number(totais.faltapagar).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            <p class="valor laranja" id="valorFaltaPagar">R$ <%= Number(totais.faltapagar).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
         </div>
         <div class="card">
             <h3>Seu Saldo</h3>
-            <p class="valor <%= Number(totais.saldoprevisto) < 0 ? 'vermelho' : 'verde' %>">
+            <p class="valor <%= Number(totais.saldoprevisto) < 0 ? 'vermelho' : 'verde' %>" id="valorSaldo">
                 R$ <%= Number(totais.saldoprevisto).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
             </p>
         </div>
@@ -68,7 +68,7 @@
                             <td><%= item.descricao %></td>
                             <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                             <td class="actions">
-                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
+                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
                                 <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                             </td>
                         </tr>
@@ -100,7 +100,7 @@
                             </td>
                             <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                             <td class="actions">
-                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
+                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
                                 <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                             </td>
                         </tr>
@@ -206,7 +206,7 @@
                                         <td><%= item.descricao %></td>
                                         <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                         <td class="actions">
-                                            <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= item.descricao %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, '<%= pessoa.nome %>')">edit</span>
+                                            <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, '<%= safeJs(pessoa.nome) %>')">edit</span>
                                             <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                                         </td>
                                     </tr>

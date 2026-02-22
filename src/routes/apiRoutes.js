@@ -76,7 +76,17 @@ module.exports = function (repo) {
         prox: { month: dataProxima.getMonth() + 1, year: dataProxima.getFullYear() },
       };
 
-      const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal] = await Promise.all([repo.getDashboardTotals(userId, mes, ano), repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano), repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano), repo.getAnotacoes(userId), repo.getResumoPessoas(userId, mes, ano, userName), repo.getDadosTerceiros(userId, mes, ano), repo.getOrdemCards(userId), repo.getFaturaManual(userId, mes, ano)]);
+      const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal, terceirosDistinct] = await Promise.all([
+        repo.getDashboardTotals(userId, mes, ano),
+        repo.getLancamentosPorTipo(userId, 'FIXA', mes, ano),
+        repo.getLancamentosPorTipo(userId, 'CARTAO', mes, ano),
+        repo.getAnotacoes(userId),
+        repo.getResumoPessoas(userId, mes, ano, userName),
+        repo.getDadosTerceiros(userId, mes, ano),
+        repo.getOrdemCards(userId),
+        repo.getFaturaManual(userId, mes, ano),
+        repo.getDistinctTerceiros(userId),
+      ]);
 
       const terceirosMap = {};
       dadosTerceirosRaw.forEach((item) => {
@@ -116,6 +126,12 @@ module.exports = function (repo) {
         return ordA - ordB || a.nome.localeCompare(b.nome);
       });
 
+      // Helper para escapar strings em contextos JavaScript (previne XSS em onclick)
+      const safeJs = (str) =>
+        String(str || '')
+          .replace(/\\/g, '\\\\')
+          .replace(/'/g, "\\'");
+
       res.render('index', {
         totais,
         fixas,
@@ -124,13 +140,27 @@ module.exports = function (repo) {
         resumoPessoas,
         nav,
         terceiros: listaTerceiros,
+        terceirosDistinct,
         query: req.query,
         user: req.session.user,
         faturaManual: faturaManualVal,
+        safeJs,
       });
     } catch (err) {
       console.error('Erro dashboard:', err);
       res.status(500).send('Erro ao carregar dashboard.');
+    }
+  });
+
+  // --- TOTAIS (para atualização parcial sem reload) ---
+  router.get('/api/dashboard/totals', async (req, res) => {
+    try {
+      const m = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
+      const y = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
+      const totais = await repo.getDashboardTotals(req.session.user.id, m, y);
+      res.json(totais);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
   });
 
@@ -221,53 +251,8 @@ module.exports = function (repo) {
   });
 
   // ================================================================================
-  // 🆕 AÇÕES EM LOTE PARA TERCEIROS (LONG PRESS MENU)
+  // AÇÕES EM LOTE PARA TERCEIROS (usadas pelo frontend via POST)
   // ================================================================================
-
-  router.put('/api/terceiros/:nome/marcar-todas-pagas', async (req, res) => {
-    try {
-      const nomeTerceiro = decodeURIComponent(req.params.nome);
-      const mes = req.query.month || new Date().getMonth() + 1;
-      const ano = req.query.year || new Date().getFullYear();
-
-      await repo.updateStatusBatchPessoa(req.session.user.id, nomeTerceiro, 'PAGO', parseInt(mes, 10), parseInt(ano, 10), req.session.user.nome);
-
-      res.json({ success: true, message: `Todas as contas de ${nomeTerceiro} marcadas como pagas` });
-    } catch (err) {
-      console.error('Erro ao marcar todas como pagas:', err);
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  router.put('/api/terceiros/:nome/marcar-todas-pendentes', async (req, res) => {
-    try {
-      const nomeTerceiro = decodeURIComponent(req.params.nome);
-      const mes = req.query.month || new Date().getMonth() + 1;
-      const ano = req.query.year || new Date().getFullYear();
-
-      await repo.updateStatusBatchPessoa(req.session.user.id, nomeTerceiro, 'PENDENTE', parseInt(mes, 10), parseInt(ano, 10), req.session.user.nome);
-
-      res.json({ success: true, message: `Todas as contas de ${nomeTerceiro} marcadas como pendentes` });
-    } catch (err) {
-      console.error('Erro ao marcar todas como pendentes:', err);
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
-
-  router.delete('/api/terceiros/:nome', async (req, res) => {
-    try {
-      const nomeTerceiro = decodeURIComponent(req.params.nome);
-      const mes = req.query.month || new Date().getMonth() + 1;
-      const ano = req.query.year || new Date().getFullYear();
-
-      await repo.deleteLancamentosPorPessoa(req.session.user.id, nomeTerceiro, parseInt(mes, 10), parseInt(ano, 10), req.session.user.nome);
-
-      res.json({ success: true, message: `Todas as contas de ${nomeTerceiro} foram excluídas` });
-    } catch (err) {
-      console.error('Erro ao excluir contas de terceiro:', err);
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
 
   // ROTA LEGADA (manter compatibilidade)
   router.delete('/api/lancamentos/pessoa/:nome', async (req, res) => {
