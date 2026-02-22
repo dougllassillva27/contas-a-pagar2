@@ -5,6 +5,25 @@ class FinanceiroRepository {
   constructor() {
     this.initOrdemTable();
     this.initLancamentosDataCriacao();
+    this.initUpsertConstraints();
+  }
+
+  // Garante que as constraints UNIQUE existam para as queries UPSERT funcionarem
+  async initUpsertConstraints() {
+    try {
+      // FaturaManual: impede duplicatas de (UsuarioId, Mes, Ano)
+      await db.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_faturamanual_usuario_mes_ano
+        ON FaturaManual (UsuarioId, Mes, Ano)
+      `);
+      // Anotacoes: impede duplicatas de (UsuarioId) — cada user tem 1 anotação
+      await db.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_anotacoes_usuario
+        ON Anotacoes (UsuarioId)
+      `);
+    } catch (err) {
+      console.error('Erro initUpsertConstraints:', err);
+    }
   }
 
   // --- USUÁRIOS ---
@@ -102,12 +121,12 @@ class FinanceiroRepository {
   }
 
   async saveFaturaManual(userId, month, year, valor) {
-    const check = await db.query('SELECT Id FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year]);
-    if (check.rows.length > 0) {
-      await db.query('UPDATE FaturaManual SET Valor = $4 WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, month, year, valor]);
-    } else {
-      await db.query('INSERT INTO FaturaManual (UsuarioId, Mes, Ano, Valor) VALUES ($1, $2, $3, $4)', [userId, month, year, valor]);
-    }
+    // UPSERT: insere ou atualiza em uma única query (sem race condition)
+    await db.query(
+      `INSERT INTO FaturaManual (UsuarioId, Mes, Ano, Valor) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (UsuarioId, Mes, Ano) DO UPDATE SET Valor = EXCLUDED.Valor`,
+      [userId, month, year, valor]
+    );
   }
 
   async getOrdemCards(userId) {
@@ -293,18 +312,22 @@ class FinanceiroRepository {
   }
 
   async updateAnotacoes(userId, texto) {
-    const check = await db.query('SELECT Id FROM Anotacoes WHERE UsuarioId = $1', [userId]);
-    if (check.rows.length > 0) {
-      await db.query('UPDATE Anotacoes SET Conteudo = $1 WHERE UsuarioId = $2', [texto, userId]);
-    } else {
-      await db.query('INSERT INTO Anotacoes (Conteudo, UsuarioId) VALUES ($1, $2)', [texto, userId]);
-    }
+    // UPSERT: insere ou atualiza em uma única query (sem race condition)
+    await db.query(
+      `INSERT INTO Anotacoes (Conteudo, UsuarioId) VALUES ($1, $2)
+       ON CONFLICT (UsuarioId) DO UPDATE SET Conteudo = EXCLUDED.Conteudo`,
+      [texto, userId]
+    );
   }
 
   async deleteMonth(userId, month, year) {
     await db.query('DELETE FROM Lancamentos WHERE UsuarioId = $1 AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3', [userId, month, year]);
   }
 
+  // ⚠️ ATENÇÃO: Esta função copia do mês informado para o PRÓXIMO mês.
+  // O frontend envia o mês que o usuário está visualizando.
+  // Exemplo: se o usuário está em Fevereiro e clica "Copiar",
+  //   → copia as fixas/parcelas de Fevereiro para Março.
   async copyMonth(userId, currentMonth, currentYear) {
     const client = await db.getClient();
     try {
@@ -366,6 +389,12 @@ class FinanceiroRepository {
     const lancamentos = await db.query('SELECT * FROM Lancamentos WHERE UsuarioId = $1 ORDER BY DataVencimento DESC, Id DESC', [userId]);
     const anotacoes = await db.query('SELECT * FROM Anotacoes WHERE UsuarioId = $1', [userId]);
     return { backup_date: new Date(), lancamentos: lancamentos.rows, anotacoes: anotacoes.rows };
+  }
+
+  // Retorna nomes únicos de terceiros (para datalist dinâmico no formulário)
+  async getDistinctTerceiros(userId) {
+    const result = await db.query("SELECT DISTINCT NomeTerceiro FROM Lancamentos WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL AND NomeTerceiro != '' ORDER BY NomeTerceiro", [userId]);
+    return result.rows.map((r) => r.nometerceiro);
   }
 }
 
