@@ -56,14 +56,25 @@ class FinanceiroRepository {
 
   // --- DASHBOARD E LISTAGENS ---
   async getUltimosLancamentos(userId) {
-    // ✅ CORREÇÃO: Ordena pela DataCriacao para que cópias de meses passados fiquem retidas no passado
+    // ✅ CORREÇÃO: DISTINCT ON agrupa lançamentos com a exata mesma data/hora e descrição.
+    // Como o script de cópia preserva os milissegundos, as cópias se tornam idênticas
+    // neste critério, e o PostgreSQL retorna apenas 1 registro para a tela de Últimas Adições.
     const query = `
-        SELECT * FROM Lancamentos 
+        SELECT DISTINCT ON (DataCriacao, Descricao) * FROM Lancamentos 
         WHERE UsuarioId = $1 
-        ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
+        ORDER BY DataCriacao DESC NULLS LAST, Descricao ASC, Id DESC 
         LIMIT 20
     `;
     const result = await db.query(query, [userId]);
+
+    // Garante a ordenação final cronológica absoluta para a Interface (UI)
+    result.rows.sort((a, b) => {
+      const dA = a.datacriacao ? new Date(a.datacriacao).getTime() : 0;
+      const dB = b.datacriacao ? new Date(b.datacriacao).getTime() : 0;
+      if (dB !== dA) return dB - dA; // Maior data primeiro
+      return b.id - a.id; // Desempate por maior ID
+    });
+
     return result.rows;
   }
 
@@ -333,8 +344,7 @@ class FinanceiroRepository {
         const newDate = new Date(nextYear, nextMonth - 1, day);
         const novoStatus = item.tipo === 'RENDA' ? 'PAGO' : 'PENDENTE';
 
-        // ✅ NOVO: Garante que a cópia herde a data de criação original
-        // Isso impede que as cópias soterrem as suas contas manuais na janela de 'Últimas Adições'
+        // Garante que a cópia herde a data de criação original
         const dataCriacaoOriginal = item.datacriacao ? new Date(item.datacriacao) : new Date();
 
         await client.query(
