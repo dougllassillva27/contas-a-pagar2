@@ -270,20 +270,20 @@ async function abrirModalCartaoPessoa(pessoa) {
 async function abrirModalRendasDetalhes() {
   registerModalOpen();
   document.getElementById('modalRendasDetalhes').classList.add('active');
-  const c = document.getElementById('listaRendasConteudo');
+  const container = document.getElementById('listaRendasConteudo');
   try {
     const res = await fetch(`/api/rendas?month=${currentMonth}&year=${currentYear}`);
-    const d = await res.json();
-    let h = '';
-    d.forEach((r) => {
-      const v = Number(r.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      const safeDesc = r.descricao.replace(/'/g, "\\'");
-      h += `<div class="list-item"><div class="desc">${r.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${v}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${r.id}, '${safeDesc}', '${v}', '${r.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${r.id})">delete</span></div></div></div>`;
+    const rendas = await res.json();
+    let html = '';
+    rendas.forEach((renda) => {
+      const valorFormatado = Number(renda.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      const safeDesc = renda.descricao.replace(/'/g, "\\'");
+      html += `<div class="list-item"><div class="desc">${renda.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${valorFormatado}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${renda.id}, '${safeDesc}', '${valorFormatado}', '${renda.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${renda.id})">delete</span></div></div></div>`;
     });
-    c.innerHTML = h || 'Vazio';
+    container.innerHTML = html || 'Vazio';
   } catch (err) {
     console.error(err);
-    c.innerHTML = '<div style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar rendas.</div>';
+    container.innerHTML = '<div style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar rendas.</div>';
   }
 }
 
@@ -637,23 +637,23 @@ async function atualizarTotais() {
   try {
     const res = await fetch(`/api/dashboard/totals?month=${currentMonth}&year=${currentYear}`);
     if (!res.ok) return;
-    const t = await res.json();
+    const totais = await res.json();
 
-    const fmt = (n) => 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const formatarMoeda = (n) => 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
     const elRendas = document.getElementById('valorRendas');
     const elContas = document.getElementById('valorContas');
     const elFalta = document.getElementById('valorFaltaPagar');
     const elSaldo = document.getElementById('valorSaldo');
 
-    if (elRendas) elRendas.textContent = fmt(t.totalrendas);
-    if (elContas) elContas.textContent = fmt(t.totalcontas);
-    if (elFalta) elFalta.textContent = fmt(t.faltapagar);
+    if (elRendas) elRendas.textContent = formatarMoeda(totais.totalrendas);
+    if (elContas) elContas.textContent = formatarMoeda(totais.totalcontas);
+    if (elFalta) elFalta.textContent = formatarMoeda(totais.faltapagar);
     if (elSaldo) {
-      elSaldo.textContent = fmt(t.saldoprevisto);
+      elSaldo.textContent = formatarMoeda(totais.saldoprevisto);
       // Atualiza a cor do saldo (vermelho se negativo, verde se positivo)
       elSaldo.classList.remove('vermelho', 'verde');
-      elSaldo.classList.add(Number(t.saldoprevisto) < 0 ? 'vermelho' : 'verde');
+      elSaldo.classList.add(Number(totais.saldoprevisto) < 0 ? 'vermelho' : 'verde');
     }
   } catch (err) {
     // Se falhar, ignora silenciosamente — os totais serão atualizados na próxima navegação
