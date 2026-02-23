@@ -5,6 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
+const { LIMITES } = require('../constants');
 
 module.exports = function (repo, SENHA_MESTRA) {
   router.get('/login', (req, res) => {
@@ -30,7 +31,7 @@ module.exports = function (repo, SENHA_MESTRA) {
     // pequeno delay para dificultar brute force básico
     setTimeout(() => {
       res.render('login', { error: 'Senha incorreta!' });
-    }, 500);
+    }, LIMITES.BRUTE_FORCE_DELAY_MS);
   });
 
   router.get('/logout', (req, res) => {

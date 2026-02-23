@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { parseValor, normalizarTipoIntegracao, normalizarParcelasPorTipo } = require('../helpers/parseHelpers');
+const { STATUS, TIPO } = require('../constants');
 
 module.exports = function (repo, apiAuth) {
   /**
@@ -37,7 +38,7 @@ module.exports = function (repo, apiAuth) {
       const tipoNorm = normalizarTipoIntegracao(tipo);
       const isFixa = tipoNorm === 'fixa';
       const isParcelada = tipoNorm === 'parcelada';
-      const dbTipo = isFixa ? 'FIXA' : 'CARTAO';
+      const dbTipo = isFixa ? TIPO.FIXA : TIPO.CARTAO;
 
       const parcelasNorm = normalizarParcelasPorTipo({
         isParcelada,
@@ -53,7 +54,7 @@ module.exports = function (repo, apiAuth) {
         descricao,
         valor: valorFinal,
         tipo: dbTipo,
-        status: 'PENDENTE',
+        status: STATUS.PENDENTE,
         parcelaAtual: parcelasNorm.parcelaAtual,
         totalParcelas: parcelasNorm.totalParcelas,
         nomeTerceiro: terceiro || null,
@@ -70,7 +71,7 @@ module.exports = function (repo, apiAuth) {
           descricao: dados.descricao,
           valor_formatado: `R$ ${valorFinal.toFixed(2).replace('.', ',')}`,
           quem: dados.nomeTerceiro || 'Próprio',
-          detalhe_tipo: dbTipo === 'FIXA' ? 'Conta Fixa' : dados.totalParcelas ? `Parcelado ${dados.parcelaAtual}/${dados.totalParcelas}` : 'Crédito à vista',
+          detalhe_tipo: dbTipo === TIPO.FIXA ? 'Conta Fixa' : dados.totalParcelas ? `Parcelado ${dados.parcelaAtual}/${dados.totalParcelas}` : 'Crédito à vista',
         },
       });
     } catch (err) {
