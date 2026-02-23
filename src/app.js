@@ -15,6 +15,7 @@ const db = require('./config/db');
 const repo = require('./repositories/FinanceiroRepository');
 const { authMiddleware, createApiAuth } = require('./middlewares/auth');
 const requestLogger = require('./middlewares/logger');
+const initDatabase = require('./helpers/initDatabase');
 const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
@@ -81,7 +82,9 @@ app.use(apiRoutes(repo));
 // ==============================================================================
 
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+  initDatabase().then(() => {
+    app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+  });
 }
 
 // Exporta para uso em testes (supertest)
