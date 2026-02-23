@@ -72,6 +72,9 @@ PostgreSQL e arquitetura cloud.
 - **Modais Responsivos**
   - Edição sem reload
 
+- **Toggle de Status via AJAX**
+  - Alternar Pago/Pendente sem recarregar a página
+
 - **Dark Mode**
 
 - **Mobile First**
@@ -93,16 +96,56 @@ PostgreSQL e arquitetura cloud.
   - Exportação manual de segurança
 - **Fatura Manual**
   - Campo para comparar valor calculado vs valor do app do banco
+- **Health Check** (`/health`)
+  - Endpoint para monitoramento de uptime (Render, UptimeRobot)
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Backend:** Node.js + Express
-- **Database:** PostgreSQL (Neon.tech)
-- **Hospedagem:** Render.com (Plano Gratuito)
-- **Frontend:** EJS + CSS3 (Grid Layout + Variáveis)
-- **Driver:** pg (node-postgres)
+| Tecnologia       | Detalhes                    |
+| ---------------- | --------------------------- |
+| **Runtime**      | Node.js v18+                |
+| **Framework**    | Express 5.x                 |
+| **Database**     | PostgreSQL (Neon.tech)      |
+| **Hospedagem**   | Render.com (Plano Gratuito) |
+| **Frontend**     | EJS + CSS3 (Grid + Vars)    |
+| **Driver DB**    | pg (node-postgres)          |
+| **Autenticação** | bcryptjs + express-session  |
+| **Testes**       | Jest 30 + Supertest 7       |
+
+---
+
+## 🧪 Testes Automatizados
+
+O projeto possui **51 testes** distribuídos em **4 suítes**, abrangendo
+testes unitários e de integração:
+
+```
+__tests__/
+├── helpers/
+│   └── parseHelpers.test.js       # Parsing de valores e parcelas
+├── middlewares/
+│   └── auth.test.js               # Autenticação web e API (token)
+├── repositories/
+│   ├── LancamentoRepository.test.js  # CRUD de lançamentos (mock)
+│   └── UsuarioRepository.test.js     # Login e gestão de usuários (mock)
+└── integration/
+    └── api.test.js                # Fluxo completo via Supertest
+```
+
+**Scripts disponíveis:**
+
+```bash
+# Rodar todos os testes
+npm test
+
+# Apenas testes unitários (helpers + middlewares)
+npm run test:unit
+
+# Apenas testes de integração
+npm run test:integration
+```
 
 ---
 
@@ -198,6 +241,10 @@ API_TOKEN=seu_token_api
 NODE_VERSION=18
 ```
 
+> ⚠️ **Segurança:** em produção, defina valores fortes para
+> `SESSION_SECRET`, `SENHA_MESTRA` e `API_TOKEN`. Os fallbacks
+> de desenvolvimento existem apenas para conveniência local.
+
 ---
 
 ### 5️⃣ Rodar
@@ -206,9 +253,7 @@ NODE_VERSION=18
 npm start
 ```
 
-Acesse:
-
-http://localhost:3000
+Acesse: http://localhost:3000
 
 ---
 
@@ -227,27 +272,14 @@ Suba o repositório.
 ### Render
 
 - New Web Service
-- Build Command:
-
-```{=html}
-<!-- -->
-```
-
-    npm install
-
-- Start Command:
-
-```{=html}
-<!-- -->
-```
-
-    node src/app.js
-
+- Build Command: `npm install`
+- Start Command: `node src/app.js`
 - Variáveis:
-  - DATABASE_URL
-  - NODE_VERSION
-  - SESSION_SECRET
-  - SENHA_MESTRA
+  - `DATABASE_URL`
+  - `NODE_VERSION`
+  - `SESSION_SECRET`
+  - `SENHA_MESTRA`
+  - `API_TOKEN`
 
 ---
 
@@ -259,48 +291,81 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 | --------------- | ------------------- | ------------------------------------------------------ |
 | **Entrada**     | `src/app.js`        | Configuração do Express, sessão e montagem dos módulos |
 | **Rotas**       | `src/routes/`       | Handlers de cada grupo de endpoints                    |
-| **Middlewares** | `src/middlewares/`  | Autenticação web (sessão) e API (token)                |
-| **Helpers**     | `src/helpers/`      | Funções utilitárias (parsing de valores, parcelas)     |
-| **Dados**       | `src/repositories/` | Queries SQL e acesso ao banco                          |
+| **Middlewares** | `src/middlewares/`  | Autenticação web (sessão), API (token) e logger        |
+| **Helpers**     | `src/helpers/`      | Parsing, async handler e inicialização do banco        |
+| **Dados**       | `src/repositories/` | Repositories especializados por domínio + facade       |
+| **Constantes**  | `src/constants.js`  | Valores centralizados (status, tipos, limites)         |
 | **Conexão**     | `src/config/`       | Pool de conexão PostgreSQL                             |
 | **Views**       | `src/views/`        | Templates EJS com partials reutilizáveis               |
 | **Frontend**    | `public/`           | CSS, JavaScript do cliente e assets estáticos          |
+| **Testes**      | `__tests__/`        | Unitários, repositórios (mock) e integração            |
 
 ---
 
 ## 📂 Estrutura do Projeto
 
-    /
-    ├── public/
-    │   ├── css/style.css               # Design system (dark mode)
-    │   ├── js/app.js                   # JavaScript do dashboard
-    │   └── favicon.ico
-    ├── src/
-    │   ├── app.js                      # Ponto de entrada (~65 linhas)
-    │   ├── config/
-    │   │   └── db.js                   # Pool PostgreSQL
-    │   ├── helpers/
-    │   │   └── parseHelpers.js         # parseValor, parcelas, etc.
-    │   ├── middlewares/
-    │   │   └── auth.js                 # authMiddleware + apiAuth
-    │   ├── repositories/
-    │   │   └── FinanceiroRepository.js # Camada de dados (queries)
-    │   ├── routes/
-    │   │   ├── publicRoutes.js         # Login / Logout
-    │   │   ├── integrationRoutes.js    # API Android
-    │   │   └── apiRoutes.js            # Dashboard + CRUD + APIs
-    │   └── views/
-    │       ├── index.ejs               # Dashboard principal
-    │       ├── login.ejs               # Tela de login
-    │       ├── relatorio.ejs           # Extrato para impressão
-    │       └── partials/
-    │           ├── head.ejs            # Meta tags, CSS, fonts
-    │           ├── header.ejs          # Barra superior + navegação
-    │           └── modals.ejs          # Todos os modais
-    ├── schema_postgreSQL.sql           # Schema do banco
-    ├── .gitignore
-    ├── package.json
-    └── README.md
+```
+/
+├── public/
+│   ├── css/style.css                       # Design system (dark mode)
+│   ├── js/app.js                           # JavaScript do dashboard
+│   └── favicon.ico
+├── src/
+│   ├── app.js                              # Ponto de entrada (~92 linhas)
+│   ├── constants.js                        # STATUS, TIPO, LIMITES centralizados
+│   ├── config/
+│   │   └── db.js                           # Pool PostgreSQL
+│   ├── helpers/
+│   │   ├── asyncHandler.js                 # Wrapper try/catch para rotas async
+│   │   ├── initDatabase.js                 # Criação automática de tabelas
+│   │   └── parseHelpers.js                 # parseValor, parcelas, etc.
+│   ├── middlewares/
+│   │   ├── auth.js                         # authMiddleware + createApiAuth
+│   │   └── logger.js                       # Request logger estruturado
+│   ├── repositories/
+│   │   ├── FinanceiroRepository.js         # Facade (re-exporta todos abaixo)
+│   │   ├── UsuarioRepository.js            # Login, busca de usuários
+│   │   ├── LancamentoRepository.js         # CRUD de lançamentos
+│   │   ├── AnotacaoRepository.js           # Bloco de notas
+│   │   ├── FaturaManualRepository.js       # Fatura manual (UPSERT)
+│   │   ├── OrdemCardsRepository.js         # Ordem dos cards do dashboard
+│   │   └── BackupRepository.js             # Exportação JSON completa
+│   ├── routes/
+│   │   ├── publicRoutes.js                 # Login / Logout
+│   │   ├── integrationRoutes.js            # API Android
+│   │   └── apiRoutes.js                    # Dashboard + CRUD + APIs
+│   └── views/
+│       ├── index.ejs                       # Dashboard principal
+│       ├── login.ejs                       # Tela de login
+│       ├── relatorio.ejs                   # Extrato para impressão
+│       └── partials/
+│           ├── head.ejs                    # Meta tags, CSS, fonts
+│           ├── header.ejs                  # Barra superior + navegação
+│           └── modals.ejs                  # Todos os modais
+├── __tests__/
+│   ├── helpers/parseHelpers.test.js        # Testes de parsing
+│   ├── middlewares/auth.test.js            # Testes de autenticação
+│   ├── repositories/
+│   │   ├── LancamentoRepository.test.js    # Testes CRUD (mock do DB)
+│   │   └── UsuarioRepository.test.js       # Testes de usuário (mock do DB)
+│   └── integration/api.test.js             # Testes de API (Supertest)
+├── schema_postgreSQL.sql                   # Schema do banco
+├── jest.config.js                          # Configuração do Jest
+├── .gitignore
+├── package.json
+└── README.md
+```
+
+---
+
+## 🔒 Segurança
+
+- **Senhas** hashadas com `bcryptjs` (nunca armazenadas em texto puro)
+- **Proteção contra brute-force** — delay configurável em tentativas de login
+- **Autenticação de sessão** para rotas web (`express-session`)
+- **Autenticação por token** para API Android (`API_TOKEN`)
+- **Constantes centralizadas** — sem magic strings espalhadas pelo código
+- **Async error handling** — wrapper `asyncHandler` captura exceções em rotas
 
 ---
 
@@ -309,7 +374,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - Use o modo privacidade para esconder valores
 - Double Tap no mobile para ações rápidas
 - Use "Imprimir" para gerar PDF
-- Plano free pode hibernar --- basta relogar
+- Plano free pode hibernar — basta relogar
+- Monitore o uptime via endpoint `/health`
 
 ---
 
@@ -320,6 +386,13 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - Organização visual
 - Independência geográfica
 - Código limpo e manutenível
+- Cobertura de testes automatizados
+
+---
+
+## 📄 Licença
+
+ISC — Veja [LICENSE](LICENSE) para detalhes.
 
 ---
 
