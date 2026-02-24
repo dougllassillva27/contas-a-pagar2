@@ -1,67 +1,284 @@
 // ==============================================================================
-// 🤖 Bot do Telegram — Módulo Principal
-// Recebe mensagens, parseia, insere no banco e responde ao usuário.
+// 🤖 Bot do Telegram — Modo Conversa Interativa
+// Pergunta campo por campo usando inline keyboards e texto livre.
 // ==============================================================================
 
 const TelegramBot = require('node-telegram-bot-api');
-const { parseMensagem, formatoEsperado } = require('./messageParser');
+const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa } = require('./conversationManager');
+const { parseValor, normalizarParcelasPorTipo } = require('../src/helpers/parseHelpers');
 const { formatarSucesso, formatarErro } = require('./responseFormatter');
+const { STATUS, TIPO } = require('../src/constants');
 
 /**
  * Cria e configura a instância do bot do Telegram.
  *
- * @param {object} config — configurações do bot
+ * @param {object} config
  * @param {string} config.token — token do @BotFather
  * @param {string} config.chatIdPermitido — chat ID autorizado
  * @param {object} repo — repositório do banco de dados
- * @returns {TelegramBot} — instância configurada
+ * @returns {TelegramBot}
  */
 function criarBot({ token, chatIdPermitido, repo }) {
-  // Modo webhook: NÃO usa polling (compatível com Render free)
   const bot = new TelegramBot(token, { polling: false });
 
+  // --- Mensagens de texto ---
   bot.on('message', async (msg) => {
-    await processarMensagem(bot, msg, { chatIdPermitido, repo });
+    const chatId = String(msg.chat.id);
+
+    if (chatId !== String(chatIdPermitido)) {
+      console.log(`[Telegram] Mensagem ignorada de chat não autorizado: ${chatId}`);
+      return;
+    }
+
+    const texto = (msg.text || '').trim();
+    if (!texto) return;
+
+    // Comandos especiais
+    if (texto.startsWith('/')) {
+      await tratarComando(bot, chatId, texto);
+      return;
+    }
+
+    // Processa resposta no fluxo da conversa
+    await processarTexto(bot, chatId, texto, repo);
+  });
+
+  // --- Cliques em botões inline ---
+  bot.on('callback_query', async (query) => {
+    const chatId = String(query.message.chat.id);
+
+    if (chatId !== String(chatIdPermitido)) return;
+
+    await bot.answerCallbackQuery(query.id);
+    await processarCallback(bot, chatId, query.data, repo);
   });
 
   return bot;
 }
 
-/**
- * Processa uma mensagem recebida do Telegram.
- * Função separada para facilitar testes.
- */
-async function processarMensagem(bot, msg, { chatIdPermitido, repo }) {
-  const chatId = String(msg.chat.id);
+// ==============================================================================
+// Comandos (/start, /help, /cancelar, /novo)
+// ==============================================================================
 
-  // --- Segurança: rejeita mensagens de chats não autorizados ---
-  if (chatId !== String(chatIdPermitido)) {
-    console.log(`[Telegram] Mensagem ignorada de chat não autorizado: ${chatId}`);
+async function tratarComando(bot, chatId, comando) {
+  const cmd = comando.toLowerCase().split(' ')[0];
+
+  if (cmd === '/novo' || cmd === '/start') {
+    iniciarConversa(chatId);
+    await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
     return;
   }
 
-  const texto = (msg.text || '').trim();
-
-  // Ignora comandos especiais (ex: /start, /help)
-  if (texto.startsWith('/')) {
-    await responderComando(bot, chatId, texto);
+  if (cmd === '/cancelar') {
+    cancelarConversa(chatId);
+    await bot.sendMessage(chatId, '❌ Lançamento cancelado\\.');
     return;
   }
 
-  // Ignora mensagens vazias (fotos, stickers, etc.)
-  if (!texto) return;
-
-  // --- Parse da mensagem ---
-  const resultado = parseMensagem(texto);
-
-  if (!resultado.sucesso) {
-    await bot.sendMessage(chatId, formatarErro(resultado.erro), { parse_mode: 'MarkdownV2' });
+  if (cmd === '/help') {
+    const ajuda = ['🏦 *Bot Contas a Pagar*', '', '📌 *Comandos:*', '/novo \\- Iniciar novo lançamento', '/cancelar \\- Cancelar lançamento em andamento', '/help \\- Ver esta ajuda'].join('\n');
+    await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2' });
     return;
   }
 
-  // --- Inserção no banco ---
+  await bot.sendMessage(chatId, 'Comando não reconhecido\\. Use /help', { parse_mode: 'MarkdownV2' });
+}
+
+// ==============================================================================
+// Processar resposta de texto (campos livres)
+// ==============================================================================
+
+async function processarTexto(bot, chatId, texto, repo) {
+  const conversa = obterConversa(chatId);
+
+  // Se não há conversa ativa, inicia uma nova
+  if (!conversa) {
+    iniciarConversa(chatId);
+    await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
+    return;
+  }
+
+  const etapa = conversa.etapa;
+
+  // Etapas que esperam texto livre
+  switch (etapa) {
+    case ETAPAS.DESCRICAO:
+      await avancarEEnviarProxima(bot, chatId, 'descricao', texto, repo);
+      break;
+
+    case ETAPAS.VALOR: {
+      const valor = parseValor(texto);
+      if (valor <= 0) {
+        await bot.sendMessage(chatId, '⚠️ Valor inválido. Envie algo como *R\\$ 100,00* ou *100*', { parse_mode: 'MarkdownV2' });
+        return;
+      }
+      await avancarEEnviarProxima(bot, chatId, 'valor', valor, repo);
+      break;
+    }
+
+    case ETAPAS.PARCELAS: {
+      const parcelasNorm = normalizarParcelasPorTipo({
+        isParcelada: true,
+        parcelasRaw: texto,
+      });
+      if (parcelasNorm.erro) {
+        await bot.sendMessage(chatId, `⚠️ ${parcelasNorm.erro}\nEnvie no formato *10* ou *1/10*`, { parse_mode: 'MarkdownV2' });
+        return;
+      }
+      conversa.dados.parcelaAtual = parcelasNorm.parcelaAtual;
+      conversa.dados.totalParcelas = parcelasNorm.totalParcelas;
+      const proxima = avancarConversa(chatId, 'parcelas', texto);
+      if (!proxima) {
+        await finalizarEInserir(bot, chatId, repo);
+      } else {
+        await enviarPergunta(bot, chatId, proxima);
+      }
+      break;
+    }
+
+    case ETAPAS.TERCEIRO:
+      await avancarEEnviarProxima(bot, chatId, 'terceiro', texto, repo);
+      break;
+
+    default:
+      // Se está numa etapa que espera botão (USUARIO, TIPO), avisa
+      await bot.sendMessage(chatId, '👆 Por favor, selecione uma opção usando os botões acima\\.');
+      break;
+  }
+}
+
+// ==============================================================================
+// Processar callback de botões inline
+// ==============================================================================
+
+async function processarCallback(bot, chatId, data, repo) {
+  const conversa = obterConversa(chatId);
+  if (!conversa) {
+    await bot.sendMessage(chatId, 'Nenhum lançamento em andamento\\. Use /novo para iniciar\\.', { parse_mode: 'MarkdownV2' });
+    return;
+  }
+
+  // Callbacks têm formato: "campo:valor" (ex: "usuario:1", "tipo:fixa")
+  const [campo, valor] = data.split(':');
+
+  if (campo === 'usuario') {
+    await avancarEEnviarProxima(bot, chatId, 'usuarioId', parseInt(valor, 10), repo);
+  } else if (campo === 'tipo') {
+    // Salvar tipo normalizado para a lógica de parcelas
+    conversa.dados.tipo = valor;
+    const proxima = avancarConversa(chatId, 'tipo', valor);
+    if (!proxima) {
+      await finalizarEInserir(bot, chatId, repo);
+    } else {
+      await enviarPergunta(bot, chatId, proxima);
+    }
+  } else if (campo === 'terceiro') {
+    // Botão "Pular" para terceiro
+    await avancarEEnviarProxima(bot, chatId, 'terceiro', null, repo);
+  }
+}
+
+// ==============================================================================
+// Avançar conversa e enviar próxima pergunta (ou finalizar)
+// ==============================================================================
+
+async function avancarEEnviarProxima(bot, chatId, campo, valor, repo) {
+  const proxima = avancarConversa(chatId, campo, valor);
+
+  if (!proxima) {
+    await finalizarEInserir(bot, chatId, repo);
+  } else {
+    await enviarPergunta(bot, chatId, proxima);
+  }
+}
+
+// ==============================================================================
+// Enviar pergunta por etapa
+// ==============================================================================
+
+async function enviarPergunta(bot, chatId, etapa) {
+  switch (etapa) {
+    case ETAPAS.USUARIO:
+      await bot.sendMessage(chatId, '👤 *Conta de quem?*', {
+        parse_mode: 'MarkdownV2',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '🧑 Dodo', callback_data: 'usuario:1' },
+              { text: '👩 Vitória', callback_data: 'usuario:2' },
+            ],
+          ],
+        },
+      });
+      break;
+
+    case ETAPAS.DESCRICAO:
+      await bot.sendMessage(chatId, '📋 *Qual a descrição?*\n_Ex: Netflix, Mercado, Rancho_', {
+        parse_mode: 'MarkdownV2',
+      });
+      break;
+
+    case ETAPAS.VALOR:
+      await bot.sendMessage(chatId, '💰 *Qual o valor?*\n_Ex: R$ 100,00 ou 100_', {
+        parse_mode: 'MarkdownV2',
+      });
+      break;
+
+    case ETAPAS.TIPO:
+      await bot.sendMessage(chatId, '📌 *Tipo de conta:*', {
+        parse_mode: 'MarkdownV2',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '🔁 Fixa', callback_data: 'tipo:fixa' },
+              { text: '1️⃣ Única', callback_data: 'tipo:unica' },
+              { text: '📊 Parcelada', callback_data: 'tipo:parcelada' },
+            ],
+          ],
+        },
+      });
+      break;
+
+    case ETAPAS.PARCELAS:
+      await bot.sendMessage(chatId, '🔢 *Quantas parcelas?*\n_Ex: 10 ou 1/10_', {
+        parse_mode: 'MarkdownV2',
+      });
+      break;
+
+    case ETAPAS.TERCEIRO:
+      await bot.sendMessage(chatId, '🏷️ *Terceiro \\(de quem é a conta\\)?*\n_Ex: Morr, Mãe, Davi_', {
+        parse_mode: 'MarkdownV2',
+        reply_markup: {
+          inline_keyboard: [[{ text: '⏭️ Pular (conta própria)', callback_data: 'terceiro:pular' }]],
+        },
+      });
+      break;
+  }
+}
+
+// ==============================================================================
+// Finalizar conversa e inserir no banco
+// ==============================================================================
+
+async function finalizarEInserir(bot, chatId, repo) {
+  const dadosBrutos = finalizarConversa(chatId);
+  if (!dadosBrutos) return;
+
   try {
-    const dados = resultado.dados;
+    const isFixa = dadosBrutos.tipo === 'fixa';
+    const dbTipo = isFixa ? TIPO.FIXA : TIPO.CARTAO;
+
+    const dados = {
+      usuarioId: dadosBrutos.usuarioId,
+      descricao: dadosBrutos.descricao,
+      valor: dadosBrutos.valor,
+      tipo: dbTipo,
+      status: STATUS.PENDENTE,
+      parcelaAtual: dadosBrutos.parcelaAtual || null,
+      totalParcelas: dadosBrutos.totalParcelas || null,
+      nomeTerceiro: dadosBrutos.terceiro || null,
+      dataBase: new Date(),
+    };
 
     await repo.addLancamento(dados.usuarioId, {
       descricao: dados.descricao,
@@ -83,23 +300,4 @@ async function processarMensagem(bot, msg, { chatIdPermitido, repo }) {
   }
 }
 
-/**
- * Responde a comandos especiais (/start, /help, etc.)
- */
-async function responderComando(bot, chatId, comando) {
-  const cmd = comando.toLowerCase().split(' ')[0];
-
-  if (cmd === '/start' || cmd === '/help') {
-    const ajuda = ['🏦 *Bot Contas a Pagar*', '', 'Envie uma mensagem no formato:', '`usuario; descricao; valor; tipo; parcelas; terceiro`', '', '📌 *Exemplos:*', '`1; Internet; R$ 100,00; fixa; ;`', '`1; Tênis; R$ 500,00; parcelada; 10; Vitoria`', '`2; Mercado; 250; unica; ;`', '', '📋 *Tipos:* fixa, unica, parcelada', '👤 *Usuários:* 1 \\= Dodo, 2 \\= Vitória'].join('\n');
-
-    await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2' });
-    return;
-  }
-
-  // Comando desconhecido — mostra ajuda
-  await bot.sendMessage(chatId, 'Comando não reconhecido\\. Use /help para ver o formato\\.', {
-    parse_mode: 'MarkdownV2',
-  });
-}
-
-module.exports = { criarBot, processarMensagem };
+module.exports = { criarBot };

@@ -1,154 +1,145 @@
 // ==============================================================================
-// 🧪 Testes do Parser de Mensagem do Telegram
+// 🧪 Testes do Gerenciador de Conversas do Telegram
 // ==============================================================================
 
-const { parseMensagem } = require('../../botTelegram/messageParser');
+const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa, calcularProximaEtapa } = require('../../botTelegram/conversationManager');
 
-describe('parseMensagem', () => {
-  // ============================================================
-  // Mensagens válidas
-  // ============================================================
+describe('conversationManager', () => {
+  const CHAT_ID = '12345';
 
-  test('mensagem completa com todos os campos', () => {
-    const resultado = parseMensagem('1; Internet; R$ 100,00; fixa; ; Vitoria');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.usuarioId).toBe(1);
-    expect(resultado.dados.descricao).toBe('Internet');
-    expect(resultado.dados.valor).toBe(100.0);
-    expect(resultado.dados.tipo).toBe('FIXA');
-    expect(resultado.dados.nomeTerceiro).toBe('Vitoria');
-    expect(resultado.dados.parcelaAtual).toBeNull();
-    expect(resultado.dados.totalParcelas).toBeNull();
-  });
-
-  test('mensagem com parcelas (número total)', () => {
-    const resultado = parseMensagem('1; Tênis Nike; R$ 500,00; parcelada; 10; Vitoria');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.tipo).toBe('CARTAO');
-    expect(resultado.dados.parcelaAtual).toBe(1);
-    expect(resultado.dados.totalParcelas).toBe(10);
-    expect(resultado.dados.nomeTerceiro).toBe('Vitoria');
-  });
-
-  test('mensagem com parcelas no formato "1/10"', () => {
-    const resultado = parseMensagem('1; Tênis; R$ 500,00; parcelada; 3/10;');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.parcelaAtual).toBe(3);
-    expect(resultado.dados.totalParcelas).toBe(10);
-  });
-
-  test('mensagem tipo "unica" — crédito à vista', () => {
-    const resultado = parseMensagem('2; Mercado; 250; unica; ;');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.usuarioId).toBe(2);
-    expect(resultado.dados.valor).toBe(250);
-    expect(resultado.dados.tipo).toBe('CARTAO');
-    expect(resultado.dados.parcelaAtual).toBeNull();
-    expect(resultado.dados.totalParcelas).toBeNull();
-  });
-
-  test('mensagem sem terceiro — deve ser null', () => {
-    const resultado = parseMensagem('1; Luz; R$ 80,00; fixa; ;');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.nomeTerceiro).toBeNull();
-  });
-
-  test('valor em formato simples (sem R$)', () => {
-    const resultado = parseMensagem('1; Aluguel; 1200; fixa; ;');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.valor).toBe(1200);
-  });
-
-  test('valor com separador de milhar brasileiro', () => {
-    const resultado = parseMensagem('1; Aluguel; R$ 1.200,50; fixa; ;');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.valor).toBe(1200.5);
-  });
-
-  test('mensagem com apenas campos obrigatórios (4 campos)', () => {
-    const resultado = parseMensagem('1; Teste; 50; unica');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.dados.descricao).toBe('Teste');
-    expect(resultado.dados.valor).toBe(50);
+  beforeEach(() => {
+    // Limpa conversas entre testes
+    cancelarConversa(CHAT_ID);
   });
 
   // ============================================================
-  // Mensagens inválidas
+  // Ciclo de vida da conversa
   // ============================================================
 
-  test('mensagem vazia — retorna erro', () => {
-    const resultado = parseMensagem('');
+  test('iniciarConversa — cria estado na etapa USUARIO', () => {
+    iniciarConversa(CHAT_ID);
+    const conversa = obterConversa(CHAT_ID);
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('vazia');
+    expect(conversa).not.toBeNull();
+    expect(conversa.etapa).toBe(ETAPAS.USUARIO);
+    expect(conversa.dados).toEqual({});
   });
 
-  test('null — retorna erro', () => {
-    const resultado = parseMensagem(null);
-
-    expect(resultado.sucesso).toBe(false);
+  test('obterConversa — retorna null se não há conversa', () => {
+    expect(obterConversa('inexistente')).toBeNull();
   });
 
-  test('undefined — retorna erro', () => {
-    const resultado = parseMensagem(undefined);
+  test('cancelarConversa — remove a conversa', () => {
+    iniciarConversa(CHAT_ID);
+    cancelarConversa(CHAT_ID);
 
-    expect(resultado.sucesso).toBe(false);
+    expect(obterConversa(CHAT_ID)).toBeNull();
   });
 
-  test('poucos campos — retorna erro de formato', () => {
-    const resultado = parseMensagem('1; Internet; 100');
+  test('finalizarConversa — retorna dados e limpa o estado', () => {
+    iniciarConversa(CHAT_ID);
+    avancarConversa(CHAT_ID, 'usuarioId', 1);
+    avancarConversa(CHAT_ID, 'descricao', 'Internet');
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('Formato');
+    const dados = finalizarConversa(CHAT_ID);
+
+    expect(dados.usuarioId).toBe(1);
+    expect(dados.descricao).toBe('Internet');
+    expect(obterConversa(CHAT_ID)).toBeNull();
   });
 
-  test('usuario_id não numérico — retorna erro', () => {
-    const resultado = parseMensagem('abc; Internet; 100; fixa; ;');
-
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('usuário');
+  test('finalizarConversa — retorna null se não há conversa', () => {
+    expect(finalizarConversa('inexistente')).toBeNull();
   });
 
-  test('usuario_id zero — retorna erro', () => {
-    const resultado = parseMensagem('0; Internet; 100; fixa; ;');
+  // ============================================================
+  // Fluxo de etapas
+  // ============================================================
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('usuário');
+  test('fluxo completo SEM parcelas (tipo fixa)', () => {
+    iniciarConversa(CHAT_ID);
+
+    let proxima;
+    proxima = avancarConversa(CHAT_ID, 'usuarioId', 1);
+    expect(proxima).toBe(ETAPAS.DESCRICAO);
+
+    proxima = avancarConversa(CHAT_ID, 'descricao', 'Internet');
+    expect(proxima).toBe(ETAPAS.VALOR);
+
+    proxima = avancarConversa(CHAT_ID, 'valor', 100);
+    expect(proxima).toBe(ETAPAS.TIPO);
+
+    // Tipo fixa → pula parcelas → vai para terceiro
+    const conversa = obterConversa(CHAT_ID);
+    conversa.dados.tipo = 'fixa';
+    proxima = avancarConversa(CHAT_ID, 'tipo', 'fixa');
+    expect(proxima).toBe(ETAPAS.TERCEIRO);
+
+    // Terceiro → finaliza
+    proxima = avancarConversa(CHAT_ID, 'terceiro', null);
+    expect(proxima).toBeNull();
   });
 
-  test('descrição vazia — retorna erro', () => {
-    const resultado = parseMensagem('1; ; 100; fixa; ;');
+  test('fluxo completo COM parcelas (tipo parcelada)', () => {
+    iniciarConversa(CHAT_ID);
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('Descrição');
+    avancarConversa(CHAT_ID, 'usuarioId', 1);
+    avancarConversa(CHAT_ID, 'descricao', 'Tênis');
+    avancarConversa(CHAT_ID, 'valor', 500);
+
+    // Tipo parcelada → vai para parcelas
+    const conversa = obterConversa(CHAT_ID);
+    conversa.dados.tipo = 'parcelada';
+    const proxima = avancarConversa(CHAT_ID, 'tipo', 'parcelada');
+    expect(proxima).toBe(ETAPAS.PARCELAS);
+
+    // Parcelas → terceiro
+    const proxima2 = avancarConversa(CHAT_ID, 'parcelas', '10');
+    expect(proxima2).toBe(ETAPAS.TERCEIRO);
   });
 
-  test('valor zero — retorna erro', () => {
-    const resultado = parseMensagem('1; Internet; 0; fixa; ;');
+  test('fluxo tipo "unica" — pula parcelas', () => {
+    iniciarConversa(CHAT_ID);
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('Valor');
+    avancarConversa(CHAT_ID, 'usuarioId', 2);
+    avancarConversa(CHAT_ID, 'descricao', 'Mercado');
+    avancarConversa(CHAT_ID, 'valor', 250);
+
+    const conversa = obterConversa(CHAT_ID);
+    conversa.dados.tipo = 'unica';
+    const proxima = avancarConversa(CHAT_ID, 'tipo', 'unica');
+    expect(proxima).toBe(ETAPAS.TERCEIRO);
   });
 
-  test('valor texto inválido — retorna erro', () => {
-    const resultado = parseMensagem('1; Internet; abc; fixa; ;');
+  // ============================================================
+  // calcularProximaEtapa (função pura)
+  // ============================================================
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('Valor');
+  test('USUARIO → DESCRICAO', () => {
+    expect(calcularProximaEtapa(ETAPAS.USUARIO, {})).toBe(ETAPAS.DESCRICAO);
   });
 
-  test('parcelas inválidas em tipo parcelada — retorna erro', () => {
-    const resultado = parseMensagem('1; Tênis; 500; parcelada; 1; ');
+  test('DESCRICAO → VALOR', () => {
+    expect(calcularProximaEtapa(ETAPAS.DESCRICAO, {})).toBe(ETAPAS.VALOR);
+  });
 
-    expect(resultado.sucesso).toBe(false);
-    expect(resultado.erro).toContain('Parcelas');
+  test('VALOR → TIPO', () => {
+    expect(calcularProximaEtapa(ETAPAS.VALOR, {})).toBe(ETAPAS.TIPO);
+  });
+
+  test('TIPO (fixa) → TERCEIRO', () => {
+    expect(calcularProximaEtapa(ETAPAS.TIPO, { tipo: 'fixa' })).toBe(ETAPAS.TERCEIRO);
+  });
+
+  test('TIPO (parcelada) → PARCELAS', () => {
+    expect(calcularProximaEtapa(ETAPAS.TIPO, { tipo: 'parcelada' })).toBe(ETAPAS.PARCELAS);
+  });
+
+  test('PARCELAS → TERCEIRO', () => {
+    expect(calcularProximaEtapa(ETAPAS.PARCELAS, {})).toBe(ETAPAS.TERCEIRO);
+  });
+
+  test('TERCEIRO → null (fim)', () => {
+    expect(calcularProximaEtapa(ETAPAS.TERCEIRO, {})).toBeNull();
   });
 });
