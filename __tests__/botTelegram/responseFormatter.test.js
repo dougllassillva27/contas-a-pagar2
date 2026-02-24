@@ -1,5 +1,5 @@
 // ==============================================================================
-// 🧪 Testes do Formatador de Respostas do Telegram.
+// 🧪 Testes do Formatador de Respostas do Telegram..
 // ==============================================================================
 
 const { formatarSucesso, formatarErro, escaparMarkdown } = require('../../botTelegram/responseFormatter');
