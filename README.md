@@ -87,6 +87,18 @@ PostgreSQL e arquitetura cloud.
 
 ---
 
+### 🤖 Bot do Telegram
+
+- **Lançamentos via chat** — registre contas direto pelo Telegram
+- **Conversa interativa** — o bot pergunta campo por campo
+- **Botões inline** — selecione usuário e tipo com um toque
+- **Lógica condicional** — parcelas só aparece se tipo = Parcelada
+- **Segurança** — restrito ao seu Chat ID
+- **Compatível com Render free** — usa webhook (sem conexão persistente)
+- Documentação completa em [`botTelegram/README.md`](botTelegram/README.md)
+
+---
+
 ### ⚙️ Ferramentas Avançadas
 
 - **Copiar Mês**
@@ -103,35 +115,39 @@ PostgreSQL e arquitetura cloud.
 
 ## 🛠️ Tecnologias Utilizadas
 
-| Tecnologia       | Detalhes                    |
-| ---------------- | --------------------------- |
-| **Runtime**      | Node.js v18+                |
-| **Framework**    | Express 5.x                 |
-| **Database**     | PostgreSQL (Neon.tech)      |
-| **Hospedagem**   | Render.com (Plano Gratuito) |
-| **Frontend**     | EJS + CSS3 (Grid + Vars)    |
-| **Driver DB**    | pg (node-postgres)          |
-| **Autenticação** | bcryptjs + express-session  |
-| **Testes**       | Jest 30 + Supertest 7       |
+| Tecnologia       | Detalhes                        |
+| ---------------- | ------------------------------- |
+| **Runtime**      | Node.js v18+                    |
+| **Framework**    | Express 5.x                     |
+| **Database**     | PostgreSQL (Neon.tech)          |
+| **Hospedagem**   | Render.com (Plano Gratuito)     |
+| **Frontend**     | EJS + CSS3 (Grid + Vars)        |
+| **Driver DB**    | pg (node-postgres)              |
+| **Autenticação** | bcryptjs + express-session      |
+| **Bot Telegram** | node-telegram-bot-api (webhook) |
+| **Testes**       | Jest 30 + Supertest 7           |
 
 ---
 
 ## 🧪 Testes Automatizados
 
-O projeto possui **51 testes** distribuídos em **4 suítes**, abrangendo
+O projeto possui **77 testes** distribuídos em **6 suítes**, abrangendo
 testes unitários e de integração:
 
 ```
 __tests__/
 ├── helpers/
-│   └── parseHelpers.test.js       # Parsing de valores e parcelas
+│   └── parseHelpers.test.js          # Parsing de valores e parcelas
 ├── middlewares/
-│   └── auth.test.js               # Autenticação web e API (token)
+│   └── auth.test.js                  # Autenticação web e API (token)
 ├── repositories/
 │   ├── LancamentoRepository.test.js  # CRUD de lançamentos (mock)
 │   └── UsuarioRepository.test.js     # Login e gestão de usuários (mock)
+├── botTelegram/
+│   ├── messageParser.test.js         # Conversation Manager (fluxo + etapas)
+│   └── responseFormatter.test.js     # Formatação de respostas do bot
 └── integration/
-    └── api.test.js                # Fluxo completo via Supertest
+    └── api.test.js                   # Fluxo completo via Supertest
 ```
 
 **Scripts disponíveis:**
@@ -239,6 +255,12 @@ SESSION_SECRET=seu_segredo_aqui
 SENHA_MESTRA=sua_senha_aqui
 API_TOKEN=seu_token_api
 NODE_VERSION=18
+
+# Bot Telegram (opcional — ver botTelegram/README.md)
+TELEGRAM_BOT_TOKEN=token_do_botfather
+TELEGRAM_CHAT_ID=seu_chat_id
+TELEGRAM_WEBHOOK_SECRET=string_aleatoria
+RENDER_EXTERNAL_URL=https://seu-app.onrender.com
 ```
 
 > ⚠️ **Segurança:** em produção, defina valores fortes para
@@ -280,6 +302,12 @@ Suba o repositório.
   - `SESSION_SECRET`
   - `SENHA_MESTRA`
   - `API_TOKEN`
+  - `TELEGRAM_BOT_TOKEN` (opcional)
+  - `TELEGRAM_CHAT_ID` (opcional)
+  - `TELEGRAM_WEBHOOK_SECRET` (opcional)
+  - `RENDER_EXTERNAL_URL` (opcional)
+
+> Após o deploy com Telegram, execute: `npm run telegram:setup`
 
 ---
 
@@ -296,9 +324,10 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 | **Dados**       | `src/repositories/` | Repositories especializados por domínio + facade       |
 | **Constantes**  | `src/constants.js`  | Valores centralizados (status, tipos, limites)         |
 | **Conexão**     | `src/config/`       | Pool de conexão PostgreSQL                             |
+| **Bot**         | `botTelegram/`      | Bot Telegram com conversa interativa (webhook)         |
 | **Views**       | `src/views/`        | Templates EJS com partials reutilizáveis               |
 | **Frontend**    | `public/`           | CSS, JavaScript do cliente e assets estáticos          |
-| **Testes**      | `__tests__/`        | Unitários, repositórios (mock) e integração            |
+| **Testes**      | `__tests__/`        | Unitários, repositórios (mock), bot e integração       |
 
 ---
 
@@ -342,12 +371,23 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │           ├── head.ejs                    # Meta tags, CSS, fonts
 │           ├── header.ejs                  # Barra superior + navegação
 │           └── modals.ejs                  # Todos os modais
+├── botTelegram/
+│   ├── conversationManager.js              # Máquina de estados da conversa
+│   ├── messageParser.js                    # Parser formato linha única (legado)
+│   ├── responseFormatter.js                # Formatação de respostas do bot
+│   ├── telegramBot.js                      # Lógica principal do bot
+│   ├── telegramRoutes.js                   # Rota webhook Express
+│   ├── setupWebhook.js                     # Script de configuração
+│   └── README.md                           # Documentação do bot
 ├── __tests__/
 │   ├── helpers/parseHelpers.test.js        # Testes de parsing
 │   ├── middlewares/auth.test.js            # Testes de autenticação
 │   ├── repositories/
 │   │   ├── LancamentoRepository.test.js    # Testes CRUD (mock do DB)
 │   │   └── UsuarioRepository.test.js       # Testes de usuário (mock do DB)
+│   ├── botTelegram/
+│   │   ├── messageParser.test.js           # Testes do Conversation Manager
+│   │   └── responseFormatter.test.js       # Testes do formatador
 │   └── integration/api.test.js             # Testes de API (Supertest)
 ├── schema_postgreSQL.sql                   # Schema do banco
 ├── jest.config.js                          # Configuração do Jest
@@ -364,6 +404,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - **Proteção contra brute-force** — delay configurável em tentativas de login
 - **Autenticação de sessão** para rotas web (`express-session`)
 - **Autenticação por token** para API Android (`API_TOKEN`)
+- **Bot restrito por Chat ID** — Telegram aceita apenas mensagens do dono
+- **Webhook com secret** — URL protegida contra payloads falsos
 - **Constantes centralizadas** — sem magic strings espalhadas pelo código
 - **Async error handling** — wrapper `asyncHandler` captura exceções em rotas
 
