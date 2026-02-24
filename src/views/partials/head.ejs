@@ -195,6 +195,17 @@
   }
 
   /* ===========================
+     CONFERIDO — opacidade reduzida para contas já somadas
+     =========================== */
+  #modalUltimasContas tr.conferido {
+    opacity: 0.4;
+    transition: opacity 0.3s ease;
+  }
+  #modalUltimasContas tr:not(.conferido) {
+    transition: opacity 0.3s ease;
+  }
+
+  /* ===========================
            LOADING SPINNER (Feedback visual)
            =========================== */
   #modalLoading .modal-box {

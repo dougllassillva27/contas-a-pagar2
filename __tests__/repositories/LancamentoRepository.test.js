@@ -76,6 +76,27 @@ describe('updateStatus', () => {
 });
 
 // ==========================================================================
+// updateConferido — verifica parâmetros corretos
+// ==========================================================================
+describe('updateConferido', () => {
+  test('marca lançamento como conferido', async () => {
+    db.query.mockResolvedValue({ rowCount: 1 });
+
+    await lancamentoRepo.updateConferido(1, 55, true);
+
+    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [true, 55, 1]);
+  });
+
+  test('desmarca lançamento conferido', async () => {
+    db.query.mockResolvedValue({ rowCount: 1 });
+
+    await lancamentoRepo.updateConferido(1, 55, false);
+
+    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [false, 55, 1]);
+  });
+});
+
+// ==========================================================================
 // deleteLancamento — verifica que usa userId para segurança
 // ==========================================================================
 describe('deleteLancamento', () => {
