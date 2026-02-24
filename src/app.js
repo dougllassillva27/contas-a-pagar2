@@ -19,6 +19,7 @@ const initDatabase = require('./helpers/initDatabase');
 const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+const telegramRoutes = require('../botTelegram/telegramRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -67,6 +68,9 @@ app.get('/health', async (req, res) => {
 
 // 1. Integração Android (API com token) — antes do authMiddleware
 app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
+
+// 1.5 Bot Telegram (webhook) — antes do authMiddleware
+app.use(telegramRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes do authMiddleware
 app.use(publicRoutes(repo, SENHA_MESTRA));
