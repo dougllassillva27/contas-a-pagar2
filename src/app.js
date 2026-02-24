@@ -1,6 +1,6 @@
 // ==============================================================================
 // ✅ app.js — Ponto de entrada (modularizado)
-// Apenas configuração do Express, sessão e montagem dos módulos.
+// Apenas configuração do Express, sessão e montagem dos módulos..
 // ==============================================================================
 
 // CARREGA VARIÁVEIS DE AMBIENTE

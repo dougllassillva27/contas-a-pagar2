@@ -1,5 +1,5 @@
 // ==============================================================================
-// 🧪 Testes do Gerenciador de Conversas do Telegram
+// 🧪 Testes do Gerenciador de Conversas do Telegram.
 // ==============================================================================
 
 const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa, calcularProximaEtapa } = require('../../botTelegram/conversationManager');

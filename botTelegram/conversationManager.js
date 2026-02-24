@@ -1,7 +1,7 @@
 // ==============================================================================
 // 💬 Gerenciador de Conversas do Bot Telegram
 // Máquina de estados que controla o fluxo passo a passo.
-// Cada chat tem seu próprio estado independente.
+// Cada chat tem seu próprio estado independente..
 // ==============================================================================
 
 /**

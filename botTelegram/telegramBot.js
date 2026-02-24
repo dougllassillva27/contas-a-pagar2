@@ -1,6 +1,6 @@
 // ==============================================================================
 // 🤖 Bot do Telegram — Modo Conversa Interativa
-// Pergunta campo por campo usando inline keyboards e texto livre.
+// Pergunta campo por campo usando inline keyboards e texto livre..
 // ==============================================================================
 
 const TelegramBot = require('node-telegram-bot-api');
