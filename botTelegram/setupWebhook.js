@@ -1,6 +1,6 @@
 // ==============================================================================
 // 🔧 Script de Setup do Webhook do Telegram
-// Execute uma vez após o deploy: node botTelegram/setupWebhook.js.
+// Execute uma vez após o deploy: node botTelegram/setupWebhook.js..
 // ==============================================================================
 
 require('dotenv').config();

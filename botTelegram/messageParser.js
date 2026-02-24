@@ -1,7 +1,7 @@
 // ==============================================================================
 // 📩 Parser de Mensagem do Telegram
 // Converte uma mensagem de texto separada por ponto e vírgula
-// em um objeto estruturado para inserção no sistema..
+// em um objeto estruturado para inserção no sistema...
 // ==============================================================================
 
 const { parseValor, normalizarTipoIntegracao, normalizarParcelasPorTipo } = require('../src/helpers/parseHelpers');
