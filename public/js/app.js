@@ -179,14 +179,14 @@ async function abrirModalUltimas() {
   document.getElementById('modalUltimasContas').classList.add('active');
 
   const tbody = document.getElementById('listaUltimasConteudo');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando...</td></tr>';
 
   try {
     const res = await fetch('/api/lancamentos/recentes');
     const data = await res.json();
 
     if (!Array.isArray(data) || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>';
       return;
     }
 
@@ -213,7 +213,12 @@ async function abrirModalUltimas() {
       // Para manter o padrão das outras telas, editarConta espera valor sem "R$"
       const valorSemMoeda = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
-      html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+      // Checkbox "conferido" — persistente no banco
+      const isConferido = item.conferido === true;
+      const classeConferido = isConferido ? ' conferido' : '';
+
+      html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" class="${classeConferido}" data-id="${item.id}">
+                <td style="text-align:center;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
                 <td class="col-data">${inseridoEm}</td>
                 <td style="font-weight:500; color:var(--blue);">${quem}</td>
                 <td class="col-desc">${desc}</td>
@@ -228,7 +233,37 @@ async function abrirModalUltimas() {
     tbody.innerHTML = html;
   } catch (err) {
     console.error(err);
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
+  }
+}
+
+// ==============================================================================
+// ✅ CONFERIDO TOGGLE (Últimas Adições)
+// Marca/desmarca conta como "já somei" — persistente no banco.
+// ==============================================================================
+async function alternarConferido(checkbox, id) {
+  const novoValor = checkbox.checked;
+  const row = checkbox.closest('tr');
+
+  try {
+    const res = await fetch(`/api/lancamentos/${id}/conferido`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conferido: novoValor }),
+    });
+    if (!res.ok) {
+      checkbox.checked = !novoValor;
+      return;
+    }
+    // Alterna a classe visual na linha
+    if (novoValor) {
+      row.classList.add('conferido');
+    } else {
+      row.classList.remove('conferido');
+    }
+  } catch (err) {
+    checkbox.checked = !novoValor;
+    console.error(err);
   }
 }
 

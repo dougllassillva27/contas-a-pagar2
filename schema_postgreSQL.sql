@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS Lancamentos (
     ParcelaAtual INT,
     TotalParcelas INT,
     NomeTerceiro VARCHAR(100),
-    Ordem INT DEFAULT 0
+    Ordem INT DEFAULT 0,
+    Conferido BOOLEAN DEFAULT FALSE
 );
 
 -- 3. Tabela Anotacoes

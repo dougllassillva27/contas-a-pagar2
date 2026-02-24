@@ -417,5 +417,13 @@ module.exports = function (repo) {
     })
   );
 
+  router.patch(
+    '/api/lancamentos/:id/conferido',
+    asyncHandler(async (req, res) => {
+      await repo.updateConferido(req.session.user.id, req.params.id, req.body.conferido);
+      res.json({ success: true });
+    })
+  );
+
   return router;
 };
