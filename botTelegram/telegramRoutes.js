@@ -1,6 +1,6 @@
 // ==============================================================================
 // 🌐 Rotas do Webhook do Telegram
-// Recebe updates do Telegram via POST e repassa ao bot.
+// Recebe updates do Telegram via POST e repassa ao bot..
 // ==============================================================================
 
 const express = require('express');

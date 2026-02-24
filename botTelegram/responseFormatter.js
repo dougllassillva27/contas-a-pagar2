@@ -1,7 +1,7 @@
 // ==============================================================================
 // 💬 Formatador de Respostas do Telegram
 // Monta as mensagens que o bot envia de volta ao usuário,
-// no estilo visual do app Atalhos HTTP original.
+// no estilo visual do app Atalhos HTTP original..
 // ==============================================================================
 
 const { TIPO } = require('../src/constants');
