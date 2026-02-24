@@ -231,6 +231,7 @@ async function abrirModalUltimas() {
     });
 
     tbody.innerHTML = html;
+    atualizarTotalNaoConferido();
   } catch (err) {
     console.error(err);
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
@@ -261,9 +262,40 @@ async function alternarConferido(checkbox, id) {
     } else {
       row.classList.remove('conferido');
     }
+    atualizarTotalNaoConferido();
   } catch (err) {
     checkbox.checked = !novoValor;
     console.error(err);
+  }
+}
+
+// ==============================================================================
+// 💰 TOTALIZADOR — soma valores das contas NÃO conferidas
+// ==============================================================================
+function atualizarTotalNaoConferido() {
+  const tbody = document.getElementById('listaUltimasConteudo');
+  const span = document.getElementById('totalNaoConferido');
+  if (!tbody || !span) return;
+
+  let total = 0;
+  tbody.querySelectorAll('tr:not(.conferido)').forEach((row) => {
+    const celValor = row.querySelector('.col-valor');
+    if (celValor) {
+      // Remove "R$", pontos de milhar e troca vírgula por ponto
+      const txt = celValor.textContent
+        .replace(/R\$\s?/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.')
+        .trim();
+      const num = parseFloat(txt);
+      if (!isNaN(num)) total += num;
+    }
+  });
+
+  if (total > 0) {
+    span.textContent = 'Falta: ' + total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  } else {
+    span.textContent = '';
   }
 }
 
