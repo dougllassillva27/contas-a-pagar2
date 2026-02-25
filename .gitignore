@@ -11,6 +11,7 @@ reverse-migrate.sql
 .DS_Store
 .env
 tests/
+buscarContas/
 
 # Playwright
 /test-results/
