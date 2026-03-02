@@ -197,7 +197,23 @@ async function abrirModalUltimas() {
       // ✅ Mantém "R$" + valor em uma única linha (usa NBSP do currency pt-BR)
       const valorCurrency = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      const desc = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+      const descText = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+
+      let badgeCmp = '';
+      if (item.datavencimento) {
+        const dtCmp = new Date(item.datavencimento);
+        // Ajusta para o meio-dia evitando recuo de mês causado pelo fuso horário (ex: 00:00 UTC -> 21:00 GMT-3 no dia anterior)
+        dtCmp.setHours(12);
+        if (!isNaN(dtCmp.getTime())) {
+          const mesesShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+          const nomeMes = mesesShort[dtCmp.getMonth()];
+          const anoCurto = String(dtCmp.getFullYear()).slice(-2);
+          // Badge visual seguindo padrão do UI-UX Pro Max
+          badgeCmp = `<span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; white-space: nowrap; flex-shrink: 0;" title="Mês de Competência">${nomeMes}/${anoCurto}</span>`;
+        }
+      }
+
+      const descHTML = `<div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span>${descText}</span>${badgeCmp}</div>`;
 
       const dt = item.datacriacao ? new Date(item.datacriacao) : null;
       const inseridoEm = dt ? `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}` : '--/--/----';
@@ -221,7 +237,7 @@ async function abrirModalUltimas() {
                 <td style="text-align:center;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
                 <td class="col-data">${inseridoEm}</td>
                 <td style="font-weight:500; color:var(--blue);">${quem}</td>
-                <td class="col-desc">${desc}</td>
+                <td class="col-desc">${descHTML}</td>
                 <td class="col-valor" style="text-align:right; font-weight:bold;">${valorCurrency}</td>
                 <td class="actions" style="text-align:center;">
                     <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span>
