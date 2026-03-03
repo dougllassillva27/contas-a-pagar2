@@ -892,9 +892,22 @@ async function enviarLancamento(e, tipoTransacao) {
 let timeout = null;
 function salvarAnotacao() {
   const t = document.getElementById('anotacoesArea').value;
+  const status = document.getElementById('statusSave');
   clearTimeout(timeout);
-  timeout = setTimeout(() => {
-    fetch('/api/anotacoes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conteudo: t }) });
+  timeout = setTimeout(async () => {
+    try {
+      await fetch('/api/anotacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conteudo: t, month: currentMonth, year: currentYear }),
+      });
+      if (status) {
+        status.style.opacity = '1';
+        setTimeout(() => (status.style.opacity = '0'), 2000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }, 1000);
 }
 function mostrarAviso(titulo, msg) {
