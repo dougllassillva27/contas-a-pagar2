@@ -56,7 +56,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Contas Fixas</h2>
-                <span class="total-panel">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel" id="totalPanelFixas">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
                 <table class="list-table">
@@ -81,7 +81,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Suas Contas Cartão</h2>
-                <span class="total-panel vermelho">R$ <%= cartao.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel vermelho" id="totalPanelCartao">R$ <%= cartao.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
                 <table class="list-table">
@@ -113,7 +113,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Cartão de Crédito</h2>
-                <span class="total-panel azul">R$ <%= resumoPessoas.reduce((acc, i) => acc + Number(i.total), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel azul" id="totalPanelCartaoGeral">R$ <%= resumoPessoas.reduce((acc, i) => acc + Number(i.total), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
 
             <div class="app-compare-wrapper">
@@ -146,7 +146,7 @@
                                     <%= pessoa.pessoa %>
                                 </span>
                             </td>
-                            <td class="text-right" style="font-weight: bold; color: var(--red);">
+                            <td class="text-right" style="font-weight: bold; color: var(--red);" id="totalResumo_<%= pessoa.pessoa.replace(/\s/g, '') %>">
                                 R$ <%= Number(pessoa.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
                             </td>
                         </tr>
@@ -170,13 +170,13 @@
                             <span class="material-icons drag-handle-card" style="font-size:18px; color:var(--text-secondary);">drag_indicator</span>
                             <h2 style="color: var(--text-primary);"><%= pessoa.nome %></h2>
                         </div>
-                        <span class="header-total-mes">Total do mês: <span>R$ <%= Number(pessoa.totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></span>
+                        <span class="header-total-mes">Total do mês: <span id="totalTerceiroGeral_<%= pessoa.nome.replace(/\s/g, '') %>">R$ <%= Number(pessoa.totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span></span>
                     </div>
 
                     <div style="background: rgba(56, 120, 225, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <small style="color: var(--blue); font-weight: bold; text-transform: uppercase; font-size: 0.75rem;">Total Cartão</small>
-                            <div style="font-size: 1.4rem; font-weight: bold; color: var(--text-primary);">
+                            <div style="font-size: 1.4rem; font-weight: bold; color: var(--text-primary);" id="totalTerceiroCartao_<%= pessoa.nome.replace(/\s/g, '') %>">
                                 R$ <%= Number(pessoa.totalCartao).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
                             </div>
                         </div>
@@ -188,7 +188,7 @@
 
                     <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="font-size: 0.9rem; color: var(--text-secondary);">Contas Fixas</h3>
-                        <span style="font-size: 0.9rem; font-weight: bold; color: var(--red);">
+                        <span style="font-size: 0.9rem; font-weight: bold; color: var(--red);" id="totalTerceiroFixas_<%= pessoa.nome.replace(/\s/g, '') %>">
                             R$ <%= Number(pessoa.totalFixas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
                         </span>
                     </div>

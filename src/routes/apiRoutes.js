@@ -227,8 +227,24 @@ module.exports = function (repo) {
     asyncHandler(async (req, res) => {
       const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
       const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
-      const totais = await repo.getDashboardTotals(req.session.user.id, month, year);
-      res.json(totais);
+
+      const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw] = await Promise.all([repo.getDashboardTotals(req.session.user.id, month, year), repo.getLancamentosPorTipo(req.session.user.id, TIPO.FIXA, month, year), repo.getLancamentosPorTipo(req.session.user.id, TIPO.CARTAO, month, year), repo.getResumoPessoas(req.session.user.id, month, year, req.session.user.nome), repo.getDadosTerceiros(req.session.user.id, month, year)]);
+
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
+
+      res.json({
+        ...totais,
+        fixasPendente: fixas.filter((i) => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0),
+        cartaoPendente: cartao.filter((i) => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0),
+        cartaoGeral: resumoPessoas.reduce((acc, i) => acc + Number(i.total), 0),
+        resumoPessoas: resumoPessoas.map((p) => ({ pessoa: p.pessoa, total: p.total })),
+        terceiros: Object.values(terceirosMap).map((t) => ({
+          nome: t.nome,
+          totalGeral: t.totalGeral,
+          totalCartao: t.totalCartao,
+          totalFixas: t.totalFixas,
+        })),
+      });
     })
   );
 
