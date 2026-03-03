@@ -443,5 +443,13 @@ module.exports = function (repo) {
     })
   );
 
+  router.patch(
+    '/api/lancamentos/:id/conferido-extrato',
+    asyncHandler(async (req, res) => {
+      await repo.updateConferidoExtrato(req.session.user.id, req.params.id, req.body.conferido);
+      res.json({ success: true });
+    })
+  );
+
   return router;
 };

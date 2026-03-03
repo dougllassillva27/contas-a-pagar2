@@ -35,6 +35,12 @@ async function initDatabase() {
       ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP DEFAULT NOW()
     `);
 
+    // 2.5 Coluna ConferidoExtrato (para separar do checkbox de Últimas Edições)
+    await db.query(`
+      ALTER TABLE Lancamentos
+      ADD COLUMN IF NOT EXISTS ConferidoExtrato BOOLEAN DEFAULT false
+    `);
+
     // 3. Adiciona colunas Mes e Ano na tabela Anotacoes se não existirem
     // Se a tabela já existia e tinha dados, eles ficarão com Mes e Ano = NULL temporariamente
     await db.query(`

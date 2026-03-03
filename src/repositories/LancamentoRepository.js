@@ -167,6 +167,10 @@ async function updateConferido(userId, id, valor) {
   await db.query('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [valor, id, userId]);
 }
 
+async function updateConferidoExtrato(userId, id, valor) {
+  await db.query('UPDATE Lancamentos SET ConferidoExtrato = $1 WHERE Id = $2 AND UsuarioId = $3', [valor, id, userId]);
+}
+
 async function updateStatusBatchPessoa(userId, pessoa, novoStatus, month, year, userName) {
   let query = `
       UPDATE Lancamentos SET Status = $1 
@@ -294,6 +298,7 @@ module.exports = {
   updateLancamento,
   updateStatus,
   updateConferido,
+  updateConferidoExtrato,
   updateStatusBatchPessoa,
   reorderLancamentos,
   deleteLancamento,

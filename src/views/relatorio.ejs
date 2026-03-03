@@ -265,6 +265,7 @@
             font-weight: 600;
             text-align: right;
             color: var(--text-main);
+            white-space: nowrap;
         }
 
         /* Visual de Status e Desativado (Linha Riscada e Diminuida) */
@@ -470,13 +471,13 @@
                         <tbody>
                             <% grupo.itens.forEach(item => { %>
                                 <!-- Salvamos o status original no data attribute para podermos voltar se o usuário desmarcar -->
-                                <tr class="<%= item.conferido ? 'tr-conferido' : '' %>" data-original-status="<%= item.status %>">
+                                <tr class="<%= item.conferidoextrato ? 'tr-conferido' : '' %>" data-original-status="<%= item.status %>">
                                     <td style="text-align: center;">
                                         <div class="checkbox-wrapper">
                                             <input type="checkbox" class="custom-checkbox chk-conferido" 
                                                    data-id="<%= item.id %>" 
                                                    title="Marque para confirmar a conferência deste valor."
-                                                   <%= item.conferido ? 'checked' : '' %>>
+                                                   <%= item.conferidoextrato ? 'checked' : '' %>>
                                         </div>
                                     </td>
                                     <td>
@@ -490,10 +491,10 @@
                                     <td style="text-align: center;">
                                         <% 
                                             // Lógica Dinâmica: Se estiver CONFERIDO ou PAGO exibe validado verde, senão amarelo
-                                            const isCheckedOuPago = item.conferido || item.status === 'PAGO';
+                                            const isCheckedOuPago = item.conferidoextrato || item.status === 'PAGO';
                                         %>
                                         <span class="badge-status <%= isCheckedOuPago ? 'badge-pago' : 'badge-pendente' %> badge-dinamico">
-                                            <%= item.conferido ? 'Conferido' : (item.status === 'PAGO' ? 'Pago' : 'Pendente') %>
+                                            <%= item.conferidoextrato ? 'Conferido' : (item.status === 'PAGO' ? 'Pago' : 'Pendente') %>
                                         </span>
                                     </td>
                                     <td class="item-valor">
@@ -508,7 +509,7 @@
         </div>
 
         <div class="footer">
-            Extrato Analítico consolidado e exportado via Gestão Financeira • Data do Sistema: <%= new Date().toLocaleDateString('pt-BR') %> às <%= new Date().toLocaleTimeString('pt-BR') %>
+            Extrato Analítico consolidado e exportado via Gestão Financeira • Data do Sistema: <%= new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %> às <%= new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %>
         </div>
     </div>
 
@@ -648,7 +649,7 @@
                     }
 
                     try {
-                        const response = await fetch(`/api/lancamentos/${id}/conferido`, {
+                        const response = await fetch(`/api/lancamentos/${id}/conferido-extrato`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ conferido: conferido })
@@ -700,7 +701,7 @@
                     grupo.itens.forEach(item => {
                         const _parcelaAt = item.parcelaatual || '';
                         const _parcelaTot = item.totalparcelas || '';
-                        const _validado = item.conferido ? 'SIM (Validado)' : 'Não conferido';
+                        const _validado = item.conferidoextrato ? 'SIM (Validado)' : 'Não conferido';
                         
                         linhasProcessadas.push([
                             pessoa,
