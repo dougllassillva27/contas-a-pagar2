@@ -238,7 +238,7 @@ async function abrirModalUltimas() {
                 <td class="col-data">${inseridoEm}</td>
                 <td style="font-weight:500; color:var(--blue);">${quem}</td>
                 <td class="col-desc">${descHTML}</td>
-                <td class="col-valor" style="text-align:right; font-weight:bold;">${valorCurrency}</td>
+                <td class="col-valor" style="text-align:right; font-weight:bold; white-space:nowrap;">${valorCurrency}</td>
                 <td class="actions" style="text-align:center;">
                     <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span>
                     <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${item.id})">delete</span>
