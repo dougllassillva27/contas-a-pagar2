@@ -734,12 +734,40 @@ async function atualizarTotais() {
     if (elFalta) elFalta.textContent = formatarMoeda(totais.faltapagar);
     if (elSaldo) {
       elSaldo.textContent = formatarMoeda(totais.saldoprevisto);
-      // Atualiza a cor do saldo (vermelho se negativo, verde se positivo)
       elSaldo.classList.remove('vermelho', 'verde');
       elSaldo.classList.add(Number(totais.saldoprevisto) < 0 ? 'vermelho' : 'verde');
     }
+
+    // Atualiza totalizadores de painéis
+    const elFixas = document.getElementById('totalPanelFixas');
+    const elCartao = document.getElementById('totalPanelCartao');
+    const elCartaoGeral = document.getElementById('totalPanelCartaoGeral');
+
+    if (elFixas) elFixas.textContent = formatarMoeda(totais.fixasPendente);
+    if (elCartao) elCartao.textContent = formatarMoeda(totais.cartaoPendente);
+    if (elCartaoGeral) elCartaoGeral.textContent = formatarMoeda(totais.cartaoGeral);
+
+    // Atualiza lista de terceiros e cartões
+    if (totais.resumoPessoas) {
+      totais.resumoPessoas.forEach((p) => {
+        const spanResumo = document.getElementById('totalResumo_' + p.pessoa.replace(/\s/g, ''));
+        if (spanResumo) spanResumo.textContent = formatarMoeda(p.total);
+      });
+    }
+
+    if (totais.terceiros) {
+      totais.terceiros.forEach((t) => {
+        const baseId = t.nome.replace(/\s/g, '');
+        const elTG = document.getElementById('totalTerceiroGeral_' + baseId);
+        const elTC = document.getElementById('totalTerceiroCartao_' + baseId);
+        const elTF = document.getElementById('totalTerceiroFixas_' + baseId);
+
+        if (elTG) elTG.textContent = formatarMoeda(t.totalGeral);
+        if (elTC) elTC.textContent = formatarMoeda(t.totalCartao);
+        if (elTF) elTF.textContent = formatarMoeda(t.totalFixas);
+      });
+    }
   } catch (err) {
-    // Se falhar, ignora silenciosamente — os totais serão atualizados na próxima navegação
     console.error('Erro ao atualizar totais:', err);
   }
 }
