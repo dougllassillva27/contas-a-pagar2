@@ -19,3 +19,4 @@ buscarContas/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+whatch-deploy.ps1
