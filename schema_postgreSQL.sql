@@ -34,11 +34,14 @@ CREATE TABLE IF NOT EXISTS Lancamentos (
 CREATE TABLE IF NOT EXISTS Anotacoes (
     Id SERIAL PRIMARY KEY,
     UsuarioId INT REFERENCES Usuarios(Id),
-    Conteudo TEXT
+    Mes INT,
+    Ano INT,
+    Conteudo TEXT,
+    UNIQUE(UsuarioId, Mes, Ano)
 );
 
 -- Insere anotações iniciais
-INSERT INTO Anotacoes (UsuarioId, Conteudo) VALUES (1, ''), (2, '')
+INSERT INTO Anotacoes (UsuarioId, Mes, Ano, Conteudo) VALUES (1, 1, 2025, ''), (2, 1, 2025, '')
 ON CONFLICT DO NOTHING; 
 -- (Nota: Postgres não tem conflito direto em INSERT sem chave, 
 -- se rodar varias vezes pode duplicar, ideal limpar antes se for recriar)
