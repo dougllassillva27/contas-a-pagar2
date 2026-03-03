@@ -193,7 +193,7 @@ module.exports = function (repo) {
         repo.getDashboardTotals(userId, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
-        repo.getAnotacoes(userId),
+        repo.getAnotacoes(userId, month, year),
         repo.getResumoPessoas(userId, month, year, userName),
         repo.getDadosTerceiros(userId, month, year),
         repo.getOrdemCards(userId),
@@ -243,7 +243,9 @@ module.exports = function (repo) {
   router.post(
     '/api/anotacoes',
     asyncHandler(async (req, res) => {
-      await repo.updateAnotacoes(req.session.user.id, req.body.conteudo);
+      const month = req.body.month ? parseInt(req.body.month, 10) : new Date().getMonth() + 1;
+      const year = req.body.year ? parseInt(req.body.year, 10) : new Date().getFullYear();
+      await repo.updateAnotacoes(req.session.user.id, month, year, req.body.conteudo);
       res.json({ success: true });
     })
   );
