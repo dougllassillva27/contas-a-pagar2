@@ -4,220 +4,700 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titulo %></title>
+    
+    <!-- Bibliotecas Externas -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
     <style>
-        @media print {
-            @page { margin: 0; size: A4; }
-            body { background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; }
-            .no-print { display: none !important; }
-            .page-container { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; border: none !important; }
+        /* CSS Reset & Variáveis (Clean Code) */
+        :root {
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --border: #e5e7eb;
+            --radius: 12px;
         }
-
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #555;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 40px 20px;
         }
 
-        .page-container {
-            background: white;
-            width: 210mm;
-            min-height: 297mm;
+        .container {
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 15mm;
-            box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            position: relative;
         }
 
-        /* CABEÇALHO */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #000;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .header .meta {
-            font-size: 14px;
-            color: #666;
-            text-align: right;
-        }
-        .header .total-badge {
-            background: #eee;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 5px;
-            display: inline-block;
-        }
-
-        /* GRUPOS */
-        .group {
+        /* Top Grid Principais (Visão Estratégica) */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
             margin-bottom: 35px;
-            page-break-inside: avoid;
         }
-        .group-header {
-            background: #f8f9fa;
-            border-left: 5px solid #3878e1; /* Azul bonito */
-            padding: 8px 15px;
-            margin-bottom: 10px;
+        
+        @media (max-width: 768px) {
+            .top-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .header-content .meta {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-top: 6px;
+            margin-bottom: 25px;
+        }
+
+        .total-badge-container {
+            margin-top: auto;
+        }
+        
+        .total-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .total-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.1;
+            margin-top: 4px;
+        }
+
+        /* Container do Canvas do Gráfico */
+        .chart-container-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+        }
+
+        /* Lista de Pessoas (Cards agrupados) */
+        .person-card {
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            page-break-inside: avoid;
+            transition: transform 0.2s;
+        }
+
+        .person-header {
+            background: #f8fafc;
+            padding: 18px 26px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            -webkit-print-color-adjust: exact !important;
-        }
-        .group-header h2 {
-            margin: 0;
-            font-size: 16px;
-            text-transform: uppercase;
-            color: #333;
-        }
-        .group-header .group-total {
-            font-weight: bold;
-            font-size: 15px;
-            color: #000;
         }
 
-        /* TABELA */
-        table {
+        .person-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #334155;
+        }
+
+        .person-dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary); /* Dinâmico via JS Chart */
+        }
+
+        .person-total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Tabela Estilizada Minimalista */
+        .list-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
         }
-        th {
+
+        .list-table th {
             text-align: left;
-            border-bottom: 1px solid #ccc;
-            padding: 5px 10px;
-            color: #666;
+            padding: 14px 26px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            font-size: 10px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
         }
-        td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #eee;
+
+        .list-table td {
+            padding: 18px 26px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 14px;
+            transition: background-color 0.2s;
         }
-        tr:last-child td {
+
+        .list-table tr:last-child td {
             border-bottom: none;
         }
-        .col-valor {
-            text-align: right;
-            width: 100px;
-            font-weight: 500;
-        }
-        .pago {
-            color: #999;
-            text-decoration: none;
-        }
-        .pago .col-valor::after {
-            content: "✔";
-            color: #66bb6a;
-            margin-left: 5px;
-            font-size: 10px;
+
+        .list-table tr:hover td {
+            background-color: #f9fafb;
         }
 
-        /* RODAPÉ */
-        .footer {
+        /* Custom Checkbox Interativa */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            margin: 0;
+            display: block;
+            background: white;
+        }
+
+        .custom-checkbox:hover {
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1);
+        }
+
+        .custom-checkbox:checked {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .custom-checkbox:checked::after {
+            content: '';
             position: absolute;
-            bottom: 15mm;
-            left: 15mm;
-            right: 15mm;
-            text-align: center;
-            font-size: 10px;
-            color: #aaa;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
+            left: 6px;
+            top: 3px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .item-desc {
+            font-weight: 500;
+            color: var(--text-main);
+            transition: color 0.2s;
         }
 
-        /* BOTÃO FLUTUANTE asdasdasd*/
-        .fab {
+        .item-parcela {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .item-valor {
+            font-weight: 600;
+            text-align: right;
+            color: var(--text-main);
+        }
+
+        /* Visual de Status e Desativado (Linha Riscada) */
+        .tr-conferido td {
+            background-color: #f8fafc;
+        }
+        .tr-conferido .item-desc {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        .tr-conferido .item-valor {
+            color: #64748b;
+        }
+
+        .badge-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-pago {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Botões de Ação Flutuantes (Excel e Impressora) */
+        .actions-bar {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
-            background: #3878e1;
-            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+        }
+
+        .btn-action {
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            font-size: 30px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 22px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s;
+            transition: all 0.2s ease;
         }
-        .fab:hover { transform: scale(1.1); }
+        
+        .btn-action:hover {
+            transform: translateY(-4px);
+            background: #f8fafc;
+            box-shadow: 0 14px 20px -3px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 64px;
+            height: 64px;
+            font-size: 26px;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Folha de Estilo para Impressão e Geração de PDF Enxuta */
+        @media print {
+            body { 
+                background: white !important; 
+                padding: 0;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 25px;
+                padding: 20px;
+            }
+            .top-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .person-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                margin-bottom: 20px;
+            }
+            .person-header {
+                background: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .chart-container-card, .actions-bar {
+                display: none !important;
+            }
+            .list-table th {
+                color: #000;
+                border-bottom: 2px solid #000;
+            }
+            .custom-checkbox {
+                border-color: #000;
+            }
+            .custom-checkbox:checked {
+                background-color: white !important;
+                border-color: #000 !important;
+            }
+            .custom-checkbox:checked::after {
+                border-color: #000;
+            }
+            .badge-status {
+                border: 1px solid #000;
+                background: transparent !important;
+                color: #000 !important;
+            }
+            .item-parcela {
+                background: transparent !important;
+                border: 1px solid #aaa;
+            }
+            .tr-conferido .item-desc {
+                text-decoration: none; /* Mantêm o texto visível e limpo na impressão, mesmo marcado */
+                color: #000;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <button class="fab no-print" onclick="window.print()">🖨️</button>
+    <!-- Botões Flutuantes -->
+    <div class="actions-bar no-print">
+        <button class="btn-action" onclick="exportDataToExcel()" title="Exportar dados para Excel (.xlsx)">📊</button>
+        <button class="btn-action btn-primary" onclick="window.print()" title="Salvar em PDF ou Imprimir">🖨️</button>
+    </div>
 
-    <div class="page-container">
-        <div class="header">
-            <div>
-                <h1>Extrato Mensal</h1>
-                <div class="meta">Referência: <%= mes %> <%= ano %></div>
+    <div class="container">
+        <!-- Dashboard Top / Resumo Analítico -->
+        <div class="top-grid">
+            <div class="card header-content" style="display: flex; flex-direction: column;">
+                <div>
+                    <h1>Extrato Mensal</h1>
+                    <div class="meta">Referência de Faturamento: <%= mes %> <%= ano %></div>
+                </div>
+                
+                <div class="total-badge-container">
+                    <div class="total-label">Gasto Total Projetado</div>
+                    <div class="total-value">R$ <%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+                </div>
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 12px; color: #666; text-transform: uppercase;">Total da Fatura</div>
-                <div class="total-badge">R$ <%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+
+            <!-- Gráfico Dinâmico D3/Canvas -->
+            <div class="card chart-container-card">
+                <div class="chart-container">
+                    <canvas id="gastosChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <% Object.keys(dados).forEach(pessoa => { 
-            const grupo = dados[pessoa];
-            if (grupo.itens.length > 0) {
-        %>
-            <div class="group">
-                <div class="group-header">
-                    <h2><%= pessoa %></h2>
-                    <span class="group-total">R$ <%= Number(grupo.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Descrição / Parcela</th>
-                            <th style="text-align: right;">Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% grupo.itens.forEach(item => { %>
-                            <tr class="<%= item.status === 'PAGO' ? 'pago' : '' %>">
-                                <td>
-                                    <%= item.descricao %>
-                                    <% if(item.parcelaatual && item.totalparcelas) { %>
-                                        <span style="color: #666; font-size: 10px; margin-left: 5px; background: #eee; padding: 2px 6px; border-radius: 10px;">
-                                            <%= String(item.parcelaatual).padStart(2,'0') %> / <%= String(item.totalparcelas).padStart(2,'0') %>
-                                        </span>
-                                    <% } %>
-                                </td>
-                                <td class="col-valor">
-                                    R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
-                                </td>
+        <!-- Mapeamento dos Cartões Analíticos Pessoais -->
+        <div id="pessoas-container">
+            <% Object.keys(dados).forEach((pessoa, index) => { 
+                const grupo = dados[pessoa];
+                if (grupo.itens.length > 0) {
+            %>
+                <div class="person-card" data-person="<%= pessoa %>">
+                    <div class="person-header">
+                        <h2 class="person-name">
+                            <span class="person-dot" data-index="<%= index %>"></span>
+                            <%= pessoa %>
+                        </h2>
+                        <span class="person-total">R$ <%= Number(grupo.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                    </div>
+
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px; text-align: center;" title="Marcar como conferido">✓</th>
+                                <th>Despesa / Parcelamento</th>
+                                <th style="width: 120px; text-align: center;">Status</th>
+                                <th style="text-align: right;">Valor</th>
                             </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
-        <% } }) %>
+                        </thead>
+                        <tbody>
+                            <% grupo.itens.forEach(item => { %>
+                                <tr class="<%= item.conferido ? 'tr-conferido' : '' %>">
+                                    <td style="text-align: center;">
+                                        <div class="checkbox-wrapper">
+                                            <input type="checkbox" class="custom-checkbox chk-conferido" 
+                                                   data-id="<%= item.id %>" 
+                                                   title="Marque para confirmar a conferência deste valor."
+                                                   <%= item.conferido ? 'checked' : '' %>>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="item-desc"><%= item.descricao %></span>
+                                        <% if(item.parcelaatual && item.totalparcelas) { %>
+                                            <span class="item-parcela">
+                                                <%= String(item.parcelaatual).padStart(2,'0') %> / <%= String(item.totalparcelas).padStart(2,'0') %>
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <% if (item.status === 'PAGO') { %>
+                                            <span class="badge-status badge-pago">Pago</span>
+                                        <% } else { %>
+                                            <span class="badge-status badge-pendente">Pendente</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="item-valor">
+                                        R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } }) %>
+        </div>
 
         <div class="footer">
-            Documento gerado em <%= new Date().toLocaleDateString('pt-BR') %> às <%= new Date().toLocaleTimeString('pt-BR') %> • Gestão Financeira
+            Extrato Analítico consolidado e exportado via Gestão Financeira • Data do Sistema: <%= new Date().toLocaleDateString('pt-BR') %> às <%= new Date().toLocaleTimeString('pt-BR') %>
         </div>
     </div>
 
+    <!-- Scripts de Interatividade e Funcionalidade -->
+    <script>
+        // Dados provindos em tempo de compilação renderizados para JS Limpo
+        const dadosRaw = <%- JSON.stringify(dados) %>;
+        const totalFaturaStr = "<%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>";
+
+        // Paleta baseada no material colors modernas
+        const colorPalette = [
+            '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1', '#f43f5e'
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            listenToCheckboxes();
+        });
+
+        // ==========================================
+        // Chart.js : Inicialização do Gráfico Rosca
+        // ==========================================
+        function initChart() {
+            const labels = [];
+            const dataValues = [];
+            let colorIndex = 0;
+            const bgColors = [];
+
+            // Povoando labels e valores para o Gráfico
+            Object.keys(dadosRaw).forEach((pessoa, i) => {
+                if (dadosRaw[pessoa].itens.length > 0) {
+                    labels.push(pessoa);
+                    dataValues.push(dadosRaw[pessoa].total);
+                    
+                    const color = colorPalette[colorIndex % colorPalette.length];
+                    bgColors.push(color);
+                    
+                    // Colore a bolinha de identificação do cartão correspondente na view
+                    const dot = document.querySelector(`.person-dot[data-index="${i}"]`);
+                    if(dot) {
+                        dot.style.background = color;
+                    }
+                    colorIndex++;
+                }
+            });
+
+            // Fallback de erro se 0 lançamentos
+            if(dataValues.reduce((a, b) => a + b, 0) === 0) return;
+
+            const ctx = document.getElementById('gastosChart').getContext('2d');
+            
+            // Registrando pequeno plugin para preencher o centro do Doughnut
+            Chart.register({
+                id: 'centerTextPlugin',
+                beforeDraw: function(chart) {
+                    if (chart.config.type !== 'doughnut') return;
+                    const { width, height, ctx } = chart;
+                    ctx.restore();
+                    
+                    const fontSize = (height / 140).toFixed(2);
+                    ctx.font = `bold ${fontSize}em Inter`;
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "#6b7280"; // text-muted
+
+                    const text = "Distribuição";
+                    const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                    const textY = height / 2;
+
+                    ctx.fillText(text, textX, textY);
+                    ctx.save();
+                }
+            });
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: bgColors,
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: {
+                            display: false, // Desligado, visamos limpeza na UI
+                        },
+                        tooltip: {
+                            padding: 12,
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { family: 'Inter', size: 14 },
+                            bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` R$ ${context.parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==============================================================
+        // Conferência Interativa Assíncrona via PATCH com Backend Moderno
+        // ==============================================================
+        function listenToCheckboxes() {
+            const checkboxes = document.querySelectorAll('.chk-conferido');
+            
+            checkboxes.forEach(chk => {
+                chk.addEventListener('change', async (e) => {
+                    const id = e.target.dataset.id;
+                    const conferido = e.target.checked;
+                    const tr = e.target.closest('tr');
+                    
+                    // Design Otimista (aplica instantâneo sem recarregar tela)
+                    if (conferido) {
+                        tr.classList.add('tr-conferido');
+                    } else {
+                        tr.classList.remove('tr-conferido');
+                    }
+
+                    try {
+                        const response = await fetch(`/api/lancamentos/${id}/conferido`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ conferido: conferido })
+                        });
+
+                        if (!response.ok) throw new Error('Falha no Servidor');
+                        
+                    } catch (error) {
+                        console.error('Falha de sincronização:', error);
+                        // Sistema auto-curativo: Rollback visual em caso de erro na rede ou banco
+                        e.target.checked = !conferido;
+                        if (!conferido) tr.classList.add('tr-conferido');
+                        else tr.classList.remove('tr-conferido');
+                        
+                        alert('Oops! Houve uma falha de conexão e o status de conferência não foi salvo.');
+                    }
+                });
+            });
+        }
+
+        // ==========================================================
+        // SheetJS: Geração Executiva Local em Excel
+        // ==========================================================
+        function exportDataToExcel() {
+            try {
+                const linhasProcessadas = [];
+                
+                // Cabeçalho Documental
+                linhasProcessadas.push(["Relatório Base:", "Extrato Mensal <%= mes %> <%= ano %>"]);
+                linhasProcessadas.push(["Gasto Total (R$)", totalFaturaStr]);
+                linhasProcessadas.push(["Gerado em:", new Date().toLocaleDateString('pt-BR')]);
+                linhasProcessadas.push([]);
+                linhasProcessadas.push([]);
+
+                // Colunas Tabela de Dados
+                linhasProcessadas.push(['Proprietário', 'Descrição', 'Parcela Ocorrida', 'Total de Parcelas', 'Valor Gasto (R$)', 'Status Operacional', 'Validado (Conferido)']);
+
+                // Injeção Lógica dos Dados iterando em memória (desonera backend de file streams)
+                Object.keys(dadosRaw).forEach(pessoa => {
+                    const grupo = dadosRaw[pessoa];
+                    
+                    grupo.itens.forEach(item => {
+                        const _parcelaAt = item.parcelaatual || '';
+                        const _parcelaTot = item.totalparcelas || '';
+                        const _validado = item.conferido ? 'SIM (Validado)' : 'Não conferido';
+                        
+                        linhasProcessadas.push([
+                            pessoa,
+                            item.descricao,
+                            _parcelaAt,
+                            _parcelaTot,
+                            Number(item.valor),
+                            item.status,
+                            _validado
+                        ]);
+                    });
+                });
+
+                // Inicializa o arquivo e pasta virtual XLS
+                const ws = XLSX.utils.aoa_to_sheet(linhasProcessadas);
+                
+                // Formatação local para Moeda BRL na coluna Valor (Índice E / 4)
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let r = 5; r <= range.e.r; ++r) { 
+                    const celulaAlvo = XLSX.utils.encode_cell({c: 4, r: r});
+                    if(ws[celulaAlvo]) ws[celulaAlvo].z = '"R$" #,##0.00'; 
+                }
+
+                // Autofilter base na linha de cabeçalho das tabelas (linha index 6 / R=5)
+                ws['!autofilter'] = { ref: `A6:G${range.e.r + 1}` };
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Faturas Pormenorizadas");
+                
+                // Trigger Download Nativo
+                const nomeArquivoSeguro = `Extrato_Mensal_<%= mes %>_<%= ano %>.xlsx`.replace(/ /g, '_');
+                XLSX.writeFile(wb, nomeArquivoSeguro);
+                
+            } catch (err) {
+                console.error("Crash SheetJS:", err);
+                alert("Falha na formatação da planilha. Verifique o console.");
+            }
+        }
+    </script>
 </body>
 </html>
