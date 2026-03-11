@@ -2,17 +2,18 @@ name: Keep Render Awake
 
 on:
   schedule:
-    # 08:01 até 23:49 no horário de Brasília (UTC-3)
-    # UTC equivalente:
-    # 11:01 até 23:49 UTC
-    - cron: "1,13,25,37,49 11-23 * * *"
-    # 00:01 até 02:49 UTC = 21:01 até 23:49 BRT do dia anterior? Não.
-    # Aqui cobre 21:01 até 23:49 UTC? Não.
-    # Como o horário local vai até 23:59 BRT e BRT = UTC-3,
-    # precisamos também cobrir 00:01 até 02:49 UTC, que corresponde
-    # a 21:01 até 23:49 BRT do mesmo "dia local".
-    - cron: "1,13,25,37,49 0-2 * * *"
+    # Horário de Brasília (UTC-3)
+    # Executa a cada 12 minutos, de 08:01 até 23:49 BRT
+    # Conversão para UTC:
+    # 08:01 BRT -> 11:01 UTC
+    # 23:49 BRT -> 02:49 UTC
+    - cron: '1,13,25,37,49 11-23 * * *'
+    - cron: '1,13,25,37,49 0-2 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: keep-render-awake
+  cancel-in-progress: false
 
 jobs:
   ping:
@@ -28,7 +29,21 @@ jobs:
         with:
           node-version: 20
 
+      - name: Validar URL configurada
+        env:
+          KEEP_ALIVE_URL: ${{ vars.KEEP_ALIVE_URL }}
+        run: |
+          if [ -z "$KEEP_ALIVE_URL" ]; then
+            echo "A variável KEEP_ALIVE_URL não está definida em Settings > Secrets and variables > Actions > Variables"
+            exit 1
+          fi
+          echo "KEEP_ALIVE_URL configurada com sucesso."
+
       - name: Executar ping no Render
         env:
-          KEEP_ALIVE_URL: https://contas-a-pagar-nsti.onrender.com/health
+          KEEP_ALIVE_URL: ${{ vars.KEEP_ALIVE_URL }}
+          MAX_TENTATIVAS: '3'
+          TIMEOUT_MS: '15000'
+          ESPERA_ENTRE_TENTATIVAS_MS: '4000'
+          VALIDAR_JSON_HEALTH: 'true'
         run: node scripts/ping-render.mjs
