@@ -2,11 +2,7 @@ name: Keep Render Awake
 
 on:
   schedule:
-    # Horário de Brasília (UTC-3)
-    # 08:01 até 20:49 BRT = 11:01 até 23:49 UTC
     - cron: '1,13,25,37,49 11-23 * * *'
-
-    # 21:01 até 23:49 BRT = 00:01 até 02:49 UTC
     - cron: '1,13,25,37,49 0-2 * * *'
   workflow_dispatch:
 
@@ -21,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout do repositório
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
