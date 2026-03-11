@@ -108,8 +108,103 @@ PostgreSQL e arquitetura cloud.
   - Exportação manual de segurança
 - **Fatura Manual**
   - Campo para comparar valor calculado vs valor do app do banco
-- **Health Check** (`/health`)
-  - Endpoint para monitoramento de uptime (Render, UptimeRobot)
+- **Health Check Profissional** (`/health`)
+  - Verifica aplicação + banco
+  - Mede latência da checagem
+  - Retorna uptime do processo
+  - Compatível com monitoramento, keep-alive e diagnóstico rápido
+- **Keep Alive Inteligente via GitHub Actions**
+  - Mantém o serviço ativo no Render free durante a janela configurada
+  - Scheduler com tolerância a atraso do GitHub Actions
+  - Logs formatados para leitura rápida
+
+---
+
+## 🩺 Monitoramento e Keep Alive
+
+Como o plano gratuito do **Render** pode colocar a aplicação em sleep
+após inatividade, o projeto pode usar um fluxo de keep-alive com
+**GitHub Actions** para reduzir cold starts durante o período de uso.
+
+### Estratégia adotada
+
+- O workflow do GitHub Actions roda em intervalo curto
+- O script Node decide se deve fazer ping ou ignorar a execução
+- A janela padrão considera horário de **Brasília**
+- O endpoint chamado é:
+
+```txt
+/health
+```
+
+### Vantagens dessa abordagem
+
+- Não depende de navegador aberto
+- Não depende de extensão do Chrome
+- Mais robusta que um cron rígido
+- Permite tolerância a pequenos atrasos do scheduler do GitHub
+- Gera logs claros para troubleshooting
+
+### Exemplo de comportamento do scheduler inteligente
+
+- Janela de funcionamento: `08:00` até `23:59`
+- Minutos base: `1,13,25,37,49`
+- Tolerância opcional: `+1 minuto`
+
+Exemplo:
+
+- Minuto `13` → executa
+- Minuto `14` → executa também, se tolerância estiver ativa
+- Minuto `15` → ignora
+
+---
+
+## 🔍 Endpoint `/health`
+
+O projeto possui um endpoint de health check pensado para:
+
+- Monitoramento de uptime
+- Keep-alive no Render
+- Diagnóstico rápido da aplicação
+- Verificação de conectividade com o banco Neon
+
+### Exemplo de resposta saudável
+
+```json
+{
+  "service": "contas-a-pagar",
+  "status": "ok",
+  "app": "online",
+  "db": "online",
+  "latency_ms": 32,
+  "uptime": "0d 3h 15m 12s",
+  "timestamp": "2026-03-10T23:05:00.000Z"
+}
+```
+
+### Exemplo de resposta com falha no banco
+
+```json
+{
+  "service": "contas-a-pagar",
+  "status": "error",
+  "app": "online",
+  "db": "offline",
+  "latency_ms": 1204,
+  "uptime": "0d 3h 15m 12s",
+  "timestamp": "2026-03-10T23:05:00.000Z"
+}
+```
+
+### O que esse endpoint informa
+
+- **service** → identifica o sistema
+- **status** → resultado geral do health check
+- **app** → se a aplicação respondeu
+- **db** → se o banco respondeu
+- **latency_ms** → tempo da checagem
+- **uptime** → tempo de vida do processo Node
+- **timestamp** → data/hora da resposta
 
 ---
 
@@ -126,6 +221,7 @@ PostgreSQL e arquitetura cloud.
 | **Autenticação** | bcryptjs + express-session      |
 | **Bot Telegram** | node-telegram-bot-api (webhook) |
 | **Testes**       | Jest 30 + Supertest 7           |
+| **Automação**    | GitHub Actions                  |
 
 ---
 
@@ -134,7 +230,7 @@ PostgreSQL e arquitetura cloud.
 O projeto possui **77 testes** distribuídos em **6 suítes**, abrangendo
 testes unitários e de integração:
 
-```
+```txt
 __tests__/
 ├── helpers/
 │   └── parseHelpers.test.js          # Parsing de valores e parcelas
@@ -311,6 +407,93 @@ Suba o repositório.
 
 ---
 
+## 🔁 Keep Alive com GitHub Actions
+
+O projeto pode utilizar um workflow dedicado para reduzir sleep no
+Render free durante o período de uso.
+
+### Estrutura esperada
+
+```txt
+.github/
+└── workflows/
+    └── keep-render-awake.yml
+
+scripts/
+└── ping-render.mjs
+```
+
+### Variável necessária no GitHub
+
+Crie em:
+
+```txt
+Settings > Secrets and variables > Actions > Variables
+```
+
+Variável:
+
+```txt
+KEEP_ALIVE_URL=https://seu-app.onrender.com/health
+```
+
+### Funcionamento
+
+- O workflow roda em intervalo curto
+- O script avalia o horário local
+- Só faz ping dentro da janela configurada
+- Fora da janela, encerra sem erro
+
+### Configurações principais do script
+
+- **TZ_APP** → timezone da aplicação
+- **JANELA_HORA_INICIO** → hora inicial
+- **JANELA_HORA_FIM** → hora final
+- **MINUTOS_PERMITIDOS** → grade principal dos minutos
+- **TOLERANCIA_MINUTOS_ATRASO** → tolerância a atraso do scheduler
+- **MAX_TENTATIVAS** → quantidade de retries
+- **TIMEOUT_MS** → timeout por tentativa
+- **ESPERA_ENTRE_TENTATIVAS_MS** → intervalo entre retries
+
+### Exemplo de logs
+
+```txt
+====================================================
+🧠 KEEP ALIVE INTELIGENTE
+====================================================
+🌎 Timezone: America/Sao_Paulo
+🕒 Agora local: 10/03/2026 22:14:03
+📅 Janela permitida: 8:00 até 23:59
+⏲ Minutos base: 1, 13, 25, 37, 49
+🛟 Tolerância de atraso: 1 minuto(s)
+✅ Minutos aceitos: 1, 2, 13, 14, 25, 26, 37, 38, 49, 50
+✅ Dentro da janela? sim
+✅ Minuto aceito? sim
+====================================================
+
+====================================================
+🚀 RENDER KEEP ALIVE
+====================================================
+🔁 Tentativa: 1/3
+🌐 URL: https://seu-app.onrender.com/health
+📡 Status HTTP: 200
+⏱ Latência: 143 ms
+🕒 Executado em UTC: 2026-03-11T01:13:02.000Z
+📦 Resposta:
+{"service":"contas-a-pagar","status":"ok","app":"online","db":"online","latency_ms":34,"uptime":"0d 1h 12m 4s","timestamp":"..."}
+====================================================
+
+✅ SUCESSO: Keep alive executado com sucesso.
+```
+
+### Observação importante
+
+O scheduler do GitHub Actions pode ter pequeno atraso em horários de
+maior carga. Por isso o projeto usa um modelo de scheduler inteligente,
+com janela horária e tolerância opcional de atraso.
+
+---
+
 ## 🏗️ Arquitetura
 
 O projeto segue uma arquitetura **modular** com separação clara de responsabilidades:
@@ -328,69 +511,76 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 | **Views**       | `src/views/`        | Templates EJS com partials reutilizáveis               |
 | **Frontend**    | `public/`           | CSS, JavaScript do cliente e assets estáticos          |
 | **Testes**      | `__tests__/`        | Unitários, repositórios (mock), bot e integração       |
+| **Automação**   | `.github/`          | Workflows do GitHub Actions                            |
+| **Scripts**     | `scripts/`          | Scripts auxiliares, incluindo keep-alive               |
 
 ---
 
 ## 📂 Estrutura do Projeto
 
-```
+```txt
 /
+├── .github/
+│   └── workflows/
+│       └── keep-render-awake.yml          # Keep alive inteligente via GitHub Actions
 ├── public/
-│   ├── css/style.css                       # Design system (dark mode)
-│   ├── js/app.js                           # JavaScript do dashboard
+│   ├── css/style.css                      # Design system (dark mode)
+│   ├── js/app.js                          # JavaScript do dashboard
 │   └── favicon.ico
+├── scripts/
+│   └── ping-render.mjs                    # Ping inteligente do Render /health
 ├── src/
-│   ├── app.js                              # Ponto de entrada (~92 linhas)
-│   ├── constants.js                        # STATUS, TIPO, LIMITES centralizados
+│   ├── app.js                             # Ponto de entrada
+│   ├── constants.js                       # STATUS, TIPO, LIMITES centralizados
 │   ├── config/
-│   │   └── db.js                           # Pool PostgreSQL
+│   │   └── db.js                          # Pool PostgreSQL
 │   ├── helpers/
-│   │   ├── asyncHandler.js                 # Wrapper try/catch para rotas async
-│   │   ├── initDatabase.js                 # Criação automática de tabelas
-│   │   └── parseHelpers.js                 # parseValor, parcelas, etc.
+│   │   ├── asyncHandler.js                # Wrapper try/catch para rotas async
+│   │   ├── initDatabase.js                # Criação automática de tabelas
+│   │   └── parseHelpers.js                # parseValor, parcelas, etc.
 │   ├── middlewares/
-│   │   ├── auth.js                         # authMiddleware + createApiAuth
-│   │   └── logger.js                       # Request logger estruturado
+│   │   ├── auth.js                        # authMiddleware + createApiAuth
+│   │   └── logger.js                      # Request logger estruturado
 │   ├── repositories/
-│   │   ├── FinanceiroRepository.js         # Facade (re-exporta todos abaixo)
-│   │   ├── UsuarioRepository.js            # Login, busca de usuários
-│   │   ├── LancamentoRepository.js         # CRUD de lançamentos
-│   │   ├── AnotacaoRepository.js           # Bloco de notas
-│   │   ├── FaturaManualRepository.js       # Fatura manual (UPSERT)
-│   │   ├── OrdemCardsRepository.js         # Ordem dos cards do dashboard
-│   │   └── BackupRepository.js             # Exportação JSON completa
+│   │   ├── FinanceiroRepository.js        # Facade (re-exporta todos abaixo)
+│   │   ├── UsuarioRepository.js           # Login, busca de usuários
+│   │   ├── LancamentoRepository.js        # CRUD de lançamentos
+│   │   ├── AnotacaoRepository.js          # Bloco de notas
+│   │   ├── FaturaManualRepository.js      # Fatura manual (UPSERT)
+│   │   ├── OrdemCardsRepository.js        # Ordem dos cards do dashboard
+│   │   └── BackupRepository.js            # Exportação JSON completa
 │   ├── routes/
-│   │   ├── publicRoutes.js                 # Login / Logout
-│   │   ├── integrationRoutes.js            # API Android
-│   │   └── apiRoutes.js                    # Dashboard + CRUD + APIs
+│   │   ├── publicRoutes.js                # Login / Logout
+│   │   ├── integrationRoutes.js           # API Android
+│   │   └── apiRoutes.js                   # Dashboard + CRUD + APIs
 │   └── views/
-│       ├── index.ejs                       # Dashboard principal
-│       ├── login.ejs                       # Tela de login
-│       ├── relatorio.ejs                   # Extrato para impressão
+│       ├── index.ejs                      # Dashboard principal
+│       ├── login.ejs                      # Tela de login
+│       ├── relatorio.ejs                  # Extrato para impressão
 │       └── partials/
-│           ├── head.ejs                    # Meta tags, CSS, fonts
-│           ├── header.ejs                  # Barra superior + navegação
-│           └── modals.ejs                  # Todos os modais
+│           ├── head.ejs                   # Meta tags, CSS, fonts
+│           ├── header.ejs                 # Barra superior + navegação
+│           └── modals.ejs                 # Todos os modais
 ├── botTelegram/
-│   ├── conversationManager.js              # Máquina de estados da conversa
-│   ├── messageParser.js                    # Parser formato linha única (legado)
-│   ├── responseFormatter.js                # Formatação de respostas do bot
-│   ├── telegramBot.js                      # Lógica principal do bot
-│   ├── telegramRoutes.js                   # Rota webhook Express
-│   ├── setupWebhook.js                     # Script de configuração
-│   └── README.md                           # Documentação do bot
+│   ├── conversationManager.js             # Máquina de estados da conversa
+│   ├── messageParser.js                   # Parser formato linha única (legado)
+│   ├── responseFormatter.js               # Formatação de respostas do bot
+│   ├── telegramBot.js                     # Lógica principal do bot
+│   ├── telegramRoutes.js                  # Rota webhook Express
+│   ├── setupWebhook.js                    # Script de configuração
+│   └── README.md                          # Documentação do bot
 ├── __tests__/
-│   ├── helpers/parseHelpers.test.js        # Testes de parsing
-│   ├── middlewares/auth.test.js            # Testes de autenticação
+│   ├── helpers/parseHelpers.test.js       # Testes de parsing
+│   ├── middlewares/auth.test.js           # Testes de autenticação
 │   ├── repositories/
-│   │   ├── LancamentoRepository.test.js    # Testes CRUD (mock do DB)
-│   │   └── UsuarioRepository.test.js       # Testes de usuário (mock do DB)
+│   │   ├── LancamentoRepository.test.js   # Testes CRUD (mock do DB)
+│   │   └── UsuarioRepository.test.js      # Testes de usuário (mock do DB)
 │   ├── botTelegram/
-│   │   ├── messageParser.test.js           # Testes do Conversation Manager
-│   │   └── responseFormatter.test.js       # Testes do formatador
-│   └── integration/api.test.js             # Testes de API (Supertest)
-├── schema_postgreSQL.sql                   # Schema do banco
-├── jest.config.js                          # Configuração do Jest
+│   │   ├── messageParser.test.js          # Testes do Conversation Manager
+│   │   └── responseFormatter.test.js      # Testes do formatador
+│   └── integration/api.test.js            # Testes de API (Supertest)
+├── schema_postgreSQL.sql                  # Schema do banco
+├── jest.config.js                         # Configuração do Jest
 ├── .gitignore
 ├── package.json
 └── README.md
@@ -408,6 +598,7 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - **Webhook com secret** — URL protegida contra payloads falsos
 - **Constantes centralizadas** — sem magic strings espalhadas pelo código
 - **Async error handling** — wrapper `asyncHandler` captura exceções em rotas
+- **Health check sem exposição sensível** — não retorna stack trace nem dados internos do banco
 
 ---
 
@@ -416,8 +607,9 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - Use o modo privacidade para esconder valores
 - Double Tap no mobile para ações rápidas
 - Use "Imprimir" para gerar PDF
-- Plano free pode hibernar — basta relogar
-- Monitore o uptime via endpoint `/health`
+- No Render free, o sistema pode hibernar fora da janela de keep-alive
+- Monitore a saúde da aplicação via endpoint `/health`
+- Consulte os logs do GitHub Actions para entender se o ping foi executado ou ignorado
 
 ---
 
@@ -429,6 +621,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - Independência geográfica
 - Código limpo e manutenível
 - Cobertura de testes automatizados
+- Boa observabilidade em ambiente cloud
+- Baixo custo operacional no plano gratuito
 
 ---
 
@@ -438,5 +632,5 @@ ISC — Veja [LICENSE](LICENSE) para detalhes.
 
 ---
 
-Desenvolvido com foco em Clean Code, Performance e Liberdade Geográfica.
+Desenvolvido com foco em Clean Code, Performance, Observabilidade e Liberdade Geográfica.
 💸
