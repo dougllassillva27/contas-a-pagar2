@@ -53,7 +53,7 @@ app.use(
 // ==============================================================================
 
 // ==============================================================================
-// Health Check — usado por monitoramento (Render, GitHub Actions) e diagnóstico
+// Health Check — usado para monitoramento e keep-alive
 // Verifica aplicação + banco e retorna informações básicas do serviço
 // ==============================================================================
 
@@ -70,8 +70,6 @@ app.get('/health', async (req, res) => {
   const uptimeFormatado = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
 
   const serviceName = 'contas-a-pagar';
-  const environment = process.env.NODE_ENV || 'development';
-  const version = process.env.APP_VERSION || '1.0.0';
 
   try {
     // Verifica conectividade com o banco
@@ -86,8 +84,6 @@ app.get('/health', async (req, res) => {
       db: 'online',
       latency_ms: latencyMs,
       uptime: uptimeFormatado,
-      version,
-      environment,
       timestamp: new Date().toISOString(),
     });
   } catch (erro) {
@@ -100,8 +96,6 @@ app.get('/health', async (req, res) => {
       db: 'offline',
       latency_ms: latencyMs,
       uptime: uptimeFormatado,
-      version,
-      environment,
       timestamp: new Date().toISOString(),
     });
   }
