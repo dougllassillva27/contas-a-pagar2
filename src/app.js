@@ -52,13 +52,58 @@ app.use(
 // Rotas de Infraestrutura (sem autenticação)
 // ==============================================================================
 
-// Health Check — para monitoramento do Render e uptimerobots
+// ==============================================================================
+// Health Check — usado por monitoramento (Render, GitHub Actions) e diagnóstico
+// Verifica aplicação + banco e retorna informações básicas do serviço
+// ==============================================================================
+
 app.get('/health', async (req, res) => {
+  const inicio = Date.now(); // usado para medir latência
+
+  // Calcula uptime da aplicação
+  const uptimeSegundos = process.uptime();
+  const dias = Math.floor(uptimeSegundos / 86400);
+  const horas = Math.floor((uptimeSegundos % 86400) / 3600);
+  const minutos = Math.floor((uptimeSegundos % 3600) / 60);
+  const segundos = Math.floor(uptimeSegundos % 60);
+
+  const uptimeFormatado = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+
+  const serviceName = 'contas-a-pagar';
+  const environment = process.env.NODE_ENV || 'development';
+  const version = process.env.APP_VERSION || '1.0.0';
+
   try {
+    // Verifica conectividade com o banco
     await db.query('SELECT 1');
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  } catch (err) {
-    res.status(503).json({ status: 'error', error: 'Database unreachable' });
+
+    const latencyMs = Date.now() - inicio;
+
+    return res.status(200).json({
+      service: serviceName,
+      status: 'ok',
+      app: 'online',
+      db: 'online',
+      latency_ms: latencyMs,
+      uptime: uptimeFormatado,
+      version,
+      environment,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (erro) {
+    const latencyMs = Date.now() - inicio;
+
+    return res.status(503).json({
+      service: serviceName,
+      status: 'error',
+      app: 'online',
+      db: 'offline',
+      latency_ms: latencyMs,
+      uptime: uptimeFormatado,
+      version,
+      environment,
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 
