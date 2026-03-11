@@ -2,13 +2,9 @@ name: Keep Render Awake
 
 on:
   schedule:
-    # Horário de Brasília (UTC-3)
-    # Executa a cada 12 minutos, de 08:01 até 23:49 BRT
-    # Conversão para UTC:
-    # 08:01 BRT -> 11:01 UTC
-    # 23:49 BRT -> 02:49 UTC
-    - cron: '1,13,25,37,49 11-23 * * *'
-    - cron: '1,13,25,37,49 0-2 * * *'
+    # Roda a cada 5 minutos.
+    # O script decide se deve ou não executar o ping.
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -34,16 +30,19 @@ jobs:
           KEEP_ALIVE_URL: ${{ vars.KEEP_ALIVE_URL }}
         run: |
           if [ -z "$KEEP_ALIVE_URL" ]; then
-            echo "A variável KEEP_ALIVE_URL não está definida em Settings > Secrets and variables > Actions > Variables"
+            echo "❌ A variável KEEP_ALIVE_URL não está definida em Settings > Secrets and variables > Actions > Variables"
             exit 1
           fi
-          echo "KEEP_ALIVE_URL configurada com sucesso."
+          echo "✅ KEEP_ALIVE_URL configurada com sucesso."
 
-      - name: Executar ping no Render
+      - name: Executar keep alive inteligente
         env:
           KEEP_ALIVE_URL: ${{ vars.KEEP_ALIVE_URL }}
           MAX_TENTATIVAS: '3'
           TIMEOUT_MS: '15000'
           ESPERA_ENTRE_TENTATIVAS_MS: '4000'
-          VALIDAR_JSON_HEALTH: 'true'
+          TZ_APP: 'America/Sao_Paulo'
+          JANELA_HORA_INICIO: '8'
+          JANELA_HORA_FIM: '23'
+          MINUTOS_PERMITIDOS: '1,13,25,37,49'
         run: node scripts/ping-render.mjs
