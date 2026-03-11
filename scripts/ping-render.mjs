@@ -7,10 +7,13 @@ const esperaEntreTentativasMs = Number(process.env.ESPERA_ENTRE_TENTATIVAS_MS ||
 const tzApp = process.env.TZ_APP || 'America/Sao_Paulo';
 const janelaHoraInicio = Number(process.env.JANELA_HORA_INICIO || 8);
 const janelaHoraFim = Number(process.env.JANELA_HORA_FIM || 23);
+const toleranciaMinutosAtraso = Number(process.env.TOLERANCIA_MINUTOS_ATRASO || 1);
+
 const minutosPermitidos = String(process.env.MINUTOS_PERMITIDOS || '1,13,25,37,49')
   .split(',')
   .map((valor) => Number(valor.trim()))
-  .filter((valor) => Number.isInteger(valor) && valor >= 0 && valor <= 59);
+  .filter((valor) => Number.isInteger(valor) && valor >= 0 && valor <= 59)
+  .sort((a, b) => a - b);
 
 if (!url) {
   console.error('❌ ERRO: KEEP_ALIVE_URL não definida');
@@ -45,17 +48,38 @@ function obterAgoraNaTimezone(timeZone) {
   };
 }
 
+function obterJanelaMinutosPermitidos(minutosBase, tolerancia) {
+  const conjunto = new Set();
+
+  for (const minutoBase of minutosBase) {
+    conjunto.add(minutoBase);
+
+    for (let atraso = 1; atraso <= tolerancia; atraso++) {
+      const minutoTolerado = minutoBase + atraso;
+
+      if (minutoTolerado <= 59) {
+        conjunto.add(minutoTolerado);
+      }
+    }
+  }
+
+  return Array.from(conjunto).sort((a, b) => a - b);
+}
+
 function deveExecutarPing() {
   const agora = obterAgoraNaTimezone(tzApp);
 
   const dentroDaJanela = agora.hora >= janelaHoraInicio && agora.hora <= janelaHoraFim;
 
-  const minutoPermitido = minutosPermitidos.includes(agora.minuto);
+  const minutosAceitos = obterJanelaMinutosPermitidos(minutosPermitidos, toleranciaMinutosAtraso);
+
+  const minutoPermitido = minutosAceitos.includes(agora.minuto);
 
   return {
     agora,
     dentroDaJanela,
     minutoPermitido,
+    minutosAceitos,
     permitido: dentroDaJanela && minutoPermitido,
   };
 }
@@ -121,14 +145,16 @@ async function main() {
   console.log(`🌎 Timezone: ${tzApp}`);
   console.log(`🕒 Agora local: ${String(controle.agora.dia).padStart(2, '0')}/${String(controle.agora.mes).padStart(2, '0')}/${controle.agora.ano} ` + `${String(controle.agora.hora).padStart(2, '0')}:${String(controle.agora.minuto).padStart(2, '0')}:${String(controle.agora.segundo).padStart(2, '0')}`);
   console.log(`📅 Janela permitida: ${janelaHoraInicio}:00 até ${janelaHoraFim}:59`);
-  console.log(`⏲ Minutos permitidos: ${minutosPermitidos.join(', ')}`);
+  console.log(`⏲ Minutos base: ${minutosPermitidos.join(', ')}`);
+  console.log(`🛟 Tolerância de atraso: ${toleranciaMinutosAtraso} minuto(s)`);
+  console.log(`✅ Minutos aceitos: ${controle.minutosAceitos.join(', ')}`);
   console.log(`✅ Dentro da janela? ${controle.dentroDaJanela ? 'sim' : 'não'}`);
-  console.log(`✅ Minuto permitido? ${controle.minutoPermitido ? 'sim' : 'não'}`);
+  console.log(`✅ Minuto aceito? ${controle.minutoPermitido ? 'sim' : 'não'}`);
   console.log('====================================================');
   console.log('');
 
   if (!controle.permitido) {
-    console.log('⏭ Execução ignorada: fora da janela ou fora dos minutos permitidos.');
+    console.log('⏭ Execução ignorada: fora da janela ou fora dos minutos aceitos.');
     process.exit(0);
   }
 
