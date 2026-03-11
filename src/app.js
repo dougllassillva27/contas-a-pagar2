@@ -102,6 +102,20 @@ app.get('/health', async (req, res) => {
 });
 
 // ==============================================================================
+// Ping simples — usado para keep-alive e monitoramento leve
+// Diferente do /health, esta rota NÃO consulta o banco.
+// Objetivo: responder rápido com HTTP 200 para manter o Render ativo.
+// ==============================================================================
+
+app.get('/ping', (req, res) => {
+  return res.status(200).json({
+    status: 'ok', // indica resposta bem-sucedida
+    service: 'contas-a-pagar', // identifica o serviço monitorado
+    timestamp: new Date().toISOString(), // momento exato da resposta
+  });
+});
+
+// ==============================================================================
 // Montagem de Rotas
 // ==============================================================================
 
