@@ -20,3 +20,4 @@ buscarContas/
 /playwright/.cache/
 /playwright/.auth/
 whatch-deploy.ps1
+guia_integracao.md
