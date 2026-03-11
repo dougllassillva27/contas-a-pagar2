@@ -2,10 +2,15 @@ name: Keep Render Awake
 
 on:
   schedule:
+    # Horário de Brasília (UTC-3)
+    # 08:01 até 20:49 BRT = 11:01 até 23:49 UTC
     - cron: '1,13,25,37,49 11-23 * * *'
+
+    # 21:01 até 23:49 BRT = 00:01 até 02:49 UTC do dia seguinte
     - cron: '1,13,25,37,49 0-2 * * *'
   workflow_dispatch:
 
+# Evita duas execuções simultâneas do mesmo keep-alive
 concurrency:
   group: keep-render-awake
   cancel-in-progress: false
@@ -16,14 +21,17 @@ jobs:
     timeout-minutes: 5
 
     steps:
+      # Faz checkout do repositório para acessar o script local
       - name: Checkout do repositório
         uses: actions/checkout@v5
 
+      # Define a versão do Node que executará o script ping-render.mjs
       - name: Configurar Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 20
 
+      # Valida se a variável obrigatória foi cadastrada no GitHub
       - name: Validar URL configurada
         env:
           KEEP_ALIVE_URL: ${{ vars.KEEP_ALIVE_URL }}
@@ -34,6 +42,7 @@ jobs:
           fi
           echo "✅ KEEP_ALIVE_URL configurada com sucesso."
 
+      # Executa o ping no endpoint /health com retry e timeout controlado
       - name: Executar ping no Render
         env:
           KEEP_ALIVE_URL: ${{ vars.KEEP_ALIVE_URL }}

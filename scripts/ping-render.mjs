@@ -1,18 +1,24 @@
+// Script de keep-alive para Render.
+// Objetivo: chamar o endpoint /health com logs claros, retry e timeout controlado.
+
 const url = process.env.KEEP_ALIVE_URL;
 
 const maxTentativas = Number(process.env.MAX_TENTATIVAS || 3);
 const timeoutMs = Number(process.env.TIMEOUT_MS || 15000);
 const esperaEntreTentativasMs = Number(process.env.ESPERA_ENTRE_TENTATIVAS_MS || 4000);
 
+// Falha cedo se a URL obrigatória não estiver configurada
 if (!url) {
   console.error('❌ ERRO: KEEP_ALIVE_URL não definida');
   process.exit(1);
 }
 
+// Pequeno utilitário para aguardar entre tentativas
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Faz fetch com timeout explícito para evitar job preso indefinidamente
 async function fetchComTimeout(resource, options = {}, timeout) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -27,6 +33,7 @@ async function fetchComTimeout(resource, options = {}, timeout) {
   }
 }
 
+// Executa uma tentativa de ping e escreve logs legíveis no GitHub Actions
 async function executarTentativa(numeroTentativa) {
   const inicio = Date.now();
 
@@ -59,11 +66,13 @@ async function executarTentativa(numeroTentativa) {
   console.log('====================================================');
   console.log('');
 
+  // Considera erro qualquer status fora de 2xx/3xx aceitável pelo fetch
   if (!resposta.ok) {
     throw new Error(`HTTP inválido: ${resposta.status}`);
   }
 }
 
+// Orquestra retry com logs simples e previsíveis
 async function main() {
   let ultimoErro = null;
 
