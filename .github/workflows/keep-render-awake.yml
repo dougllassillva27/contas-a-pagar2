@@ -45,4 +45,5 @@ jobs:
           JANELA_HORA_INICIO: '8'
           JANELA_HORA_FIM: '23'
           MINUTOS_PERMITIDOS: '1,13,25,37,49'
+          TOLERANCIA_MINUTOS_ATRASO: '1'
         run: node scripts/ping-render.mjs
