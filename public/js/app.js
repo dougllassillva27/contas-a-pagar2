@@ -96,11 +96,23 @@ function abrirMenuContexto(e, pessoa) {
   
   // Controle de visibilidade dos itens do menu
   const isUltimas = (pessoa === 'ULTIMAS');
-  document.querySelectorAll('#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas)').forEach(li => li.style.display = isUltimas ? 'none' : 'flex');
-  document.querySelector('#customContextMenu li.delete-action').style.display = isUltimas ? 'none' : 'flex';
-  document.getElementById('btnMarcarCalculadas').style.display = isUltimas ? 'flex' : 'none';
-  document.getElementById('menuDividerUltimas').style.display = isUltimas ? 'flex' : 'none';
-  document.querySelector('.menu-divider:not(#menuDividerUltimas)').style.display = isUltimas ? 'none' : 'block';
+  
+  // Esconde itens de cartão se for 'ULTIMAS'
+  document.querySelectorAll('#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas)').forEach(li => {
+    li.style.display = isUltimas ? 'none' : 'flex';
+  });
+
+  const btnDelete = document.querySelector('#customContextMenu li.delete-action');
+  if (btnDelete) btnDelete.style.display = isUltimas ? 'none' : 'flex';
+
+  const btnMarcar = document.getElementById('btnMarcarCalculadas');
+  if (btnMarcar) btnMarcar.style.display = isUltimas ? 'flex' : 'none';
+
+  const divUltimas = document.getElementById('menuDividerUltimas');
+  if (divUltimas) divUltimas.style.display = isUltimas ? 'flex' : 'none';
+
+  const divGeral = document.querySelector('.menu-divider:not(#menuDividerUltimas)');
+  if (divGeral) divGeral.style.display = isUltimas ? 'none' : 'block';
 
   menu.style.display = 'block';
 
