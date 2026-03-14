@@ -996,6 +996,11 @@ function mostrarAviso(titulo, msg) {
 function abrirModalAdicionar() {
   registerModalOpen();
   document.getElementById('modalAdicionar').classList.add('active');
+  // Foca automaticamente no campo de descrição da conta para agilizar a digitação
+  setTimeout(() => {
+    const inputDesc = document.getElementById('contaDesc');
+    if (inputDesc) inputDesc.focus();
+  }, 100);
 }
 
 // --- FUNÇÃO DELETAR SINGLE REFEITA COM LOADING ---
