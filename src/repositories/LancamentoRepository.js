@@ -189,6 +189,23 @@ async function updateStatusBatchPessoa(userId, pessoa, novoStatus, month, year, 
   await db.query(query, params);
 }
 
+async function updateConferidoBatchRecent(userId) {
+  const query = `
+      UPDATE Lancamentos 
+      SET Conferido = true 
+      WHERE Id IN (
+          SELECT Id FROM (
+              SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao) Id, DataCriacao FROM Lancamentos 
+              WHERE UsuarioId = $1 
+              ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, Id ASC
+          ) sub
+          ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
+          LIMIT ${LIMITES.ULTIMOS_LANCAMENTOS}
+      )
+  `;
+  await db.query(query, [userId]);
+}
+
 async function reorderLancamentos(userId, itens) {
   const client = await db.getClient();
   try {
@@ -300,6 +317,7 @@ module.exports = {
   updateConferido,
   updateConferidoExtrato,
   updateStatusBatchPessoa,
+  updateConferidoBatchRecent,
   reorderLancamentos,
   deleteLancamento,
   deleteLancamentosPorPessoa,

@@ -9,10 +9,14 @@
       <span class="material-icons" style="color: var(--orange)">history</span>
       Marcar todas como Pendentes
     </li>
-    <div class="menu-divider"></div>
     <li onclick="confirmarExclusaoPessoa()" class="delete-action">
       <span class="material-icons">delete_sweep</span>
       Excluir todas as contas
+    </li>
+    <div class="menu-divider" id="menuDividerUltimas" style="display: none"></div>
+    <li onclick="executarAcaoConferidoLote()" id="btnMarcarCalculadas" style="display: none">
+      <span class="material-icons" style="color: var(--blue)">task_alt</span>
+      Marcar todas como já calculadas
     </li>
   </ul>
 </div>
