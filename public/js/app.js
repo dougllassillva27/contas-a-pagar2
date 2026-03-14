@@ -93,6 +93,15 @@ function abrirMenuContexto(e, pessoa) {
   if (e.cancelable && e.preventDefault) e.preventDefault();
   pessoaSelecionadaContexto = pessoa;
   const menu = document.getElementById('customContextMenu');
+  
+  // Controle de visibilidade dos itens do menu
+  const isUltimas = (pessoa === 'ULTIMAS');
+  document.querySelectorAll('#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas)').forEach(li => li.style.display = isUltimas ? 'none' : 'flex');
+  document.querySelector('#customContextMenu li.delete-action').style.display = isUltimas ? 'none' : 'flex';
+  document.getElementById('btnMarcarCalculadas').style.display = isUltimas ? 'flex' : 'none';
+  document.getElementById('menuDividerUltimas').style.display = isUltimas ? 'flex' : 'none';
+  document.querySelector('.menu-divider:not(#menuDividerUltimas)').style.display = isUltimas ? 'none' : 'block';
+
   menu.style.display = 'block';
 
   // CORREÇÃO CRÍTICA: USAR CLIENTX/CLIENTY PARA POSITION FIXED
@@ -247,10 +256,38 @@ async function abrirModalUltimas() {
     });
 
     tbody.innerHTML = html;
+    
+    // Adiciona evento de clique com botão direito no tbody do modal ÚLTIMAS
+    tbody.oncontextmenu = (e) => abrirMenuContexto(e, 'ULTIMAS');
+
     atualizarTotalNaoConferido();
   } catch (err) {
     console.error(err);
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
+  }
+}
+
+async function executarAcaoConferidoLote() {
+  fecharMenuContexto();
+  mostrarLoading();
+  try {
+    const res = await fetch('/api/lancamentos/conferido-recentes', { method: 'POST' });
+    if (res.ok) {
+      // Atualiza visualmente as linhas no modal aberto
+      document.querySelectorAll('#listaUltimasConteudo tr').forEach(row => {
+        row.classList.add('conferido');
+        const cb = row.querySelector('input[type="checkbox"]');
+        if (cb) cb.checked = true;
+      });
+      atualizarTotalNaoConferido();
+      ocultarLoading();
+    } else {
+      ocultarLoading();
+      mostrarAviso('Erro', 'Falha ao atualizar lote.');
+    }
+  } catch (err) {
+    ocultarLoading();
+    console.error(err);
   }
 }
 

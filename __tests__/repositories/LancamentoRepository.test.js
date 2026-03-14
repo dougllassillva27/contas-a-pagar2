@@ -97,6 +97,24 @@ describe('updateConferido', () => {
 });
 
 // ==========================================================================
+// updateConferidoBatchRecent — verifica parâmetros e query
+// ==========================================================================
+describe('updateConferidoBatchRecent', () => {
+  test('marca os últimos lançamentos como conferidos', async () => {
+    db.query.mockResolvedValue({ rowCount: 1 });
+
+    await lancamentoRepo.updateConferidoBatchRecent(1);
+
+    expect(db.query).toHaveBeenCalledTimes(1);
+    const [querySQL, params] = db.query.mock.calls[0];
+    expect(querySQL).toContain('UPDATE Lancamentos');
+    expect(querySQL).toContain('SET Conferido = true');
+    expect(querySQL).toContain('LIMIT');
+    expect(params[0]).toBe(1); // userId
+  });
+});
+
+// ==========================================================================
 // deleteLancamento — verifica que usa userId para segurança
 // ==========================================================================
 describe('deleteLancamento', () => {
