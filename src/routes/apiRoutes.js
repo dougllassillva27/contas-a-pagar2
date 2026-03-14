@@ -346,6 +346,14 @@ module.exports = function (repo) {
       res.json({ success: true });
     })
   );
+  
+  router.post(
+    '/api/lancamentos/conferido-recentes',
+    asyncHandler(async (req, res) => {
+      await repo.updateConferidoBatchRecent(req.session.user.id);
+      res.json({ success: true });
+    })
+  );
 
   router.post(
     '/api/lancamentos/reorder',
