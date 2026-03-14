@@ -255,14 +255,19 @@ async function abrirModalUltimas() {
       const classeConferido = isConferido ? ' conferido' : '';
 
       html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" class="${classeConferido}" data-id="${item.id}">
-                <td style="text-align:center;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
-                <td class="col-data">${inseridoEm}</td>
-                <td style="font-weight:500; color:var(--blue);">${quem}</td>
-                <td class="col-desc">${descHTML}</td>
-                <td class="col-valor" style="text-align:right; font-weight:bold; white-space:nowrap;">${valorCurrency}</td>
-                <td class="actions" style="text-align:center;">
+                <td style="text-align:center; width:30px;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
+                <td class="col-main-premium">
+                    <div class="col-desc-premium">${descHTML}</div>
+                    <div class="col-info-premium">
+                        <span class="col-quem-premium">${quem}</span>
+                        <span class="col-sep-premium">•</span>
+                        <span class="col-data-premium">${inseridoEm}</span>
+                    </div>
+                </td>
+                <td class="col-valor-premium" style="text-align:right; font-weight:bold; white-space:nowrap; color:var(--blue);">R$ ${parseFloat(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td class="col-actions-premium" style="text-align:center; width:60px; white-space:nowrap;">
                     <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span>
-                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${item.id})">delete</span>
+                    <span class="material-icons" style="font-size:18px; cursor:pointer; margin-left:5px;" onclick="confirmarExclusao(${item.id})">delete</span>
                 </td>
             </tr>`;
     });
