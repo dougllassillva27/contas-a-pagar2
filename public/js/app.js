@@ -109,7 +109,7 @@ function abrirMenuContexto(e, pessoa) {
   if (btnMarcar) btnMarcar.style.display = isUltimas ? 'flex' : 'none';
 
   const divUltimas = document.getElementById('menuDividerUltimas');
-  if (divUltimas) divUltimas.style.display = isUltimas ? 'flex' : 'none';
+  if (divUltimas) divUltimas.style.display = 'none'; // Sempre oculto para não criar espaços vazios no topo
 
   const divGeral = document.querySelector('.menu-divider:not(#menuDividerUltimas)');
   if (divGeral) divGeral.style.display = isUltimas ? 'none' : 'block';
