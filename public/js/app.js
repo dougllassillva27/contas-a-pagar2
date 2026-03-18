@@ -112,7 +112,7 @@ function abrirMenuContexto(e, pessoa) {
   if (divUltimas) divUltimas.style.display = 'none'; // Sempre oculto para não criar espaços vazios no topo
 
   const divGeral = document.querySelector('.menu-divider:not(#menuDividerUltimas)');
-  if (divGeral) divGeral.style.display = isUltimas ? 'none' : 'block';
+  if (divGeral) divGeral.style.display = 'none'; // Sempre oculto para evitar espaços vazios
 
   menu.style.display = 'block';
 
