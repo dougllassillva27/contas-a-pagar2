@@ -108,7 +108,7 @@
     border: 1px solid #444;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-    padding: 6px 0;
+    padding: 4px 0; /* reduzido de 6px */
     min-width: 220px;
     user-select: none;
   }
@@ -118,7 +118,7 @@
     padding: 0;
   }
   .context-menu li {
-    padding: 14px 18px;
+    padding: 12px 18px; /* reduzido levemente de 14px */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -128,7 +128,7 @@
     transition: background 0.2s;
   }
   .context-menu li:hover {
-    background: #3a3a3a;
+    background: #333; /* levemente mais escuro que anterior */
   }
   .context-menu li .material-icons {
     font-size: 20px;
@@ -141,7 +141,15 @@
   }
   .context-menu .menu-divider {
     border-top: 1px solid #444;
-    margin: 6px 0;
+    margin: 4px 0; /* reduzido de 6px */
+    padding: 0 !important;
+    height: 0;
+    list-style: none; /* garante se for li */
+  }
+  /* Remove hover de divisores se forem li */
+  .context-menu li.menu-divider:hover {
+    background: none !important;
+    cursor: default;
   }
 
   /* ===========================
