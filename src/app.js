@@ -20,6 +20,7 @@ const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const telegramRoutes = require('../botTelegram/telegramRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -124,6 +125,9 @@ app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
 
 // 1.5 Bot Telegram (webhook) — antes do authMiddleware
 app.use(telegramRoutes(repo));
+
+// 1.6 Rotas de Autenticação Persistente
+app.use(authRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes do authMiddleware
 app.use(publicRoutes(repo, SENHA_MESTRA));

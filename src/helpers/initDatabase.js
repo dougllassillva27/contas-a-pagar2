@@ -16,64 +16,88 @@ const db = require('../config/db');
  * 1. Cria a tabela OrdemCards (se não existir)
  * 2. Adiciona coluna DataCriacao em Lancamentos (se não existir)
  * 3. Cria índices UNIQUE para queries UPSERT funcionarem
+ * 4. Cria tabela TokensPersistentes (se não existir)
  */
 async function initDatabase() {
   try {
     // 1. Tabela OrdemCards
-    await db.query(`
+    await db.query(` 
       CREATE TABLE IF NOT EXISTS OrdemCards (
           Id SERIAL PRIMARY KEY,
           Nome VARCHAR(255) NOT NULL,
           Ordem INT NOT NULL,
           UsuarioId INT DEFAULT 1
       )
-    `);
+     `);
 
     // 2. Coluna DataCriacao em Lancamentos
-    await db.query(`
+    await db.query(` 
       ALTER TABLE Lancamentos
       ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP DEFAULT NOW()
-    `);
+     `);
 
     // 2.5 Coluna ConferidoExtrato (para separar do checkbox de Últimas Edições)
-    await db.query(`
+    await db.query(` 
       ALTER TABLE Lancamentos
       ADD COLUMN IF NOT EXISTS ConferidoExtrato BOOLEAN DEFAULT false
-    `);
+     `);
 
     // 3. Adiciona colunas Mes e Ano na tabela Anotacoes se não existirem
     // Se a tabela já existia e tinha dados, eles ficarão com Mes e Ano = NULL temporariamente
-    await db.query(`
+    await db.query(` 
       ALTER TABLE Anotacoes
       ADD COLUMN IF NOT EXISTS Mes INT,
       ADD COLUMN IF NOT EXISTS Ano INT
-    `);
+     `);
 
     // Atualiza os registros antigos (que não tem mês/ano) para o mês/ano atual
     // Assim não perdemos nenhuma anotação antiga e ela fica no mês vigente.
     const hoje = new Date();
     await db.query(
-      `
+      ` 
       UPDATE Anotacoes
       SET Mes = $1, Ano = $2
       WHERE Mes IS NULL OR Ano IS NULL
-    `,
+     `,
       [hoje.getMonth() + 1, hoje.getFullYear()]
     );
 
     // 4. Constraints UNIQUE para UPSERTs
-    await db.query(`
+    await db.query(` 
       CREATE UNIQUE INDEX IF NOT EXISTS uq_faturamanual_usuario_mes_ano
       ON FaturaManual (UsuarioId, Mes, Ano)
-    `);
+     `);
 
     // Remove o índice antigo que não considerava Mês e Ano, caso exista
-    await db.query(`DROP INDEX IF EXISTS uq_anotacoes_usuario`);
+    await db.query(`DROP INDEX IF EXISTS uq_anotacoes_usuario `);
 
     // Habilita a nova constraint UNIQUE por Usuario, Mês e Ano
-    await db.query(`
+    await db.query(` 
       CREATE UNIQUE INDEX IF NOT EXISTS uq_anotacoes_usuario_mes_ano
       ON Anotacoes (UsuarioId, Mes, Ano)
+     `);
+
+    // 5. Tabela TokensPersistentes (Lembrar de mim)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS TokensPersistentes (
+          Id SERIAL PRIMARY KEY,
+          UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          Token VARCHAR(64) NOT NULL UNIQUE,
+          ExpiresAt TIMESTAMP NOT NULL,
+          Revogado BOOLEAN DEFAULT false,
+          CriadoEm TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Índices para performance
+    await db.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token 
+      ON TokensPersistentes(Token)
+    `);
+
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_tokens_expires 
+      ON TokensPersistentes(ExpiresAt)
     `);
 
     console.log('✅ Database inicializado com sucesso.');
