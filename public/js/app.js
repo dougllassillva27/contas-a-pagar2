@@ -968,11 +968,16 @@ window.setBulkMode = function(isBulk) {
   const btnSim = document.getElementById('bulkBtnSim');
   const btnNao = document.getElementById('bulkBtnNao');
 
+  if (!btnSim || !btnNao) return;
+
+  // Remove active de ambos primeiro
+  btnSim.classList.remove('active');
+  btnNao.classList.remove('active');
+
+  // Adiciona active no selecionado
   if (isBulk) {
     btnSim.classList.add('active');
-    btnNao.classList.remove('active');
   } else {
-    btnSim.classList.remove('active');
     btnNao.classList.add('active');
   }
 
