@@ -938,17 +938,18 @@ function toggleParcelas() {
 }
 
 // ==============================================================================
-// ✅ NOVO: Toggle para modo bulk (lançamento em massa)
+// ✅ NOVO: Toggle para modo bulk com botões Sim/Não
 // ==============================================================================
 function toggleBulkMode() {
-  const bulkCheckbox = document.getElementById('contaBulkMode');
+  const btnSim = document.getElementById('bulkBtnSim');
+  const btnNao = document.getElementById('bulkBtnNao');
   const singleTerceiroGroup = document.getElementById('grupoTerceiroSingle');
   const bulkTerceirosGroup = document.getElementById('grupoTerceirosBulk');
   const bulkCounter = document.getElementById('bulkCounter');
 
-  if (!bulkCheckbox || !singleTerceiroGroup || !bulkTerceirosGroup) return;
+  if (!btnSim || !btnNao || !singleTerceiroGroup || !bulkTerceirosGroup) return;
 
-  const isBulk = bulkCheckbox.checked;
+  const isBulk = btnSim.classList.contains('active');
 
   if (isBulk) {
     singleTerceiroGroup.style.display = 'none';
@@ -961,6 +962,22 @@ function toggleBulkMode() {
     if (bulkCounter) bulkCounter.textContent = '';
   }
 }
+
+// ✅ CORREÇÃO: Função setBulkMode agora está no escopo global
+window.setBulkMode = function(isBulk) {
+  const btnSim = document.getElementById('bulkBtnSim');
+  const btnNao = document.getElementById('bulkBtnNao');
+
+  if (isBulk) {
+    btnSim.classList.add('active');
+    btnNao.classList.remove('active');
+  } else {
+    btnSim.classList.remove('active');
+    btnNao.classList.add('active');
+  }
+
+  toggleBulkMode();
+};
 
 function atualizarBulkCounter() {
   const bulkInput = document.getElementById('contaTerceirosBulk');
@@ -994,8 +1011,8 @@ async function enviarLancamento(e, tipoTransacao) {
   const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value;
   
   // Verifica se é modo bulk (apenas para CONTAS)
-  const bulkCheckbox = document.getElementById('contaBulkMode');
-  const isBulk = bulkCheckbox && bulkCheckbox.checked && tipoTransacao === 'CONTA';
+  const btnSim = document.getElementById('bulkBtnSim');
+  const isBulk = btnSim && btnSim.classList.contains('active') && tipoTransacao === 'CONTA';
 
   if (isBulk) {
     await enviarLancamentoBulk(form);
