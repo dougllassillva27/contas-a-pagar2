@@ -62,3 +62,25 @@ CREATE TABLE IF NOT EXISTS FaturaManual (
     Ano INT NOT NULL,
     Valor DECIMAL(18, 2) DEFAULT 0
 );
+
+-- ==============================================================================
+-- Tabela de Tokens Persistentes (Lembrar de mim)
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS TokensPersistentes (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Token VARCHAR(64) NOT NULL UNIQUE,
+    ExpiresAt TIMESTAMP NOT NULL,
+    Revogado BOOLEAN DEFAULT false,
+    CriadoEm TIMESTAMP DEFAULT NOW()
+);
+
+-- Índice para busca rápida por token
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token ON TokensPersistentes(Token);
+
+-- Índice para limpeza de tokens expirados
+CREATE INDEX IF NOT EXISTS idx_tokens_expires ON TokensPersistentes(ExpiresAt);
+
+-- Limpeza automática de tokens expirados (opcional - rodar periodicamente)
+-- DELETE FROM TokensPersistentes WHERE ExpiresAt < NOW() OR Revogado = true;
