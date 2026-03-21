@@ -5,6 +5,18 @@
 const db = require('../config/db');
 const { STATUS, TIPO, LIMITES, SQL_SEM_TERCEIRO } = require('../constants');
 
+// ==============================================================================
+// ✅ NOVO: Helper para normalizar palavras-chave "Eu" ou "Dodo" para NULL
+// ==============================================================================
+function normalizarTerceiro(nome) {
+  const nomeNormalizado = nome.trim().toLowerCase();
+  // Palavras-chave que representam "conta própria"
+  if (nomeNormalizado === 'eu' || nomeNormalizado === 'dodo') {
+    return null;
+  }
+  return nome.trim();
+}
+
 // --- LISTAGENS E DASHBOARD ---
 
 async function getUltimosLancamentos(userId) {
@@ -164,6 +176,9 @@ async function addLancamentosBulk(userId, dadosBase, terceiros) {
     const dataVencimento = dadosBase.dataBase ? new Date(dadosBase.dataBase) : new Date();
 
     for (const terceiro of terceiros) {
+      // ✅ CORREÇÃO: Normaliza "Eu" ou "Dodo" para NULL
+      const terceiroNormalizado = normalizarTerceiro(terceiro);
+
       const query = `
         INSERT INTO Lancamentos 
           (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, 
@@ -182,7 +197,7 @@ async function addLancamentosBulk(userId, dadosBase, terceiros) {
         dataVencimento,
         dadosBase.parcelaAtual || null,
         dadosBase.totalParcelas || null,
-        terceiro.trim()
+        terceiroNormalizado // NULL se for "Eu" ou "Dodo"
       ]);
       
       criados++;

@@ -175,12 +175,16 @@
             <textarea 
               id="contaTerceirosBulk" 
               class="form-input" 
-              placeholder="Ex: Casa, Mãe, Davi, Vô" 
+              placeholder="Ex: Eu, Casa, Mãe, Davi" 
               rows="3"
               oninput="atualizarBulkCounter()"
               style="resize: none; height: 80px; min-height: 80px; max-height: 80px;"
             ></textarea>
             <small id="bulkCounter" style="color: var(--text-secondary); display: block; margin-top: 5px;"></small>
+            <!-- ✅ DICA: Palavras-chave para conta própria -->
+            <small style="color: var(--blue); display: block; margin-top: 8px; font-size: 0.75rem;">
+              💡 Use <strong>"Eu"</strong> ou <strong>"Dodo"</strong> para lançar para você mesmo
+            </small>
           </div>
 
           <button type="submit" id="btnSalvarConta" class="btn-primary form-btn" style="background-color: #444">+ Adicionar Conta</button>
