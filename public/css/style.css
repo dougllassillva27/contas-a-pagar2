@@ -1,3 +1,6 @@
+/* ==============================================================================
+   VARIÁVEIS GLOBAIS (DESIGN SYSTEM)
+   ============================================================================== */
 :root {
   --bg-dark: #121212;
   --bg-card: #1e1e1e;
@@ -14,7 +17,9 @@
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* --- SCROLLBAR CUSTOMIZADA --- */
+/* ==============================================================================
+   SCROLLBAR CUSTOMIZADA
+   ============================================================================== */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -35,7 +40,9 @@
   scrollbar-color: #333 #1e1e1e;
 }
 
-/* Reset */
+/* ==============================================================================
+   RESET & BASE
+   ============================================================================== */
 * {
   box-sizing: border-box;
   outline: none;
@@ -49,12 +56,14 @@ body {
   padding: 30px;
 }
 
-/* --- CORREÇÃO DO SCROLL (TRAVAR FUNDO) --- */
+/* Correção do scroll (travar fundo) */
 body.no-scroll {
-  overflow: hidden; /* Isso impede que a página atrás do modal role */
+  overflow: hidden;
 }
 
-/* Tipografia */
+/* ==============================================================================
+   TIPOGRAFIA
+   ============================================================================== */
 h1,
 h2,
 h3 {
@@ -71,7 +80,9 @@ h2 {
   color: var(--text-primary);
 }
 
-/* --- HEADER --- */
+/* ==============================================================================
+   HEADER
+   ============================================================================== */
 header {
   display: flex;
   justify-content: space-between;
@@ -136,7 +147,9 @@ header {
   background: rgba(239, 83, 80, 0.1);
 }
 
-/* --- CARDS --- */
+/* ==============================================================================
+   CARDS DO DASHBOARD
+   ============================================================================== */
 .dashboard-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -185,7 +198,7 @@ header {
   white-space: nowrap;
 }
 
-/* --- PRIVACIDADE (BLUR FORTE) --- */
+/* Privacidade (blur forte) */
 html.hide-rendas-mode #valorRendas {
   filter: blur(15px);
   opacity: 0.5;
@@ -206,6 +219,7 @@ html.hide-rendas-mode #valorRendas {
   color: var(--text-primary);
 }
 
+/* Cores utilitárias */
 .azul {
   color: var(--blue);
 }
@@ -219,7 +233,9 @@ html.hide-rendas-mode #valorRendas {
   color: var(--orange);
 }
 
-/* --- GRID PRINCIPAL --- */
+/* ==============================================================================
+   GRID PRINCIPAL
+   ============================================================================== */
 .action-area {
   display: flex;
   justify-content: center;
@@ -284,7 +300,9 @@ html.hide-rendas-mode #valorRendas {
   color: var(--blue);
 }
 
-/* --- GRID DE TERCEIROS --- */
+/* ==============================================================================
+   GRID DE TERCEIROS
+   ============================================================================== */
 .terceiros-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -317,7 +335,9 @@ html.hide-rendas-mode #valorRendas {
   font-weight: bold;
 }
 
-/* --- TEXTAREA --- */
+/* ==============================================================================
+   TEXTAREA (ANOTAÇÕES)
+   ============================================================================== */
 .anotacoes-wrapper {
   position: relative;
   height: 100%;
@@ -342,7 +362,9 @@ textarea:focus {
   border-color: var(--blue);
 }
 
-/* --- TABELAS --- */
+/* ==============================================================================
+   TABELAS
+   ============================================================================== */
 .list-table {
   width: 100%;
   border-collapse: separate;
@@ -403,7 +425,9 @@ input[type='checkbox'] {
   color: var(--text-primary);
 }
 
-/* --- COMPARATIVO FATURA APP --- */
+/* ==============================================================================
+   COMPARATIVO FATURA APP
+   ============================================================================== */
 .app-compare-wrapper {
   display: flex;
   justify-content: space-between;
@@ -436,7 +460,9 @@ input[type='checkbox'] {
   outline: none;
 }
 
-/* --- SCROLL ESTRUTURAL --- */
+/* ==============================================================================
+   SCROLL ESTRUTURAL
+   ============================================================================== */
 .scroll-wrapper {
   max-height: 520px;
   overflow-y: auto;
@@ -445,7 +471,9 @@ input[type='checkbox'] {
   margin-top: 10px;
 }
 
-/* --- MODAIS --- */
+/* ==============================================================================
+   MODAIS
+   ============================================================================== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -639,6 +667,9 @@ input[type='checkbox'] {
   background: var(--red-hover);
 }
 
+/* ==============================================================================
+   DRAG & DROP
+   ============================================================================== */
 .draggable-row {
   cursor: move;
 }
@@ -669,6 +700,40 @@ input[type='checkbox'] {
   transform: scale(0.98);
 }
 
+/* ==============================================================================
+   BOTÕES TOGGLE — Sim/Não para Lançamento em Massa
+   ============================================================================== */
+.bulk-toggle-btn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+.bulk-toggle-btn:hover {
+  border-color: rgba(56, 120, 225, 0.5);
+  color: var(--text-primary);
+  background: rgba(56, 120, 225, 0.05);
+}
+.bulk-toggle-btn.active {
+  border-color: var(--blue);
+  color: var(--text-primary);
+  background: rgba(56, 120, 225, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 120, 225, 0.15);
+}
+.bulk-toggle-btn.active:hover {
+  border-color: var(--blue);
+  background: rgba(56, 120, 225, 0.1);
+}
+
+/* ==============================================================================
+   PRINT (IMPRESSÃO A4)
+   ============================================================================== */
 #printable-area {
   display: none;
 }
@@ -747,6 +812,9 @@ input[type='checkbox'] {
   }
 }
 
+/* ==============================================================================
+   RESPONSIVO (MOBILE)
+   ============================================================================== */
 @media (max-width: 768px) {
   body {
     padding: 10px;
@@ -832,183 +900,9 @@ input[type='checkbox'] {
   }
 }
 
-/* =========================================
-   LOGIN PAGE STYLES (NOVO DESIGN ELEGANTE)
-========================================= */
-.login-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  padding: 20px;
-  background-color: var(--bg-dark);
-  /* Degradê sutil para dar profundidade */
-  background: radial-gradient(circle at center, #1e1e1e 0%, #121212 100%);
-}
-
-.login-container {
-  width: 100%;
-  max-width: 380px;
-  perspective: 1000px;
-}
-
-.login-card {
-  background: var(--bg-card);
-  padding: 50px 40px;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  text-align: center;
-
-  /* Animação de entrada */
-  animation: fadeInLogin 0.8s ease-out forwards;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-@keyframes fadeInLogin {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Ícone de Cadeado */
-.login-icon {
-  font-size: 40px;
-  color: var(--blue);
-  margin-bottom: 20px;
-  background: rgba(56, 120, 225, 0.1);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  margin-right: auto;
-  box-shadow: 0 0 20px rgba(56, 120, 225, 0.1);
-}
-
-.login-card h2 {
-  color: var(--text-primary);
-  margin-bottom: 5px;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.login-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 35px;
-  display: block;
-}
-
-.login-form .form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.login-form label {
-  font-size: 0.85rem;
-  margin-bottom: 8px;
-  display: block;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-/* Input mais elegante */
-.login-input {
-  width: 100%;
-  padding: 14px 16px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  outline: none;
-}
-
-.login-input:focus {
-  border-color: var(--blue);
-  background-color: rgba(56, 120, 225, 0.05);
-  box-shadow: 0 0 0 4px rgba(56, 120, 225, 0.1);
-}
-
-.login-btn {
-  width: 100%;
-  padding: 14px;
-  background: var(--blue);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 10px;
-}
-
-.login-btn:hover {
-  background: var(--blue-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(56, 120, 225, 0.3);
-}
-
-.login-footer {
-  margin-top: 30px;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.error-msg {
-  background: rgba(239, 83, 80, 0.1);
-  color: var(--red);
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  margin-bottom: 20px;
-  border: 1px solid rgba(239, 83, 80, 0.2);
-}
-
 /* ==============================================================================
-   BOTÕES TOGGLE — Sim/Não para Lançamento em Massa
+   LOGIN PAGE (VERSÃO FINAL ÚNICA)
    ============================================================================== */
-.bulk-toggle-btn {
-  background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-secondary);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-}
-
-.bulk-toggle-btn:hover {
-  border-color: rgba(56, 120, 225, 0.5);
-  color: var(--text-primary);
-  background: rgba(56, 120, 225, 0.05);
-}
-
-.bulk-toggle-btn.active {
-  border-color: var(--blue);
-  color: var(--text-primary);
-  background: rgba(56, 120, 225, 0.1);
-  box-shadow: 0 0 0 3px rgba(56, 120, 225, 0.15);
-}
-
-.bulk-toggle-btn.active:hover {
-  border-color: var(--blue);
-  background: rgba(56, 120, 225, 0.1);
-}
-/* =========================================
-   LOGIN PAGE STYLES (VERSÃO FINAL - ÚNICA)
-   ========================================= */
-
 .login-body {
   display: flex;
   justify-content: center;
@@ -1255,7 +1149,7 @@ input[type='checkbox'] {
   75% { transform: translateX(5px); }
 }
 
-/* Responsivo */
+/* Login Responsivo */
 @media (max-width: 480px) {
   .login-card {
     padding: 40px 25px;
