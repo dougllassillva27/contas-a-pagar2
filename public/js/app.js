@@ -3,7 +3,7 @@
 // Extraído de index.ejs — sem alteração de lógica
 //
 // Variáveis do EJS são injetadas via data-* attributes no <body>:
-//   data-month, data-year, data-username
+// data-month, data-year, data-username
 // ==============================================================================
 
 // Lê variáveis injetadas pelo EJS via data-attributes
@@ -434,6 +434,7 @@ function fecharModais() {
     document.getElementById('colConta').style.display = 'block';
     document.getElementById('modalTitulo').innerText = 'Adicionar Lançamento';
     toggleParcelas();
+    toggleBulkMode(); // Reset bulk mode
   }, 300);
 }
 
@@ -531,7 +532,7 @@ function toggleRendas(event) {
   }
 }
 
-// --- INICIALIZAÇÃO NO DOMContentLoaded ---
+// --- INICIALIZAÇÃO NO DOMCONTENTLOADED ---
 window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('hideRendas') === 'true') {
     const icon = document.getElementById('iconEyeRendas');
@@ -749,14 +750,14 @@ async function alternarStatus(checkbox, id) {
     });
     if (!res.ok) {
       // Reverte se falhou
-      checkbox.checked = !checkbox.checked;
+      checkbox.checked = !novoStatus;
       return;
     }
     // Busca os totais atualizados do servidor e atualiza os cards
     await atualizarTotais();
   } catch (err) {
     // Reverte em caso de erro de rede
-    checkbox.checked = !checkbox.checked;
+    checkbox.checked = !novoStatus;
     console.error(err);
   }
 }
@@ -936,6 +937,50 @@ function toggleParcelas() {
   }
 }
 
+// ==============================================================================
+// ✅ NOVO: Toggle para modo bulk (lançamento em massa)
+// ==============================================================================
+function toggleBulkMode() {
+  const bulkCheckbox = document.getElementById('contaBulkMode');
+  const singleTerceiroGroup = document.getElementById('grupoTerceiroSingle');
+  const bulkTerceirosGroup = document.getElementById('grupoTerceirosBulk');
+  const bulkCounter = document.getElementById('bulkCounter');
+
+  if (!bulkCheckbox || !singleTerceiroGroup || !bulkTerceirosGroup) return;
+
+  const isBulk = bulkCheckbox.checked;
+
+  if (isBulk) {
+    singleTerceiroGroup.style.display = 'none';
+    bulkTerceirosGroup.style.display = 'flex';
+    // Atualiza contador
+    atualizarBulkCounter();
+  } else {
+    singleTerceiroGroup.style.display = 'flex';
+    bulkTerceirosGroup.style.display = 'none';
+    if (bulkCounter) bulkCounter.textContent = '';
+  }
+}
+
+function atualizarBulkCounter() {
+  const bulkInput = document.getElementById('contaTerceirosBulk');
+  const bulkCounter = document.getElementById('bulkCounter');
+  if (!bulkInput || !bulkCounter) return;
+
+  const nomes = bulkInput.value
+    .split(',')
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+
+  if (nomes.length > 0) {
+    bulkCounter.textContent = `${nomes.length} lançamento(s) será(ão) criado(s)`;
+    bulkCounter.style.color = 'var(--blue)';
+  } else {
+    bulkCounter.textContent = 'Adicione pelo menos 1 terceiro';
+    bulkCounter.style.color = 'var(--red)';
+  }
+}
+
 function mascaraParcela(input) {
   let v = input.value.replace(/\D/g, '');
   if (v.length > 4) v = v.substring(0, 4);
@@ -947,11 +992,30 @@ async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
   const form = e.target;
   const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value;
-  const dados = { descricao: form.descricao.value, valor: form.valor.value, sub_tipo: form.sub_tipo.value, tipo_transacao: tipoTransacao, context_month: currentMonth, context_year: currentYear };
+  
+  // Verifica se é modo bulk (apenas para CONTAS)
+  const bulkCheckbox = document.getElementById('contaBulkMode');
+  const isBulk = bulkCheckbox && bulkCheckbox.checked && tipoTransacao === 'CONTA';
+
+  if (isBulk) {
+    await enviarLancamentoBulk(form);
+    return;
+  }
+
+  const dados = { 
+    descricao: form.descricao.value, 
+    valor: form.valor.value, 
+    sub_tipo: form.sub_tipo.value, 
+    tipo_transacao: tipoTransacao, 
+    context_month: currentMonth, 
+    context_year: currentYear 
+  };
+  
   if (tipoTransacao === 'CONTA') {
     if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
     dados.nome_terceiro = form.nome_terceiro.value;
   }
+  
   try {
     let url = '/api/lancamentos';
     let method = 'POST';
@@ -963,6 +1027,61 @@ async function enviarLancamento(e, tipoTransacao) {
     if (res.ok) window.location.reload();
   } catch (err) {
     console.error(err);
+  }
+}
+
+// ==============================================================================
+// ✅ NOVO: Envio de lançamento em massa (bulk)
+// ==============================================================================
+async function enviarLancamentoBulk(form) {
+  const bulkInput = document.getElementById('contaTerceirosBulk');
+  if (!bulkInput) return;
+
+  const terceiros = bulkInput.value
+    .split(',')
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+
+  if (terceiros.length === 0) {
+    mostrarAviso('Erro', 'Adicione pelo menos 1 terceiro separado por vírgula.');
+    return;
+  }
+
+  const dados = {
+    descricao: form.descricao.value,
+    valor: form.valor.value,
+    sub_tipo: form.sub_tipo.value,
+    tipo_transacao: 'CONTA',
+    context_month: currentMonth,
+    context_year: currentYear,
+    terceiros: terceiros, // Array de terceiros
+    bulk_mode: true // Flag para backend
+  };
+
+  if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
+
+  try {
+    mostrarLoading();
+    const res = await fetch('/api/lancamentos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+
+    ocultarLoading();
+
+    if (res.ok) {
+      const result = await res.json();
+      mostrarAviso('Sucesso', `${result.criados || terceiros.length} lançamento(s) criado(s) com sucesso!`);
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      const error = await res.json();
+      mostrarAviso('Erro', error.error || 'Falha ao criar lançamentos em massa.');
+    }
+  } catch (err) {
+    ocultarLoading();
+    console.error(err);
+    mostrarAviso('Erro', 'Erro de conexão.');
   }
 }
 

@@ -130,7 +130,19 @@
             <input type="text" name="parcelas" id="contaParcelas" class="form-input" placeholder="00/00" maxlength="5" oninput="mascaraParcela(this)" />
           </div>
 
-          <div class="form-group">
+          <!-- ✅ CHECKBOX MODO BULK -->
+          <div class="form-group" style="margin-top: 15px; padding: 12px; background: rgba(56, 120, 225, 0.1); border-radius: 8px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+              <input type="checkbox" id="contaBulkMode" onchange="toggleBulkMode()" style="width: 18px; height: 18px;" />
+              <span style="font-weight: 600; color: var(--blue);">Dividir entre vários terceiros</span>
+            </label>
+            <small style="color: var(--text-secondary); display: block; margin-top: 5px; margin-left: 28px;">
+              Marque para lançar a mesma conta para múltiplas pessoas
+            </small>
+          </div>
+
+          <!-- ✅ CAMPO SINGLE (padrão) -->
+          <div class="form-group" id="grupoTerceiroSingle">
             <label>Nome do Terceiro (Opcional)</label>
             <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Mãe, Davi..." />
             <datalist id="nomesTerceiros">
@@ -140,6 +152,20 @@
                 <% }) %>
               <% } %>
             </datalist>
+          </div>
+
+          <!-- ✅ CAMPO BULK (múltiplos terceiros) -->
+          <div class="form-group" id="grupoTerceirosBulk" style="display: none">
+            <label>Terceiros (separados por vírgula)</label>
+            <textarea 
+              id="contaTerceirosBulk" 
+              class="form-input" 
+              placeholder="Ex: Casa, Mãe, Davi, Vô" 
+              rows="3"
+              oninput="atualizarBulkCounter()"
+              style="resize: vertical;"
+            ></textarea>
+            <small id="bulkCounter" style="color: var(--text-secondary); display: block; margin-top: 5px;"></small>
           </div>
 
           <button type="submit" id="btnSalvarConta" class="btn-primary form-btn" style="background-color: #444">+ Adicionar Conta</button>

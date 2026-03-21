@@ -12,6 +12,7 @@ reverse-migrate.sql
 .env
 tests/
 buscarContas/
+backup/
 
 # Playwright
 /test-results/
