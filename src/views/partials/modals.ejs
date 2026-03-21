@@ -157,13 +157,14 @@
           <!-- ✅ CAMPO BULK (múltiplos terceiros) -->
           <div class="form-group" id="grupoTerceirosBulk" style="display: none">
             <label>Terceiros (separados por vírgula)</label>
+            <!-- ✅ CORREÇÃO: Altura fixa para não variar -->
             <textarea 
               id="contaTerceirosBulk" 
               class="form-input" 
               placeholder="Ex: Casa, Mãe, Davi, Vô" 
               rows="3"
               oninput="atualizarBulkCounter()"
-              style="resize: vertical;"
+              style="resize: none; height: 80px; min-height: 80px; max-height: 80px;"
             ></textarea>
             <small id="bulkCounter" style="color: var(--text-secondary); display: block; margin-top: 5px;"></small>
           </div>
