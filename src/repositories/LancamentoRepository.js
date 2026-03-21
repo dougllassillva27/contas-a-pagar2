@@ -8,11 +8,14 @@ const { STATUS, TIPO, LIMITES, SQL_SEM_TERCEIRO } = require('../constants');
 // --- LISTAGENS E DASHBOARD ---
 
 async function getUltimosLancamentos(userId) {
+  // ✅ CORREÇÃO: Adicionado NomeTerceiro no DISTINCT para não filtrar lançamentos em massa
   const query = `
       WITH Unicos AS (
-          SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao) * FROM Lancamentos 
+          SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, '')) 
+            * 
+          FROM Lancamentos 
           WHERE UsuarioId = $1 
-          ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, Id ASC
+          ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, COALESCE(NomeTerceiro, '') ASC, Id ASC
       )
       SELECT * FROM Unicos 
       ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
@@ -241,9 +244,11 @@ async function updateConferidoBatchRecent(userId) {
       SET Conferido = true 
       WHERE Id IN (
           SELECT Id FROM (
-              SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao) Id, DataCriacao FROM Lancamentos 
+              SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, '')) 
+                Id, DataCriacao 
+              FROM Lancamentos 
               WHERE UsuarioId = $1 
-              ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, Id ASC
+              ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, COALESCE(NomeTerceiro, '') ASC, Id ASC
           ) sub
           ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
           LIMIT ${LIMITES.ULTIMOS_LANCAMENTOS}
