@@ -228,7 +228,13 @@ module.exports = function (repo) {
       const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
       const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
 
-      const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw] = await Promise.all([repo.getDashboardTotals(req.session.user.id, month, year), repo.getLancamentosPorTipo(req.session.user.id, TIPO.FIXA, month, year), repo.getLancamentosPorTipo(req.session.user.id, TIPO.CARTAO, month, year), repo.getResumoPessoas(req.session.user.id, month, year, req.session.user.nome), repo.getDadosTerceiros(req.session.user.id, month, year)]);
+      const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw] = await Promise.all([
+        repo.getDashboardTotals(req.session.user.id, month, year),
+        repo.getLancamentosPorTipo(req.session.user.id, TIPO.FIXA, month, year),
+        repo.getLancamentosPorTipo(req.session.user.id, TIPO.CARTAO, month, year),
+        repo.getResumoPessoas(req.session.user.id, month, year, req.session.user.nome),
+        repo.getDadosTerceiros(req.session.user.id, month, year)
+      ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
 
@@ -370,12 +376,44 @@ module.exports = function (repo) {
   /**
    * Criação de lançamentos via web.
    * Usa classificarLancamento() para normalizar tipo/parcelas.
+   * ✅ SUPORTE A BULK MODE (lançamento em massa para terceiros)
    */
   router.post(
     '/api/lancamentos',
     asyncHandler(async (req, res) => {
-      const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year } = req.body;
+      const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year, terceiros, bulk_mode } = req.body;
 
+      // ✅ MODO BULK: lançamento em massa para múltiplos terceiros
+      if (bulk_mode && Array.isArray(terceiros) && terceiros.length > 0) {
+        const classificacao = classificarLancamento({ tipo_transacao, sub_tipo, parcelas });
+        if (classificacao.erro) {
+          return res.status(400).json({ error: classificacao.erro });
+        }
+
+        const dataBase = new Date(context_year, context_month - 1, 10);
+        const dadosBase = {
+          descricao: (descricao || '').trim(),
+          valor: parseValor(valor),
+          tipo: classificacao.dbTipo,
+          categoria: classificacao.dbCategoria,
+          status: classificacao.dbStatus,
+          parcelaAtual: classificacao.pAtual,
+          totalParcelas: classificacao.pTotal,
+          dataBase,
+        };
+
+        // Filtra terceiros vazios e duplicados
+        const terceirosUnicos = [...new Set(terceiros.map(t => t.trim()).filter(t => t.length > 0))];
+
+        if (terceirosUnicos.length === 0) {
+          return res.status(400).json({ error: 'Nenhum terceiro válido informado.' });
+        }
+
+        const resultado = await repo.addLancamentosBulk(req.session.user.id, dadosBase, terceirosUnicos);
+        return res.json({ success: true, ...resultado });
+      }
+
+      // ✅ MODO NORMAL: lançamento único (backward compatible)
       const classificacao = classificarLancamento({ tipo_transacao, sub_tipo, parcelas });
       if (classificacao.erro) {
         return res.status(400).json({ error: classificacao.erro });
