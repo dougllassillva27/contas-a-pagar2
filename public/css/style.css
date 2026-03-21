@@ -1005,3 +1005,32 @@ input[type='checkbox'] {
   border-color: var(--blue);
   background: rgba(56, 120, 225, 0.1);
 }
+
+/* ==============================================================================
+   TOKEN PERSISTENTE — Estilos adicionais
+   ============================================================================== */
+
+/* Checkbox customizado para "Lembrar de mim" */
+#lembrar {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+#lembrar + label {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Animação de carregamento ao validar token */
+@keyframes tokenValidating {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.token-validating {
+  animation: tokenValidating 1.5s infinite;
+  pointer-events: none;
+}
