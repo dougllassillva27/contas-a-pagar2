@@ -13,6 +13,7 @@ reverse-migrate.sql
 tests/
 buscarContas/
 backup/
+calcularLuz/
 
 # Playwright
 /test-results/
