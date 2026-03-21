@@ -971,3 +971,31 @@ input[type='checkbox'] {
   margin-bottom: 20px;
   border: 1px solid rgba(239, 83, 80, 0.2);
 }
+
+/* ==============================================================================
+   BOTÕES TOGGLE — Sim/Não para Lançamento em Massa
+   ============================================================================== */
+.bulk-toggle-btn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bulk-toggle-btn:hover {
+  border-color: rgba(56, 120, 225, 0.5);
+  color: var(--text-primary);
+  background: rgba(56, 120, 225, 0.05);
+}
+
+.bulk-toggle-btn.active {
+  border-color: var(--blue);
+  color: var(--text-primary);
+  background: rgba(56, 120, 225, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 120, 225, 0.15);
+}
