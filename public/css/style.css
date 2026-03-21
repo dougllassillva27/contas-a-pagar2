@@ -985,6 +985,7 @@ input[type='checkbox'] {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex: 1;
 }
 
 .bulk-toggle-btn:hover {
@@ -998,4 +999,9 @@ input[type='checkbox'] {
   color: var(--text-primary);
   background: rgba(56, 120, 225, 0.1);
   box-shadow: 0 0 0 3px rgba(56, 120, 225, 0.15);
+}
+
+.bulk-toggle-btn.active:hover {
+  border-color: var(--blue);
+  background: rgba(56, 120, 225, 0.1);
 }
