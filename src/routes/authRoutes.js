@@ -81,5 +81,20 @@ module.exports = function(repo) {
     });
   }));
 
+  // ==============================================================================
+  // GET /api/auth/me — Retorna usuário da sessão atual
+  // ==============================================================================
+  router.get('/api/auth/me', asyncHandler(async (req, res) => {
+    if (req.session && req.session.user) {
+      res.json({
+        id: req.session.user.id,
+        nome: req.session.user.nome,
+        login: req.session.user.login,
+      });
+    } else {
+      res.status(401).json({ error: 'Não autenticado' });
+    }
+  }));
+
   return router;
 };
