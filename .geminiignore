@@ -1,0 +1,150 @@
+# =========================================
+# Assets pesados (inúteis para análise)
+# =========================================
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.mp4
+*.mp3
+*.wav
+*.pdf
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# =========================================
+# Lock files (alto volume, baixo valor)
+# =========================================
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# =========================================
+# Logs e dados brutos
+# =========================================
+*.log
+*.csv
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# =========================================
+# Builds e artefatos gerados
+# =========================================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vercel/
+.cache/
+.tmp/
+.temp/
+coverage/
+
+# =========================================
+# Dependências
+# =========================================
+node_modules/
+vendor/
+venv/
+.env/
+
+# =========================================
+# Arquivos de ambiente (sensível + ruído)
+# =========================================
+.env
+.env.*
+*.env
+
+# =========================================
+# IDE / Editor (irrelevante pro agente)
+# =========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# =========================================
+# Sistema operacional
+# =========================================
+.DS_Store
+Thumbs.db
+
+# =========================================
+# Pastas pesadas de dados
+# =========================================
+data/
+backups/
+uploads/
+storage/
+tmp/
+logs/
+
+# =========================================
+# Test artifacts (se não for foco)
+# =========================================
+test-results/
+playwright-report/
+cypress/videos/
+cypress/screenshots/
+
+# =========================================
+# Docker / infra gerada
+# =========================================
+docker-data/
+*.pid
+
+# =========================================
+# Arquivos grandes de documentação
+# =========================================
+docs/pdf/
+docs/assets/
+
+# =========================================
+# Machine Learning / IA (muito pesados)
+# =========================================
+models/
+checkpoints/
+*.onnx
+*.pt
+*.h5
+
+# =========================================
+# Binários
+# =========================================
+*.exe
+*.dll
+*.so
+*.bin
+
+# =========================================
+# Cache de ferramentas
+# =========================================
+.eslintcache
+.prettiercache
+*.cache
+
+# =========================================
+# Git (nunca necessário pro agente)
+# =========================================
+.git/
+.gitignore
+.gitattributes
+
+# =========================================
+# Outros
+# =========================================
+*.bak
+*.tmp
+*.old

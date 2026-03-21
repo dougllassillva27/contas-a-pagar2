@@ -17,7 +17,7 @@ async function getUltimosLancamentos(userId) {
       SELECT * FROM Unicos 
       ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
       LIMIT ${LIMITES.ULTIMOS_LANCAMENTOS}
-  `;
+   `;
   const result = await db.query(query, [userId]);
   return result.rows;
 }
@@ -33,7 +33,7 @@ async function getRelatorioMensal(userId, month, year) {
           CASE WHEN ${SQL_SEM_TERCEIRO} THEN 0 ELSE 1 END, 
           NomeTerceiro, 
           Ordem
-  `;
+   `;
   const result = await db.query(query, [userId, month, year]);
   return result.rows;
 }
@@ -51,7 +51,7 @@ async function getDashboardTotals(userId, month, year) {
       WHERE UsuarioId = $1 
         AND EXTRACT(MONTH FROM DataVencimento) = $2 
         AND EXTRACT(YEAR FROM DataVencimento) = $3
-  `;
+   `;
   const result = await db.query(query, [userId, month, year]);
   return result.rows[0];
 }
@@ -65,7 +65,7 @@ async function getLancamentosPorTipo(userId, tipo, month, year) {
         AND EXTRACT(MONTH FROM DataVencimento) = $3 
         AND EXTRACT(YEAR FROM DataVencimento) = $4 
       ORDER BY Ordem ASC
-  `;
+   `;
   const result = await db.query(query, [userId, tipo, month, year]);
   return result.rows;
 }
@@ -78,7 +78,7 @@ async function getDadosTerceiros(userId, month, year) {
         AND EXTRACT(MONTH FROM DataVencimento) = $2 
         AND EXTRACT(YEAR FROM DataVencimento) = $3 
       ORDER BY NomeTerceiro, Tipo, Ordem
-  `;
+   `;
   const result = await db.query(query, [userId, month, year]);
   return result.rows;
 }
@@ -90,7 +90,7 @@ async function getLancamentosCartaoPorPessoa(userId, pessoa, month, year, userNa
         AND Tipo = '${TIPO.CARTAO}' 
         AND EXTRACT(MONTH FROM DataVencimento) = $2 
         AND EXTRACT(YEAR FROM DataVencimento) = $3
-  `;
+   `;
   const params = [userId, month, year];
   if (pessoa === userName) {
     query += ` AND ${SQL_SEM_TERCEIRO}`;
@@ -116,7 +116,7 @@ async function getResumoPessoas(userId, month, year, userName) {
         AND EXTRACT(YEAR FROM DataVencimento) = $3 
       GROUP BY NomeTerceiro 
       ORDER BY CASE WHEN ${SQL_SEM_TERCEIRO} THEN 0 ELSE 1 END, NomeTerceiro
-  `;
+   `;
   const result = await db.query(query, [userId, month, year, userName]);
   return result.rows;
 }
@@ -142,11 +142,57 @@ async function addLancamento(userId, dados) {
   const query = `
       INSERT INTO Lancamentos 
         (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, 
-         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem) 
+         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem)  
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
         (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
-  `;
+   `;
   await db.query(query, [userId, dados.descricao, dados.valor, dados.tipo, dados.categoria, dados.status || STATUS.PENDENTE, dataVencimento, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null]);
+}
+
+// ==============================================================================
+// ✅ NOVO: Lançamento em massa (bulk) — transação segura
+// ==============================================================================
+async function addLancamentosBulk(userId, dadosBase, terceiros) {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+
+    let criados = 0;
+    const dataVencimento = dadosBase.dataBase ? new Date(dadosBase.dataBase) : new Date();
+
+    for (const terceiro of terceiros) {
+      const query = `
+        INSERT INTO Lancamentos 
+          (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, 
+           ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem)  
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
+          (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
+      `;
+      
+      await client.query(query, [
+        userId,
+        dadosBase.descricao,
+        dadosBase.valor,
+        dadosBase.tipo,
+        dadosBase.categoria,
+        dadosBase.status || STATUS.PENDENTE,
+        dataVencimento,
+        dadosBase.parcelaAtual || null,
+        dadosBase.totalParcelas || null,
+        terceiro.trim()
+      ]);
+      
+      criados++;
+    }
+
+    await client.query('COMMIT');
+    return { criados };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 async function updateLancamento(userId, id, dados) {
@@ -178,7 +224,7 @@ async function updateStatusBatchPessoa(userId, pessoa, novoStatus, month, year, 
         AND Tipo = '${TIPO.CARTAO}' 
         AND EXTRACT(MONTH FROM DataVencimento) = $3 
         AND EXTRACT(YEAR FROM DataVencimento) = $4
-  `;
+   `;
   const params = [novoStatus, userId, month, year];
   if (pessoa === userName) {
     query += ` AND ${SQL_SEM_TERCEIRO}`;
@@ -202,7 +248,7 @@ async function updateConferidoBatchRecent(userId) {
           ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
           LIMIT ${LIMITES.ULTIMOS_LANCAMENTOS}
       )
-  `;
+   `;
   await db.query(query, [userId]);
 }
 
@@ -245,7 +291,7 @@ async function deleteMonth(userId, month, year) {
 // ⚠️ ATENÇÃO: Esta função copia do mês informado para o PRÓXIMO mês.
 // O frontend envia o mês que o usuário está visualizando.
 // Exemplo: se o usuário está em Fevereiro e clica "Copiar",
-//   → copia as fixas/parcelas de Fevereiro para Março.
+// → copia as fixas/parcelas de Fevereiro para Março.
 async function copyMonth(userId, currentMonth, currentYear) {
   const client = await db.getClient();
   try {
@@ -312,6 +358,7 @@ module.exports = {
   getDetalhesRendas,
   getDistinctTerceiros,
   addLancamento,
+  addLancamentosBulk, // ✅ Novo método exportado
   updateLancamento,
   updateStatus,
   updateConferido,
