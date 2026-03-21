@@ -126,7 +126,7 @@ app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
 // 1.5 Bot Telegram (webhook) — antes do authMiddleware
 app.use(telegramRoutes(repo));
 
-// 1.6 Rotas de Autenticação Persistente
+// 1.6 Rotas de Autenticação Persistente — antes do authMiddleware
 app.use(authRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes do authMiddleware
