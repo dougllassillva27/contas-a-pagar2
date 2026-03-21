@@ -1005,9 +1005,8 @@ input[type='checkbox'] {
   border-color: var(--blue);
   background: rgba(56, 120, 225, 0.1);
 }
-
 /* =========================================
-   LOGIN PAGE STYLES (NOVO DESIGN)
+   LOGIN PAGE STYLES (VERSÃO FINAL - ÚNICA)
    ========================================= */
 
 .login-body {
