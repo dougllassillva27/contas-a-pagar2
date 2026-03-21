@@ -15,52 +15,43 @@
     <div class="login-card">
       
       <div class="login-icon">
-        <span class="material-icons">account_balance_wallet</span>
+        <span class="material-icons">lock</span>
       </div>
 
       <h2>Bem-vindo de volta</h2>
-      <p class="login-subtitle">Gerencie suas finanças com segurança e praticidade</p>
+      <span class="login-subtitle">Gerencie suas finanças com segurança</span>
 
       <% if (error) { %>
       <div class="error-msg">
-        <span class="material-icons">error_outline</span>
+        <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">error</span>
         <%= error %>
       </div>
       <% } %>
 
-      <form action="/login" method="POST" class="login-form">
+      <form action="/login" method="POST" class="login-form" id="loginForm">
         <div class="form-group">
-          <label for="password">
-            <span class="material-icons">lock_outline</span>
-            Senha de acesso
+          <label for="password">Digite sua senha de acesso</label>
+          <input type="password" name="password" id="password" class="login-input" placeholder="••••••••" required autofocus>
+        </div>
+        
+        <!-- ✅ RESTAURADO: Checkbox "Lembrar de mim" -->
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+          <input type="checkbox" name="lembrar" id="lembrar" style="width: 18px; height: 18px; accent-color: var(--blue);">
+          <label for="lembrar" style="margin: 0; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">
+            Lembrar de mim por 90 dias
           </label>
-          <input 
-            type="password" 
-            name="password" 
-            id="password" 
-            class="login-input" 
-            placeholder="Digite sua senha" 
-            required 
-            autofocus
-            autocomplete="current-password"
-          >
         </div>
 
-        <button type="submit" class="login-btn">
-          <span class="material-icons">login</span>
-          Entrar no Sistema
-        </button>
+        <button type="submit" class="login-btn">Entrar no Sistema</button>
       </form>
 
       <div class="login-footer">
-        <p>© <%= new Date().getFullYear() %> Gestão Financeira</p>
-        <p class="login-security">
-          <span class="material-icons">security</span>
-          Acesso seguro e criptografado
-        </p>
+        &copy; <%= new Date().getFullYear() %> Gestão Financeira • Acesso Seguro
       </div>
     </div>
   </div>
 
+  <!-- ✅ NOVO: Script de gerenciamento de token -->
+  <script src="/js/login.js?v=2"></script>
 </body>
 </html>

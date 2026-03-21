@@ -7,20 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { LIMITES } = require('../constants');
 
-module.exports = function(repo, SENHA_MESTRA) {
-  // Rota para obter usuário da sessão atual (usada pelo login.js)
-  router.get('/api/auth/me', (req, res) => {
-    if (req.session && req.session.user) {
-      res.json({
-        id: req.session.user.id,
-        nome: req.session.user.nome,
-        login: req.session.user.login,
-      });
-    } else {
-      res.status(401).json({ error: 'Não autenticado' });
-    }
-  });
-
+module.exports = function (repo, SENHA_MESTRA) {
   router.get('/login', (req, res) => {
     if (req.session.user) return res.redirect('/');
     res.render('login', { error: null });
