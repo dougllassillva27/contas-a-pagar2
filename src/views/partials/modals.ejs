@@ -130,15 +130,31 @@
             <input type="text" name="parcelas" id="contaParcelas" class="form-input" placeholder="00/00" maxlength="5" oninput="mascaraParcela(this)" />
           </div>
 
-          <!-- ✅ CHECKBOX MODO BULK -->
-          <div class="form-group" style="margin-top: 15px; padding: 12px; background: rgba(56, 120, 225, 0.1); border-radius: 8px;">
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-              <input type="checkbox" id="contaBulkMode" onchange="toggleBulkMode()" style="width: 18px; height: 18px;" />
-              <span style="font-weight: 600; color: var(--blue);">Dividir entre vários terceiros</span>
+          <!-- ✅ NOVO: Botões Sim/Não para Dividir entre Terceiros -->
+          <div class="form-group" style="margin-top: 15px;">
+            <label style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; display: block; margin-bottom: 8px;">
+              Dividir entre vários terceiros?
             </label>
-            <small style="color: var(--text-secondary); display: block; margin-top: 5px; margin-left: 28px;">
-              Marque para lançar a mesma conta para múltiplas pessoas
-            </small>
+            <div style="display: flex; gap: 10px;">
+              <button 
+                type="button" 
+                id="bulkBtnNao" 
+                class="bulk-toggle-btn active" 
+                onclick="setBulkMode(false)"
+                style="flex: 1; padding: 10px; border: 2px solid var(--blue); border-radius: 8px; background: transparent; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all 0.2s;"
+              >
+                Não
+              </button>
+              <button 
+                type="button" 
+                id="bulkBtnSim" 
+                class="bulk-toggle-btn" 
+                onclick="setBulkMode(true)"
+                style="flex: 1; padding: 10px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;"
+              >
+                Sim
+              </button>
+            </div>
           </div>
 
           <!-- ✅ CAMPO SINGLE (padrão) -->
