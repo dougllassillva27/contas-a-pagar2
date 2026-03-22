@@ -1243,7 +1243,8 @@ function compartilharLinkTerceiro() {
   const nome = pessoaSelecionadaContexto;
   if (!nome || nome === 'ULTIMAS') return;
 
-  const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+  const userId = document.body.dataset.userid;
+  const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
   
   // Detecção de PC vs Celular
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
