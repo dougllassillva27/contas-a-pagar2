@@ -71,8 +71,9 @@ module.exports = function (repo, SENHA_MESTRA) {
   // GET /contas/:nome — Portal público de terceiros
   // Permite que terceiros visualizem suas contas sem login
   // ============================================================================
-  router.get('/contas/:nome', async (req, res) => {
+  router.get('/contas/:userId/:nome', async (req, res) => {
     try {
+      const userId = parseInt(req.params.userId, 10);
       const nome = decodeURIComponent(req.params.nome);
       const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
       const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
@@ -88,8 +89,8 @@ module.exports = function (repo, SENHA_MESTRA) {
         prox: { month: dataProxima.getMonth() + 1, year: dataProxima.getFullYear() },
       };
 
-      // Busca lançamentos do terceiro
-      const lancamentos = await repo.getLancamentosTerceiro(nome, month, year);
+      // Busca lançamentos do terceiro filtrando por usuário
+      const lancamentos = await repo.getLancamentosTerceiro(userId, nome, month, year);
 
       // Agrupa por tipo
       const itensFixas = lancamentos.filter(i => i.tipo === 'FIXA');
@@ -101,6 +102,7 @@ module.exports = function (repo, SENHA_MESTRA) {
       const totalGeral = totalFixas + totalCartao;
 
       res.render('terceiro', {
+        userId,
         nome,
         nav,
         itensFixas,

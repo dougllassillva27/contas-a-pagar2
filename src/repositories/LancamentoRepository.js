@@ -370,16 +370,17 @@ async function copyMonth(userId, currentMonth, currentYear) {
 // ==============================================================================
 // Portal de Terceiros — consulta pública por nome do terceiro
 // ==============================================================================
-async function getLancamentosTerceiro(nome, month, year) {
+async function getLancamentosTerceiro(userId, nome, month, year) {
   const query = `
       SELECT * FROM Lancamentos 
-      WHERE NomeTerceiro = $1 
+      WHERE UsuarioId = $1
+        AND NomeTerceiro = $2 
         AND Tipo IN ('${TIPO.FIXA}', '${TIPO.CARTAO}') 
-        AND EXTRACT(MONTH FROM DataVencimento) = $2 
-        AND EXTRACT(YEAR FROM DataVencimento) = $3 
+        AND EXTRACT(MONTH FROM DataVencimento) = $3 
+        AND EXTRACT(YEAR FROM DataVencimento) = $4 
       ORDER BY Tipo, Ordem ASC
    `;
-  const result = await db.query(query, [nome, month, year]);
+  const result = await db.query(query, [userId, nome, month, year]);
   return result.rows;
 }
 
