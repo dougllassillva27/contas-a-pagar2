@@ -36,6 +36,7 @@ window.addEventListener('popstate', () => {
     if (activeModal.id === 'modalConfirmar') fecharConfirmacao();
     else if (activeModal.id === 'modalAviso') fecharModalAviso();
     else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
+    else if (activeModal.id === 'modalCalcularLuz') fecharModalCalcularLuz();
     else fecharModais();
     isBackNavigation = false;
   }
@@ -49,6 +50,7 @@ document.addEventListener('keydown', (e) => {
       if (activeModal.id === 'modalConfirmar') fecharConfirmacao();
       else if (activeModal.id === 'modalAviso') fecharModalAviso();
       else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
+      else if (activeModal.id === 'modalCalcularLuz') fecharModalCalcularLuz();
       else fecharModais();
     }
     fecharMenuContexto();
@@ -61,6 +63,17 @@ function mostrarLoading() {
 }
 function ocultarLoading() {
   document.getElementById('modalLoading').classList.remove('active');
+}
+
+// --- FUNÇÕES DO MODAL CALCULAR LUZ ---
+function abrirModalCalcularLuz() {
+  registerModalOpen();
+  document.getElementById('modalCalcularLuz').classList.add('active');
+}
+
+function fecharModalCalcularLuz() {
+  handleModalClose();
+  document.getElementById('modalCalcularLuz').classList.remove('active');
 }
 
 // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) E POSICIONAMENTO CORRIGIDO ---
