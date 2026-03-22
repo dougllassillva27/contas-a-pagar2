@@ -18,13 +18,30 @@
       <span class="material-icons">delete_sweep</span>
       Excluir todas as contas
     </li>
-    <li class="menu-divider"></li>
     <li class="menu-divider" id="menuDividerUltimas" style="display: none"></li>
     <li onclick="executarAcaoConferidoLote()" id="btnMarcarCalculadas" style="display: none">
       <span class="material-icons" style="color: var(--blue)">task_alt</span>
       Marcar todas como já calculadas
     </li>
   </ul>
+</div>
+
+<%# ================= MODAL: COMPARTILHAR PORTAL ================= %>
+<div class="modal-overlay confirm-overlay" id="modalCompartilhar">
+  <div class="modal-box" style="max-width: 400px; text-align: center">
+    <span class="material-icons" style="font-size: 48px; color: var(--blue); margin-bottom: 15px">share</span>
+    <h2>Compartilhar Portal</h2>
+    <p style="color: var(--text-secondary); margin: 10px 0 20px">Como deseja compartilhar o portal de <strong id="nomePessoaShare" style="color: var(--text-primary)"></strong>?</p>
+    <div class="confirm-actions" style="flex-direction: column; gap: 10px;">
+      <button class="btn-primary" style="width: 100%; justify-content: center; gap: 8px;" onclick="copiarLinkCompartilhado()">
+        <span class="material-icons">content_copy</span> Copiar Link
+      </button>
+      <button class="btn-secondary" style="width: 100%; justify-content: center; gap: 8px; background: rgba(255,255,255,0.05);" onclick="abrirLinkCompartilhado()">
+        <span class="material-icons">open_in_new</span> Abrir em Nova Guia
+      </button>
+      <button class="btn-cancel" style="width: 100%; margin: 0; margin-top: 5px;" onclick="fecharModalCompartilhar()">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <%# ================= MODAL: CALCULAR LUZ (IFRAME) ================= %>

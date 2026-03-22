@@ -131,10 +131,7 @@ function abrirMenuContexto(e, pessoa) {
   if (btnMarcar) btnMarcar.style.display = isUltimas ? 'flex' : 'none';
 
   const divUltimas = document.getElementById('menuDividerUltimas');
-  if (divUltimas) divUltimas.style.display = 'none'; // Sempre oculto para não criar espaços vazios no topo
-
-  const divGeral = document.querySelector('.menu-divider:not(#menuDividerUltimas)');
-  if (divGeral) divGeral.style.display = 'none'; // Sempre oculto para evitar espaços vazios
+  if (divUltimas) divUltimas.style.display = isUltimas ? 'flex' : 'none';
 
   menu.style.display = 'block';
 
@@ -1202,3 +1199,95 @@ document.getElementById('btnConfirmarExclusao').onclick = async () => {
     ocultarLoading();
   }
 };
+
+// ==============================================================================
+// ✅ PORTAL DE TERCEIROS - COMPARTILHAMENTO
+// ==============================================================================
+
+/**
+ * Inicia o fluxo de compartilhamento do link público
+ */
+function compartilharLinkTerceiro() {
+  const nome = pessoaSelecionadaContexto;
+  if (!nome || nome === 'ULTIMAS') return;
+
+  const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+  
+  // Detecção de PC vs Celular
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Comportamento Mobile: Copia direto e mostra aviso
+    copiarAoClipboard(url);
+    mostrarAviso('Link copiado!', url);
+  } else {
+    // Comportamento PC: Abre modal de escolhas
+    const nomeEl = document.getElementById('nomePessoaShare');
+    if (nomeEl) nomeEl.innerText = nome;
+    
+    registerModalOpen();
+    document.getElementById('modalCompartilhar').classList.add('active');
+  }
+}
+
+function fecharModalCompartilhar() {
+  handleModalClose();
+  document.getElementById('modalCompartilhar').classList.remove('active');
+}
+
+/**
+ * Abre o link do portal em uma nova guia
+ */
+function abrirLinkCompartilhado() {
+  const nome = pessoaSelecionadaContexto;
+  if (nome) {
+    const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+    window.open(url, '_blank');
+    fecharModalCompartilhar();
+  }
+}
+
+/**
+ * Copia o link e fecha o modal
+ */
+function copiarLinkCompartilhado() {
+  const nome = pessoaSelecionadaContexto;
+  if (nome) {
+    const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+    copiarAoClipboard(url);
+    fecharModalCompartilhar();
+    mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
+  }
+}
+
+/**
+ * Helper robusto para cópia de texto (Clipboard API + Fallback)
+ */
+function copiarAoClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Erro ao copiar: ', err);
+      // fallback redundante em caso de erro na API
+      fallbackCopiarAoClipboard(text);
+    });
+  } else {
+    fallbackCopiarAoClipboard(text);
+  }
+}
+
+function fallbackCopiarAoClipboard(text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  const selected = document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  if (selected) {
+    document.getSelection().removeAllRanges();
+    document.getSelection().addRange(selected);
+  }
+}
