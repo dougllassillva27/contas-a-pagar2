@@ -1,9 +1,10 @@
 <%# ================= MENU DE CONTEXTO ================= %>
 <div id="customContextMenu" class="context-menu" style="display: none">
   <ul>
+    <%# ✅ NOVO: Botão de Compartilhar Link %>
     <li onclick="compartilharLinkTerceiro()">
       <span class="material-icons" style="color: var(--blue)">share</span>
-      Compartilhar link
+      Compartilhar Link
     </li>
     <li class="menu-divider"></li>
     <li onclick="executarAcaoEmLotePessoa('PAGO')">
@@ -18,6 +19,7 @@
       <span class="material-icons">delete_sweep</span>
       Excluir todas as contas
     </li>
+    <li class="menu-divider"></li>
     <li class="menu-divider" id="menuDividerUltimas" style="display: none"></li>
     <li onclick="executarAcaoConferidoLote()" id="btnMarcarCalculadas" style="display: none">
       <span class="material-icons" style="color: var(--blue)">task_alt</span>
@@ -26,45 +28,8 @@
   </ul>
 </div>
 
-<%# ================= MODAL: COMPARTILHAR PORTAL ================= %>
-<div class="modal-overlay confirm-overlay" id="modalCompartilhar">
-  <div class="modal-box" style="max-width: 400px; text-align: center">
-    <span class="material-icons" style="font-size: 48px; color: var(--blue); margin-bottom: 15px">share</span>
-    <h2>Compartilhar Portal</h2>
-    <p style="color: var(--text-secondary); margin: 10px 0 20px">Como deseja compartilhar o portal de <strong id="nomePessoaShare" style="color: var(--text-primary)"></strong>?</p>
-    <div class="confirm-actions" style="flex-direction: column; gap: 10px;">
-      <button class="btn-primary" style="width: 100%; justify-content: center; gap: 8px;" onclick="copiarLinkCompartilhado()">
-        <span class="material-icons">content_copy</span> Copiar Link
-      </button>
-      <button class="btn-primary" style="width: 100%; justify-content: center; gap: 8px;" onclick="abrirLinkCompartilhado()">
-        <span class="material-icons">open_in_new</span> Abrir em Nova Guia
-      </button>
-      <button class="btn-cancel" style="width: 100%; margin: 0; margin-top: 5px;" onclick="fecharModalCompartilhar()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<%# ================= MODAL: CALCULAR LUZ (IFRAME) ================= %>
-<div class="modal-overlay" id="modalCalcularLuz">
-  <div class="modal-box modal-lg">
-    <div class="modal-header">
-      <div class="modal-title-wrapper">
-        <h2>Calcular Luz</h2>
-      </div>
-      <button class="modal-close" onclick="fecharModalCalcularLuz()">&times;</button>
-    </div>
-    <div class="modal-scroll">
-      <div style="flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%;">
-        <iframe 
-          src="https://calcularluz.onrender.com/" 
-          title="Calcular Luz"
-          style="flex: 1; width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px;"
-          loading="lazy"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-</div>
+<%# ================= TOOLTIP CUSTOMIZADO (Substitui tooltip nativo) ================= %>
+<div id="customTooltip" class="custom-tooltip" style="display: none"></div>
 
 <%# ================= MODAL: ÚLTIMAS ADIÇÕES ================= %>
 <div class="modal-overlay" id="modalUltimasContas">
@@ -80,7 +45,10 @@
       <table class="list-table">
         <thead>
           <tr>
-            <th style="text-align: center; width: 40px">✓</th>
+            <%# ✅ REMOVIDO title attribute para evitar tooltip nativo quebrado %>
+            <th style="text-align: center; width: 40px">
+              <input type="checkbox" id="checkAllConferido" onchange="toggleAllConferido(this)" style="width: 15px; height: 15px; cursor: pointer;">
+            </th>
             <th style="text-align: left">Data adicionado</th>
             <th style="text-align: left">Quem</th>
             <th style="text-align: left">Descrição</th>
@@ -174,7 +142,6 @@
             <input type="text" name="parcelas" id="contaParcelas" class="form-input" placeholder="00/00" maxlength="5" oninput="mascaraParcela(this)" />
           </div>
 
-          <!-- ✅ NOVO: Botões Sim/Não para Dividir entre Terceiros -->
           <div class="form-group" style="margin-top: 15px;">
             <label style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; display: block; margin-bottom: 8px;">
               Dividir entre vários terceiros?
@@ -199,7 +166,6 @@
             </div>
           </div>
 
-          <!-- ✅ CAMPO SINGLE (padrão) -->
           <div class="form-group" id="grupoTerceiroSingle">
             <label>Nome do Terceiro (Opcional)</label>
             <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Mãe, Davi..." />
@@ -212,10 +178,8 @@
             </datalist>
           </div>
 
-          <!-- ✅ CAMPO BULK (múltiplos terceiros) -->
           <div class="form-group" id="grupoTerceirosBulk" style="display: none">
             <label>Terceiros (separados por vírgula)</label>
-            <!-- ✅ CORREÇÃO: Altura fixa para não variar -->
             <textarea 
               id="contaTerceirosBulk" 
               class="form-input" 
