@@ -66,24 +66,37 @@ function ocultarLoading() {
 }
 
 // ==============================================================================
-// ✅ FUNÇÕES DO MODAL CALCULAR LUZ (IFRAME)
+// ✅ TOOLTIP CUSTOMIZADO (Substitui tooltip nativo do browser)
 // ==============================================================================
+const customTooltip = document.getElementById('customTooltip');
 
-function abrirModalCalcularLuz() {
-  registerModalOpen();
-  document.getElementById('modalCalcularLuz').classList.add('active');
+function showCustomTooltip(element, text) {
+  if (!customTooltip) return;
   
-  // Prevenir scroll do body quando modal de iframe estiver aberto
-  document.body.style.overflow = 'hidden';
+  const rect = element.getBoundingClientRect();
+  customTooltip.textContent = text;
+  customTooltip.style.display = 'block';
+  customTooltip.style.left = `${rect.left + (rect.width / 2) - (customTooltip.offsetWidth / 2)}px`;
+  customTooltip.style.top = `${rect.top - customTooltip.offsetHeight - 8}px`;
 }
 
-function fecharModalCalcularLuz() {
-  handleModalClose();
-  document.getElementById('modalCalcularLuz').classList.remove('active');
-  
-  // Restaurar scroll do body
-  document.body.style.overflow = '';
+function hideCustomTooltip() {
+  if (!customTooltip) return;
+  customTooltip.style.display = 'none';
 }
+
+// Adiciona listeners para tooltips customizados
+document.addEventListener('DOMContentLoaded', () => {
+  // Adiciona tooltips customizados para checkboxes do header
+  document.querySelectorAll('th input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('mouseenter', (e) => {
+      showCustomTooltip(e.target, 'Marcar todas como já calculadas');
+    });
+    checkbox.addEventListener('mouseleave', () => {
+      hideCustomTooltip();
+    });
+  });
+});
 
 // --- DOUBLE TAP REAL PARA MOBILE (TOUCHEND) E POSICIONAMENTO CORRIGIDO ---
 function initDoubleTapMobile() {
@@ -133,6 +146,9 @@ function abrirMenuContexto(e, pessoa) {
   const divUltimas = document.getElementById('menuDividerUltimas');
   if (divUltimas) divUltimas.style.display = isUltimas ? 'flex' : 'none';
 
+  const divGeral = document.querySelector('.menu-divider:not(#menuDividerUltimas)');
+  if (divGeral) divGeral.style.display = 'none'; // Sempre oculto para evitar espaços vazios
+
   menu.style.display = 'block';
 
   // CORREÇÃO CRÍTICA: USAR CLIENTX/CLIENTY PARA POSITION FIXED
@@ -167,27 +183,6 @@ window.onclick = (e) => {
   if (!e.target.closest('#customContextMenu')) fecharMenuContexto();
   if (e.target.classList.contains('modal-overlay') && e.target.id !== 'modalLoading') fecharModais();
 };
-
-// ==============================================================================
-// ✅ COMPARTILHAR LINK DO PORTAL DE TERCEIROS
-// Copia URL pública (/contas/NomeTerceiro) para a área de transferência
-// ==============================================================================
-function compartilharLinkTerceiro() {
-  fecharMenuContexto();
-  const nome = pessoaSelecionadaContexto;
-  if (!nome || nome === 'ULTIMAS') return;
-
-  const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url)
-      .then(() => mostrarAviso('Link copiado!', url))
-      .catch(() => mostrarAviso('Link do Portal', url));
-  } else {
-    // Fallback para navegadores sem clipboard API
-    mostrarAviso('Link do Portal', url);
-  }
-}
 
 // --- AÇÕES EM LOTE ---
 async function executarAcaoEmLotePessoa(novoStatus) {
@@ -233,6 +228,21 @@ document.getElementById('btnConfirmarAcao').onclick = () => {
   if (acaoConfirmadaCallback) acaoConfirmadaCallback();
   fecharConfirmacaoAcao();
 };
+
+// ==============================================================================
+// ✅ FUNÇÃO PARA TOGGLE ALL (MARCAR TODOS COMO CONFERIDO)
+// ==============================================================================
+function toggleAllConferido(checkbox) {
+  const isChecked = checkbox.checked;
+  const tbody = document.getElementById('listaUltimasConteudo');
+  const checkboxes = tbody.querySelectorAll('input[type="checkbox"]');
+  
+  checkboxes.forEach(cb => {
+    cb.checked = isChecked;
+    // Dispara o evento change para cada checkbox
+    cb.dispatchEvent(new Event('change'));
+  });
+}
 
 // --- OUTRAS FUNÇÕES ---
 async function abrirModalUltimas() {
@@ -474,7 +484,7 @@ function fecharModais() {
     document.getElementById('colConta').style.display = 'block';
     document.getElementById('modalTitulo').innerText = 'Adicionar Lançamento';
     toggleParcelas();
-    toggleBulkMode(); // Reset bulk mode
+    toggleBulkMode();
   }, 300);
 }
 
@@ -1199,95 +1209,3 @@ document.getElementById('btnConfirmarExclusao').onclick = async () => {
     ocultarLoading();
   }
 };
-
-// ==============================================================================
-// ✅ PORTAL DE TERCEIROS - COMPARTILHAMENTO
-// ==============================================================================
-
-/**
- * Inicia o fluxo de compartilhamento do link público
- */
-function compartilharLinkTerceiro() {
-  const nome = pessoaSelecionadaContexto;
-  if (!nome || nome === 'ULTIMAS') return;
-
-  const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
-  
-  // Detecção de PC vs Celular
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    // Comportamento Mobile: Copia direto e mostra aviso
-    copiarAoClipboard(url);
-    mostrarAviso('Link copiado!', url);
-  } else {
-    // Comportamento PC: Abre modal de escolhas
-    const nomeEl = document.getElementById('nomePessoaShare');
-    if (nomeEl) nomeEl.innerText = nome;
-    
-    registerModalOpen();
-    document.getElementById('modalCompartilhar').classList.add('active');
-  }
-}
-
-function fecharModalCompartilhar() {
-  handleModalClose();
-  document.getElementById('modalCompartilhar').classList.remove('active');
-}
-
-/**
- * Abre o link do portal em uma nova guia
- */
-function abrirLinkCompartilhado() {
-  const nome = pessoaSelecionadaContexto;
-  if (nome) {
-    const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
-    window.open(url, '_blank');
-    fecharModalCompartilhar();
-  }
-}
-
-/**
- * Copia o link e fecha o modal
- */
-function copiarLinkCompartilhado() {
-  const nome = pessoaSelecionadaContexto;
-  if (nome) {
-    const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
-    copiarAoClipboard(url);
-    fecharModalCompartilhar();
-    mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
-  }
-}
-
-/**
- * Helper robusto para cópia de texto (Clipboard API + Fallback)
- */
-function copiarAoClipboard(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).catch(err => {
-      console.error('Erro ao copiar: ', err);
-      // fallback redundante em caso de erro na API
-      fallbackCopiarAoClipboard(text);
-    });
-  } else {
-    fallbackCopiarAoClipboard(text);
-  }
-}
-
-function fallbackCopiarAoClipboard(text) {
-  const el = document.createElement('textarea');
-  el.value = text;
-  el.setAttribute('readonly', '');
-  el.style.position = 'absolute';
-  el.style.left = '-9999px';
-  document.body.appendChild(el);
-  const selected = document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
-  el.select();
-  document.execCommand('copy');
-  document.body.removeChild(el);
-  if (selected) {
-    document.getSelection().removeAllRanges();
-    document.getSelection().addRange(selected);
-  }
-}
