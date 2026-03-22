@@ -12,7 +12,7 @@
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:title" content="Contas de <%= nome %> — <%= mesAnoCapitalizado %>" />
     <meta property="og:description" content="Portal de acompanhamento de contas a pagar (Fixas e Cartão)." />
-    <meta property="og:url" content="https://contas-a-pagar-nsti.onrender.com/contas/<%= encodeURIComponent(nome) %>" />
+    <meta property="og:url" content="https://contas-a-pagar-nsti.onrender.com/contas/<%= userId %>/<%= encodeURIComponent(nome) %>" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://contas-a-pagar-nsti.onrender.com/icons/icon-512x512.png" />
     <meta property="og:image:width" content="512" />
@@ -41,11 +41,11 @@
             <p class="tp-mes-label"><%= mesAnoCapitalizado %></p>
         </div>
         <nav class="tp-nav">
-            <a href="/contas/<%= encodeURIComponent(nome) %>?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="tp-nav-btn">
+            <a href="/contas/<%= userId %>/<%= encodeURIComponent(nome) %>?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="tp-nav-btn">
                 <span class="material-icons">chevron_left</span> Anterior
             </a>
-            <a href="/contas/<%= encodeURIComponent(nome) %>" class="tp-nav-btn tp-nav-atual">Mês Atual</a>
-            <a href="/contas/<%= encodeURIComponent(nome) %>?month=<%= nav.prox.month %>&year=<%= nav.prox.year %>" class="tp-nav-btn">
+            <a href="/contas/<%= userId %>/<%= encodeURIComponent(nome) %>" class="tp-nav-btn tp-nav-atual">Mês Atual</a>
+            <a href="/contas/<%= userId %>/<%= encodeURIComponent(nome) %>?month=<%= nav.prox.month %>&year=<%= nav.prox.year %>" class="tp-nav-btn">
                 Próximo <span class="material-icons">chevron_right</span>
             </a>
         </nav>
