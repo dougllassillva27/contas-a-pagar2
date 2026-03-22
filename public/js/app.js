@@ -1239,6 +1239,7 @@ document.getElementById('btnConfirmarExclusao').onclick = async () => {
  * Inicia o fluxo de compartilhamento do link público
  */
 function compartilharLinkTerceiro() {
+  fecharMenuContexto();
   const nome = pessoaSelecionadaContexto;
   if (!nome || nome === 'ULTIMAS') return;
 
