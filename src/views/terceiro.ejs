@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Contas de <%= nome %> — <%= nav.atual.dateObj.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }) %></title>
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="stylesheet" href="/css/terceiro.css?v=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="tp-header">
+        <div class="tp-header-info">
+            <h1 class="tp-titulo">Contas de <span class="tp-nome-destaque"><%= nome %></span></h1>
+            <p class="tp-mes-label"><%= nav.atual.dateObj.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }) %></p>
+        </div>
+        <nav class="tp-nav">
+            <a href="/contas/<%= encodeURIComponent(nome) %>?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="tp-nav-btn">
+                <span class="material-icons">chevron_left</span> Anterior
+            </a>
+            <a href="/contas/<%= encodeURIComponent(nome) %>" class="tp-nav-btn tp-nav-atual">Mês Atual</a>
+            <a href="/contas/<%= encodeURIComponent(nome) %>?month=<%= nav.prox.month %>&year=<%= nav.prox.year %>" class="tp-nav-btn">
+                Próximo <span class="material-icons">chevron_right</span>
+            </a>
+        </nav>
+    </header>
+
+    <% if (!temDados) { %>
+        <!-- ===== SEM DADOS ===== -->
+        <div class="tp-vazio">
+            <span class="material-icons tp-vazio-icon">inbox</span>
+            <h2>Nenhuma conta encontrada</h2>
+            <p>Não há lançamentos para <strong><%= nome %></strong> neste mês.</p>
+        </div>
+    <% } else { %>
+
+        <!-- ===== CARDS DE TOTAIS ===== -->
+        <section class="tp-cards">
+            <div class="tp-card">
+                <span class="material-icons tp-card-icon" style="color: var(--red);">receipt_long</span>
+                <small>Contas Fixas</small>
+                <p class="tp-card-valor vermelho">R$ <%= Number(totalFixas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            </div>
+            <div class="tp-card">
+                <span class="material-icons tp-card-icon" style="color: var(--blue);">credit_card</span>
+                <small>Cartão de Crédito</small>
+                <p class="tp-card-valor azul">R$ <%= Number(totalCartao).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            </div>
+            <div class="tp-card tp-card-destaque">
+                <span class="material-icons tp-card-icon" style="color: var(--text-primary);">account_balance_wallet</span>
+                <small>Total do Mês</small>
+                <p class="tp-card-valor">R$ <%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+            </div>
+        </section>
+
+        <!-- ===== SEÇÕES DE CONTAS ===== -->
+        <div class="tp-grid">
+
+            <!-- Contas Fixas -->
+            <section class="tp-section">
+                <div class="tp-section-header">
+                    <h2><span class="material-icons" style="color: var(--red); font-size: 20px;">receipt_long</span> Contas Fixas</h2>
+                    <span class="tp-section-total vermelho">R$ <%= Number(totalFixas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                </div>
+                <% if (itensFixas.length === 0) { %>
+                    <p class="tp-sem-itens">Nenhuma conta fixa neste mês.</p>
+                <% } else { %>
+                    <table class="tp-table">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% itensFixas.forEach(item => { %>
+                            <tr>
+                                <td><%= item.descricao %></td>
+                                <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } %>
+            </section>
+
+            <!-- Cartão de Crédito -->
+            <section class="tp-section">
+                <div class="tp-section-header">
+                    <h2><span class="material-icons" style="color: var(--blue); font-size: 20px;">credit_card</span> Cartão de Crédito</h2>
+                    <span class="tp-section-total azul">R$ <%= Number(totalCartao).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                </div>
+                <% if (itensCartao.length === 0) { %>
+                    <p class="tp-sem-itens">Nenhuma conta de cartão neste mês.</p>
+                <% } else { %>
+                    <table class="tp-table">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% itensCartao.forEach(item => { %>
+                            <tr>
+                                <td>
+                                    <%= item.descricao %>
+                                    <% if(item.parcelaatual && item.totalparcelas) { %>
+                                        <small class="tp-parcela">
+                                            (<%= String(item.parcelaatual).padStart(2, '0') %>/<%= String(item.totalparcelas).padStart(2, '0') %>)
+                                        </small>
+                                    <% } %>
+                                </td>
+                                <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } %>
+            </section>
+
+        </div>
+
+    <% } %>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="tp-footer">
+        <p>Gestão Financeira &bull; contas-a-pagar</p>
+    </footer>
+
+</body>
+</html>

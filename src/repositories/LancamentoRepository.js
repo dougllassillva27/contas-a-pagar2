@@ -367,6 +367,22 @@ async function copyMonth(userId, currentMonth, currentYear) {
   }
 }
 
+// ==============================================================================
+// Portal de Terceiros — consulta pública por nome do terceiro
+// ==============================================================================
+async function getLancamentosTerceiro(nome, month, year) {
+  const query = `
+      SELECT * FROM Lancamentos 
+      WHERE NomeTerceiro = $1 
+        AND Tipo IN ('${TIPO.FIXA}', '${TIPO.CARTAO}') 
+        AND EXTRACT(MONTH FROM DataVencimento) = $2 
+        AND EXTRACT(YEAR FROM DataVencimento) = $3 
+      ORDER BY Tipo, Ordem ASC
+   `;
+  const result = await db.query(query, [nome, month, year]);
+  return result.rows;
+}
+
 module.exports = {
   getUltimosLancamentos,
   getRelatorioMensal,
@@ -377,6 +393,7 @@ module.exports = {
   getResumoPessoas,
   getDetalhesRendas,
   getDistinctTerceiros,
+  getLancamentosTerceiro,
   addLancamento,
   addLancamentosBulk, // ✅ Novo método exportado
   updateLancamento,
