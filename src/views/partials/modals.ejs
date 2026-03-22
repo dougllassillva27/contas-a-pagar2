@@ -24,7 +24,7 @@
 
 <%# ================= MODAL: CALCULAR LUZ (IFRAME) ================= %>
 <div class="modal-overlay" id="modalCalcularLuz">
-  <div class="modal-box modal-lg iframe-modal">
+  <div class="modal-box modal-lg">
     <div class="modal-header">
       <div class="modal-title-wrapper">
         <h2>Calcular Luz</h2>
@@ -32,12 +32,14 @@
       <button class="modal-close" onclick="fecharModalCalcularLuz()">&times;</button>
     </div>
     <div class="modal-scroll">
-      <iframe 
-        src="https://calcularluz.onrender.com/" 
-        title="Calcular Luz"
-        allow="fullscreen"
-        loading="lazy"
-      ></iframe>
+      <div style="flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%;">
+        <iframe 
+          src="https://calcularluz.onrender.com/" 
+          title="Calcular Luz"
+          style="flex: 1; width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px;"
+          loading="lazy"
+        ></iframe>
+      </div>
     </div>
   </div>
 </div>
