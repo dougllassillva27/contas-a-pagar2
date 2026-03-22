@@ -173,7 +173,7 @@ describe('GET /contas/:nome (Portal de Terceiros)', () => {
     const res = await request(app).get('/contas/Mae?month=1&year=2026');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('janeiro');
+    expect(res.text).toContain('Janeiro');
   });
 
   test('exibe mensagem quando terceiro não tem lançamentos', async () => {
