@@ -22,6 +22,25 @@
   </ul>
 </div>
 
+<%# ================= MODAL: CALCULAR LUZ (IFRAME) ================= %>
+<div class="modal-overlay" id="modalCalcularLuz">
+  <div class="modal-box modal-lg" style="max-width: 95%; height: 90vh;">
+    <div class="modal-header">
+      <div class="modal-title-wrapper">
+        <h2>Calcular Luz</h2>
+      </div>
+      <button class="modal-close" onclick="fecharModalCalcularLuz()">&times;</button>
+    </div>
+    <div style="flex-grow: 1; height: 100%; margin: -30px; margin-top: 0;">
+      <iframe 
+        src="https://calcularluz.onrender.com/" 
+        style="width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px;"
+        title="Calcular Luz"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
 <%# ================= MODAL: ÚLTIMAS ADIÇÕES ================= %>
 <div class="modal-overlay" id="modalUltimasContas">
   <div class="modal-box" style="max-width: 600px">
