@@ -149,3 +149,37 @@ describe('Fluxo autenticado', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 });
+
+// ==========================================================================
+// Portal de Terceiros — rota pública /contas/:nome
+// ==========================================================================
+describe('GET /contas/:nome (Portal de Terceiros)', () => {
+  test('retorna 200 e HTML (rota pública, sem redirecionamento)', async () => {
+    const res = await request(app).get('/contas/Mae');
+
+    // Deve retornar 200 (não redirecionar para login)
+    expect(res.status).toBe(200);
+    expect(res.type).toContain('html');
+  });
+
+  test('HTML contém meta noindex para evitar indexação', async () => {
+    const res = await request(app).get('/contas/Mae');
+
+    expect(res.text).toContain('noindex');
+    expect(res.text).toContain('nofollow');
+  });
+
+  test('aceita navegação por mês/ano via query params', async () => {
+    const res = await request(app).get('/contas/Mae?month=1&year=2026');
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('janeiro');
+  });
+
+  test('exibe mensagem quando terceiro não tem lançamentos', async () => {
+    const res = await request(app).get('/contas/NomeQueNaoExiste999');
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('Nenhuma conta encontrada');
+  });
+});

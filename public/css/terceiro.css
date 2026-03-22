@@ -1,0 +1,401 @@
+/* ==============================================================================
+   PORTAL DE TERCEIROS — Estilos dedicados (página pública)
+   Reutiliza o design system do app principal (dark mode, Inter font)
+   ============================================================================== */
+
+/* --- Variáveis (mesmo design system) --- */
+:root {
+  --bg-dark: #121212;
+  --bg-card: #1e1e1e;
+  --bg-input: #2c2c2c;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --blue: #3878e1;
+  --blue-hover: #2b62c0;
+  --red: #ef5350;
+  --green: #66bb6a;
+  --orange: #ffa726;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #1e1e1e; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background-color: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--blue); }
+* { scrollbar-width: thin; scrollbar-color: #333 #1e1e1e; }
+
+/* --- Reset & Base --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 30px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==============================================================================
+   HEADER
+   ============================================================================== */
+.tp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tp-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tp-titulo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.tp-nome-destaque {
+  color: var(--blue);
+}
+
+.tp-mes-label {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+/* --- Navegação mensal --- */
+.tp-nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tp-nav-btn {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tp-nav-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tp-nav-btn .material-icons {
+  font-size: 18px;
+}
+
+.tp-nav-atual {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+.tp-nav-atual:hover {
+  background: rgba(56, 120, 225, 0.1);
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+/* ==============================================================================
+   ESTADO VAZIO
+   ============================================================================== */
+.tp-vazio {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.tp-vazio-icon {
+  font-size: 64px;
+  opacity: 0.3;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.tp-vazio h2 {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.tp-vazio p {
+  font-size: 0.95rem;
+}
+
+/* ==============================================================================
+   CARDS DE TOTAIS
+   ============================================================================== */
+.tp-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.tp-card {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.tp-card:hover {
+  transform: translateY(-3px);
+}
+
+.tp-card-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.tp-card small {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.tp-card-valor {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-top: 8px;
+  white-space: nowrap;
+}
+
+.tp-card-destaque {
+  background: linear-gradient(135deg, rgba(56, 120, 225, 0.15), rgba(56, 120, 225, 0.05));
+  border: 1px solid rgba(56, 120, 225, 0.2);
+}
+
+/* --- Cores utilitárias --- */
+.azul { color: var(--blue); }
+.vermelho { color: var(--red); }
+.verde { color: var(--green); }
+
+/* ==============================================================================
+   GRID DAS SEÇÕES
+   ============================================================================== */
+.tp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.tp-section {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.tp-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tp-section-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tp-section-total {
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tp-sem-itens {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 30px 0;
+}
+
+/* ==============================================================================
+   TABELA DE CONTAS
+   ============================================================================== */
+.tp-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.tp-table thead th {
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.tp-table tbody tr {
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.2s;
+}
+
+.tp-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tp-table td {
+  padding: 12px;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.tp-table td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.tp-table td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.text-right {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.tp-parcela {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-left: 4px;
+}
+
+/* ==============================================================================
+   FOOTER
+   ============================================================================== */
+.tp-footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 30px 0 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tp-footer p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* ==============================================================================
+   RESPONSIVO (MOBILE)
+   ============================================================================== */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  .tp-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .tp-titulo {
+    font-size: 1.4rem;
+  }
+
+  .tp-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tp-nav-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .tp-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .tp-card {
+    padding: 18px;
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .tp-card-icon {
+    margin-bottom: 0;
+    margin-right: 12px;
+    font-size: 24px;
+  }
+
+  .tp-card small {
+    font-size: 0.7rem;
+  }
+
+  .tp-card-valor {
+    font-size: 1.4rem;
+    margin-top: 0;
+  }
+
+  .tp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tp-table td {
+    padding: 10px 8px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tp-titulo {
+    font-size: 1.2rem;
+  }
+
+  .tp-card-valor {
+    font-size: 1.2rem;
+  }
+
+  .tp-nav-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}

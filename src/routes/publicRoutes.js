@@ -67,5 +67,63 @@ module.exports = function (repo, SENHA_MESTRA) {
     res.redirect('/login');
   });
 
+  // ============================================================================
+  // GET /contas/:nome — Portal público de terceiros
+  // Permite que terceiros visualizem suas contas sem login
+  // ============================================================================
+  router.get('/contas/:nome', async (req, res) => {
+    try {
+      const nome = decodeURIComponent(req.params.nome);
+      const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
+      const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
+
+      // Navegação mensal
+      const dataAtual = new Date(year, month - 1, 1);
+      const dataAnterior = new Date(year, month - 2, 1);
+      const dataProxima = new Date(year, month, 1);
+
+      const nav = {
+        atual: { month, year, dateObj: dataAtual },
+        ant: { month: dataAnterior.getMonth() + 1, year: dataAnterior.getFullYear() },
+        prox: { month: dataProxima.getMonth() + 1, year: dataProxima.getFullYear() },
+      };
+
+      // Busca lançamentos do terceiro
+      const lancamentos = await repo.getLancamentosTerceiro(nome, month, year);
+
+      // Agrupa por tipo
+      const itensFixas = lancamentos.filter(i => i.tipo === 'FIXA');
+      const itensCartao = lancamentos.filter(i => i.tipo === 'CARTAO');
+
+      // Calcula totais (todos os itens, independente de status)
+      const totalFixas = itensFixas.reduce((acc, i) => acc + Number(i.valor), 0);
+      const totalCartao = itensCartao.reduce((acc, i) => acc + Number(i.valor), 0);
+      const totalGeral = totalFixas + totalCartao;
+
+      res.render('terceiro', {
+        nome,
+        nav,
+        itensFixas,
+        itensCartao,
+        totalFixas,
+        totalCartao,
+        totalGeral,
+        temDados: lancamentos.length > 0,
+      });
+    } catch (err) {
+      console.error(`[PORTAL TERCEIRO] Erro ao buscar contas de ${req.params.nome}:`, err.message);
+      res.status(500).render('terceiro', {
+        nome: req.params.nome,
+        nav: { atual: { month: new Date().getMonth() + 1, year: new Date().getFullYear(), dateObj: new Date() }, ant: { month: new Date().getMonth() || 12, year: new Date().getFullYear() }, prox: { month: new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2, year: new Date().getFullYear() } },
+        itensFixas: [],
+        itensCartao: [],
+        totalFixas: 0,
+        totalCartao: 0,
+        totalGeral: 0,
+        temDados: false,
+      });
+    }
+  });
+
   return router;
 };

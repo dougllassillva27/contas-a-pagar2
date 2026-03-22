@@ -171,6 +171,27 @@ window.onclick = (e) => {
   if (e.target.classList.contains('modal-overlay') && e.target.id !== 'modalLoading') fecharModais();
 };
 
+// ==============================================================================
+// ✅ COMPARTILHAR LINK DO PORTAL DE TERCEIROS
+// Copia URL pública (/contas/NomeTerceiro) para a área de transferência
+// ==============================================================================
+function compartilharLinkTerceiro() {
+  fecharMenuContexto();
+  const nome = pessoaSelecionadaContexto;
+  if (!nome || nome === 'ULTIMAS') return;
+
+  const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => mostrarAviso('Link copiado!', url))
+      .catch(() => mostrarAviso('Link do Portal', url));
+  } else {
+    // Fallback para navegadores sem clipboard API
+    mostrarAviso('Link do Portal', url);
+  }
+}
+
 // --- AÇÕES EM LOTE ---
 async function executarAcaoEmLotePessoa(novoStatus) {
   fecharMenuContexto();

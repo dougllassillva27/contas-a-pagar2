@@ -286,3 +286,39 @@ describe('copyMonth', () => {
     expect(mockClient.release).toHaveBeenCalled();
   });
 });
+
+// ==========================================================================
+// getLancamentosTerceiro — Portal público de terceiros
+// ==========================================================================
+describe('getLancamentosTerceiro', () => {
+  test('busca lançamentos pelo nome do terceiro, mês e ano', async () => {
+    const mockRows = [
+      { id: 1, descricao: 'Internet', valor: 120, tipo: 'FIXA', nometerceiro: 'Mae' },
+      { id: 2, descricao: 'Netflix', valor: 55.9, tipo: 'CARTAO', nometerceiro: 'Mae' },
+    ];
+    db.query.mockResolvedValue({ rows: mockRows });
+
+    const result = await lancamentoRepo.getLancamentosTerceiro('Mae', 3, 2026);
+
+    expect(result).toEqual(mockRows);
+    expect(db.query).toHaveBeenCalledTimes(1);
+
+    // Verifica os parâmetros da query
+    const [query, params] = db.query.mock.calls[0];
+    expect(params).toEqual(['Mae', 3, 2026]);
+    expect(query).toContain('NomeTerceiro');
+    expect(query).toContain('FIXA');
+    expect(query).toContain('CARTAO');
+    // Não deve incluir RENDA
+    expect(query).not.toContain('RENDA');
+  });
+
+  test('retorna array vazio se terceiro não tem lançamentos', async () => {
+    db.query.mockResolvedValue({ rows: [] });
+
+    const result = await lancamentoRepo.getLancamentosTerceiro('Inexistente', 1, 2026);
+
+    expect(result).toEqual([]);
+    expect(db.query).toHaveBeenCalledTimes(1);
+  });
+});
