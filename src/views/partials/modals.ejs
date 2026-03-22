@@ -1,6 +1,11 @@
 <%# ================= MENU DE CONTEXTO ================= %>
 <div id="customContextMenu" class="context-menu" style="display: none">
   <ul>
+    <li onclick="compartilharLinkTerceiro()">
+      <span class="material-icons" style="color: var(--blue)">share</span>
+      Compartilhar link
+    </li>
+    <li class="menu-divider"></li>
     <li onclick="executarAcaoEmLotePessoa('PAGO')">
       <span class="material-icons" style="color: var(--verde)">check_circle</span>
       Marcar todas como Pagas
