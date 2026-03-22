@@ -1,57 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Login - Gestão Financeira</title>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2"/> 
-  <link rel="stylesheet" href="/css/style.css?v=2">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Gestão Financeira</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2"/> 
+    <link rel="stylesheet" href="/css/style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="login-body">
 
-  <div class="login-container">
-    <div class="login-card">
-      
-      <div class="login-icon">
-        <span class="material-icons">lock</span>
-      </div>
+    <div class="login-container">
+        <div class="login-card">
+            
+            <div class="login-icon">
+                <span class="material-icons">lock</span>
+            </div>
 
-      <h2>Bem-vindo de volta</h2>
-      <span class="login-subtitle">Gerencie suas finanças com segurança</span>
+            <h2>Bem-vindo de volta</h2>
+            <span class="login-subtitle">Gerencie suas finanças com segurança</span>
 
-      <% if (error) { %>
-      <div class="error-msg">
-        <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">error</span>
-        <%= error %>
-      </div>
-      <% } %>
+            <% if (error) { %>
+            <div class="error-msg">
+                <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">error</span>
+                <%= error %>
+            </div>
+            <% } %>
 
-      <form action="/login" method="POST" class="login-form" id="loginForm">
-        <div class="form-group">
-          <label for="password">Digite sua senha de acesso</label>
-          <input type="password" name="password" id="password" class="login-input" placeholder="••••••••" required autofocus>
+            <form action="/login" method="POST" class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="password">Digite sua senha de acesso</label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="password" 
+                        class="login-input" 
+                        placeholder="••••••••" 
+                        required 
+                        autofocus
+                        autocomplete="current-password"
+                    >
+                </div>
+                
+                <!-- Checkbox Lembrar de Mim -->
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin: 15px 0;">
+                    <input 
+                        type="checkbox" 
+                        name="lembrar" 
+                        id="lembrar" 
+                        value="on"
+                        style="width: 18px; height: 18px; accent-color: var(--blue);"
+                    >
+                    <label for="lembrar" style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; cursor: pointer;">
+                        Lembrar de mim por 90 dias
+                    </label>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <span class="material-icons" style="font-size: 18px; margin-right: 8px;">login</span>
+                    Entrar no Sistema
+                </button>
+            </form>
+
+            <div class="login-footer">
+                &copy; <%= new Date().getFullYear() %> Gestão Financeira • Acesso Seguro
+            </div>
         </div>
-        
-        <!-- ✅ RESTAURADO: Checkbox "Lembrar de mim" -->
-        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-          <input type="checkbox" name="lembrar" id="lembrar" style="width: 18px; height: 18px; accent-color: var(--blue);">
-          <label for="lembrar" style="margin: 0; color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">
-            Lembrar de mim por 90 dias
-          </label>
-        </div>
-
-        <button type="submit" class="login-btn">Entrar no Sistema</button>
-      </form>
-
-      <div class="login-footer">
-        &copy; <%= new Date().getFullYear() %> Gestão Financeira • Acesso Seguro
-      </div>
     </div>
-  </div>
 
-  <!-- ✅ NOVO: Script de gerenciamento de token -->
-  <script src="/js/login.js?v=2"></script>
+    <script>
+        // Log de debug no console do navegador
+        console.log('[LOGIN PAGE] Loaded');
+        console.log('[LOGIN PAGE] Form action:', document.getElementById('loginForm')?.action);
+        
+        // Monitora submit do form
+        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+            const password = document.getElementById('password')?.value;
+            const lembrar = document.getElementById('lembrar')?.checked;
+            
+            console.log('[LOGIN FORM] Submit triggered');
+            console.log('[LOGIN FORM] Password length:', password?.length);
+            console.log('[LOGIN FORM] Remember me:', lembrar);
+            
+            // Não previne o submit - deixa o form fazer POST tradicional
+        });
+    </script>
 </body>
 </html>

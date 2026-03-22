@@ -1,6 +1,6 @@
 // ==============================================================================
 // ✅ app.js — Ponto de entrada (modularizado)
-// Apenas configuração do Express, sessão e montagem dos módulos...
+// Com logs avançados para debug em produção
 // ==============================================================================
 
 // CARREGA VARIÁVEIS DE AMBIENTE
@@ -20,7 +20,6 @@ const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const telegramRoutes = require('../botTelegram/telegramRoutes');
-const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,9 +44,30 @@ app.use(
     secret: process.env.SESSION_SECRET || 'segredo_sessao_inseguro',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, // Em HTTPS, o ideal é secure:true
+    cookie: { 
+      secure: false, // Em HTTPS, o ideal é secure:true
+      maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    },
   })
 );
+
+// ==============================================================================
+// Middleware de Log de Sessão
+// ==============================================================================
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const sessionData = req.session.user ? `USER:${req.session.user.nome}` : 'GUEST';
+  
+  // Log apenas para rotas importantes (evita poluição com estáticos)
+  const skipPaths = ['.css', '.js', '.ico', '.png', '.jpg', '.svg', '.woff'];
+  const shouldSkip = skipPaths.some(ext => req.path.endsWith(ext));
+  
+  if (!shouldSkip) {
+    console.log(`[${timestamp}] [SESSION] ${req.method} ${req.originalUrl} - ${sessionData}`);
+  }
+  
+  next();
+});
 
 // ==============================================================================
 // Rotas de Infraestrutura (sem autenticação)
@@ -55,13 +75,14 @@ app.use(
 
 // ==============================================================================
 // Health Check — usado para monitoramento e keep-alive
-// Verifica aplicação + banco e retorna informações básicas do serviço
 // ==============================================================================
 
 app.get('/health', async (req, res) => {
-  const inicio = Date.now(); // usado para medir latência
+  const inicio = Date.now();
+  const timestamp = new Date().toISOString();
+  
+  console.log(`[${timestamp}] [HEALTH] Health check initiated`);
 
-  // Calcula uptime da aplicação
   const uptimeSegundos = process.uptime();
   const dias = Math.floor(uptimeSegundos / 86400);
   const horas = Math.floor((uptimeSegundos % 86400) / 3600);
@@ -69,14 +90,13 @@ app.get('/health', async (req, res) => {
   const segundos = Math.floor(uptimeSegundos % 60);
 
   const uptimeFormatado = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
-
   const serviceName = 'contas-a-pagar';
 
   try {
-    // Verifica conectividade com o banco
     await db.query('SELECT 1');
-
     const latencyMs = Date.now() - inicio;
+
+    console.log(`[${timestamp}] [HEALTH] ✅ OK - DB: online, Latency: ${latencyMs}ms`);
 
     return res.status(200).json({
       service: serviceName,
@@ -89,6 +109,8 @@ app.get('/health', async (req, res) => {
     });
   } catch (erro) {
     const latencyMs = Date.now() - inicio;
+    
+    console.error(`[${timestamp}] [HEALTH] ❌ ERROR - DB: offline, Error: ${erro.message}`);
 
     return res.status(503).json({
       service: serviceName,
@@ -103,16 +125,14 @@ app.get('/health', async (req, res) => {
 });
 
 // ==============================================================================
-// Ping simples — usado para keep-alive e monitoramento leve
-// Diferente do /health, esta rota NÃO consulta o banco.
-// Objetivo: responder rápido com HTTP 200 para manter o Render ativo.
+// Ping simples — usado para keep-alive
 // ==============================================================================
 
 app.get('/ping', (req, res) => {
   return res.status(200).json({
-    status: 'ok', // indica resposta bem-sucedida
-    service: 'contas-a-pagar', // identifica o serviço monitorado
-    timestamp: new Date().toISOString(), // momento exato da resposta
+    status: 'ok',
+    service: 'contas-a-pagar',
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -120,16 +140,13 @@ app.get('/ping', (req, res) => {
 // Montagem de Rotas
 // ==============================================================================
 
-// 1. Integração Android (API com token) — antes do authMiddleware
+// 1. Integração Android (API com token)
 app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
 
-// 1.5 Bot Telegram (webhook) — antes do authMiddleware
+// 1.5 Bot Telegram (webhook)
 app.use(telegramRoutes(repo));
 
-// 1.6 Rotas de Autenticação Persistente — antes do authMiddleware
-app.use(authRoutes(repo));
-
-// 2. Rotas públicas (login/logout) — antes do authMiddleware
+// 2. Rotas públicas (login/logout)
 app.use(publicRoutes(repo, SENHA_MESTRA));
 
 // 3. Proteção de rotas web
@@ -139,12 +156,33 @@ app.use(authMiddleware);
 app.use(apiRoutes(repo));
 
 // ==============================================================================
-// Iniciar Servidor (apenas quando rodado diretamente, não em testes)
+// Handler de Erros Global
+// ==============================================================================
+app.use((err, req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.error(`[${timestamp}] [ERROR] ${err.message}`);
+  console.error(`[${timestamp}] [ERROR] Stack: ${err.stack}`);
+  console.error(`[${timestamp}] [ERROR] Path: ${req.originalUrl}`);
+  console.error(`[${timestamp}] [ERROR] Method: ${req.method}`);
+  
+  res.status(500).json({
+    error: 'Erro interno do servidor',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ==============================================================================
+// Iniciar Servidor
 // ==============================================================================
 
 if (require.main === module) {
   initDatabase().then(() => {
-    app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+    console.log(`[${new Date().toISOString()}] [SERVER] ========================================`);
+    console.log(`[${new Date().toISOString()}] [SERVER] 🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`[${new Date().toISOString()}] [SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`[${new Date().toISOString()}] [SERVER] ========================================`);
+    
+    app.listen(PORT, () => console.log(`[${new Date().toISOString()}] [SERVER] Listening on port ${PORT}`));
   });
 }
 
