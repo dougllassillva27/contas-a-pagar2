@@ -1,13 +1,16 @@
 // ==============================================================================
-// 📋 Logger de Requisições — AVANÇADO
-// Com timestamps e detalhes para debug em produção
+// 📋 Logger de Requisições
+// Registra método, URL, status e tempo de resposta.
+// Útil para diagnosticar problemas em produção (Render).
 // ==============================================================================
 
 /**
- * Middleware de logging detalhado.
- * Loga cada requisição ao finalizar, com timestamp ISO e detalhes.
- * 
- * Formato: [TIMESTAMP] [METHOD] PATH - STATUS - DURATIONms - USER
+ * Middleware de logging simples.
+ * Loga cada requisição ao finalizar, no formato:
+ *   GET /api/rendas 200 12ms
+ *
+ * ⚠️ IMPORTANTE: NÃO loga corpo da requisição para evitar expor senhas
+ * Ignora arquivos estáticos (css, js, ico) para não poluir o log.
  */
 function requestLogger(req, res, next) {
   // Não loga arquivos estáticos
@@ -16,27 +19,15 @@ function requestLogger(req, res, next) {
     return next();
   }
 
-  const startTime = Date.now();
-  const timestamp = new Date().toISOString();
-  const method = req.method;
-  const path = req.originalUrl;
-  const ip = req.ip || req.connection.remoteAddress || 'N/A';
+  const start = Date.now();
 
   res.on('finish', () => {
-    const duration = Date.now() - startTime;
+    const duration = Date.now() - start;
     const status = res.statusCode;
-    const user = req.session?.user?.nome || 'GUEST';
-    
-    // Ícone baseado no status
     const icon = status >= 500 ? '❌' : status >= 400 ? '⚠️' : '✅';
     
-    // Log colorido (funciona no Render)
-    console.log(`[${timestamp}] [${method}] ${path} - ${status} - ${duration}ms - User: ${user} - IP: ${ip}`);
-    
-    // Log adicional para erros
-    if (status >= 400) {
-      console.warn(`[${timestamp}] [WARNING] ${method} ${path} returned ${status}`);
-    }
+    // ✅ LOG SEGURO: Não inclui corpo da requisição (pode conter senhas)
+    console.log(`${icon} ${req.method} ${req.originalUrl} ${status} ${duration}ms`);
   });
 
   next();
