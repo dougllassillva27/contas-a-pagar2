@@ -65,19 +65,16 @@ function ocultarLoading() {
   document.getElementById('modalLoading').classList.remove('active');
 }
 
-// --- FUNÇÕES DO MODAL CALCULAR LUZ (IFRAME) ---
+// ==============================================================================
+// ✅ FUNÇÕES DO MODAL CALCULAR LUZ (IFRAME)
+// ==============================================================================
+
 function abrirModalCalcularLuz() {
   registerModalOpen();
   document.getElementById('modalCalcularLuz').classList.add('active');
   
   // Prevenir scroll do body quando modal de iframe estiver aberto
   document.body.style.overflow = 'hidden';
-  
-  // Forçar recarregamento do iframe ao abrir (opcional, para garantir estado fresco)
-  const iframe = document.querySelector('#modalCalcularLuz iframe');
-  if (iframe) {
-    iframe.src = iframe.src;
-  }
 }
 
 function fecharModalCalcularLuz() {
