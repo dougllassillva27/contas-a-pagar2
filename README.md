@@ -60,6 +60,26 @@ PostgreSQL e arquitetura cloud.
 
 ---
 
+### 🌐 Portal de Terceiros (Acesso Público)
+
+- **URL direta por pessoa** — cada terceiro acessa suas contas via
+  link próprio (ex: `/contas/Mae`)
+- **Sem necessidade de login** — acesso público e read-only
+- **Contas Fixas e Cartão** — exibe ambos os tipos com totais
+  separados e total geral do mês
+- **Navegação entre meses** — botões Anterior / Próximo para
+  consultar histórico
+- **Compartilhar link** — no dashboard admin, clique direito no
+  nome do terceiro → "Compartilhar link" copia a URL para o
+  clipboard
+- **SEO protegido** — meta tags `noindex, nofollow` impedem
+  indexação por buscadores
+- **Design consistente** — mesma identidade visual dark mode do
+  sistema principal
+- **Mobile-first** — totalmente responsivo
+
+---
+
 ### ✨ UX/UI (Experiência do Usuário)
 
 - **Menu de Contexto Híbrido**
@@ -227,7 +247,7 @@ O projeto possui um endpoint de health check pensado para:
 
 ## 🧪 Testes Automatizados
 
-O projeto possui **77 testes** distribuídos em **6 suítes**, abrangendo
+O projeto possui **83 testes** distribuídos em **6 suítes**, abrangendo
 testes unitários e de integração:
 
 ```txt
@@ -524,7 +544,9 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   └── workflows/
 │       └── keep-render-awake.yml          # Keep alive inteligente via GitHub Actions
 ├── public/
-│   ├── css/style.css                      # Design system (dark mode)
+│   ├── css/
+│   │   ├── style.css                      # Design system (dark mode)
+│   │   └── terceiro.css                   # Estilos do Portal de Terceiros
 │   ├── js/app.js                          # JavaScript do dashboard
 │   └── favicon.ico
 ├── scripts/
@@ -544,23 +566,24 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   ├── repositories/
 │   │   ├── FinanceiroRepository.js        # Facade (re-exporta todos abaixo)
 │   │   ├── UsuarioRepository.js           # Login, busca de usuários
-│   │   ├── LancamentoRepository.js        # CRUD de lançamentos
+│   │   ├── LancamentoRepository.js        # CRUD de lançamentos + portal
 │   │   ├── AnotacaoRepository.js          # Bloco de notas
 │   │   ├── FaturaManualRepository.js      # Fatura manual (UPSERT)
 │   │   ├── OrdemCardsRepository.js        # Ordem dos cards do dashboard
 │   │   └── BackupRepository.js            # Exportação JSON completa
 │   ├── routes/
-│   │   ├── publicRoutes.js                # Login / Logout
+│   │   ├── publicRoutes.js                # Login / Logout / Portal de Terceiros
 │   │   ├── integrationRoutes.js           # API Android
 │   │   └── apiRoutes.js                   # Dashboard + CRUD + APIs
 │   └── views/
 │       ├── index.ejs                      # Dashboard principal
 │       ├── login.ejs                      # Tela de login
+│       ├── terceiro.ejs                   # Portal público de terceiros
 │       ├── relatorio.ejs                  # Extrato para impressão
 │       └── partials/
 │           ├── head.ejs                   # Meta tags, CSS, fonts
 │           ├── header.ejs                 # Barra superior + navegação
-│           └── modals.ejs                 # Todos os modais
+│           └── modals.ejs                 # Modais + menu de contexto
 ├── botTelegram/
 │   ├── conversationManager.js             # Máquina de estados da conversa
 │   ├── messageParser.js                   # Parser formato linha única (legado)
@@ -610,6 +633,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 - No Render free, o sistema pode hibernar fora da janela de keep-alive
 - Monitore a saúde da aplicação via endpoint `/health`
 - Consulte os logs do GitHub Actions para entender se o ping foi executado ou ignorado
+- **Portal de Terceiros**: envie o link `/contas/NomeDaPessoa` para que
+  terceiros acompanhem suas contas diretamente, sem precisar de prints
 
 ---
 
