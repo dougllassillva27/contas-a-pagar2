@@ -18,12 +18,59 @@ function authMiddleware(req, res, next) {
 }
 
 /**
+ * Middleware de persistência de login (Lembrar de mim).
+ * Restaura a sessão do usuário se houver um token válido no cookie.
+ */
+function createPersistAuthMiddleware(repo) {
+  return async (req, res, next) => {
+    // Se já estiver autenticado na sessão, apenas prossegue
+    if (req.session && req.session.user) {
+      return next();
+    }
+
+    const token = req.cookies?.remember_me;
+
+    if (token) {
+      try {
+        const tokenData = await repo.validarToken(token);
+        
+        if (tokenData) {
+          // Restaura a sessão
+          req.session.user = { 
+            id: tokenData.id, 
+            nome: tokenData.nome, 
+            login: tokenData.login 
+          };
+          
+          console.log(`[PERSIST-AUTH] ✅ Sessão restaurada para: ${tokenData.nome}`);
+          
+          // Opcional: renovar o token para mais 90 dias
+          const novoToken = await repo.renovarToken(token, 90);
+          if (novoToken) {
+            res.cookie('remember_me', novoToken.token, {
+              maxAge: 90 * 24 * 60 * 60 * 1000,
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax'
+            });
+          }
+        } else {
+          // Token inválido ou expirado, limpa o cookie
+          console.log(`[PERSIST-AUTH] ⚠️ Token inválido/expirado detectado. Limpando cookie.`);
+          res.clearCookie('remember_me');
+        }
+      } catch (err) {
+        console.error(`[PERSIST-AUTH] ❌ Erro ao validar token: ${err.message}`);
+      }
+    }
+
+    next();
+  };
+}
+
+/**
  * Autenticação simples para API via header:
  * x-api-key: <API_TOKEN>
- *
- * Segurança:
- * - Não é o ideal para sistemas críticos, mas é OK para integração pessoal.
- * - Garanta que o token seja forte no .env
  */
 function createApiAuth(API_TOKEN) {
   return (req, res, next) => {
@@ -42,5 +89,6 @@ function createApiAuth(API_TOKEN) {
 
 module.exports = {
   authMiddleware,
+  createPersistAuthMiddleware,
   createApiAuth,
 };
