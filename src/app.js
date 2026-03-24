@@ -14,7 +14,7 @@ const path = require('path');
 // Módulos internos
 const db = require('./config/db');
 const repo = require('./repositories/FinanceiroRepository');
-const { authMiddleware, createPersistAuthMiddleware, createApiAuth } = require('./middlewares/auth');
+const { authMiddleware, createApiAuth } = require('./middlewares/auth');
 const requestLogger = require('./middlewares/logger');
 const initDatabase = require('./helpers/initDatabase');
 const publicRoutes = require('./routes/publicRoutes');
@@ -116,9 +116,6 @@ app.use(telegramRoutes(repo));
 app.use(publicRoutes(repo, SENHA_MESTRA));
 
 // 3. Middlewares de Autenticação
-// ✅ Novo middleware de persistência: tenta restaurar sessão via cookie ANTES de exigir login
-app.use(createPersistAuthMiddleware(repo));
-
 // ✅ Proteção principal: exige que exista user na session (restaurado ou logado agora)
 app.use(authMiddleware);
 
