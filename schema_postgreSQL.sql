@@ -43,8 +43,6 @@ CREATE TABLE IF NOT EXISTS Anotacoes (
 -- Insere anotações iniciais
 INSERT INTO Anotacoes (UsuarioId, Mes, Ano, Conteudo) VALUES (1, 1, 2025, ''), (2, 1, 2025, '')
 ON CONFLICT DO NOTHING; 
--- (Nota: Postgres não tem conflito direto em INSERT sem chave, 
--- se rodar varias vezes pode duplicar, ideal limpar antes se for recriar)
 
 -- 4. Tabela OrdemCards
 CREATE TABLE IF NOT EXISTS OrdemCards (
@@ -70,17 +68,34 @@ CREATE TABLE IF NOT EXISTS FaturaManual (
 CREATE TABLE IF NOT EXISTS TokensPersistentes (
     Id SERIAL PRIMARY KEY,
     UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
-    Token VARCHAR(64) NOT NULL UNIQUE,
-    ExpiresAt TIMESTAMP NOT NULL,
-    Revogado BOOLEAN DEFAULT false,
+    Token VARCHAR(255) NOT NULL UNIQUE,
+    DataExpiracao TIMESTAMP NOT NULL,
     CriadoEm TIMESTAMP DEFAULT NOW()
 );
+
+-- ==============================================================================
+-- MIGRATION: Ajuste caso a tabela já exista com estrutura antiga (ExpiresAt)
+-- ==============================================================================
+DO $$
+BEGIN
+    ALTER TABLE TokensPersistentes ALTER COLUMN Token TYPE VARCHAR(255);
+    ALTER TABLE TokensPersistentes ADD COLUMN IF NOT EXISTS DataExpiracao TIMESTAMP;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tokenspersistentes' AND column_name='expiresat') THEN
+        EXECUTE 'UPDATE TokensPersistentes SET DataExpiracao = ExpiresAt WHERE DataExpiracao IS NULL';
+        ALTER TABLE TokensPersistentes DROP COLUMN ExpiresAt;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tokenspersistentes' AND column_name='revogado') THEN
+        ALTER TABLE TokensPersistentes DROP COLUMN Revogado;
+    END IF;
+END $$;
 
 -- Índice para busca rápida por token
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token ON TokensPersistentes(Token);
 
 -- Índice para limpeza de tokens expirados
-CREATE INDEX IF NOT EXISTS idx_tokens_expires ON TokensPersistentes(ExpiresAt);
+CREATE INDEX IF NOT EXISTS idx_tokens_expires ON TokensPersistentes(DataExpiracao);
 
 -- Limpeza automática de tokens expirados (opcional - rodar periodicamente)
--- DELETE FROM TokensPersistentes WHERE ExpiresAt < NOW() OR Revogado = true;
+-- DELETE FROM TokensPersistentes WHERE DataExpiracao < NOW();
