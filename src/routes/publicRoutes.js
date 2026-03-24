@@ -13,7 +13,7 @@ module.exports = function (repo, SENHA_MESTRA) {
   // GET /login — Renderiza página de login
   // ============================================================================
   router.get('/login', (req, res) => {
-    // Se já estiver autenticado, redireciona para dashboard
+    // Se já estiver autenticado via sessão ou persistência, redireciona
     if (req.session.user) {
       return res.redirect('/');
     }
@@ -25,6 +25,7 @@ module.exports = function (repo, SENHA_MESTRA) {
   // ============================================================================
   router.post('/login', async (req, res) => {
     const passwordDigitada = (req.body.password || '').trim();
+    const lembrar = (req.body.lembrar === 'on');
 
     // ✅ LOG SEGURO: Não loga a senha, apenas o evento de tentativa
     console.log(`[LOGIN] Tentativa de login - IP: ${req.ip || req.connection.remoteAddress || 'N/A'}`);
@@ -36,7 +37,26 @@ module.exports = function (repo, SENHA_MESTRA) {
           req.session.user = { id: user.id, nome: user.nome, login: user.login };
           
           // ✅ LOG SEGURO: Confirma sucesso sem expor dados sensíveis
-          console.log(`[LOGIN] ✅ Sucesso - Usuário: ${user.nome}`);
+          console.log(`[LOGIN] ✅ Sucesso - Usuário: ${user.nome} (Lembrar: ${lembrar})`);
+
+          // ✅ PERSISTÊNCIA: Gera o token se solicitado
+          if (lembrar) {
+            try {
+              const novoToken = await repo.criarToken(user.id, 90);
+              const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 dias
+
+              res.cookie('remember_me', novoToken.token, {
+                maxAge,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax'
+              });
+              
+              console.log(`[LOGIN] 🔑 Token persistente gerado para usuário ${user.id}`);
+            } catch (errToken) {
+              console.error(`[LOGIN] ❌ Erro ao gerar token: ${errToken.message}`);
+            }
+          }
           
           return res.redirect('/');
         }
@@ -59,9 +79,21 @@ module.exports = function (repo, SENHA_MESTRA) {
   // ============================================================================
   // GET /logout — Encerra sessão
   // ============================================================================
-  router.get('/logout', (req, res) => {
+  router.get('/logout', async (req, res) => {
     const userName = req.session.user?.nome || 'Desconhecido';
+    const token = req.cookies?.remember_me;
+
     console.log(`[LOGOUT] Usuário: ${userName}`);
+
+    try {
+      if (token) {
+        await repo.revogarToken(token);
+        res.clearCookie('remember_me');
+        console.log(`[LOGOUT] 🔑 Token persistente revogado`);
+      }
+    } catch (err) {
+      console.error(`[LOGOUT] ❌ Erro ao revogar token persistente: ${err.message}`);
+    }
     
     req.session.destroy();
     res.redirect('/login');
