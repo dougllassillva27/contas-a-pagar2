@@ -31,3 +31,7 @@ Arquivo de log de modificações e controle de progresso.
 ### [2026-03-24] Backend: Correção de Crash no Deploy (Render)
 - Removida chamada obsoleta para `createPersistAuthMiddleware` no `app.js`.
 - Fluxo de middleware consolidado diretamente no `authMiddleware` para evitar erro de inicialização `is not a function`.
+
+### [2026-03-24] Backend: Homologação e Limpeza da Autenticação Persistente
+- Validação bem-sucedida da reidratação de sessões em ambiente de produção (Render).
+- Remoção de verbosidade de logs de diagnóstico (`[AUTH-DEBUG]`) no `authMiddleware` para manter a limpeza dos logs operacionais e redução de I/O em produção.
