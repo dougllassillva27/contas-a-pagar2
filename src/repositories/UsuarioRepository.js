@@ -3,6 +3,7 @@
 // ==============================================================================
 
 const db = require('../config/db');
+const crypto = require('crypto');
 
 async function obterUsuarioPorLogin(login) {
   try {
@@ -24,4 +25,33 @@ async function getUsuarioById(id) {
   }
 }
 
-module.exports = { obterUsuarioPorLogin, getUsuarioById };
+async function criarToken(usuarioId, diasValidade = 90) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const dataExpiracao = new Date();
+  dataExpiracao.setDate(dataExpiracao.getDate() + diasValidade);
+
+  try {
+    const query = `
+      INSERT INTO TokensPersistentes (UsuarioId, Token, DataExpiracao)
+      VALUES ($1, $2, $3)
+      RETURNING Token as token
+    `;
+    const result = await db.query(query, [usuarioId, token, dataExpiracao]);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Erro ao criar token:', err.message);
+    throw err;
+  }
+}
+
+async function revogarToken(token) {
+  try {
+    await db.query('DELETE FROM TokensPersistentes WHERE Token = $1', [token]);
+    return true;
+  } catch (err) {
+    console.error('Erro ao revogar token:', err.message);
+    throw err;
+  }
+}
+
+module.exports = { obterUsuarioPorLogin, getUsuarioById, criarToken, revogarToken };
