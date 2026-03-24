@@ -17,3 +17,8 @@ Arquivo de log de modificações e controle de progresso.
 - Criação de componente visual customizado em CSS (`style.css`), alinhado ao *Dark Mode* do design system.
 - Implementação de micro-interações de estado: *hover* dinâmico, realce na cor do texto e efeito *glow* neon ao marcar a opção.
 - Melhoria no espaçamento e respiro em relação ao botão de ação principal.
+
+### [2026-03-24] Banco de Dados: Migração da Tabela TokensPersistentes
+- Ajuste e correção da estrutura da tabela `TokensPersistentes` no banco PostgreSQL (Neon DB).
+- Criação de script de migração inteligente no `schema_postgreSQL.sql` para alterar `ExpiresAt` para `DataExpiracao` e ajustar o tamanho do `Token` para 255 caracteres sem perder dados.
+- Atualização do `src/helpers/initDatabase.js` para padronizar a criação da tabela durante o startup do sistema e evitar recriações conflitantes.

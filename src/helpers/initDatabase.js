@@ -77,14 +77,13 @@ async function initDatabase() {
       ON Anotacoes (UsuarioId, Mes, Ano)
      `);
 
-    // 5. Tabela TokensPersistentes (Lembrar de mim)
+    // 5. Tabela TokensPersistentes (Lembrar de mim) - Ajustada com nomes corretos
     await db.query(`
       CREATE TABLE IF NOT EXISTS TokensPersistentes (
           Id SERIAL PRIMARY KEY,
           UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
-          Token VARCHAR(64) NOT NULL UNIQUE,
-          ExpiresAt TIMESTAMP NOT NULL,
-          Revogado BOOLEAN DEFAULT false,
+          Token VARCHAR(255) NOT NULL UNIQUE,
+          DataExpiracao TIMESTAMP NOT NULL,
           CriadoEm TIMESTAMP DEFAULT NOW()
       )
     `);
@@ -97,7 +96,7 @@ async function initDatabase() {
 
     await db.query(`
       CREATE INDEX IF NOT EXISTS idx_tokens_expires 
-      ON TokensPersistentes(ExpiresAt)
+      ON TokensPersistentes(DataExpiracao)
     `);
 
     console.log('✅ Database inicializado com sucesso.');
