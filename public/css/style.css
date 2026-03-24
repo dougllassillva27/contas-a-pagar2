@@ -1119,6 +1119,71 @@ input[type='checkbox'] {
 }
 
 /* ==============================================================================
+   LOGIN: CHECKBOX LEMBRAR DE MIM
+   ============================================================================== */
+.remember-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 10px 0 25px 0;
+}
+
+.custom-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hidden-checkbox {
+  display: none;
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.custom-checkbox-wrapper:hover .custom-checkbox {
+  border-color: rgba(56, 120, 225, 0.5);
+}
+
+.hidden-checkbox:checked + .custom-checkbox {
+  background-color: var(--blue);
+  border-color: var(--blue);
+  box-shadow: 0 0 12px rgba(56, 120, 225, 0.4);
+}
+
+.hidden-checkbox:checked + .custom-checkbox::after {
+  content: '';
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.remember-text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.hidden-checkbox:checked ~ .remember-text {
+  color: var(--text-primary);
+}
+
+/* ==============================================================================
    BOTÕES TOGGLE — Sim/Não para Lançamento em Massa
    ============================================================================== */
 .bulk-toggle-btn {

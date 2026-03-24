@@ -11,3 +11,9 @@ Arquivo de log de modificações e controle de progresso.
 - Atualizado `app.js` para integrar o middleware de persistência antes da proteção de rotas.
 - Ajustada lógica de Logout para revogar tokens persistentes no banco de dados e limpar cookies.
 - Adicionados logs detalhados para monitorar a restauração de sessões: `[PERSIST-AUTH] ✅ Sessão restaurada`.
+
+### [2026-03-24] UI/UX: Melhoria no Checkbox de Login
+- Refatoração da estrutura HTML do checkbox "Lembrar de mim" no `login.ejs`, removendo estilos inline em prol de classes limpas.
+- Criação de componente visual customizado em CSS (`style.css`), alinhado ao *Dark Mode* do design system.
+- Implementação de micro-interações de estado: *hover* dinâmico, realce na cor do texto e efeito *glow* neon ao marcar a opção.
+- Melhoria no espaçamento e respiro em relação ao botão de ação principal.

@@ -44,16 +44,11 @@
                 </div>
                 
                 <!-- Checkbox Lembrar de Mim -->
-                <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin: 15px 0;">
-                    <input 
-                        type="checkbox" 
-                        name="lembrar" 
-                        id="lembrar" 
-                        value="on"
-                        style="width: 18px; height: 18px; accent-color: var(--blue);"
-                    >
-                    <label for="lembrar" style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; cursor: pointer;">
-                        Lembrar de mim por 90 dias
+                <div class="remember-group">
+                    <label class="custom-checkbox-wrapper" for="lembrar">
+                        <input type="checkbox" name="lembrar" id="lembrar" value="on" class="hidden-checkbox">
+                        <div class="custom-checkbox"></div>
+                        <span class="remember-text">Lembrar de mim por 90 dias</span>
                     </label>
                 </div>
 
