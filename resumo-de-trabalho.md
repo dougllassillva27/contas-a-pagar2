@@ -27,3 +27,7 @@ Arquivo de log de modificações e controle de progresso.
 - Implementação de `buscarUsuarioPorToken` no `UsuarioRepository.js` com `JOIN` cruzado para validar segurança e data de expiração (`DataExpiracao > NOW()`).
 - Injeção de logs avançados (`[AUTH-DEBUG]`) no middleware de sessão web (`auth.js`) para monitorar o ciclo de vida e reidratação de cookies e sessions em tempo real via Render.
 - Estabelecimento de tratativas de fallback que limpam o cookie (`clearCookie`) caso seja considerado adulterado ou obsoleto no banco.
+
+### [2026-03-24] Backend: Correção de Crash no Deploy (Render)
+- Removida chamada obsoleta para `createPersistAuthMiddleware` no `app.js`.
+- Fluxo de middleware consolidado diretamente no `authMiddleware` para evitar erro de inicialização `is not a function`.
