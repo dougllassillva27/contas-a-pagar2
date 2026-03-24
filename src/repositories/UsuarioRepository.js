@@ -54,4 +54,27 @@ async function revogarToken(token) {
   }
 }
 
-module.exports = { obterUsuarioPorLogin, getUsuarioById, criarToken, revogarToken };
+// NOVA FUNÇÃO: Busca usuário pelo token para reidratar a sessão
+async function buscarUsuarioPorToken(token) {
+  try {
+    const query = `
+      SELECT u.Id as id, u.Nome as nome, u.Login as login
+      FROM Usuarios u
+      INNER JOIN TokensPersistentes t ON u.Id = t.UsuarioId
+      WHERE t.Token = $1 AND t.DataExpiracao > NOW()
+    `;
+    const result = await db.query(query, [token]);
+    return result.rows[0] || null;
+  } catch (err) {
+    console.error('[REPO] Erro ao buscar usuário por token:', err.message);
+    return null;
+  }
+}
+
+module.exports = { 
+  obterUsuarioPorLogin, 
+  getUsuarioById, 
+  criarToken, 
+  revogarToken, 
+  buscarUsuarioPorToken 
+};

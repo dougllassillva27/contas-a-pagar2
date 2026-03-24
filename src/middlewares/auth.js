@@ -1,94 +1,70 @@
 // ==============================================================================
-// 🔒 Middlewares de Autenticação
+// Middlewares de Autenticação
 // ==============================================================================
 
-/**
- * Protege as rotas web.
- * Se não tiver sessão autenticada, redireciona para /login
- */
-function authMiddleware(req, res, next) {
+const repo = require('../repositories/FinanceiroRepository');
+
+// Autenticação para rotas Web (Dashboard, Relatórios)
+async function authMiddleware(req, res, next) {
+  // LOG AVANÇADO
+  console.log(`[AUTH-DEBUG] Acesso solicitado: ${req.path}`);
+
+  // 1. Sessão tradicional ativa? (Ex: Login há menos de 24h)
   if (req.session && req.session.user) {
     return next();
   }
-  
-  // Log de acesso não autorizado (útil para debugging)
-  console.log(`[AUTH] Acesso não autorizado: ${req.method} ${req.originalUrl}`);
-  
-  res.redirect('/login');
+
+  // 2. Não tem sessão. Verifica parser de cookies
+  if (req.cookies === undefined) {
+    console.log('[AUTH-DEBUG] ❌ AVISO: req.cookies está undefined. O cookie-parser foi inicializado no app.js?');
+  }
+
+  // 3. Tenta recuperar o token persistente do navegador
+  const token = req.cookies?.remember_me;
+  console.log(`[AUTH-DEBUG] Token "remember_me" no navegador: ${token ? 'Encontrado' : 'Ausente'}`);
+
+  if (token) {
+    try {
+      console.log('[AUTH-DEBUG] 🔍 Validando token no banco de dados...');
+      const user = await repo.buscarUsuarioPorToken(token);
+
+      if (user) {
+        console.log(`[AUTH-DEBUG] ✅ Token válido! Sessão restaurada para: ${user.nome}`);
+        
+        // Reidrata a sessão
+        req.session.user = { 
+          id: user.id, 
+          nome: user.nome, 
+          login: user.login 
+        };
+        
+        return next();
+      } else {
+        console.log('[AUTH-DEBUG] ⚠️ Token expirado ou inválido. Limpando cookie.');
+        res.clearCookie('remember_me');
+      }
+    } catch (error) {
+      console.error('[AUTH-DEBUG] ❌ Erro interno ao validar token persistente:', error.message);
+    }
+  }
+
+  // 4. Bloqueio final: Sem sessão e sem token -> Login
+  console.log('[AUTH-DEBUG] 🛑 Acesso negado. Redirecionando para login.');
+  return res.redirect('/login');
 }
 
-/**
- * Middleware de persistência de login (Lembrar de mim).
- * Restaura a sessão do usuário se houver um token válido no cookie.
- */
-function createPersistAuthMiddleware(repo) {
-  return async (req, res, next) => {
-    // Se já estiver autenticado na sessão, apenas prossegue
-    if (req.session && req.session.user) {
-      return next();
+// Autenticação para a API de Integração (App Android / Bot)
+function createApiAuth(API_TOKEN) {
+  return function apiAuth(req, res, next) {
+    const clientToken = req.headers['x-api-key'] || req.query.token;
+    
+    if (!clientToken || clientToken !== API_TOKEN) {
+      console.log(`[API-AUTH] Bloqueado. Token fornecido: ${clientToken ? 'Sim' : 'Não'}`);
+      return res.status(401).json({ success: false, error: 'Acesso Negado' });
     }
-
-    const token = req.cookies?.remember_me;
-
-    if (token) {
-      try {
-        const tokenData = await repo.validarToken(token);
-        
-        if (tokenData) {
-          // Restaura a sessão
-          req.session.user = { 
-            id: tokenData.id, 
-            nome: tokenData.nome, 
-            login: tokenData.login 
-          };
-          
-          console.log(`[PERSIST-AUTH] ✅ Sessão restaurada para: ${tokenData.nome}`);
-          
-          // Opcional: renovar o token para mais 90 dias
-          const novoToken = await repo.renovarToken(token, 90);
-          if (novoToken) {
-            res.cookie('remember_me', novoToken.token, {
-              maxAge: 90 * 24 * 60 * 60 * 1000,
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax'
-            });
-          }
-        } else {
-          // Token inválido ou expirado, limpa o cookie
-          console.log(`[PERSIST-AUTH] ⚠️ Token inválido/expirado detectado. Limpando cookie.`);
-          res.clearCookie('remember_me');
-        }
-      } catch (err) {
-        console.error(`[PERSIST-AUTH] ❌ Erro ao validar token: ${err.message}`);
-      }
-    }
-
+    
     next();
   };
 }
 
-/**
- * Autenticação simples para API via header:
- * x-api-key: <API_TOKEN>
- */
-function createApiAuth(API_TOKEN) {
-  return (req, res, next) => {
-    const tokenRecebido = req.headers['x-api-key'];
-    
-    if (tokenRecebido && tokenRecebido === API_TOKEN) {
-      return next();
-    }
-    
-    // Log de tentativa de acesso à API sem token válido
-    console.log(`[API-AUTH] Acesso negado: ${req.method} ${req.originalUrl}`);
-    
-    return res.status(401).json({ success: false, error: 'Acesso Negado' });
-  };
-}
-
-module.exports = {
-  authMiddleware,
-  createPersistAuthMiddleware,
-  createApiAuth,
-};
+module.exports = { authMiddleware, createApiAuth };
