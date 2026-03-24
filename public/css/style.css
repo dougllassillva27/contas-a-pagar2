@@ -1128,12 +1128,14 @@ input[type='checkbox'] {
   margin: 10px 0 25px 0;
 }
 
-.custom-checkbox-wrapper {
+/* Aumentando a especificidade para sobrescrever o .login-form label (que aplicava block) */
+.login-form label.custom-checkbox-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   user-select: none;
+  margin-bottom: 0;
 }
 
 .hidden-checkbox {
