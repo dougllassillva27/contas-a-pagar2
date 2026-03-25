@@ -1274,7 +1274,8 @@ function fecharModalCompartilhar() {
 function abrirLinkCompartilhado() {
   const nome = pessoaSelecionadaContexto;
   if (nome) {
-    const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+    const userId = document.body.dataset.userid;
+    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
     window.open(url, '_blank');
     fecharModalCompartilhar();
   }
@@ -1286,7 +1287,8 @@ function abrirLinkCompartilhado() {
 function copiarLinkCompartilhado() {
   const nome = pessoaSelecionadaContexto;
   if (nome) {
-    const url = `${window.location.origin}/contas/${encodeURIComponent(nome)}`;
+    const userId = document.body.dataset.userid;
+    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
     copiarAoClipboard(url);
     fecharModalCompartilhar();
     mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
