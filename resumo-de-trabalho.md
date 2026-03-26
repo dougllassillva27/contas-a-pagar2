@@ -101,3 +101,15 @@ Arquivo de log de modificações e controle de progresso.
   - Corrigido o preview ao compartilhar o link de `/login`.
   - Padronizada a descrição e imagem (ícone 512x512) para WhatsApp/Telegram.
   - Atualizados `login.ejs`, `relatorio.ejs` e o partial `head.ejs` para consistência visual.
+
+### [2026-03-26] Testes: Cobertura das Novas Funcionalidades
+
+- **test**: Adicionados 5 novos casos de teste em `__tests__/integration/api.test.js`:
+  - `GET /login` contém meta tags Open Graph (`og:image`, `og:title`, `icon-512x512.png`)
+  - `GET /logout` redireciona para `/login` e encerra sessão
+  - Após logout, `GET /` redireciona para `/login` (sessão destruída com sucesso)
+  - `POST /login` com `SENHA_VITORIA` redireciona para `/` (autenticação confirmada)
+  - Após login como Vitória, `GET /` retorna 200 (dashboard acessível)
+  - `GET /logout` como Vitória redireciona para `/login` corretamente
+- **fix**: Corrigidos 4 testes antigos do portal de terceiros que estavam com a rota desatualizada (`/contas/:nome` → `/contas/:userId/:nome`).
+- **resultado**: **21/21 testes passando** (suíte de integração completa)
