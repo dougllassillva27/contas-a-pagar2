@@ -61,6 +61,10 @@ body.no-scroll {
   overflow: hidden;
 }
 
+.desktop-actions {
+  display: none !important; /* Esconde botões do cabeçalho globalmente pois agora usamos a Sidebar */
+}
+
 /* ==============================================================================
    TIPOGRAFIA
    ============================================================================== */
@@ -84,7 +88,7 @@ h2 {
    MOBILE SIDEBAR E FAB COMPONENT
    ============================================================================== */
 .fab-menu {
-  display: none;
+  display: flex;
   position: fixed;
   bottom: 30px;
   right: 30px;
@@ -964,13 +968,6 @@ input[type='checkbox'] {
   .header-actions {
     width: 100%;
     display: none; /* Esconde no mobile em favor do sidebar */
-  }
-  .desktop-actions {
-    display: none !important;
-  }
-  .fab-menu {
-    display: flex; /* Exibe o Floating Action Button no Mobile */
-  }
   .dashboard-cards {
     grid-template-columns: 1fr 1fr;
     gap: 10px;

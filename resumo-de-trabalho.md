@@ -93,3 +93,11 @@ Arquivo de log de modificações e controle de progresso.
 - **fix**: Adequação do Jest no auth.test.js onde mocks incompletos sem obj de query/cookies causavam falhas inesperadas de teste após instanciamento em vazio.
 - **QA**: Validação isolada de todos os modais agora fechando o menu lateral preventivamente ao exibirem via callback.
 
+
+### [2026-03-26] UI/UX: Unificação do Menu Lateral (Desktop e Mobile)
+
+- **feat**: O Menu Hamburguer Flutuante (FAB) foi adotado globalmente como sistema de navegação da aplicação web, resultando em uma interface Desktop purificada de ruídos.
+- **style**: Removida a classe .desktop-actions e dezenas de botões do header.ejs, mantendo o topo da tela estritamente para leitura (Mês atual).
+- **css**: Regras de media querie removidas para expor Sidebar nativa responsiva em qualquer monitor com glassmorphism contínuo.
+- **QA**: Testes e checagens isolados realizados por Jest para certificar ausência de efeitos colaterais na lógica geral.
+
