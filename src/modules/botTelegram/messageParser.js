@@ -4,8 +4,8 @@
 // em um objeto estruturado para inserção no sistema...
 // ==============================================================================
 
-const { parseValor, normalizarTipoIntegracao, normalizarParcelasPorTipo } = require('../src/helpers/parseHelpers');
-const { STATUS, TIPO } = require('../src/constants');
+const { parseValor, normalizarTipoIntegracao, normalizarParcelasPorTipo } = require('../../helpers/parseHelpers');
+const { STATUS, TIPO } = require('../../constants');
 
 /**
  * Formato esperado da mensagem:

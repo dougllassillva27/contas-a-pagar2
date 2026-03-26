@@ -4,7 +4,7 @@
 // no estilo visual do app Atalhos HTTP original...
 // ==============================================================================
 
-const { TIPO } = require('../src/constants');
+const { TIPO } = require('../../constants');
 
 /**
  * Mapa de usuario_id → nome para exibição.
