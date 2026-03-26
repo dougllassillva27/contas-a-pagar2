@@ -5,9 +5,9 @@
 
 const TelegramBot = require('node-telegram-bot-api');
 const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa } = require('./conversationManager');
-const { parseValor, normalizarParcelasPorTipo } = require('../src/helpers/parseHelpers');
+const { parseValor, normalizarParcelasPorTipo } = require('../../helpers/parseHelpers');
 const { formatarSucesso, formatarErro } = require('./responseFormatter');
-const { STATUS, TIPO } = require('../src/constants');
+const { STATUS, TIPO } = require('../../constants');
 
 /**
  * Cria e configura a instância do bot do Telegram.
