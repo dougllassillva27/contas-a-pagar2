@@ -85,3 +85,19 @@ Arquivo de log de modificações e controle de progresso.
   - carregar `SENHA_VITORIA` do ambiente
   - mapear senhas aos IDs de usuário no `publicRoutes`
   - garantir isolamento de sessão por ID de usuário logado
+
+### [2026-03-26] UI/UX: Implementação de Botão de Logoff
+
+- **feat**: Adicionado botão "Sair" ao cabeçalho do Dashboard.
+  - Posicionado ao lado do botão "Deletar Mês" para fácil acesso.
+  - Implementado com estilo `btn-danger-outline` (estilo discreto com realce vermelho no hover).
+  - Configurado logout direto sem necessidade de popup, conforme solicitado.
+- **mobile**: Layout validado para telas pequenas, mantendo o grid de 2 colunas e acessibilidade de toque.
+- **security**: Garantida a revogação de tokens persistentes e destruição de sessão ao clicar em "Sair".
+
+### [2026-03-26] SEO: Ajuste de Preview Social (Open Graph)
+
+- **feat**: Implementado suporte a Open Graph e Twitter Cards em todo o sistema.
+  - Corrigido o preview ao compartilhar o link de `/login`.
+  - Padronizada a descrição e imagem (ícone 512x512) para WhatsApp/Telegram.
+  - Atualizados `login.ejs`, `relatorio.ejs` e o partial `head.ejs` para consistência visual.
