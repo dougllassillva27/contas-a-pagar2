@@ -76,22 +76,34 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
   - Mede latência da checagem
   - Retorna uptime do processo
   - Compatível com monitoramento e diagnóstico rápido
-- **Monitoramento via UptimeRobot**
-  - Mantém o serviço ativo no Render free através de pings regulares
+- **Monitoramento e Anti-Idle via Google Apps Script**
+  - Mantém o serviço ativo no Render Free contornando bloqueios de bots conhecidos
   - Rota dedicada: `/ping`
-  - Mais leve que o GitHub Actions e sem necessidade de workflows externos
+  - Mais leve que runtimes de CI/CD e sem necessidade de servidores extras
 
 ---
 
 ## 🩺 Monitoramento e Keep Alive
 
-Para evitar o *cold start* (hibernação) do plano gratuito do Render, o projeto utiliza uma estratégia de monitoramento externo.
+Para evitar o *cold start* (hibernação) do plano gratuito do Render, o projeto utiliza um script no Google Apps Script simulando um navegador real. Essa estratégia impede o serviço de host de abater conexões vindas de *bots conhecidos* (como ocorria no UptimeRobot).
 
-### Estratégia Adotada
-- **Ferramenta**: [UptimeRobot](https://uptimerobot.com/).
-- **Endpoint**: `/ping`.
-- **Intervalo**: Chamada a cada **12 minutos**.
-- **Vantagem**: Mantém a aplicação ativa sem a complexidade de workflows externos ou dependência de navegadores abertos.
+### Estratégia Adotada (Passo a Passo)
+1. Crie um novo projeto gratuito no [Google Apps Script](https://script.google.com/).
+2. Adicione a função responsável por fazer um GET disfarçado e salve o código:
+   ```javascript
+   function pingRenderHost() {
+     var url = "https://SEU_PROJETO.onrender.com/ping";
+     var options = {
+       method: "get",
+       muteHttpExceptions: true,
+       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36" }
+     };
+     UrlFetchApp.fetch(url, options);
+   }
+   ```
+3. Configure um **Acionador (Trigger)** baseado no tempo (*Minutes timer*) para executar a função `pingRenderHost` a cada **10 minutos**.
+
+- **Vantagem Principal**: IPs originários da infraestrutura do Google Drive não caem em filtros primários em balanceadores Cloudflare e o *spoofing* do cabeçalho `User-Agent` finaliza a ilusão de tráfego real.
 
 ### 🔍 Endpoint `/health`
 O projeto possui um endpoint de health check pensado para:
@@ -123,7 +135,7 @@ O projeto possui um endpoint de health check pensado para:
 | **Database** | PostgreSQL (Neon.tech) |
 | **Hospedagem**| Render.com (Plano Gratuito) |
 | **Frontend** | EJS + Vanilla CSS (Grid/Flex) |
-| **Monitoramento**| UptimeRobot |
+| **Monitoramento**| Google Apps Script (Triggers) |
 | **Bot Telegram** | node-telegram-bot-api (webhook) |
 | **Testes** | Jest 30 + Supertest 7 |
 

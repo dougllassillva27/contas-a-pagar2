@@ -106,3 +106,8 @@ Arquivo de log de modificações e controle de progresso.
 
 - **fix**: Correção de escopo de classes na Media Query de 768px que havia quebrado a quebra de linha de cards no Mobile. A chave de fechamento perdida no refactor Desktop foi restaurada em .header-actions, reisolando o grid-template de colunas.
 
+
+### [2026-03-26] Infra/Docs: Migração de Monitoramento Keep-Alive
+
+- **docs**: Atualização do README.md substituindo a documentação de monitoramento via UptimeRobot pelo método funcional via Google Apps Script (Script de Cloud Function baseado no tempo para drible do isolamento de bots gratuitos da Render).
+
