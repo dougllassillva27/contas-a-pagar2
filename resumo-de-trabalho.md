@@ -101,3 +101,8 @@ Arquivo de log de modificações e controle de progresso.
 - **css**: Regras de media querie removidas para expor Sidebar nativa responsiva em qualquer monitor com glassmorphism contínuo.
 - **QA**: Testes e checagens isolados realizados por Jest para certificar ausência de efeitos colaterais na lógica geral.
 
+
+### [2026-03-26] UI/UX: Hotfix de Correção do Grid Mobile
+
+- **fix**: Correção de escopo de classes na Media Query de 768px que havia quebrado a quebra de linha de cards no Mobile. A chave de fechamento perdida no refactor Desktop foi restaurada em .header-actions, reisolando o grid-template de colunas.
+

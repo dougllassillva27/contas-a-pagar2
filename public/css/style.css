@@ -968,6 +968,7 @@ input[type='checkbox'] {
   .header-actions {
     width: 100%;
     display: none; /* Esconde no mobile em favor do sidebar */
+  }
   .dashboard-cards {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
