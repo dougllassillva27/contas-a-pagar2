@@ -7,7 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { LIMITES } = require('../constants');
 
-module.exports = function (repo, SENHA_MESTRA) {
+module.exports = function (repo, senhas) {
   
   // ============================================================================
   // GET /login — Renderiza página de login
@@ -30,9 +30,17 @@ module.exports = function (repo, SENHA_MESTRA) {
     // ✅ LOG SEGURO: Não loga a senha, apenas o evento de tentativa
     console.log(`[LOGIN] Tentativa de login - IP: ${req.ip || req.connection.remoteAddress || 'N/A'}`);
 
-    if (passwordDigitada === SENHA_MESTRA) {
+    // Identifica o usuário pelo segredo digitado
+    let targetUserId = null;
+    if (passwordDigitada === senhas.dodo) {
+      targetUserId = 1;
+    } else if (passwordDigitada === senhas.vitoria) {
+      targetUserId = 2;
+    }
+
+    if (targetUserId) {
       try {
-        const user = await repo.getUsuarioById(1);
+        const user = await repo.getUsuarioById(targetUserId);
         if (user) {
           req.session.user = { id: user.id, nome: user.nome, login: user.login };
           
