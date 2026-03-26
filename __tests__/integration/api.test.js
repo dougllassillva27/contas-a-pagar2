@@ -102,6 +102,16 @@ describe('Login', () => {
     // Pode retornar 200 (re-renderiza login com erro) ou 302 mas NÃO para "/"
     expect(res.headers.location).not.toBe('/');
   });
+
+  // ✅ NOVO: Verificação das Meta Tags SEO na página de login
+  test('GET /login — HTML contém meta tags Open Graph (og:image e og:title)', async () => {
+    const res = await request(app).get('/login');
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('og:image');
+    expect(res.text).toContain('og:title');
+    expect(res.text).toContain('icon-512x512.png');
+  });
 });
 
 // ==========================================================================
@@ -148,14 +158,66 @@ describe('Fluxo autenticado', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
+
+  // ✅ NOVO: Logout encerra sessão e redireciona para /login
+  test('GET /logout — redireciona para /login e encerra sessão', async () => {
+    const res = await agent.get('/logout');
+
+    // Deve redirecionar para /login
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/login');
+
+    // Após logout, GET / deve redirecionar novamente para /login (sessão encerrada)
+    const resPos = await agent.get('/');
+    expect(resPos.status).toBe(302);
+    expect(resPos.headers.location).toBe('/login');
+  });
 });
 
 // ==========================================================================
-// Portal de Terceiros — rota pública /contas/:nome
+// ✅ NOVO: Login da Vitória (senha mestra secundária)
 // ==========================================================================
-describe('GET /contas/:nome (Portal de Terceiros)', () => {
+describe('Login — Vitória (senha mestra secundária)', () => {
+  let agentVitoria;
+
+  beforeAll(async () => {
+    agentVitoria = request.agent(app);
+    await agentVitoria.post('/login').send({ password: process.env.SENHA_VITORIA });
+  });
+
+  test('login com SENHA_VITORIA redireciona para /', async () => {
+    const agente = request.agent(app);
+    const res = await agente.post('/login').send({ password: process.env.SENHA_VITORIA });
+
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/');
+  });
+
+  test('após login com SENHA_VITORIA, GET / retorna 200 (dashboard)', async () => {
+    const res = await agentVitoria.get('/');
+
+    expect(res.status).toBe(200);
+    // Verifica que o dashboard carregou (conteúdo genérico do template)
+    expect(res.text).toContain('Painel');
+  });
+
+  test('logout da Vitória redireciona para /login', async () => {
+    const res = await agentVitoria.get('/logout');
+
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/login');
+  });
+});
+
+
+// ==========================================================================
+// Portal de Terceiros — rota pública /contas/:userId/:nome
+// (Rota atualizada: precisa do userId na URL)
+// ==========================================================================
+describe('GET /contas/:userId/:nome (Portal de Terceiros)', () => {
+  // Usa userId=1 (Dodo) como referência nos testes públicos
   test('retorna 200 e HTML (rota pública, sem redirecionamento)', async () => {
-    const res = await request(app).get('/contas/Mae');
+    const res = await request(app).get('/contas/1/Mae');
 
     // Deve retornar 200 (não redirecionar para login)
     expect(res.status).toBe(200);
@@ -163,21 +225,21 @@ describe('GET /contas/:nome (Portal de Terceiros)', () => {
   });
 
   test('HTML contém meta noindex para evitar indexação', async () => {
-    const res = await request(app).get('/contas/Mae');
+    const res = await request(app).get('/contas/1/Mae');
 
     expect(res.text).toContain('noindex');
     expect(res.text).toContain('nofollow');
   });
 
   test('aceita navegação por mês/ano via query params', async () => {
-    const res = await request(app).get('/contas/Mae?month=1&year=2026');
+    const res = await request(app).get('/contas/1/Mae?month=1&year=2026');
 
     expect(res.status).toBe(200);
     expect(res.text).toContain('Janeiro');
   });
 
   test('exibe mensagem quando terceiro não tem lançamentos', async () => {
-    const res = await request(app).get('/contas/NomeQueNaoExiste999');
+    const res = await request(app).get('/contas/1/NomeQueNaoExiste999');
 
     expect(res.status).toBe(200);
     expect(res.text).toContain('Nenhuma conta encontrada');
