@@ -2,7 +2,7 @@
 // 🧪 Testes do Formatador de Respostas do Telegram..
 // ==============================================================================
 
-const { formatarSucesso, formatarErro, escaparMarkdown } = require('../../botTelegram/responseFormatter');
+const { formatarSucesso, formatarErro, escaparMarkdown } = require('../../src/modules/botTelegram/responseFormatter');
 
 describe('formatarSucesso', () => {
   test('formata resposta com todos os campos preenchidos', () => {

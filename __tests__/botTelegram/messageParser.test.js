@@ -2,7 +2,7 @@
 // 🧪 Testes do Gerenciador de Conversas do Telegram..
 // ==============================================================================
 
-const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa, calcularProximaEtapa } = require('../../botTelegram/conversationManager');
+const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa, calcularProximaEtapa } = require('../../src/modules/botTelegram/conversationManager');
 
 describe('conversationManager', () => {
   const CHAT_ID = '12345';
