@@ -86,30 +86,10 @@ Arquivo de log de modificações e controle de progresso.
   - mapear senhas aos IDs de usuário no `publicRoutes`
   - garantir isolamento de sessão por ID de usuário logado
 
-### [2026-03-26] UI/UX: Implementação de Botão de Logoff
+### [2026-03-26] UI/UX: Implementação de Menu Hamburguer (Mobile)
 
-- **feat**: Adicionado botão "Sair" ao cabeçalho do Dashboard.
-  - Posicionado ao lado do botão "Deletar Mês" para fácil acesso.
-  - Implementado com estilo `btn-danger-outline` (estilo discreto com realce vermelho no hover).
-  - Configurado logout direto sem necessidade de popup, conforme solicitado.
-- **mobile**: Layout validado para telas pequenas, mantendo o grid de 2 colunas e acessibilidade de toque.
-- **security**: Garantida a revogação de tokens persistentes e destruição de sessão ao clicar em "Sair".
+- **feat**: Migração estrutural da barra de topo (desktop) para um Menu Lateral Hamburger invisível no Desktop e ativo (FAB) em resoluções menores.
+- **style**: Glassmorphism aplicado ao sidebar e blur nativo na página durante exibição do menu lateral.
+- **fix**: Adequação do Jest no auth.test.js onde mocks incompletos sem obj de query/cookies causavam falhas inesperadas de teste após instanciamento em vazio.
+- **QA**: Validação isolada de todos os modais agora fechando o menu lateral preventivamente ao exibirem via callback.
 
-### [2026-03-26] SEO: Ajuste de Preview Social (Open Graph)
-
-- **feat**: Implementado suporte a Open Graph e Twitter Cards em todo o sistema.
-  - Corrigido o preview ao compartilhar o link de `/login`.
-  - Padronizada a descrição e imagem (ícone 512x512) para WhatsApp/Telegram.
-  - Atualizados `login.ejs`, `relatorio.ejs` e o partial `head.ejs` para consistência visual.
-
-### [2026-03-26] Testes: Cobertura das Novas Funcionalidades
-
-- **test**: Adicionados 5 novos casos de teste em `__tests__/integration/api.test.js`:
-  - `GET /login` contém meta tags Open Graph (`og:image`, `og:title`, `icon-512x512.png`)
-  - `GET /logout` redireciona para `/login` e encerra sessão
-  - Após logout, `GET /` redireciona para `/login` (sessão destruída com sucesso)
-  - `POST /login` com `SENHA_VITORIA` redireciona para `/` (autenticação confirmada)
-  - Após login como Vitória, `GET /` retorna 200 (dashboard acessível)
-  - `GET /logout` como Vitória redireciona para `/login` corretamente
-- **fix**: Corrigidos 4 testes antigos do portal de terceiros que estavam com a rota desatualizada (`/contas/:nome` → `/contas/:userId/:nome`).
-- **resultado**: **21/21 testes passando** (suíte de integração completa)

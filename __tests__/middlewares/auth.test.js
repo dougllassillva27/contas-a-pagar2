@@ -25,6 +25,7 @@ describe('authMiddleware', () => {
     return {
       req: {
         session: sessionUser ? { user: sessionUser } : {},
+        cookies: {},
       },
       res: {
         redirect: jest.fn(), // jest.fn() = função espiã (registra se foi chamada)
@@ -56,7 +57,7 @@ describe('authMiddleware', () => {
   });
 
   test('se sessão existe mas sem user, redireciona para /login', () => {
-    const req = { session: {} }; // session sem propriedade "user"
+    const req = { session: {}, cookies: {} }; // session sem propriedade "user"
     const res = { redirect: jest.fn() };
     const next = jest.fn();
 
@@ -78,6 +79,7 @@ describe('createApiAuth', () => {
   function criarReq(apiKey) {
     return {
       headers: apiKey !== undefined ? { 'x-api-key': apiKey } : {},
+      query: {},
     };
   }
 

@@ -1,0 +1,54 @@
+<!-- src/views/partials/sidebar.ejs -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="fecharSidebar()"></div>
+
+<nav id="mobileSidebar" class="sidebar-mobile">
+    <div class="sidebar-header">
+        <h2>Menu</h2>
+        <button class="btn-close-sidebar" onclick="fecharSidebar()">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+    
+    <div class="sidebar-actions">
+        <% if (user.id === 1) { %> 
+            <a href="/switch/2" class="sidebar-btn sidebar-btn-users">
+                <span class="material-icons" style="color: var(--orange);">people</span> Vitória
+            </a>
+        <% } else { %>
+            <a href="/switch/1" class="sidebar-btn sidebar-btn-users">
+                <span class="material-icons" style="color: var(--blue);">people</span> Dodo
+            </a>
+        <% } %>
+
+        <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalUltimas)">
+            <span class="material-icons">history</span> Últimas
+        </button>
+
+        <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalCalcularLuz)">
+            <span class="material-icons" style="color: var(--yellow);">lightbulb</span> Calcular Luz
+        </button>
+
+        <button class="sidebar-btn" onclick="fecharSidebarE(() => abrirConfirmacaoAcao('COPIAR'))">
+            <span class="material-icons">content_copy</span> Copiar Contas
+        </button>
+        
+        <a href="/relatorio?month=<%= nav.atual.month %>&year=<%= nav.atual.year %>" target="_blank" class="sidebar-btn" onclick="fecharSidebar()">
+            <span class="material-icons">print</span> Imprimir
+        </a>
+
+        <div class="sidebar-divider"></div>
+
+        <button class="sidebar-btn btn-danger-sidebar" onclick="fecharSidebarE(() => abrirConfirmacaoAcao('DELETAR'))">
+            <span class="material-icons">delete</span> Deletar Mês
+        </button>
+
+        <a href="/logout" class="sidebar-btn btn-danger-sidebar">
+            <span class="material-icons">logout</span> Sair
+        </a>
+    </div>
+</nav>
+
+<!-- FAB (Botão Flutuante) Hamburger -->
+<button class="fab-menu" id="fabMenu" onclick="abrirSidebar()">
+    <span class="material-icons">menu</span>
+</button>

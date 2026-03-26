@@ -8,7 +8,7 @@ types.setTypeParser(1700, (val) => {
 // LÊ A URL DO .ENV
 const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
+if (!connectionString && process.env.NODE_ENV !== 'test') {
   console.error('❌ ERRO: DATABASE_URL não definida no arquivo .env');
   process.exit(1);
 }
