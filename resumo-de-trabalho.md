@@ -70,3 +70,18 @@ Arquivo de log de modificações e controle de progresso.
   - Corrigidos os caminhos nos arquivos de teste em `__tests__/botTelegram/` para apontarem para o novo local em `src/modules/botTelegram/`.
   - Verificação realizada via execução de testes (`npx jest`), com 100% de aprovação (23 testes).
 
+### [2026-03-26] Auth: Login Dedicado para Vitória via Senha Mestra
+
+- **feat**: Implementado fluxo de login baseado em senha para múltiplos usuários.
+  - O sistema agora identifica o usuário automaticamente pelo segredo digitado na tela de login (Dodo via `SENHA_MESTRA` e Vitória via `SENHA_VITORIA`).
+  - Atualizado `src/app.js` para carregar ambas as variáveis de ambiente e passá-las ao roteador.
+  - Refatorada lógica de autenticação no `src/routes/publicRoutes.js` para associar senhas aos IDs de banco (1 e 2).
+- **security**: Mantida a simplicidade da UI original, eliminando a necessidade de um campo "Usuário", o que preserva a experiência limpa e rápida.
+- **db**: Confirmada a existência dos usuários com IDs 1 (Dodo) e 2 (Vitoria) na tabela `Usuarios` do banco PostgreSQL (Neon).
+
+### [2026-03-26] Commit das Alterações de Login e Estrutura
+
+- **feat**: implementar login dedicado com múltiplas senhas mestras para Vitória
+  - carregar `SENHA_VITORIA` do ambiente
+  - mapear senhas aos IDs de usuário no `publicRoutes`
+  - garantir isolamento de sessão por ID de usuário logado

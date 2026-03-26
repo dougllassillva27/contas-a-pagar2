@@ -28,6 +28,7 @@ const PORT = process.env.PORT || 3000;
 // ⚠️ Observação de segurança:
 // - manter fallback inseguro é útil em DEV, mas em PROD é recomendado definir .env com valores fortes.
 const SENHA_MESTRA = (process.env.SENHA_MESTRA || 'senha_padrao_insegura').trim();
+const SENHA_VITORIA = (process.env.SENHA_VITORIA || 'vitoria_padrao_insegura').trim();
 const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 
 // ==============================================================================
@@ -113,7 +114,7 @@ app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
 app.use(telegramRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
-app.use(publicRoutes(repo, SENHA_MESTRA));
+app.use(publicRoutes(repo, { dodo: SENHA_MESTRA, vitoria: SENHA_VITORIA }));
 
 // 3. Middlewares de Autenticação
 // ✅ Proteção principal: exige que exista user na session (restaurado ou logado agora)
