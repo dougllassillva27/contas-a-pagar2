@@ -62,3 +62,11 @@ Arquivo de log de modificações e controle de progresso.
   - Exclusão da pasta `backup/` redundante.
 - **cleanup**: Consolidação de configs de desenvolvimento.
   - Movida configuração do Jest de `jest.config.js` diretamente para o `package.json`, eliminando mais um arquivo da raiz.
+
+### [2026-03-26] Fix: Correção de Caminhos Após Refatoração
+
+- **fix**: Corrigidos caminhos de importação relativos no módulo `botTelegram`.
+  - Atualizados `responseFormatter.js` e `messageParser.js` para buscarem `constants` e `helpers` em `../../` (subindo dois níveis).
+  - Corrigidos os caminhos nos arquivos de teste em `__tests__/botTelegram/` para apontarem para o novo local em `src/modules/botTelegram/`.
+  - Verificação realizada via execução de testes (`npx jest`), com 100% de aprovação (23 testes).
+
