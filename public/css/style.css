@@ -81,6 +81,169 @@ h2 {
 }
 
 /* ==============================================================================
+   MOBILE SIDEBAR E FAB COMPONENT
+   ============================================================================== */
+.fab-menu {
+  display: none;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 25px rgba(56, 120, 225, 0.4);
+  cursor: pointer;
+  z-index: 900;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  align-items: center;
+  justify-content: center;
+}
+.fab-menu:hover {
+  transform: scale(1.08);
+  background: var(--blue-hover);
+}
+.fab-menu:active {
+  transform: scale(0.95);
+}
+.fab-menu .material-icons {
+  font-size: 28px;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar-mobile {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 280px;
+  max-width: 85vw;
+  height: 100vh;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  transition: right 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 25px 20px;
+  overflow-y: auto;
+}
+.sidebar-mobile.open {
+  right: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.sidebar-header h2 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.btn-close-sidebar {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-close-sidebar:hover {
+  background: rgba(239, 83, 80, 0.15);
+  color: var(--red);
+  border-color: rgba(239, 83, 80, 0.3);
+  transform: rotate(90deg);
+}
+
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(4px);
+}
+.sidebar-btn .material-icons {
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+.sidebar-btn-users .material-icons {
+  opacity: 0.9;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 10px 0;
+}
+
+.btn-danger-sidebar {
+  color: var(--red);
+}
+.btn-danger-sidebar:hover {
+  background: rgba(239, 83, 80, 0.08);
+  border-color: rgba(239, 83, 80, 0.2);
+}
+.btn-danger-sidebar .material-icons {
+  color: var(--red);
+}
+
+/* ==============================================================================
    HEADER
    ============================================================================== */
 header {
@@ -800,14 +963,13 @@ input[type='checkbox'] {
   }
   .header-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    display: none; /* Esconde no mobile em favor do sidebar */
   }
-  .btn-secondary,
-  .btn-danger-outline {
-    justify-content: center;
-    width: 100%;
+  .desktop-actions {
+    display: none !important;
+  }
+  .fab-menu {
+    display: flex; /* Exibe o Floating Action Button no Mobile */
   }
   .dashboard-cards {
     grid-template-columns: 1fr 1fr;

@@ -66,6 +66,38 @@ function ocultarLoading() {
 }
 
 // ==============================================================================
+// ✅ SIDEBAR MOBILE (HAMBURGER MENU)
+// ==============================================================================
+const mobileSidebar = document.getElementById('mobileSidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function abrirSidebar() {
+  if (!mobileSidebar || !sidebarOverlay) return;
+  mobileSidebar.classList.add('open');
+  sidebarOverlay.classList.add('open');
+  document.body.classList.add('no-scroll');
+  // Se houver overlay de modal ou contexto, a sidebar ficará por cima (z-index 999)
+}
+
+function fecharSidebar() {
+  if (!mobileSidebar || !sidebarOverlay) return;
+  mobileSidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('open');
+  document.body.classList.remove('no-scroll');
+}
+
+/**
+ * Fecha a Sidebar e em seguida dispara a função principal de modal.
+ * Usado nos botões de dentro da sidebar.
+ */
+function fecharSidebarE(callback) {
+  fecharSidebar();
+  setTimeout(() => {
+    if (typeof callback === 'function') callback();
+  }, 300); // Aguarda o CSS transition
+}
+
+// ==============================================================================
 // ✅ TOOLTIP CUSTOMIZADO (Substitui tooltip nativo do browser)
 // ==============================================================================
 const customTooltip = document.getElementById('customTooltip');
