@@ -136,13 +136,13 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 | Camada | Diretório | Responsabilidade |
 | :--- | :--- | :--- |
 | **Entrada** | `src/app.js` | Configuração do Express, sessão e montagem dos módulos |
+| **Módulos** | `src/modules/` | Funcionalidades independentes (Bot Telegram, Estimativa de Luz) |
 | **Rotas** | `src/routes/` | Handlers de cada grupo de endpoints |
 | **Middlewares** | `src/middlewares/` | Autenticação web (sessão), API (token) e logger |
 | **Helpers** | `src/helpers/` | Parsing, async handler e inicialização do banco |
 | **Dados** | `src/repositories/` | Repositories especializados por domínio + facade |
 | **Constantes** | `src/constants.js` | Valores centralizados (status, tipos, limites) |
 | **Conexão** | `src/config/` | Pool de conexão PostgreSQL |
-| **Bot** | `botTelegram/` | Bot Telegram com conversa interativa (webhook) |
 | **Views** | `src/views/` | Templates EJS com partials reutilizáveis |
 | **Frontend** | `public/` | CSS, JavaScript do cliente e assets estáticos |
 | **Testes** | `__tests__/` | Unitários, repositórios (mock), bot e integração |
@@ -153,6 +153,9 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 
 ```txt
 /
+├── docs/
+│   └── history/
+│       └── database/                      # Scripts e SQL de migrações históricas
 ├── public/
 │   ├── css/
 │   │   ├── style.css                      # Design system (dark mode)
@@ -165,6 +168,9 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   ├── constants.js                       # STATUS, TIPO, LIMITES centralizados
 │   ├── config/
 │   │   └── db.js                          # Pool PostgreSQL
+│   ├── modules/
+│   │   ├── botTelegram/                   # Bot Telegram (webhook)
+│   │   └── calcularLuz/                   # App de estimativa de conta de luz
 │   ├── helpers/
 │   │   ├── asyncHandler.js                # Wrapper try/catch para rotas async
 │   │   ├── initDatabase.js                # Criação automática de tabelas
@@ -193,9 +199,6 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │           ├── head.ejs                   # Meta tags, CSS, fonts
 │           ├── header.ejs                 # Barra superior + navegação
 │           └── modals.ejs                 # Modais + menu de contexto
-├── botTelegram/
-│   ├── telegramBot.js                     # Lógica principal do bot
-│   └── README.md                          # Documentação do bot
 ├── __tests__/
 │   ├── helpers/                           # Testes de parsing
 │   ├── repositories/                      # Testes CRUD (mock do DB)

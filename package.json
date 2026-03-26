@@ -8,7 +8,7 @@
     "test": "jest --verbose",
     "test:unit": "jest __tests__/helpers __tests__/middlewares --verbose",
     "test:integration": "jest __tests__/integration --verbose",
-    "telegram:setup": "node botTelegram/setupWebhook.js"
+    "telegram:setup": "node src/modules/botTelegram/setupWebhook.js"
   },
   "keywords": [
     "financas",
@@ -34,5 +34,13 @@
   "devDependencies": {
     "jest": "^30.2.0",
     "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "verbose": true,
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "testTimeout": 10000
   }
 }
