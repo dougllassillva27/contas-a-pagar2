@@ -9,13 +9,14 @@ const { STATUS, TIPO, LIMITES, SQL_SEM_TERCEIRO } = require('../constants');
 // ✅ NOVO: Helper para normalizar palavras-chave "Eu" ou "Dodo" para NULL
 // ==============================================================================
 function normalizarTerceiro(nome) {
-  const nomeNormalizado = nome.trim().toLowerCase();
+  const nomeNormalizado = (nome || '').trim().toLowerCase();
   // Palavras-chave que representam "conta própria"
-  if (nomeNormalizado === 'eu' || nomeNormalizado === 'dodo') {
+  if (['eu', 'dodo', ''].includes(nomeNormalizado)) {
     return null;
   }
   return nome.trim();
 }
+
 
 // --- LISTAGENS E DASHBOARD ---
 
@@ -235,6 +236,20 @@ async function updateConferidoExtrato(userId, id, valor) {
   await db.query('UPDATE Lancamentos SET ConferidoExtrato = $1 WHERE Id = $2 AND UsuarioId = $3', [valor, id, userId]);
 }
 
+// ✅ NOVO: Atualização em lote da flag `ConferidoExtrato`
+async function updateConferidoExtratoLote(userId, ids, conferido) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return 0;
+  }
+  const query = `
+    UPDATE Lancamentos
+    SET ConferidoExtrato = $1
+    WHERE Id = ANY($2::int[]) AND UsuarioId = $3
+  `;
+  const result = await db.query(query, [conferido, ids, userId]);
+  return result.rowCount;
+}
+
 async function updateStatusBatchPessoa(userId, pessoa, novoStatus, month, year, userName) {
   let query = `
       UPDATE Lancamentos SET Status = $1 
@@ -401,6 +416,7 @@ module.exports = {
   updateStatus,
   updateConferido,
   updateConferidoExtrato,
+  updateConferidoExtratoLote, // ✅ Novo método exportado
   updateStatusBatchPessoa,
   updateConferidoBatchRecent,
   reorderLancamentos,

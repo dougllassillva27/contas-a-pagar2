@@ -497,5 +497,21 @@ module.exports = function (repo) {
     })
   );
 
+  // ✅ NOVA ROTA: Atualização em lote da flag `conferidoextrato`
+  router.post(
+    '/api/lancamentos/conferido-extrato-lote',
+    asyncHandler(async (req, res) => {
+      const { ids, conferido } = req.body;
+      const userId = req.session.user.id;
+
+      if (!Array.isArray(ids) || typeof conferido !== 'boolean') {
+        return res.status(400).json({ error: 'Payload inválido.' });
+      }
+
+      const updatedCount = await repo.updateConferidoExtratoLote(userId, ids, conferido);
+      res.json({ success: true, updated: updatedCount });
+    })
+  );
+
   return router;
 };
