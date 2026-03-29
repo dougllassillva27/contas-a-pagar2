@@ -129,3 +129,38 @@ Arquivo de log de modificações e controle de progresso.
    - Adicionada a função de repositório `updateConferidoExtratoLote` que recebe um array de IDs e atualiza todos em uma única query com a instrução `ANY($2::int[])`.
 3. **Testes (`__tests__/integration/api.test.js`)**:
    - Adicionado novo bloco de testes validando os cenários de marcação (`true`) e desmarcação (`false`) enviando uma matriz de IDs, com limpeza inteligente dos dados de teste no `afterAll`.
+
+# [2026-03-29] - Correção do Layout de Relatórios e Menu de Contexto
+
+### Problema
+
+Durante a implementação de uma nova funcionalidade no frontend, uma substituição agressiva no arquivo `relatorio.ejs` causou a quebra do layout, resultando em uma página em branco com vazamento de CSS.
+
+### O que foi feito
+
+1. **Restauração do Arquivo Original:** O arquivo `relatorio.ejs` foi restaurado ao seu estado funcional anterior.
+2. **Reintegração Segura do CSS:** Os estilos do menu de contexto foram adicionados adequadamente dentro da tag `<style>`.
+3. **Menu de Contexto Flutuante:** O HTML correspondente ao menu foi incluído no local correto da página.
+4. **JavaScript Focado no Elemento:** O comportamento de clique com o botão direito foi ajustado para selecionar e agir apenas sobre a seção (ou pessoa) específica clicada, garantindo precisão e evitando que ações em lote afetassem itens indesejados.
+
+### Impacto
+
+- A página de relatórios (`/relatorio`) voltou a ser renderizada corretamente.
+- A nova funcionalidade de menu de contexto agora atua no escopo correto.
+
+## [2026-03-29l] - Correção Visual e Melhoria nas Ações em Lote do Relatório
+
+### Problema
+
+Durante a introdução de uma feature de menu de contexto, o layout Dark Mode original da página de relatórios (`relatorio.ejs`) foi corrompido, perdendo os estilos, o gráfico (Chart.js) e as opções de exportação (SheetJS). Além disso, a ação em lote limitava-se a marcar apenas um bloco de usuário por vez, o que reduzia a agilidade em telas cheias.
+
+### O que foi feito
+
+1. **Restauração do Layout:** O arquivo `relatorio.ejs` foi 100% restaurado para seu visual Dark Mode original, com os scripts e recursos visuais funcionando.
+2. **Menu de Contexto Global:** O script de clique com o botão direito (`contextmenu`) foi refatorado para escutar a tela toda (exceto na barra de ações).
+3. **Seleção em Massa (Global):** A ação "Marcar TODAS as contas" agora mapeia globalmente todas as checkboxes `.chk-conferido` da tela, aplicando a atualização visual (Optimistic UI) a todas simultaneamente antes de acionar a API de lote do backend.
+
+### Impacto
+
+- O frontend do relatório voltou a ter sua estética e funcionalidades premium originais.
+- A conferência de extrato mensal ficou exponencialmente mais rápida, permitindo liquidar o relatório inteiro com apenas 2 cliques.
