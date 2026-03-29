@@ -1,11 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <title><%= titulo %></title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Meta Tags para Preview Social -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            padding: 30px;
+            margin: 0;
+        }
+        .report-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        .report-header {
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 25px;
+            margin-bottom: 40px;
+        }
+        .report-header h1 {
+            margin: 0;
+            color: #111;
+            font-size: 2rem;
+        }
+        .report-header h3 {
+            margin: 10px 0 0 0;
             color: #666;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        .btn-print {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #3878e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-print:hover {
+            background: #2b62c0;
+        }
+        
+        /* Blocos das pessoas */
+        .person-card {
+            margin-bottom: 40px;
+            border: 1px solid #eaeaea;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .person-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .person-header {
+            background: #f8f9fa;
+            padding: 18px 24px;
+            border-bottom: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .person-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #222;
+        }
+        .person-total {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #d32f2f;
+        }
+        
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+        th {
+            background: #fff;
+            font-weight: 600;
+            color: #777;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .text-right {
+            text-align: right;
+        }
+        
+        /* Badges e Status */
+        .badge-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-pendente {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .badge-pago {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* UI Otimista - Estado Conferido */
+        .tr-conferido td {
+            color: #999;
+            background: #fafafa;
+        }
+        .tr-conferido td:not(.no-print):not(:last-child) {
+            text-decoration: line-through;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #3878e1;
         }
 
         /* --- Menu de Contexto --- */
@@ -16,10 +154,10 @@
             border: 1px solid #444;
             border-radius: 8px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-            padding: 4px 0;
-            min-width: 220px;
+            padding: 6px 0;
+            min-width: 240px;
             user-select: none;
-            display: none; /* Inicia escondido */
+            display: none;
         }
         .context-menu ul {
             list-style: none;
@@ -37,63 +175,133 @@
             transition: background 0.2s;
         }
         .context-menu li:hover {
-            background: #333;
+            background: #3a3a3a;
         }
         .context-menu li .material-icons {
             font-size: 20px;
-            color: var(--text-secondary);
         }
-        /* --- Fim Menu de Contexto --- */
 
-        .badge-status {
-            font-size: 11px;
-            padding: 5px 12px;
+        /* Regras para Impressão */
+        @media print {
+            body { background: #fff; padding: 0; }
+            .report-container { box-shadow: none; padding: 0; max-width: 100%; border: none; }
+            .context-menu { display: none !important; }
+            .no-print { display: none !important; }
+            .person-card { page-break-inside: avoid; border: 1px solid #ccc; margin-bottom: 20px; }
+            .tr-conferido td { text-decoration: none; color: #666; background: transparent; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-container">
+        <div class="report-header">
+            <h1><%= titulo %></h1>
+            <h3>Total Geral do Mês: R$ <%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></h3>
+            <button class="no-print btn-print" onclick="window.print()">
+                <span class="material-icons">print</span> Imprimir Relatório
+            </button>
         </div>
+
+        <% for(const pessoa in dados) { %>
+            <% if (dados[pessoa].itens.length > 0) { %>
+                <!-- Bloco de cada pessoa (Importante para o Right Click) -->
+                <div class="person-card">
+                    <div class="person-header">
+                        <h2><%= pessoa %></h2>
+                        <span class="person-total">R$ <%= Number(dados[pessoa].total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="no-print" width="40" style="text-align: center;">✔</th>
+                                <th>Data Venc.</th>
+                                <th>Descrição</th>
+                                <th style="text-align: center;">Status</th>
+                                <th class="text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% dados[pessoa].itens.forEach(item => { %>
+                                <% 
+                                   // Tratamento de UI visual inicial baseado no banco
+                                   const isConferido = item.conferidoextrato === true;
+                                   const statusBadgeClass = isConferido ? 'badge-pago' : (item.status === 'PAGO' ? 'badge-pago' : 'badge-pendente');
+                                   const statusText = isConferido ? 'Conferido' : (item.status === 'PAGO' ? 'Pago' : 'Pendente');
+                                   const trClass = isConferido ? 'tr-conferido' : '';
+                                   
+                                   const dataVenc = new Date(item.datavencimento);
+                                   dataVenc.setHours(12); // Previne bug de fuso horário
+                                   const dataFormatada = `${String(dataVenc.getDate()).padStart(2, '0')}/${String(dataVenc.getMonth()+1).padStart(2, '0')}/${dataVenc.getFullYear()}`;
+                                %>
+                                <tr class="<%= trClass %>" data-original-status="<%= item.status %>" data-id="<%= item.id %>">
+                                    <td class="no-print" style="text-align: center;">
+                                        <input type="checkbox" class="chk-conferido" data-id="<%= item.id %>" <%= isConferido ? 'checked' : '' %>>
+                                    </td>
+                                    <td><%= dataFormatada %></td>
+                                    <td>
+                                        <%= item.descricao %>
+                                        <% if(item.parcelaatual && item.totalparcelas) { %>
+                                            <small style="color: #888; margin-left: 5px; font-weight: 500;">(<%= item.parcelaatual %>/<%= item.totalparcelas %>)</small>
+                                        <% } %>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="badge-status <%= statusBadgeClass %> badge-dinamico"><%= statusText %></span>
+                                    </td>
+                                    <td class="text-right" style="font-weight: 600;">
+                                        R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        <% } %>
     </div>
 
-    <!-- ✅ NOVO: Menu de Contexto para Ações em Lote -->
+    <!-- HTML do Menu de Contexto para Ações em Lote -->
     <div id="relatorioContextMenu" class="context-menu">
         <ul>
             <li onclick="executarAcaoConferenciaLote(true)">
-                <span class="material-icons" style="color: var(--success);">check_circle</span>
-                Marcar Todas como Conferidas
+                <span class="material-icons" style="color: #66bb6a;">check_circle</span>
+                Marcar Bloco como Conferido
             </li>
             <li onclick="executarAcaoConferenciaLote(false)">
-                <span class="material-icons" style="color: var(--warning);">cancel</span>
-                Desmarcar Todas
+                <span class="material-icons" style="color: #ef5350;">cancel</span>
+                Desmarcar Bloco
             </li>
         </ul>
     </div>
 
-    <!-- Scripts de Interatividade e Funcionalidade -->
     <script>
-        // Dados provindos em tempo de compilação renderizados para JS Limpo
+        // Variável global para guardar de qual bloco veio o clique do mouse
+        let blockClicado = null; 
+
         document.addEventListener('DOMContentLoaded', () => {
-            initChart();
-            listenToCheckboxes();
-            listenForRightClick(); // ✅ Adicionado listener para o menu de contexto
+            listenForRightClick();
+            listenToIndividualCheckboxes();
         });
 
-        // ==========================================
-            });
-        }
-
         // ==============================================================
-        // ✅ NOVO: Menu de Contexto e Ações em Lote
+        // Eventos do Botão Direito e Checkbox em Massa
         // ==============================================================
         function listenForRightClick() {
             const cards = document.querySelectorAll('.person-card');
+            
             cards.forEach(card => {
                 card.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
+                    blockClicado = card; // Salva o escopo exato do card clicado!
                     abrirMenuRelatorio(e);
                 });
             });
 
-            // Fecha o menu se clicar em qualquer outro lugar
+            // Fecha o menu se clicar em outro lugar
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#relatorioContextMenu')) {
-                    document.getElementById('relatorioContextMenu').style.display = 'none';
+                    const menu = document.getElementById('relatorioContextMenu');
+                    if (menu) menu.style.display = 'none';
                 }
             });
         }
@@ -105,7 +313,7 @@
             let x = e.clientX;
             let y = e.clientY;
 
-            // Ajuste para não sair da tela
+            // Impede que o menu vaze para fora da tela
             if (x + menu.offsetWidth > window.innerWidth) {
                 x = window.innerWidth - menu.offsetWidth - 5;
             }
@@ -120,36 +328,98 @@
         async function executarAcaoConferenciaLote(conferidoStatus) {
             document.getElementById('relatorioContextMenu').style.display = 'none';
             
-            const checkboxes = document.querySelectorAll('.chk-conferido');
-            const ids = Array.from(checkboxes).map(chk => chk.dataset.id);
+            if (!blockClicado) return;
+
+            // Busca os checkboxes APENAS dentro do bloco que foi clicado
+            const checkboxes = blockClicado.querySelectorAll('.chk-conferido');
+            const ids = Array.from(checkboxes).map(chk => chk.dataset.id).filter(id => id);
 
             if (ids.length === 0) return;
 
-            // --- UI Otimista ---
+            // 1. UI Otimista (Atualiza a tela instantaneamente)
             checkboxes.forEach(chk => {
                 chk.checked = conferidoStatus;
                 const tr = chk.closest('tr');
-                const badge = tr.querySelector('.badge-dinamico');
-                
-                tr.classList.toggle('tr-conferido', conferidoStatus);
-                badge.textContent = conferidoStatus ? 'Conferido' : (tr.dataset.originalStatus === 'PAGO' ? 'Pago' : 'Pendente');
-                badge.className = `badge-status ${conferidoStatus || tr.dataset.originalStatus === 'PAGO' ? 'badge-pago' : 'badge-pendente'} badge-dinamico`;
+                if (tr) {
+                    const badge = tr.querySelector('.badge-dinamico');
+                    if (conferidoStatus) {
+                        tr.classList.add('tr-conferido');
+                        if (badge) {
+                            badge.textContent = 'Conferido';
+                            badge.className = 'badge-status badge-pago badge-dinamico';
+                        }
+                    } else {
+                        tr.classList.remove('tr-conferido');
+                        if (badge) {
+                            const originalStatus = tr.dataset.originalStatus;
+                            badge.textContent = originalStatus === 'PAGO' ? 'Pago' : 'Pendente';
+                            badge.className = `badge-status ${originalStatus === 'PAGO' ? 'badge-pago' : 'badge-pendente'} badge-dinamico`;
+                        }
+                    }
+                }
             });
 
-            // --- Chamada API ---
+            // 2. Chamada a API em Lote
             try {
-                await fetch('/api/lancamentos/conferido-extrato-lote', {
+                const res = await fetch('/api/lancamentos/conferido-extrato-lote', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ids, conferido: conferidoStatus })
                 });
+                
+                if (!res.ok) throw new Error('Erro na resposta do servidor');
             } catch (error) {
                 console.error('Falha na ação em lote:', error);
                 alert('Falha ao sincronizar com o servidor. Por favor, recarregue a página.');
             }
         }
 
-        // ==========================================================
-        // SheetJS: Geração Executiva Local em Excel
-        // ==========================================================
+        // ==============================================================
+        // Lógica para clique individual no checkbox (mantendo UI otimista)
+        // ==============================================================
+        function listenToIndividualCheckboxes() {
+            const checkboxes = document.querySelectorAll('.chk-conferido');
+            checkboxes.forEach(chk => {
+                chk.addEventListener('change', async (e) => {
+                    const isChecked = e.target.checked;
+                    const id = e.target.dataset.id;
+                    const tr = e.target.closest('tr');
+                    
+                    // UI Otimista
+                    if (tr) {
+                        const badge = tr.querySelector('.badge-dinamico');
+                        if (isChecked) {
+                            tr.classList.add('tr-conferido');
+                            if (badge) {
+                                badge.textContent = 'Conferido';
+                                badge.className = 'badge-status badge-pago badge-dinamico';
+                            }
+                        } else {
+                            tr.classList.remove('tr-conferido');
+                            if (badge) {
+                                const originalStatus = tr.dataset.originalStatus;
+                                badge.textContent = originalStatus === 'PAGO' ? 'Pago' : 'Pendente';
+                                badge.className = `badge-status ${originalStatus === 'PAGO' ? 'badge-pago' : 'badge-pendente'} badge-dinamico`;
+                            }
+                        }
+                    }
 
+                    // Reutiliza a rota de lote mandando um array de 1 elemento
+                    try {
+                        const res = await fetch('/api/lancamentos/conferido-extrato-lote', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: [id], conferido: isChecked })
+                        });
+                        if (!res.ok) throw new Error('Erro na resposta do servidor');
+                    } catch (err) {
+                        console.error('Falha ao atualizar status individual:', err);
+                        e.target.checked = !isChecked; // Reverte visual
+                        alert('Falha ao sincronizar com o banco.');
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
