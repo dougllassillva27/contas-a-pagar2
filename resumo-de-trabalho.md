@@ -93,7 +93,6 @@ Arquivo de log de modificações e controle de progresso.
 - **fix**: Adequação do Jest no auth.test.js onde mocks incompletos sem obj de query/cookies causavam falhas inesperadas de teste após instanciamento em vazio.
 - **QA**: Validação isolada de todos os modais agora fechando o menu lateral preventivamente ao exibirem via callback.
 
-
 ### [2026-03-26] UI/UX: Unificação do Menu Lateral (Desktop e Mobile)
 
 - **feat**: O Menu Hamburguer Flutuante (FAB) foi adotado globalmente como sistema de navegação da aplicação web, resultando em uma interface Desktop purificada de ruídos.
@@ -101,13 +100,32 @@ Arquivo de log de modificações e controle de progresso.
 - **css**: Regras de media querie removidas para expor Sidebar nativa responsiva em qualquer monitor com glassmorphism contínuo.
 - **QA**: Testes e checagens isolados realizados por Jest para certificar ausência de efeitos colaterais na lógica geral.
 
-
 ### [2026-03-26] UI/UX: Hotfix de Correção do Grid Mobile
 
 - **fix**: Correção de escopo de classes na Media Query de 768px que havia quebrado a quebra de linha de cards no Mobile. A chave de fechamento perdida no refactor Desktop foi restaurada em .header-actions, reisolando o grid-template de colunas.
-
 
 ### [2026-03-26] Infra/Docs: Migração de Monitoramento Keep-Alive
 
 - **docs**: Atualização do README.md substituindo a documentação de monitoramento via UptimeRobot pelo método funcional via Google Apps Script (Script de Cloud Function baseado no tempo para drible do isolamento de bots gratuitos da Render).
 
+### [2026-03-27] Infra/Setup: Inicialização do Master Skill
+
+- **feat**: Inicializada a estrutura do `master-skill` no projeto.
+- **config**: Criado arquivo `master-skill-config.json` com framework `Google Antigravity` e path de skills `.agent/skills`.
+- **docs**: Atualizado o `task.md` e verificado o `resumo-de-trabalho.md` para manutenção do histórico de Arquiteto Sênior.
+
+## [2026-03-29] - Conferência em Lote no Relatório
+
+**Objetivo:** Permitir a marcação e desmarcação em massa de contas (flag `ConferidoExtrato`) diretamente pela tela de relatório, melhorando a usabilidade.
+
+**Implementações realizadas:**
+
+1. **Frontend (`src/views/relatorio.ejs`)**:
+   - Adicionado um listener de clique com o botão direito (`contextmenu`) nos cards de pessoas.
+   - Criado um menu de contexto flutuante com as opções "Marcar Todas" e "Desmarcar Todas".
+   - Implementada "UI Otimista" (Optimistic UI) para atualizar visualmente a tabela, alterando os checkboxes, cores da linha e texto do badge instantaneamente antes mesmo da resposta do servidor.
+2. **Backend (`src/routes/apiRoutes.js` e `src/repositories/LancamentoRepository.js`)**:
+   - Criada a nova rota `POST /api/lancamentos/conferido-extrato-lote` focada em performance.
+   - Adicionada a função de repositório `updateConferidoExtratoLote` que recebe um array de IDs e atualiza todos em uma única query com a instrução `ANY($2::int[])`.
+3. **Testes (`__tests__/integration/api.test.js`)**:
+   - Adicionado novo bloco de testes validando os cenários de marcação (`true`) e desmarcação (`false`) enviando uma matriz de IDs, com limpeza inteligente dos dados de teste no `afterAll`.
