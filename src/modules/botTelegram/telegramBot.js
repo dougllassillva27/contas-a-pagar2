@@ -4,7 +4,14 @@
 // ==============================================================================
 
 const TelegramBot = require('node-telegram-bot-api');
-const { ETAPAS, iniciarConversa, obterConversa, avancarConversa, finalizarConversa, cancelarConversa } = require('./conversationManager');
+const {
+  ETAPAS,
+  iniciarConversa,
+  obterConversa,
+  avancarConversa,
+  finalizarConversa,
+  cancelarConversa,
+} = require('./conversationManager');
 const { parseValor, normalizarParcelasPorTipo } = require('../../helpers/parseHelpers');
 const { formatarSucesso, formatarErro } = require('./responseFormatter');
 const { STATUS, TIPO } = require('../../constants');
@@ -76,7 +83,14 @@ async function tratarComando(bot, chatId, comando) {
   }
 
   if (cmd === '/help') {
-    const ajuda = ['🏦 *Bot Contas a Pagar*', '', '📌 *Comandos:*', '/novo \\- Iniciar novo lançamento', '/cancelar \\- Cancelar lançamento em andamento', '/help \\- Ver esta ajuda'].join('\n');
+    const ajuda = [
+      '🏦 *Bot Contas a Pagar*',
+      '',
+      '📌 *Comandos:*',
+      '/novo \\- Iniciar novo lançamento',
+      '/cancelar \\- Cancelar lançamento em andamento',
+      '/help \\- Ver esta ajuda',
+    ].join('\n');
     await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2' });
     return;
   }
@@ -109,7 +123,9 @@ async function processarTexto(bot, chatId, texto, repo) {
     case ETAPAS.VALOR: {
       const valor = parseValor(texto);
       if (valor <= 0) {
-        await bot.sendMessage(chatId, '⚠️ Valor inválido. Envie algo como *R\\$ 100,00* ou *100*', { parse_mode: 'MarkdownV2' });
+        await bot.sendMessage(chatId, '⚠️ Valor inválido. Envie algo como *R\\$ 100,00* ou *100*', {
+          parse_mode: 'MarkdownV2',
+        });
         return;
       }
       await avancarEEnviarProxima(bot, chatId, 'valor', valor, repo);
@@ -122,7 +138,9 @@ async function processarTexto(bot, chatId, texto, repo) {
         parcelasRaw: texto,
       });
       if (parcelasNorm.erro) {
-        await bot.sendMessage(chatId, `⚠️ ${parcelasNorm.erro}\nEnvie no formato *10* ou *1/10*`, { parse_mode: 'MarkdownV2' });
+        await bot.sendMessage(chatId, `⚠️ ${parcelasNorm.erro}\nEnvie no formato *10* ou *1/10*`, {
+          parse_mode: 'MarkdownV2',
+        });
         return;
       }
       conversa.dados.parcelaAtual = parcelasNorm.parcelaAtual;
@@ -154,7 +172,9 @@ async function processarTexto(bot, chatId, texto, repo) {
 async function processarCallback(bot, chatId, data, repo) {
   const conversa = obterConversa(chatId);
   if (!conversa) {
-    await bot.sendMessage(chatId, 'Nenhum lançamento em andamento\\. Use /novo para iniciar\\.', { parse_mode: 'MarkdownV2' });
+    await bot.sendMessage(chatId, 'Nenhum lançamento em andamento\\. Use /novo para iniciar\\.', {
+      parse_mode: 'MarkdownV2',
+    });
     return;
   }
 
