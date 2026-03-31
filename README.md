@@ -126,6 +126,28 @@ O projeto possui um endpoint de health check pensado para:
 
 ---
 
+## ⚡ Automação: Cópia Mensal de Contas
+
+O sistema possui um endpoint de automação que realiza a cópia das contas de todos os usuários de forma automática e gratuita via **Google Apps Script**.
+
+### Como Configurar (Google Apps Script)
+1. Abra seu projeto no [Google Apps Script](https://script.google.com/).
+2. Cole a função `verificarEExecutarCopia` (veja o código no guia de entrega).
+3. No menu lateral, vá em **Acionadores** (ícone de relógio).
+4. Clique em **Adicionar Acionador**.
+5. Configure:
+   - **Função**: `verificarEExecutarCopia`
+   - **Origem do evento**: Contagem de tempo.
+   - **Tipo de acionador**: Temporizador diário.
+   - **Horário**: 22:00 às 23:00 (Horário de Brasília).
+
+> **Por que diário?** O script possui uma proteção interna que checa se "amanhã é dia 1". Ele rodará todo dia, mas a cópia real só acontece no **exato último dia do mês**.
+
+### Segurança
+O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o seu robô possa disparar a cópia.
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 
 | Tecnologia | Detalhes |

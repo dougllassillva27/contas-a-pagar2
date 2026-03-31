@@ -164,3 +164,11 @@ Durante a introdução de uma feature de menu de contexto, o layout Dark Mode or
 
 - O frontend do relatório voltou a ter sua estética e funcionalidades premium originais.
 - A conferência de extrato mensal ficou exponencialmente mais rápida, permitindo liquidar o relatório inteiro com apenas 2 cliques.
+
+### [2026-03-31] Automação: Cópia Mensal de Contas (Google Apps Script)
+
+- **feat**: Implementado endpoint de API `POST /api/v1/integracao/copiar-mensal` com trava de segurança.
+- **infra**: Integração com **Google Apps Script** via acionador diário com verificação lógica de "último dia do mês".
+- **feat**: Notificações automáticas via Telegram integradas diretamente à execução do Webhook.
+- **fix**: O sistema calcula o mês de referência baseando-se no fuso horário de Brasília (UTC-3).
+- **audit**: Solução 100% gratuita implementada, eliminando a necessidade de Cron Jobs pagos no Render.
