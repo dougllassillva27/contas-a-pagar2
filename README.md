@@ -132,7 +132,39 @@ O sistema possui um endpoint de automação que realiza a cópia das contas de t
 
 ### Como Configurar (Google Apps Script)
 1. Abra seu projeto no [Google Apps Script](https://script.google.com/).
-2. Cole a função `verificarEExecutarCopia` (veja o código no guia de entrega).
+2. Cole a função abaixo (também disponível em [scripts/google-apps-script-example.js](src/scripts/google-apps-script-example.js)):
+
+```javascript
+/**
+ * Adicione este código ao seu Google Apps Script (GAS)
+ * Configurar como: Temporizador Diário (22:00 às 23:00)
+ */
+function verificarEExecutarCopia() {
+  const hoje = new Date();
+  const amanha = new Date(hoje);
+  amanha.setDate(hoje.getDate() + 1);
+  
+  if (amanha.getDate() === 1) {
+    Logger.log('📅 Último dia detectado. Iniciando...');
+    dispararWebhookCopia();
+  }
+}
+
+function dispararWebhookCopia() {
+  const URL_BASE = 'https://SUA_URL.onrender.com';
+  const API_TOKEN = 'SEU_API_TOKEN'; 
+  const url = URL_BASE + '/api/v1/integracao/copiar-mensal';
+  
+  const options = {
+    'method': 'post',
+    'headers': { 'x-api-key': API_TOKEN },
+    'muteHttpExceptions': true
+  };
+  
+  const response = UrlFetchApp.fetch(url, options);
+  Logger.log(response.getContentText());
+}
+```
 3. No menu lateral, vá em **Acionadores** (ícone de relógio).
 4. Clique em **Adicionar Acionador**.
 5. Configure:
