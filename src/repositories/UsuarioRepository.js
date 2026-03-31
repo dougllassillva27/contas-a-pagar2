@@ -71,10 +71,21 @@ async function buscarUsuarioPorToken(token) {
   }
 }
 
+async function getTodosUsuarios() {
+  try {
+    const result = await db.query('SELECT Id as id, Nome as nome FROM Usuarios');
+    return result.rows;
+  } catch (err) {
+    console.error('Erro ao buscar todos os usuários:', err.message);
+    return [];
+  }
+}
+
 module.exports = { 
   obterUsuarioPorLogin, 
   getUsuarioById, 
   criarToken, 
   revogarToken, 
-  buscarUsuarioPorToken 
+  buscarUsuarioPorToken,
+  getTodosUsuarios
 };
