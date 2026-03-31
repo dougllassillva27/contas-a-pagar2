@@ -669,7 +669,27 @@
       "risk": "unknown",
       "source": "community",
       "date_added": "2026-02-27"
-    }
+    },
+    {
+  "name": "instrucoes-ia",
+  "description": "Garante a atuação como Arquiteto Sênior, evita vibe coding através de baby steps e testes obrigatórios, mantém histórico no resumo-de-trabalho.md, gera Conventional Commits e aplica a regra incondicional de entrega integral de código 100%.",
+  "use_cases": [
+    "geração de código", 
+    "refatoração", 
+    "tarefas de arquitetura", 
+    "manutenção de histórico de projeto", 
+    "prevenção de vibe coding"
+  ],
+  "not_use_cases": [
+    "envio de diffs ou patches parciais", 
+    "entrega de código sem testes", 
+    "sobrescrever o resumo-de-trabalho.md"
+  ],
+  "category": "meta-skill",
+  "risk": "safe",
+  "source": "personal",
+  "date_added": "2026-03-26"
+}
   ],
   "metadata": {
     "total_skills": 67,
