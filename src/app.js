@@ -38,6 +38,7 @@ const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/docs', express.static(path.join(__dirname, '../docs')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
@@ -47,10 +48,10 @@ app.use(
     secret: process.env.SESSION_SECRET || 'segredo_sessao_inseguro',
     resave: false,
     saveUninitialized: true,
-    cookie: { 
+    cookie: {
       secure: false, // Em HTTPS (Render em PROD), o ideal seria true, mas requer proxy confiável
       httpOnly: true, // Previne acesso via JavaScript (XSS)
-      maxAge: 24 * 60 * 60 * 1000 // 24 horas (tempo padrão da sessão)
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas (tempo padrão da sessão)
     },
   })
 );
