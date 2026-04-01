@@ -1,5 +1,5 @@
 // ==============================================================================
-// 🌐 ROTAS PÚBLICAS (LOGIN)
+// 🌐 ROTAS PÚBLICAS (LOGIN + PÁGINAS PÚBLICAS)
 // Extraído de app.js — sem alteração de lógica
 // ==============================================================================
 
@@ -8,7 +8,6 @@ const router = express.Router();
 const { LIMITES } = require('../constants');
 
 module.exports = function (repo, senhas) {
-  
   // ============================================================================
   // GET /login — Renderiza página de login
   // ============================================================================
@@ -25,7 +24,7 @@ module.exports = function (repo, senhas) {
   // ============================================================================
   router.post('/login', async (req, res) => {
     const passwordDigitada = (req.body.password || '').trim();
-    const lembrar = (req.body.lembrar === 'on');
+    const lembrar = req.body.lembrar === 'on';
 
     // ✅ LOG SEGURO: Não loga a senha, apenas o evento de tentativa
     console.log(`[LOGIN] Tentativa de login - IP: ${req.ip || req.connection.remoteAddress || 'N/A'}`);
@@ -43,7 +42,7 @@ module.exports = function (repo, senhas) {
         const user = await repo.getUsuarioById(targetUserId);
         if (user) {
           req.session.user = { id: user.id, nome: user.nome, login: user.login };
-          
+
           // ✅ LOG SEGURO: Confirma sucesso sem expor dados sensíveis
           console.log(`[LOGIN] ✅ Sucesso - Usuário: ${user.nome} (Lembrar: ${lembrar})`);
 
@@ -57,15 +56,15 @@ module.exports = function (repo, senhas) {
                 maxAge,
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax'
+                sameSite: 'lax',
               });
-              
+
               console.log(`[LOGIN] 🔑 Token persistente gerado para usuário ${user.id}`);
             } catch (errToken) {
               console.error(`[LOGIN] ❌ Erro ao gerar token: ${errToken.message}`);
             }
           }
-          
+
           return res.redirect('/');
         }
       } catch (err) {
@@ -76,7 +75,7 @@ module.exports = function (repo, senhas) {
     }
 
     // ✅ LOG SEGURO: Loga falha sem expor a senha tentada
-    console.log(`[LOGIN] ❌ Falha - Senha incorreta`);
+    console.log('[LOGIN] ❌ Falha - Senha incorreta');
 
     // Pequeno delay para dificultar brute force básico
     setTimeout(() => {
@@ -97,14 +96,22 @@ module.exports = function (repo, senhas) {
       if (token) {
         await repo.revogarToken(token);
         res.clearCookie('remember_me');
-        console.log(`[LOGOUT] 🔑 Token persistente revogado`);
+        console.log('[LOGOUT] 🔑 Token persistente revogado');
       }
     } catch (err) {
       console.error(`[LOGOUT] ❌ Erro ao revogar token persistente: ${err.message}`);
     }
-    
+
     req.session.destroy();
     res.redirect('/login');
+  });
+
+  // ============================================================================
+  // GET /docs/Lajeado.md — Página pública estilizada
+  // Mantém a URL desejada, mas renderiza HTML bonito em vez do markdown cru
+  // ============================================================================
+  router.get('/docs/Lajeado.md', (req, res) => {
+    return res.render('lajeado');
   });
 
   // ============================================================================
@@ -125,16 +132,22 @@ module.exports = function (repo, senhas) {
 
       const nav = {
         atual: { month, year, dateObj: dataAtual },
-        ant: { month: dataAnterior.getMonth() + 1, year: dataAnterior.getFullYear() },
-        prox: { month: dataProxima.getMonth() + 1, year: dataProxima.getFullYear() },
+        ant: {
+          month: dataAnterior.getMonth() + 1,
+          year: dataAnterior.getFullYear(),
+        },
+        prox: {
+          month: dataProxima.getMonth() + 1,
+          year: dataProxima.getFullYear(),
+        },
       };
 
       // Busca lançamentos do terceiro filtrando por usuário
       const lancamentos = await repo.getLancamentosTerceiro(userId, nome, month, year);
 
       // Agrupa por tipo
-      const itensFixas = lancamentos.filter(i => i.tipo === 'FIXA');
-      const itensCartao = lancamentos.filter(i => i.tipo === 'CARTAO');
+      const itensFixas = lancamentos.filter((i) => i.tipo === 'FIXA');
+      const itensCartao = lancamentos.filter((i) => i.tipo === 'CARTAO');
 
       // Calcula totais (todos os itens, independente de status)
       const totalFixas = itensFixas.reduce((acc, i) => acc + Number(i.valor), 0);
@@ -156,7 +169,21 @@ module.exports = function (repo, senhas) {
       console.error(`[PORTAL TERCEIRO] Erro ao buscar contas de ${req.params.nome}:`, err.message);
       res.status(500).render('terceiro', {
         nome: req.params.nome,
-        nav: { atual: { month: new Date().getMonth() + 1, year: new Date().getFullYear(), dateObj: new Date() }, ant: { month: new Date().getMonth() || 12, year: new Date().getFullYear() }, prox: { month: new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2, year: new Date().getFullYear() } },
+        nav: {
+          atual: {
+            month: new Date().getMonth() + 1,
+            year: new Date().getFullYear(),
+            dateObj: new Date(),
+          },
+          ant: {
+            month: new Date().getMonth() || 12,
+            year: new Date().getFullYear(),
+          },
+          prox: {
+            month: new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2,
+            year: new Date().getFullYear(),
+          },
+        },
         itensFixas: [],
         itensCartao: [],
         totalFixas: 0,
