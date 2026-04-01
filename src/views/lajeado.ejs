@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Organização de contas | Lajeado</title>
+    <meta
+      name="description"
+      content="Planejamento financeiro e organização de contas de Douglas e Vitória."
+    />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <style>
+      :root {
+        --bg-dark: #121212;
+        --bg-card: #1e1e1e;
+        --bg-soft: #181818;
+        --bg-chip: rgba(255, 255, 255, 0.06);
+        --text-primary: #ffffff;
+        --text-secondary: #a0a0a0;
+        --text-muted: #7b7b7b;
+        --blue: #3878e1;
+        --blue-hover: #2b62c0;
+        --red: #ef5350;
+        --green: #66bb6a;
+        --orange: #ffa726;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.14);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.22);
+        --radius: 18px;
+        --radius-sm: 12px;
+        --container: 1320px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top left, rgba(56, 120, 225, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(102, 187, 106, 0.08), transparent 20%),
+          linear-gradient(180deg, #141414 0%, #121212 100%);
+        color: var(--text-primary);
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        padding: 32px 20px 56px;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        width: 100%;
+        max-width: var(--container);
+        margin: 0 auto;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        background:
+          linear-gradient(135deg, rgba(56, 120, 225, 0.12), rgba(56, 120, 225, 0.03)),
+          var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+        margin-bottom: 24px;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -60px -60px auto;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(56, 120, 225, 0.2), transparent 65%);
+        pointer-events: none;
+      }
+
+      .hero-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .hero-copy {
+        max-width: 760px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(56, 120, 225, 0.12);
+        border: 1px solid rgba(56, 120, 225, 0.18);
+        color: #9fc1ff;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+      }
+
+      .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.92rem;
+        transition: 0.2s ease;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-primary);
+      }
+
+      .hero-btn:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--border-strong);
+      }
+
+      .hero-btn.primary {
+        background: var(--blue);
+        border-color: rgba(56, 120, 225, 0.45);
+      }
+
+      .hero-btn.primary:hover {
+        background: var(--blue-hover);
+      }
+
+      .hero-badge {
+        min-width: 180px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .hero-badge small {
+        display: block;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+        margin-bottom: 6px;
+      }
+
+      .hero-badge strong {
+        display: block;
+        font-size: 1.2rem;
+        color: var(--text-primary);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .summary-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .summary-card small {
+        display: block;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+        margin-bottom: 8px;
+      }
+
+      .summary-card strong {
+        display: block;
+        font-size: clamp(1.35rem, 2vw, 1.9rem);
+        line-height: 1.1;
+        margin-bottom: 6px;
+      }
+
+      .summary-card span {
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+      }
+
+      .summary-card.accent-blue {
+        background:
+          linear-gradient(135deg, rgba(56, 120, 225, 0.14), rgba(56, 120, 225, 0.04)),
+          var(--bg-card);
+      }
+
+      .summary-card.accent-green {
+        background:
+          linear-gradient(135deg, rgba(102, 187, 106, 0.12), rgba(102, 187, 106, 0.03)),
+          var(--bg-card);
+      }
+
+      .summary-card.accent-orange {
+        background:
+          linear-gradient(135deg, rgba(255, 167, 38, 0.12), rgba(255, 167, 38, 0.03)),
+          var(--bg-card);
+      }
+
+      .people-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+      }
+
+      .person-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .person-header {
+        padding: 24px 24px 18px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      }
+
+      .person-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .person-title {
+        margin: 0;
+        font-size: 1.5rem;
+        letter-spacing: -0.02em;
+      }
+
+      .person-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: var(--bg-chip);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+
+      .person-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .person-stat {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
+      }
+
+      .person-stat small {
+        display: block;
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+      }
+
+      .person-stat strong {
+        display: block;
+        font-size: 1.06rem;
+        line-height: 1.2;
+      }
+
+      .person-body {
+        padding: 22px 24px 24px;
+      }
+
+      .month-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .month-card {
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 16px;
+        transition: 0.2s ease;
+      }
+
+      .month-card:hover {
+        transform: translateY(-1px);
+        border-color: var(--border-strong);
+      }
+
+      .month-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .month-title {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .month-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+
+      .month-chip.warning {
+        color: #ffb4b4;
+        background: rgba(239, 83, 80, 0.12);
+        border-color: rgba(239, 83, 80, 0.18);
+      }
+
+      .month-chip.success {
+        color: #b8efbb;
+        background: rgba(102, 187, 106, 0.12);
+        border-color: rgba(102, 187, 106, 0.18);
+      }
+
+      .month-chip.info {
+        color: #b8d4ff;
+        background: rgba(56, 120, 225, 0.12);
+        border-color: rgba(56, 120, 225, 0.18);
+      }
+
+      .month-metrics {
+        display: grid;
+        gap: 10px;
+      }
+
+      .metric {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+      }
+
+      .metric:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .metric-label {
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+      }
+
+      .metric-value {
+        color: var(--text-primary);
+        font-weight: 700;
+        white-space: nowrap;
+        text-align: right;
+      }
+
+      .metric-value.red {
+        color: var(--red);
+      }
+
+      .metric-value.green {
+        color: var(--green);
+      }
+
+      .metric-value.blue {
+        color: var(--blue);
+      }
+
+      .footer-note {
+        margin-top: 28px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+      }
+
+      .floating-top {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        width: 52px;
+        height: 52px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--blue);
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(56, 120, 225, 0.38);
+        transition: 0.2s ease;
+      }
+
+      .floating-top:hover {
+        background: var(--blue-hover);
+        transform: translateY(-2px);
+      }
+
+      @media (max-width: 1024px) {
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .people-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-top {
+          flex-direction: column;
+        }
+
+        .hero-badge {
+          width: 100%;
+          min-width: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 18px 14px 40px;
+        }
+
+        .hero {
+          padding: 20px;
+          border-radius: 22px;
+        }
+
+        .person-header,
+        .person-body {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .person-stats {
+          grid-template-columns: 1fr;
+        }
+
+        .month-top,
+        .metric {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .metric-value {
+          text-align: left;
+        }
+
+        .hero-actions {
+          flex-direction: column;
+        }
+
+        .hero-btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <%
+      const dados = {
+        douglas: {
+          nome: 'Douglas',
+          tag: 'Planejamento principal',
+          resumo: {
+            guardado: 'R$ 12.491,67',
+            saque: 'R$ 2.113,48',
+            total: 'R$ 14.605,15'
+          },
+          meses: [
+            {
+              titulo: '05/Abril',
+              statusLabel: 'Atenção',
+              statusClass: 'warning',
+              metricas: [
+                { label: 'Contas', valor: 'R$ 4.595,15', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 1.267,00', classe: 'red' }
+              ]
+            },
+            {
+              titulo: '05/Maio',
+              statusLabel: 'Atenção',
+              statusClass: 'warning',
+              metricas: [
+                { label: 'Contas', valor: 'R$ 4.055,10', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 725,95', classe: 'red' }
+              ]
+            },
+            {
+              titulo: '05/Junho',
+              statusLabel: 'Quase lá',
+              statusClass: 'info',
+              metricas: [
+                { label: 'Contas', valor: 'R$ 3.717,90', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 388,75', classe: 'red' }
+              ]
+            },
+            {
+              titulo: '05/Julho',
+              statusLabel: 'Quase lá',
+              statusClass: 'info',
+              metricas: [
+                { label: 'Contas', valor: 'R$ 3.665,07', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 335,92', classe: 'red' }
+              ]
+            },
+            {
+              titulo: '05/Agosto (acabou o seguro)',
+              statusLabel: 'Fôlego extra',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Contas', valor: 'R$ 3.653,51', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 2.843,01', classe: 'green' }
+              ]
+            },
+            {
+              titulo: '05/Setembro',
+              statusLabel: 'Fôlego extra',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Contas', valor: 'R$ 3.559,76', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 2.749,26', classe: 'green' }
+              ]
+            }
+          ]
+        },
+        vitoria: {
+          nome: 'Vitória',
+          tag: 'Planejamento compartilhado',
+          resumo: {
+            guardado: 'R$ 5.729,89',
+            saque: '—',
+            total: 'R$ 5.729,89'
+          },
+          meses: [
+            {
+              titulo: '05/Abril',
+              statusLabel: 'Atenção',
+              statusClass: 'warning',
+              metricas: [
+                { label: 'Cartão Dodo', valor: 'R$ 1.541,90', classe: 'blue' },
+                { label: 'Contas', valor: 'R$ 6.344,36', classe: 'blue' },
+                { label: 'Faltando', valor: 'R$ 344,36', classe: 'red' }
+              ]
+            },
+            {
+              titulo: '05/Maio',
+              statusLabel: 'Sobra positiva',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Cartão Dodo', valor: 'R$ 938,44', classe: 'blue' },
+                { label: 'Contas', valor: 'R$ 4.401,18', classe: 'blue' },
+                { label: 'Sobrando', valor: 'R$ 1.598,82', classe: 'green' }
+              ]
+            },
+            {
+              titulo: '05/Junho',
+              statusLabel: 'Sobra positiva',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Cartão Dodo', valor: 'R$ 767,65', classe: 'blue' },
+                { label: 'Contas', valor: 'R$ 4.125,02', classe: 'blue' },
+                { label: 'Sobrando', valor: 'R$ 1.874,98', classe: 'green' }
+              ]
+            },
+            {
+              titulo: '05/Julho',
+              statusLabel: 'Sobra positiva',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Cartão Dodo', valor: 'R$ 666,49', classe: 'blue' },
+                { label: 'Contas', valor: 'R$ 3.992,23', classe: 'blue' },
+                { label: 'Sobrando', valor: 'R$ 2.007,77', classe: 'green' }
+              ]
+            },
+            {
+              titulo: '05/Agosto',
+              statusLabel: 'Sobra positiva',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Cartão Dodo', valor: 'R$ 666,49', classe: 'blue' },
+                { label: 'Contas', valor: 'R$ 3.940,98', classe: 'blue' },
+                { label: 'Sobrando', valor: 'R$ 2.059,02', classe: 'green' }
+              ]
+            },
+            {
+              titulo: '05/Setembro',
+              statusLabel: 'Sobra positiva',
+              statusClass: 'success',
+              metricas: [
+                { label: 'Cartão Dodo', valor: 'R$ 666,49', classe: 'blue' },
+                { label: 'Contas', valor: 'R$ 3.940,98', classe: 'blue' },
+                { label: 'Sobrando', valor: 'R$ 2.059,02', classe: 'green' }
+              ]
+            }
+          ]
+        }
+      };
+    %>
+
+    <main class="page">
+      <section class="hero">
+        <div class="hero-top">
+          <div class="hero-copy">
+            <div class="eyebrow">Planejamento financeiro • Lajeado</div>
+            <h1>Organização de contas</h1>
+            <p>
+              Página pública organizada no mesmo clima visual do sistema principal,
+              com leitura rápida, destaque dos valores e visão mensal separada por pessoa.
+            </p>
+
+            <div class="hero-actions">
+              <a class="hero-btn primary" href="#conteudo">Ver planejamento</a>
+              <a class="hero-btn" href="/login">Voltar ao sistema</a>
+            </div>
+          </div>
+
+          <div class="hero-badge">
+            <small>Documento</small>
+            <strong>Lajeado</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary-grid">
+        <article class="summary-card accent-blue">
+          <small>Douglas • total disponível</small>
+          <strong><%= dados.douglas.resumo.total %></strong>
+          <span>Guardado + saque aniversário</span>
+        </article>
+
+        <article class="summary-card accent-orange">
+          <small>Vitória • total guardado</small>
+          <strong><%= dados.vitoria.resumo.total %></strong>
+          <span>Base atual para organização mensal</span>
+        </article>
+
+        <article class="summary-card accent-green">
+          <small>Visão consolidada</small>
+          <strong>2 pessoas</strong>
+          <span>Planejamento separado por blocos mensais</span>
+        </article>
+      </section>
+
+      <section class="people-grid" id="conteudo">
+        <article class="person-card">
+          <header class="person-header">
+            <div class="person-title-row">
+              <h2 class="person-title"><%= dados.douglas.nome %></h2>
+              <span class="person-tag"><%= dados.douglas.tag %></span>
+            </div>
+
+            <div class="person-stats">
+              <div class="person-stat">
+                <small>Guardado</small>
+                <strong><%= dados.douglas.resumo.guardado %></strong>
+              </div>
+              <div class="person-stat">
+                <small>Saque aniversário</small>
+                <strong><%= dados.douglas.resumo.saque %></strong>
+              </div>
+              <div class="person-stat">
+                <small>Total</small>
+                <strong><%= dados.douglas.resumo.total %></strong>
+              </div>
+            </div>
+          </header>
+
+          <div class="person-body">
+            <div class="month-list">
+              <% dados.douglas.meses.forEach((mes) => { %>
+                <section class="month-card">
+                  <div class="month-top">
+                    <h3 class="month-title"><%= mes.titulo %></h3>
+                    <span class="month-chip <%= mes.statusClass %>"><%= mes.statusLabel %></span>
+                  </div>
+
+                  <div class="month-metrics">
+                    <% mes.metricas.forEach((metrica) => { %>
+                      <div class="metric">
+                        <span class="metric-label"><%= metrica.label %></span>
+                        <strong class="metric-value <%= metrica.classe %>"><%= metrica.valor %></strong>
+                      </div>
+                    <% }) %>
+                  </div>
+                </section>
+              <% }) %>
+            </div>
+          </div>
+        </article>
+
+        <article class="person-card">
+          <header class="person-header">
+            <div class="person-title-row">
+              <h2 class="person-title"><%= dados.vitoria.nome %></h2>
+              <span class="person-tag"><%= dados.vitoria.tag %></span>
+            </div>
+
+            <div class="person-stats">
+              <div class="person-stat">
+                <small>Guardado</small>
+                <strong><%= dados.vitoria.resumo.guardado %></strong>
+              </div>
+              <div class="person-stat">
+                <small>Saque aniversário</small>
+                <strong><%= dados.vitoria.resumo.saque %></strong>
+              </div>
+              <div class="person-stat">
+                <small>Total</small>
+                <strong><%= dados.vitoria.resumo.total %></strong>
+              </div>
+            </div>
+          </header>
+
+          <div class="person-body">
+            <div class="month-list">
+              <% dados.vitoria.meses.forEach((mes) => { %>
+                <section class="month-card">
+                  <div class="month-top">
+                    <h3 class="month-title"><%= mes.titulo %></h3>
+                    <span class="month-chip <%= mes.statusClass %>"><%= mes.statusLabel %></span>
+                  </div>
+
+                  <div class="month-metrics">
+                    <% mes.metricas.forEach((metrica) => { %>
+                      <div class="metric">
+                        <span class="metric-label"><%= metrica.label %></span>
+                        <strong class="metric-value <%= metrica.classe %>"><%= metrica.valor %></strong>
+                      </div>
+                    <% }) %>
+                  </div>
+                </section>
+              <% }) %>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="footer-note">
+        Página pública estilizada a partir do conteúdo original de <code>Lajeado.md</code>.
+      </div>
+    </main>
+
+    <button
+      class="floating-top"
+      type="button"
+      aria-label="Voltar ao topo"
+      title="Voltar ao topo"
+      onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+    >
+      ↑
+    </button>
+  </body>
+</html>

@@ -38,7 +38,6 @@ const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/docs', express.static(path.join(__dirname, '../docs')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
