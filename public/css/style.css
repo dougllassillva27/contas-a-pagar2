@@ -544,6 +544,9 @@ textarea:focus {
 .list-table tr:hover {
   background: rgba(255, 255, 255, 0.05);
 }
+.list-table tr.selected-row {
+  background: rgba(56, 120, 225, 0.2) !important;
+}
 .list-table td {
   padding: 10px 12px;
   font-size: 0.9rem;
@@ -1029,7 +1032,7 @@ input[type='checkbox'] {
   .panel > div[style*='background'] div[style*='font-size: 1.4rem'] {
     font-size: 1.1rem !important;
   }
-  
+
   /* ==============================================================================
      CORREÇÃO MOBILE: SCROLL EM IFRAMES DENTRO DE MODAIS (APENAS MOBILE)
      ============================================================================== */
@@ -1038,7 +1041,7 @@ input[type='checkbox'] {
     touch-action: pan-y;
     overscroll-behavior: contain;
   }
-  
+
   /* Iframe dentro de modal - permitir scroll apenas no mobile */
   .modal-scroll iframe {
     width: 100%;
@@ -1049,13 +1052,13 @@ input[type='checkbox'] {
     touch-action: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Modal de iframe específico - APENAS MOBILE */
   .modal-box.iframe-modal {
     padding: 0;
     overflow: hidden;
   }
-  
+
   .modal-box.iframe-modal .modal-header {
     padding: 15px 20px;
     margin-bottom: 0;
@@ -1065,7 +1068,7 @@ input[type='checkbox'] {
     top: 0;
     z-index: 10;
   }
-  
+
   .modal-box.iframe-modal .modal-scroll {
     height: calc(90vh - 60px);
     max-height: none;
@@ -1073,7 +1076,7 @@ input[type='checkbox'] {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .modal-box.iframe-modal .modal-scroll iframe {
     height: 100%;
     min-height: 100%;
@@ -1137,7 +1140,7 @@ input[type='checkbox'] {
     height: 95vh;
     max-height: 95vh;
   }
-  
+
   #modalCalcularLuz .modal-scroll {
     height: calc(95vh - 70px);
   }

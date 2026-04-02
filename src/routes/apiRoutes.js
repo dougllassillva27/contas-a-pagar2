@@ -189,7 +189,17 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      const [totais, fixas, cartao, anotacoes, resumoPessoas, dadosTerceirosRaw, ordemCardsRaw, faturaManualVal, terceirosDistinct] = await Promise.all([
+      const [
+        totais,
+        fixas,
+        cartao,
+        anotacoes,
+        resumoPessoas,
+        dadosTerceirosRaw,
+        ordemCardsRaw,
+        faturaManualVal,
+        terceirosDistinct,
+      ] = await Promise.all([
         repo.getDashboardTotals(userId, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
@@ -233,7 +243,7 @@ module.exports = function (repo) {
         repo.getLancamentosPorTipo(req.session.user.id, TIPO.FIXA, month, year),
         repo.getLancamentosPorTipo(req.session.user.id, TIPO.CARTAO, month, year),
         repo.getResumoPessoas(req.session.user.id, month, year, req.session.user.nome),
-        repo.getDadosTerceiros(req.session.user.id, month, year)
+        repo.getDadosTerceiros(req.session.user.id, month, year),
       ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
@@ -286,7 +296,15 @@ module.exports = function (repo) {
     asyncHandler(async (req, res) => {
       const month = req.query.month || new Date().getMonth() + 1;
       const year = req.query.year || new Date().getFullYear();
-      res.json(await repo.getLancamentosCartaoPorPessoa(req.session.user.id, req.params.pessoa, month, year, req.session.user.nome));
+      res.json(
+        await repo.getLancamentosCartaoPorPessoa(
+          req.session.user.id,
+          req.params.pessoa,
+          month,
+          year,
+          req.session.user.nome
+        )
+      );
     })
   );
 
@@ -304,7 +322,12 @@ module.exports = function (repo) {
   router.post(
     '/api/fatura-manual',
     asyncHandler(async (req, res) => {
-      await repo.saveFaturaManual(req.session.user.id, parseInt(req.body.month, 10), parseInt(req.body.year, 10), parseValor(req.body.valor));
+      await repo.saveFaturaManual(
+        req.session.user.id,
+        parseInt(req.body.month, 10),
+        parseInt(req.body.year, 10),
+        parseValor(req.body.valor)
+      );
       res.json({ success: true });
     })
   );
@@ -340,7 +363,13 @@ module.exports = function (repo) {
   router.delete(
     '/api/lancamentos/pessoa/:nome',
     asyncHandler(async (req, res) => {
-      await repo.deleteLancamentosPorPessoa(req.session.user.id, req.params.nome, parseInt(req.query.month, 10), parseInt(req.query.year, 10), req.session.user.nome);
+      await repo.deleteLancamentosPorPessoa(
+        req.session.user.id,
+        req.params.nome,
+        parseInt(req.query.month, 10),
+        parseInt(req.query.year, 10),
+        req.session.user.nome
+      );
       res.json({ success: true });
     })
   );
@@ -348,11 +377,18 @@ module.exports = function (repo) {
   router.post(
     '/api/lancamentos/status-pessoa',
     asyncHandler(async (req, res) => {
-      await repo.updateStatusBatchPessoa(req.session.user.id, req.body.pessoa, req.body.status, req.body.month, req.body.year, req.session.user.nome);
+      await repo.updateStatusBatchPessoa(
+        req.session.user.id,
+        req.body.pessoa,
+        req.body.status,
+        req.body.month,
+        req.body.year,
+        req.session.user.nome
+      );
       res.json({ success: true });
     })
   );
-  
+
   router.post(
     '/api/lancamentos/conferido-recentes',
     asyncHandler(async (req, res) => {
@@ -381,7 +417,18 @@ module.exports = function (repo) {
   router.post(
     '/api/lancamentos',
     asyncHandler(async (req, res) => {
-      const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro, context_month, context_year, terceiros, bulk_mode } = req.body;
+      const {
+        descricao,
+        valor,
+        tipo_transacao,
+        sub_tipo,
+        parcelas,
+        nome_terceiro,
+        context_month,
+        context_year,
+        terceiros,
+        bulk_mode,
+      } = req.body;
 
       // ✅ MODO BULK: lançamento em massa para múltiplos terceiros
       if (bulk_mode && Array.isArray(terceiros) && terceiros.length > 0) {
@@ -403,7 +450,7 @@ module.exports = function (repo) {
         };
 
         // Filtra terceiros vazios e duplicados
-        const terceirosUnicos = [...new Set(terceiros.map(t => t.trim()).filter(t => t.length > 0))];
+        const terceirosUnicos = [...new Set(terceiros.map((t) => t.trim()).filter((t) => t.length > 0))];
 
         if (terceirosUnicos.length === 0) {
           return res.status(400).json({ error: 'Nenhum terceiro válido informado.' });
@@ -486,6 +533,19 @@ module.exports = function (repo) {
     asyncHandler(async (req, res) => {
       await repo.updateConferido(req.session.user.id, req.params.id, req.body.conferido);
       res.json({ success: true });
+    })
+  );
+
+  // ✅ NOVA ROTA: Exclusão em lote por array de IDs
+  router.delete(
+    '/api/lancamentos/lote',
+    asyncHandler(async (req, res) => {
+      const { ids } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Array de IDs inválido ou vazio.' });
+      }
+      const deletedCount = await repo.deleteLancamentosEmLote(req.session.user.id, ids);
+      res.json({ success: true, deleted: deletedCount });
     })
   );
 

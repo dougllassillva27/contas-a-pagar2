@@ -104,11 +104,11 @@ const customTooltip = document.getElementById('customTooltip');
 
 function showCustomTooltip(element, text) {
   if (!customTooltip) return;
-  
+
   const rect = element.getBoundingClientRect();
   customTooltip.textContent = text;
   customTooltip.style.display = 'block';
-  customTooltip.style.left = `${rect.left + (rect.width / 2) - (customTooltip.offsetWidth / 2)}px`;
+  customTooltip.style.left = `${rect.left + rect.width / 2 - customTooltip.offsetWidth / 2}px`;
   customTooltip.style.top = `${rect.top - customTooltip.offsetHeight - 8}px`;
 }
 
@@ -136,7 +136,7 @@ function fecharModalCalcularLuz() {
 // Adiciona listeners para tooltips customizados
 document.addEventListener('DOMContentLoaded', () => {
   // Adiciona tooltips customizados para checkboxes do header
-  document.querySelectorAll('th input[type="checkbox"]').forEach(checkbox => {
+  document.querySelectorAll('th input[type="checkbox"]').forEach((checkbox) => {
     checkbox.addEventListener('mouseenter', (e) => {
       showCustomTooltip(e.target, 'Marcar todas como já calculadas');
     });
@@ -176,20 +176,40 @@ function abrirMenuContexto(e, pessoa) {
   if (e.cancelable && e.preventDefault) e.preventDefault();
   pessoaSelecionadaContexto = pessoa;
   const menu = document.getElementById('customContextMenu');
-  
+
   // Controle de visibilidade dos itens do menu
-  const isUltimas = (pessoa === 'ULTIMAS');
-  
+  const isUltimas = pessoa === 'ULTIMAS';
+
   // Esconde itens de cartão se for 'ULTIMAS'
-  document.querySelectorAll('#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas)').forEach(li => {
-    li.style.display = isUltimas ? 'none' : 'flex';
-  });
+  document
+    .querySelectorAll(
+      '#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas):not(#btnExcluirSelecionados)'
+    )
+    .forEach((li) => {
+      li.style.display = isUltimas ? 'none' : 'flex';
+    });
 
   const btnDelete = document.querySelector('#customContextMenu li.delete-action');
   if (btnDelete) btnDelete.style.display = isUltimas ? 'none' : 'flex';
 
   const btnMarcar = document.getElementById('btnMarcarCalculadas');
   if (btnMarcar) btnMarcar.style.display = isUltimas ? 'flex' : 'none';
+
+  const btnExcluirSelecionados = document.getElementById('btnExcluirSelecionados');
+  if (btnExcluirSelecionados) {
+    if (isUltimas) {
+      const selectedCount = document.querySelectorAll('#listaUltimasConteudo tr.selected-row').length;
+      if (selectedCount > 0) {
+        btnExcluirSelecionados.style.display = 'flex';
+        document.getElementById('textExcluirSelecionados').innerText =
+          `Excluir ${selectedCount} ite${selectedCount > 1 ? 'ns' : 'm'} selecionado${selectedCount > 1 ? 's' : ''}`;
+      } else {
+        btnExcluirSelecionados.style.display = 'none';
+      }
+    } else {
+      btnExcluirSelecionados.style.display = 'none';
+    }
+  }
 
   // Controle de divisores
   const divUltimas = document.getElementById('menuDividerUltimas');
@@ -263,7 +283,8 @@ function confirmarExclusaoPessoa() {
   registerModalOpen();
   const modal = document.getElementById('modalConfirmacaoAcao');
   document.getElementById('tituloConfirmacao').innerText = 'Excluir em Lote';
-  document.getElementById('textoConfirmacao').innerText = `Deseja apagar permanentemente todas as contas de cartão de "${pessoaSelecionadaContexto}"?`;
+  document.getElementById('textoConfirmacao').innerText =
+    `Deseja apagar permanentemente todas as contas de cartão de "${pessoaSelecionadaContexto}"?`;
   const btn = document.getElementById('btnConfirmarAcao');
   btn.style.backgroundColor = 'var(--red)';
   document.getElementById('iconConfirmacao').innerText = 'warning';
@@ -271,7 +292,10 @@ function confirmarExclusaoPessoa() {
 
   acaoConfirmadaCallback = async () => {
     mostrarLoading();
-    await fetch(`/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' });
+    await fetch(
+      `/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`,
+      { method: 'DELETE' }
+    );
     window.location.reload();
   };
   modal.classList.add('active');
@@ -289,13 +313,21 @@ function toggleAllConferido(checkbox) {
   const isChecked = checkbox.checked;
   const tbody = document.getElementById('listaUltimasConteudo');
   const checkboxes = tbody.querySelectorAll('input[type="checkbox"]');
-  
-  checkboxes.forEach(cb => {
+
+  checkboxes.forEach((cb) => {
     cb.checked = isChecked;
     // Dispara o evento change para cada checkbox
     cb.dispatchEvent(new Event('change'));
   });
 }
+
+// ==============================================================================
+// ✅ SELEÇÃO DE LINHAS (EXCLUSÃO EM LOTE)
+// ==============================================================================
+window.toggleRowSelection = function (e, row) {
+  if (e.target.tagName === 'INPUT' || e.target.closest('.actions')) return;
+  row.classList.toggle('selected-row');
+};
 
 // --- OUTRAS FUNÇÕES ---
 async function abrirModalUltimas() {
@@ -310,7 +342,8 @@ async function abrirModalUltimas() {
     const data = await res.json();
 
     if (!Array.isArray(data) || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhum registro recente.</td></tr>';
       return;
     }
 
@@ -340,7 +373,9 @@ async function abrirModalUltimas() {
       const descHTML = `<div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span>${descText}</span>${badgeCmp}</div>`;
 
       const dt = item.datacriacao ? new Date(item.datacriacao) : null;
-      const inseridoEm = dt ? `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}` : '--/--/----';
+      const inseridoEm = dt
+        ? `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`
+        : '--/--/----';
 
       // Segurança básica para strings dentro do onclick
       const safeDesc = String(item.descricao || '').replace(/'/g, "\\'");
@@ -357,7 +392,7 @@ async function abrirModalUltimas() {
       const isConferido = item.conferido === true;
       const classeConferido = isConferido ? ' conferido' : '';
 
-      html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" class="${classeConferido}" data-id="${item.id}">
+      html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" class="${classeConferido}" data-id="${item.id}" onclick="toggleRowSelection(event, this)">
                 <td style="text-align:center;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
                 <td class="col-data">${inseridoEm}</td>
                 <td style="font-weight:500; color:var(--blue);">${quem}</td>
@@ -371,14 +406,15 @@ async function abrirModalUltimas() {
     });
 
     tbody.innerHTML = html;
-    
+
     // Adiciona evento de clique com botão direito no tbody do modal ÚLTIMAS
     tbody.oncontextmenu = (e) => abrirMenuContexto(e, 'ULTIMAS');
 
     atualizarTotalNaoConferido();
   } catch (err) {
     console.error(err);
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
   }
 }
 
@@ -389,7 +425,7 @@ async function executarAcaoConferidoLote() {
     const res = await fetch('/api/lancamentos/conferido-recentes', { method: 'POST' });
     if (res.ok) {
       // Atualiza visualmente as linhas no modal aberto
-      document.querySelectorAll('#listaUltimasConteudo tr').forEach(row => {
+      document.querySelectorAll('#listaUltimasConteudo tr').forEach((row) => {
         row.classList.add('conferido');
         const cb = row.querySelector('input[type="checkbox"]');
         if (cb) cb.checked = true;
@@ -404,6 +440,50 @@ async function executarAcaoConferidoLote() {
     ocultarLoading();
     console.error(err);
   }
+}
+
+function confirmarExclusaoLoteUltimas() {
+  fecharMenuContexto();
+  const selectedRows = document.querySelectorAll('#listaUltimasConteudo tr.selected-row');
+  const ids = Array.from(selectedRows).map((tr) => tr.dataset.id);
+
+  if (ids.length === 0) return;
+
+  registerModalOpen();
+  const modal = document.getElementById('modalConfirmacaoAcao');
+  document.getElementById('tituloConfirmacao').innerText = 'Excluir Selecionados';
+  document.getElementById('textoConfirmacao').innerText =
+    `Deseja apagar permanentemente os ${ids.length} itens selecionados?`;
+  const btn = document.getElementById('btnConfirmarAcao');
+  btn.style.backgroundColor = 'var(--red)';
+  document.getElementById('iconConfirmacao').innerText = 'warning';
+  document.getElementById('iconConfirmacao').style.color = 'var(--red)';
+
+  acaoConfirmadaCallback = async () => {
+    mostrarLoading();
+    try {
+      const res = await fetch('/api/lancamentos/lote', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        selectedRows.forEach((tr) => tr.remove());
+        atualizarTotalNaoConferido();
+        await atualizarTotais();
+        ocultarLoading();
+        mostrarAviso('Sucesso', `${ids.length} itens excluídos.`);
+      } else {
+        ocultarLoading();
+        mostrarAviso('Erro', 'Falha ao excluir itens.');
+      }
+    } catch (err) {
+      ocultarLoading();
+      console.error(err);
+      mostrarAviso('Erro', 'Erro de conexão.');
+    }
+  };
+  modal.classList.add('active');
 }
 
 // ==============================================================================
@@ -478,7 +558,8 @@ async function abrirModalCartaoPessoa(pessoa) {
     const res = await fetch(`/api/cartao/${encodeURIComponent(pessoa)}?month=${currentMonth}&year=${currentYear}`);
     const itens = await res.json();
     const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
-    document.getElementById('totalModalCartao').innerText = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('totalModalCartao').innerText =
+      'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     if (itens.length === 0) {
       container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum lançamento.</td></tr>';
       return;
@@ -490,7 +571,10 @@ async function abrirModalCartaoPessoa(pessoa) {
       const pAtual = item.parcelaatual || '';
       const pTotal = item.totalparcelas || '';
       const safePessoa = (item.nometerceiro || '').replace(/'/g, "\\'");
-      let parcelasTexto = item.parcelaatual && item.totalparcelas ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2, '0')}/${String(item.totalparcelas).padStart(2, '0')})</small>` : '';
+      let parcelasTexto =
+        item.parcelaatual && item.totalparcelas
+          ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2, '0')}/${String(item.totalparcelas).padStart(2, '0')})</small>`
+          : '';
       html += `<tr class="draggable-row" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
     });
     container.innerHTML = html;
@@ -498,7 +582,8 @@ async function abrirModalCartaoPessoa(pessoa) {
     initTouchDragAndDrop();
   } catch (err) {
     console.error(err);
-    container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>';
+    container.innerHTML =
+      '<tr><td colspan="5" style="text-align:center; color:var(--red);">Erro ao carregar detalhes.</td></tr>';
   }
 }
 
@@ -518,7 +603,8 @@ async function abrirModalRendasDetalhes() {
     container.innerHTML = html || 'Vazio';
   } catch (err) {
     console.error(err);
-    container.innerHTML = '<div style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar rendas.</div>';
+    container.innerHTML =
+      '<div style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar rendas.</div>';
   }
 }
 
@@ -597,8 +683,11 @@ function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) {
   document.getElementById('contaDesc').value = desc;
   document.getElementById('contaValor').value = valor;
   document.getElementById('contaTipo').value = tipo;
-  document.getElementById('contaTerceiro').value = nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined' ? nomeTerceiro : '';
-  if (tipo === 'Parcelada' && pAtual && pTotal) document.getElementById('contaParcelas').value = String(pAtual).padStart(2, '0') + '/' + String(pTotal).padStart(2, '0');
+  document.getElementById('contaTerceiro').value =
+    nomeTerceiro && nomeTerceiro !== 'null' && nomeTerceiro !== 'undefined' ? nomeTerceiro : '';
+  if (tipo === 'Parcelada' && pAtual && pTotal)
+    document.getElementById('contaParcelas').value =
+      String(pAtual).padStart(2, '0') + '/' + String(pTotal).padStart(2, '0');
   else document.getElementById('contaParcelas').value = '';
   toggleParcelas();
   modal.classList.add('active');
@@ -661,7 +750,11 @@ async function salvarFaturaManual(input) {
   let val = input.value;
   if (!val) val = '0';
   try {
-    const res = await fetch('/api/fatura-manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }) });
+    const res = await fetch('/api/fatura-manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ valor: val, month: currentMonth, year: currentYear }),
+    });
     const data = await res.json();
     if (!res.ok) {
       mostrarAviso('Erro', data.error);
@@ -792,7 +885,11 @@ async function salvarOrdemCards() {
   const container = document.querySelector('.drag-container-cards');
   const nomes = [...container.querySelectorAll('.draggable-card')].map((card) => card.dataset.nome);
   try {
-    await fetch('/api/cards/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nomes }) });
+    await fetch('/api/cards/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nomes }),
+    });
   } catch (err) {
     console.error(err);
   }
@@ -806,7 +903,11 @@ function fazerBackup() {
 async function executarCopia() {
   mostrarLoading();
   try {
-    const res = await fetch('/api/lancamentos/copiar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ month: currentMonth, year: currentYear }) });
+    const res = await fetch('/api/lancamentos/copiar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month: currentMonth, year: currentYear }),
+    });
     ocultarLoading();
     if (res.ok) {
       mostrarAviso('Sucesso', 'Contas copiadas!');
@@ -1021,7 +1122,11 @@ async function salvarOrdem(container) {
   const itens = [...container.querySelectorAll('.draggable-row')].map((row) => ({ id: row.dataset.id }));
   if (itens.length === 0) return;
   try {
-    await fetch('/api/lancamentos/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itens }) });
+    await fetch('/api/lancamentos/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itens }),
+    });
   } catch (err) {
     console.error('Erro', err);
   }
@@ -1067,7 +1172,7 @@ function toggleBulkMode() {
 }
 
 // ✅ CORREÇÃO: Função setBulkMode agora está no escopo global
-window.setBulkMode = function(isBulk) {
+window.setBulkMode = function (isBulk) {
   const btnSim = document.getElementById('bulkBtnSim');
   const btnNao = document.getElementById('bulkBtnNao');
 
@@ -1094,8 +1199,8 @@ function atualizarBulkCounter() {
 
   const nomes = bulkInput.value
     .split(',')
-    .map(n => n.trim())
-    .filter(n => n.length > 0);
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0);
 
   if (nomes.length > 0) {
     bulkCounter.textContent = `${nomes.length} lançamento(s) será(ão) criado(s)`;
@@ -1116,8 +1221,9 @@ function mascaraParcela(input) {
 async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
   const form = e.target;
-  const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId')).value;
-  
+  const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
+    .value;
+
   // Verifica se é modo bulk (apenas para CONTAS)
   const btnSim = document.getElementById('bulkBtnSim');
   const isBulk = btnSim && btnSim.classList.contains('active') && tipoTransacao === 'CONTA';
@@ -1127,20 +1233,20 @@ async function enviarLancamento(e, tipoTransacao) {
     return;
   }
 
-  const dados = { 
-    descricao: form.descricao.value, 
-    valor: form.valor.value, 
-    sub_tipo: form.sub_tipo.value, 
-    tipo_transacao: tipoTransacao, 
-    context_month: currentMonth, 
-    context_year: currentYear 
+  const dados = {
+    descricao: form.descricao.value,
+    valor: form.valor.value,
+    sub_tipo: form.sub_tipo.value,
+    tipo_transacao: tipoTransacao,
+    context_month: currentMonth,
+    context_year: currentYear,
   };
-  
+
   if (tipoTransacao === 'CONTA') {
     if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
     dados.nome_terceiro = form.nome_terceiro.value;
   }
-  
+
   try {
     let url = '/api/lancamentos';
     let method = 'POST';
@@ -1148,7 +1254,11 @@ async function enviarLancamento(e, tipoTransacao) {
       url = `/api/lancamentos/${id}`;
       method = 'PUT';
     }
-    const res = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados),
+    });
     if (res.ok) window.location.reload();
   } catch (err) {
     console.error(err);
@@ -1164,8 +1274,8 @@ async function enviarLancamentoBulk(form) {
 
   const terceiros = bulkInput.value
     .split(',')
-    .map(n => n.trim())
-    .filter(n => n.length > 0);
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0);
 
   if (terceiros.length === 0) {
     mostrarAviso('Erro', 'Adicione pelo menos 1 terceiro separado por vírgula.');
@@ -1180,7 +1290,7 @@ async function enviarLancamentoBulk(form) {
     context_month: currentMonth,
     context_year: currentYear,
     terceiros: terceiros, // Array de terceiros
-    bulk_mode: true // Flag para backend
+    bulk_mode: true, // Flag para backend
   };
 
   if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
@@ -1190,7 +1300,7 @@ async function enviarLancamentoBulk(form) {
     const res = await fetch('/api/lancamentos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados)
+      body: JSON.stringify(dados),
     });
 
     ocultarLoading();
@@ -1277,7 +1387,7 @@ function compartilharLinkTerceiro() {
 
   const userId = document.body.dataset.userid;
   const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
-  
+
   // Detecção de PC vs Celular
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -1289,7 +1399,7 @@ function compartilharLinkTerceiro() {
     // Comportamento PC: Abre modal de escolhas
     const nomeEl = document.getElementById('nomePessoaShare');
     if (nomeEl) nomeEl.innerText = nome;
-    
+
     registerModalOpen();
     document.getElementById('modalCompartilhar').classList.add('active');
   }
@@ -1332,7 +1442,7 @@ function copiarLinkCompartilhado() {
  */
 function copiarAoClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).catch(err => {
+    navigator.clipboard.writeText(text).catch((err) => {
       console.error('Erro ao copiar: ', err);
       // fallback redundante em caso de erro na API
       fallbackCopiarAoClipboard(text);
