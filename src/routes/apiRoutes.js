@@ -512,6 +512,19 @@ module.exports = function (repo) {
     })
   );
 
+  // ✅ NOVA ROTA: Exclusão em lote por array de IDs
+  router.delete(
+    '/api/lancamentos/lote',
+    asyncHandler(async (req, res) => {
+      const { ids } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Array de IDs inválido ou vazio.' });
+      }
+      const deletedCount = await repo.deleteLancamentosEmLote(req.session.user.id, ids);
+      res.json({ success: true, deleted: deletedCount });
+    })
+  );
+
   router.delete(
     '/api/lancamentos/:id',
     asyncHandler(async (req, res) => {
@@ -533,19 +546,6 @@ module.exports = function (repo) {
     asyncHandler(async (req, res) => {
       await repo.updateConferido(req.session.user.id, req.params.id, req.body.conferido);
       res.json({ success: true });
-    })
-  );
-
-  // ✅ NOVA ROTA: Exclusão em lote por array de IDs
-  router.delete(
-    '/api/lancamentos/lote',
-    asyncHandler(async (req, res) => {
-      const { ids } = req.body;
-      if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ error: 'Array de IDs inválido ou vazio.' });
-      }
-      const deletedCount = await repo.deleteLancamentosEmLote(req.session.user.id, ids);
-      res.json({ success: true, deleted: deletedCount });
     })
   );
 
