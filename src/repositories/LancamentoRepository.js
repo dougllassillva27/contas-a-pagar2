@@ -17,7 +17,6 @@ function normalizarTerceiro(nome) {
   return nome.trim();
 }
 
-
 // --- LISTAGENS E DASHBOARD ---
 
 async function getUltimosLancamentos(userId) {
@@ -162,7 +161,18 @@ async function addLancamento(userId, dados) {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
         (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
    `;
-  await db.query(query, [userId, dados.descricao, dados.valor, dados.tipo, dados.categoria, dados.status || STATUS.PENDENTE, dataVencimento, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null]);
+  await db.query(query, [
+    userId,
+    dados.descricao,
+    dados.valor,
+    dados.tipo,
+    dados.categoria,
+    dados.status || STATUS.PENDENTE,
+    dataVencimento,
+    dados.parcelaAtual || null,
+    dados.totalParcelas || null,
+    dados.nomeTerceiro || null,
+  ]);
 }
 
 // ==============================================================================
@@ -187,7 +197,7 @@ async function addLancamentosBulk(userId, dadosBase, terceiros) {
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
           (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
       `;
-      
+
       await client.query(query, [
         userId,
         dadosBase.descricao,
@@ -198,9 +208,9 @@ async function addLancamentosBulk(userId, dadosBase, terceiros) {
         dataVencimento,
         dadosBase.parcelaAtual || null,
         dadosBase.totalParcelas || null,
-        terceiroNormalizado // NULL se for "Eu" ou "Dodo"
+        terceiroNormalizado, // NULL se for "Eu" ou "Dodo"
       ]);
-      
+
       criados++;
     }
 
@@ -220,7 +230,17 @@ async function updateLancamento(userId, id, dados) {
      SET Descricao = $1, Valor = $2, Tipo = $3, Categoria = $4, 
          ParcelaAtual = $5, TotalParcelas = $6, NomeTerceiro = $7 
      WHERE Id = $8 AND UsuarioId = $9`,
-    [dados.descricao, dados.valor, dados.tipo, dados.categoria, dados.parcelaAtual || null, dados.totalParcelas || null, dados.nomeTerceiro || null, id, userId]
+    [
+      dados.descricao,
+      dados.valor,
+      dados.tipo,
+      dados.categoria,
+      dados.parcelaAtual || null,
+      dados.totalParcelas || null,
+      dados.nomeTerceiro || null,
+      id,
+      userId,
+    ]
   );
 }
 
@@ -292,7 +312,11 @@ async function reorderLancamentos(userId, itens) {
   try {
     await client.query('BEGIN');
     for (let i = 0; i < itens.length; i++) {
-      await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [i, itens[i].id, userId]);
+      await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [
+        i,
+        itens[i].id,
+        userId,
+      ]);
     }
     await client.query('COMMIT');
   } catch (err) {
@@ -320,7 +344,22 @@ async function deleteLancamentosPorPessoa(userId, pessoa, month, year, userName)
 }
 
 async function deleteMonth(userId, month, year) {
-  await db.query('DELETE FROM Lancamentos WHERE UsuarioId = $1 AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3', [userId, month, year]);
+  await db.query(
+    'DELETE FROM Lancamentos WHERE UsuarioId = $1 AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3',
+    [userId, month, year]
+  );
+}
+
+// ==============================================================================
+// ✅ NOVO: Exclusão em lote por IDs
+// ==============================================================================
+async function deleteLancamentosEmLote(userId, ids) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return 0;
+  }
+  const query = `DELETE FROM Lancamentos WHERE Id = ANY($1::int[]) AND UsuarioId = $2`;
+  const result = await db.query(query, [ids, userId]);
+  return result.rowCount;
 }
 
 // ⚠️ ATENÇÃO: Esta função copia do mês informado para o PRÓXIMO mês.
@@ -370,7 +409,20 @@ async function copyMonth(userId, currentMonth, currentYear) {
            (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, 
             ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-        [userId, item.descricao, item.valor, item.tipo, item.categoria, novoStatus, newDate, novoParcelaAtual, totalParcelas, item.nometerceiro, item.ordem, dataCriacaoOriginal]
+        [
+          userId,
+          item.descricao,
+          item.valor,
+          item.tipo,
+          item.categoria,
+          novoStatus,
+          newDate,
+          novoParcelaAtual,
+          totalParcelas,
+          item.nometerceiro,
+          item.ordem,
+          dataCriacaoOriginal,
+        ]
       );
     }
     await client.query('COMMIT');
@@ -420,6 +472,7 @@ module.exports = {
   updateStatusBatchPessoa,
   updateConferidoBatchRecent,
   reorderLancamentos,
+  deleteLancamentosEmLote, // ✅ Novo método exportado
   deleteLancamento,
   deleteLancamentosPorPessoa,
   deleteMonth,
