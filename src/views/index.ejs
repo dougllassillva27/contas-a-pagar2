@@ -3,7 +3,7 @@
 <head>
     <%- include('partials/head') %>
 </head>
-<body data-month="<%= nav.atual.month %>" data-year="<%= nav.atual.year %>" data-username="<%= user.nome %>" data-userid="<%= user.id %>">
+<body data-month="<%= nav.atual.month %>" data-year="<%= nav.atual.year %>" data-username="<%= user.nome %>" data-userid="<%= user.id %>" data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>">
 
     <%- include('partials/header') %>
 

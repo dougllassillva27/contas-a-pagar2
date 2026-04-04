@@ -99,6 +99,18 @@ async function initDatabase() {
       ON TokensPersistentes(DataExpiracao)
     `);
 
+    // 6. Tabela MesesFechados
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS MesesFechados (
+          Id SERIAL PRIMARY KEY,
+          UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          Mes INT NOT NULL,
+          Ano INT NOT NULL,
+          DataFechamento TIMESTAMP DEFAULT NOW(),
+          UNIQUE(UsuarioId, Mes, Ano)
+      )
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);

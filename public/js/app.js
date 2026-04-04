@@ -57,6 +57,19 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// --- VERIFICAÇÃO DE MÊS FECHADO ---
+function isMesFechado() {
+  return document.body.dataset.mesFechado === 'true';
+}
+
+function checkBloqueioMesFechado() {
+  if (isMesFechado()) {
+    mostrarAviso('Mês Fechado', 'Este mês está fechado. Reabra-o no menu lateral para adicionar ou remover contas.');
+    return true;
+  }
+  return false;
+}
+
 // --- FUNÇÕES DO NOVO MODAL DE LOADING ---
 function mostrarLoading() {
   document.getElementById('modalLoading').classList.add('active');
@@ -279,6 +292,10 @@ async function executarAcaoEmLotePessoa(novoStatus) {
 }
 
 function confirmarExclusaoPessoa() {
+  if (checkBloqueioMesFechado()) {
+    fecharMenuContexto();
+    return;
+  }
   fecharMenuContexto();
   registerModalOpen();
   const modal = document.getElementById('modalConfirmacaoAcao');
@@ -292,11 +309,22 @@ function confirmarExclusaoPessoa() {
 
   acaoConfirmadaCallback = async () => {
     mostrarLoading();
-    await fetch(
-      `/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`,
-      { method: 'DELETE' }
-    );
-    window.location.reload();
+    try {
+      const res = await fetch(
+        `/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`,
+        { method: 'DELETE' }
+      );
+      if (res.status === 403) {
+        ocultarLoading();
+        const err = await res.json();
+        mostrarAviso('Acesso Negado', err.error);
+      } else {
+        window.location.reload();
+      }
+    } catch (e) {
+      ocultarLoading();
+      mostrarAviso('Erro', 'Erro de rede.');
+    }
   };
   modal.classList.add('active');
 }
@@ -442,6 +470,29 @@ async function executarAcaoConferidoLote() {
   }
 }
 
+// ==============================================================================
+// ✅ TOGGLE MÊS FECHADO
+// ==============================================================================
+async function toggleMesFechado() {
+  mostrarLoading();
+  try {
+    const res = await fetch('/api/meses-fechados/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month: currentMonth, year: currentYear }),
+    });
+    ocultarLoading();
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      mostrarAviso('Erro', 'Falha ao alterar status do mês.');
+    }
+  } catch (err) {
+    ocultarLoading();
+    mostrarAviso('Erro', 'Erro de conexão.');
+  }
+}
+
 function confirmarExclusaoLoteUltimas() {
   fecharMenuContexto();
   const selectedRows = document.querySelectorAll('#listaUltimasConteudo tr.selected-row');
@@ -467,7 +518,11 @@ function confirmarExclusaoLoteUltimas() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
       });
-      if (res.ok) {
+      if (res.status === 403) {
+        ocultarLoading();
+        const err = await res.json();
+        mostrarAviso('Acesso Negado', err.error);
+      } else if (res.ok) {
         selectedRows.forEach((tr) => tr.remove());
         atualizarTotalNaoConferido();
         await atualizarTotais();
@@ -901,6 +956,7 @@ function fazerBackup() {
 
 // --- FUNÇÕES REFEITAS COM LOADING ---
 async function executarCopia() {
+  // Se o mês alvo for fechado, a API retorna 403.
   mostrarLoading();
   try {
     const res = await fetch('/api/lancamentos/copiar', {
@@ -909,7 +965,12 @@ async function executarCopia() {
       body: JSON.stringify({ month: currentMonth, year: currentYear }),
     });
     ocultarLoading();
-    if (res.ok) {
+
+    if (res.status === 403) {
+      const err = await res.json();
+      mostrarAviso('Acesso Negado', err.error);
+      return;
+    } else if (res.ok) {
       mostrarAviso('Sucesso', 'Contas copiadas!');
       setTimeout(() => window.location.reload(), 1500);
     } else {
@@ -923,11 +984,16 @@ async function executarCopia() {
 }
 
 async function executarDeleteMes() {
+  if (checkBloqueioMesFechado()) return;
   mostrarLoading();
   try {
     const res = await fetch(`/api/lancamentos/mes?month=${currentMonth}&year=${currentYear}`, { method: 'DELETE' });
     ocultarLoading();
-    if (res.ok) {
+    if (res.status === 403) {
+      const err = await res.json();
+      mostrarAviso('Acesso Negado', err.error);
+      return;
+    } else if (res.ok) {
       mostrarAviso('Sucesso', 'Mês limpo!');
       setTimeout(() => window.location.reload(), 1500);
     } else {
@@ -1219,6 +1285,7 @@ function mascaraParcela(input) {
 }
 
 async function enviarLancamento(e, tipoTransacao) {
+  if (!id && checkBloqueioMesFechado()) return; // Apenas bloqueia POST (inserir), edição permite passar
   e.preventDefault();
   const form = e.target;
   const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
@@ -1259,7 +1326,12 @@ async function enviarLancamento(e, tipoTransacao) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados),
     });
-    if (res.ok) window.location.reload();
+    if (res.status === 403) {
+      const err = await res.json();
+      mostrarAviso('Acesso Negado', err.error);
+    } else if (res.ok) {
+      window.location.reload();
+    }
   } catch (err) {
     console.error(err);
   }
@@ -1269,6 +1341,7 @@ async function enviarLancamento(e, tipoTransacao) {
 // ✅ NOVO: Envio de lançamento em massa (bulk)
 // ==============================================================================
 async function enviarLancamentoBulk(form) {
+  if (checkBloqueioMesFechado()) return;
   const bulkInput = document.getElementById('contaTerceirosBulk');
   if (!bulkInput) return;
 
@@ -1305,7 +1378,11 @@ async function enviarLancamentoBulk(form) {
 
     ocultarLoading();
 
-    if (res.ok) {
+    if (res.status === 403) {
+      const err = await res.json();
+      mostrarAviso('Acesso Negado', err.error);
+      return;
+    } else if (res.ok) {
       const result = await res.json();
       mostrarAviso('Sucesso', `${result.criados || terceiros.length} lançamento(s) criado(s) com sucesso!`);
       setTimeout(() => window.location.reload(), 1500);
@@ -1348,6 +1425,7 @@ function mostrarAviso(titulo, msg) {
   document.getElementById('modalAviso').classList.add('active');
 }
 function abrirModalAdicionar() {
+  if (checkBloqueioMesFechado()) return;
   registerModalOpen();
   document.getElementById('modalAdicionar').classList.add('active');
   // Foca automaticamente no campo de descrição da conta para agilizar a digitação
@@ -1366,8 +1444,14 @@ function confirmarExclusao(id) {
 document.getElementById('btnConfirmarExclusao').onclick = async () => {
   mostrarLoading();
   try {
-    await fetch(`/api/lancamentos/${idExcluir}`, { method: 'DELETE' });
-    window.location.reload();
+    const res = await fetch(`/api/lancamentos/${idExcluir}`, { method: 'DELETE' });
+    if (res.status === 403) {
+      ocultarLoading();
+      const err = await res.json();
+      mostrarAviso('Acesso Negado', err.error);
+    } else {
+      window.location.reload();
+    }
   } catch (e) {
     ocultarLoading();
   }

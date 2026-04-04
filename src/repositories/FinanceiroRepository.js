@@ -15,6 +15,7 @@ const AnotacaoRepository = require('./AnotacaoRepository');
 const FaturaManualRepository = require('./FaturaManualRepository');
 const OrdemCardsRepository = require('./OrdemCardsRepository');
 const BackupRepository = require('./BackupRepository');
+const MesFechadoRepository = require('./MesFechadoRepository');
 
 module.exports = {
   // Usuários
@@ -34,4 +35,7 @@ module.exports = {
 
   // Backup
   ...BackupRepository,
+
+  // Fechamento de Mês
+  ...MesFechadoRepository,
 };
