@@ -790,6 +790,11 @@ window.addEventListener('DOMContentLoaded', () => {
   initTouchCardDragAndDrop(); // ✅ DND Cards Mobile
   initDoubleTapMobile();
   initTouchDragAndDrop(); // ✅ DND Linhas Mobile
+
+  if (document.getElementById('anotacoesArea')) {
+    currentAnotacaoText = document.getElementById('anotacoesArea').value;
+    renderAnotacoesPreview(); // Renderiza view inicial
+  }
 });
 
 function limparMascara(input) {
@@ -1398,26 +1403,162 @@ async function enviarLancamentoBulk(form) {
   }
 }
 
-let timeout = null;
+// ==============================================================================
+// ✅ ANOTAÇÕES E CHECKLISTS (Global, Markdown e UX de Salvamento)
+// ==============================================================================
+let isAnotacaoGlobal = false;
+let isAnotacaoEditMode = false;
+let currentAnotacaoText = '';
+let timeoutAnotacao = null;
+
+async function carregarAnotacoes() {
+  const m = isAnotacaoGlobal ? 0 : currentMonth;
+  const y = isAnotacaoGlobal ? 0 : currentYear;
+
+  try {
+    const res = await fetch(`/api/anotacoes?month=${m}&year=${y}`);
+    const data = await res.json();
+    currentAnotacaoText = data.conteudo || '';
+    const area = document.getElementById('anotacoesArea');
+    if (area) area.value = currentAnotacaoText;
+    renderAnotacoesPreview();
+  } catch (err) {
+    console.error('Erro ao carregar anotações', err);
+  }
+}
+
+function alternarAbaAnotacao(global) {
+  isAnotacaoGlobal = global;
+  document.getElementById('btnAnotacaoMensal').classList.toggle('active', !global);
+  document.getElementById('btnAnotacaoGlobal').classList.toggle('active', global);
+  carregarAnotacoes();
+}
+
+function alternarModoAnotacao() {
+  isAnotacaoEditMode = !isAnotacaoEditMode;
+  const area = document.getElementById('anotacoesArea');
+  const preview = document.getElementById('anotacoesPreview');
+  const toolbar = document.getElementById('anotacoesToolbar');
+  const btn = document.getElementById('btnAnotacaoModo');
+
+  if (isAnotacaoEditMode) {
+    area.style.display = 'block';
+    toolbar.style.display = 'flex';
+    preview.style.display = 'none';
+    btn.innerHTML = '<span class="material-icons" style="font-size:16px;">visibility</span>';
+    btn.title = 'Modo Leitura';
+    area.focus();
+  } else {
+    area.style.display = 'none';
+    toolbar.style.display = 'none';
+    preview.style.display = 'block';
+    btn.innerHTML = '<span class="material-icons" style="font-size:16px;">edit</span>';
+    btn.title = 'Modo Edição';
+    renderAnotacoesPreview();
+  }
+}
+
+function renderAnotacoesPreview() {
+  const preview = document.getElementById('anotacoesPreview');
+  if (!preview) return;
+
+  if (!currentAnotacaoText.trim()) {
+    preview.innerHTML =
+      '<div style="color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px;">Nenhuma anotação. Clique em editar para começar.</div>';
+    return;
+  }
+
+  const lines = currentAnotacaoText.split('\n');
+  let html = '';
+
+  lines.forEach((line, index) => {
+    let parsed = line
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    if (parsed.trim().startsWith('- [ ]')) {
+      const text = parsed.replace('- [ ]', '').trim();
+      html += `<div class="checklist-item"><input type="checkbox" onchange="toggleChecklist(${index}, true)"> <span>${text}</span></div>`;
+    } else if (parsed.trim().startsWith('- [x]')) {
+      const text = parsed.replace('- [x]', '').trim();
+      html += `<div class="checklist-item"><input type="checkbox" checked onchange="toggleChecklist(${index}, false)"> <span style="text-decoration: line-through; opacity: 0.6">${text}</span></div>`;
+    } else {
+      html += `<div style="min-height: 20px;">${parsed}</div>`;
+    }
+  });
+
+  preview.innerHTML = html;
+}
+
+function toggleChecklist(index, isChecked) {
+  const lines = currentAnotacaoText.split('\n');
+  if (isChecked) {
+    lines[index] = lines[index].replace('- [ ]', '- [x]');
+  } else {
+    lines[index] = lines[index].replace('- [x]', '- [ ]');
+  }
+  currentAnotacaoText = lines.join('\n');
+  document.getElementById('anotacoesArea').value = currentAnotacaoText;
+  renderAnotacoesPreview();
+  salvarAnotacao();
+}
+
+function inserirFormatacao(prefix, suffix) {
+  const area = document.getElementById('anotacoesArea');
+  const start = area.selectionStart;
+  const end = area.selectionEnd;
+  const text = area.value;
+  const selectedText = text.substring(start, end);
+
+  const newText = text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
+  area.value = newText;
+  currentAnotacaoText = newText;
+
+  area.focus();
+  area.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
+
+  salvarAnotacao();
+}
+
 function salvarAnotacao() {
-  const t = document.getElementById('anotacoesArea').value;
-  const status = document.getElementById('statusSave');
-  clearTimeout(timeout);
-  timeout = setTimeout(async () => {
+  const area = document.getElementById('anotacoesArea');
+  if (!area) return;
+
+  currentAnotacaoText = area.value;
+  const m = isAnotacaoGlobal ? 0 : currentMonth;
+  const y = isAnotacaoGlobal ? 0 : currentYear;
+
+  const statusIcon = document.getElementById('statusSaveIcon');
+
+  if (statusIcon) {
+    statusIcon.innerText = 'cloud_upload';
+    statusIcon.style.color = 'var(--text-secondary)';
+    statusIcon.style.opacity = '0.7';
+  }
+
+  clearTimeout(timeoutAnotacao);
+  timeoutAnotacao = setTimeout(async () => {
     try {
       await fetch('/api/anotacoes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conteudo: t, month: currentMonth, year: currentYear }),
+        body: JSON.stringify({ conteudo: currentAnotacaoText, month: m, year: y }),
       });
-      if (status) {
-        status.style.opacity = '1';
-        setTimeout(() => (status.style.opacity = '0'), 2000);
+      if (statusIcon) {
+        statusIcon.innerText = 'cloud_done';
+        statusIcon.style.color = 'var(--green)';
+        statusIcon.style.opacity = '1';
       }
     } catch (err) {
       console.error(err);
+      if (statusIcon) {
+        statusIcon.innerText = 'cloud_off';
+        statusIcon.style.color = 'var(--red)';
+      }
     }
-  }, 1000);
+  }, 800);
 }
 function mostrarAviso(titulo, msg) {
   registerModalOpen();
