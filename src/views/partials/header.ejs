@@ -1,6 +1,11 @@
 <header>
     <div class="header-left">
-        <h1>Painel de <%= nav.atual.dateObj.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }) %></h1>
+        <h1 style="display: flex; align-items: center; gap: 8px;">
+            Painel de <%= nav.atual.dateObj.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }) %>
+            <% if (typeof mesFechado !== 'undefined' && mesFechado) { %>
+                <span class="material-icons" style="color: var(--red);" title="Mês Fechado">lock</span>
+            <% } %>
+        </h1>
         <div class="nav-links">
             <a href="/?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="nav-btn">‹ Anterior</a>
             <a href="/" class="nav-btn <%= (!query.month) ? 'active' : '' %>">Mês Atual</a>
