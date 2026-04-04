@@ -71,7 +71,11 @@ describe('updateStatus', () => {
 
     await lancamentoRepo.updateStatus(1, 42, 'PAGO');
 
-    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Status = $1 WHERE Id = $2 AND UsuarioId = $3', ['PAGO', 42, 1]);
+    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Status = $1 WHERE Id = $2 AND UsuarioId = $3', [
+      'PAGO',
+      42,
+      1,
+    ]);
   });
 });
 
@@ -84,7 +88,11 @@ describe('updateConferido', () => {
 
     await lancamentoRepo.updateConferido(1, 55, true);
 
-    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [true, 55, 1]);
+    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [
+      true,
+      55,
+      1,
+    ]);
   });
 
   test('desmarca lançamento conferido', async () => {
@@ -92,7 +100,11 @@ describe('updateConferido', () => {
 
     await lancamentoRepo.updateConferido(1, 55, false);
 
-    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [false, 55, 1]);
+    expect(db.query).toHaveBeenCalledWith('UPDATE Lancamentos SET Conferido = $1 WHERE Id = $2 AND UsuarioId = $3', [
+      false,
+      55,
+      1,
+    ]);
   });
 });
 
@@ -181,7 +193,9 @@ describe('copyMonth', () => {
     await lancamentoRepo.copyMonth(1, 12, 2026);
 
     // Verifica que o INSERT usou janeiro 2027
-    const insertCall = mockClient.query.mock.calls.find((call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos'));
+    const insertCall = mockClient.query.mock.calls.find(
+      (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos')
+    );
     expect(insertCall).toBeDefined();
     const insertParams = insertCall[1];
     const newDate = insertParams[6]; // DataVencimento
@@ -212,7 +226,9 @@ describe('copyMonth', () => {
     await lancamentoRepo.copyMonth(1, 2, 2026);
 
     // Deve ter chamado BEGIN e COMMIT, mas NENHUM INSERT
-    const insertCalls = mockClient.query.mock.calls.filter((call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos'));
+    const insertCalls = mockClient.query.mock.calls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos')
+    );
     expect(insertCalls).toHaveLength(0);
   });
 
@@ -238,7 +254,9 @@ describe('copyMonth', () => {
 
     await lancamentoRepo.copyMonth(1, 2, 2026);
 
-    const insertCall = mockClient.query.mock.calls.find((call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos'));
+    const insertCall = mockClient.query.mock.calls.find(
+      (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos')
+    );
     expect(insertCall).toBeDefined();
     const params = insertCall[1];
     expect(params[7]).toBe(4); // parcelaAtual incrementada de 3 → 4
@@ -320,5 +338,102 @@ describe('getLancamentosTerceiro', () => {
 
     expect(result).toEqual([]);
     expect(db.query).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ==========================================================================
+// getDashboardTotals — verifica mapeamento e parâmetros de totais
+// ==========================================================================
+describe('getDashboardTotals', () => {
+  test('deve retornar os totais consolidados do mês corretamente', async () => {
+    const mockTotais = {
+      totalrendas: 5000,
+      totalcontas: 3000,
+      faltapagar: 1000,
+      saldoprevisto: 2000,
+    };
+
+    db.query.mockResolvedValueOnce({ rows: [mockTotais] });
+
+    const result = await lancamentoRepo.getDashboardTotals(1, 4, 2026);
+
+    expect(result).toEqual(mockTotais);
+    expect(db.query).toHaveBeenCalledTimes(1);
+
+    const [querySQL, params] = db.query.mock.calls[0];
+    expect(params).toEqual([1, 4, 2026]);
+    expect(querySQL).toContain('totalrendas');
+    expect(querySQL).toContain('totalcontas');
+    expect(querySQL).toContain('faltapagar');
+    expect(querySQL).toContain('saldoprevisto');
+  });
+});
+
+// ==========================================================================
+// addLancamentosBulk — inserção em massa com transação
+// ==========================================================================
+describe('addLancamentosBulk', () => {
+  let mockClient;
+
+  beforeEach(() => {
+    mockClient = {
+      query: jest.fn(),
+      release: jest.fn(),
+    };
+    db.getClient.mockResolvedValue(mockClient);
+  });
+
+  test('deve inserir múltiplos lançamentos e usar transação (BEGIN/COMMIT)', async () => {
+    const dadosBase = { descricao: 'Netflix', valor: 50, tipo: 'CARTAO' };
+    const terceiros = ['Mae', 'Dodo', 'Pai']; // 'Dodo' vira null na normalização
+
+    mockClient.query.mockResolvedValue({}); // Resolve todas as queries da transação
+
+    const result = await lancamentoRepo.addLancamentosBulk(1, dadosBase, terceiros);
+
+    expect(result.criados).toBe(3);
+    expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
+    expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
+    expect(mockClient.release).toHaveBeenCalled();
+
+    // 3 inserts efetuados
+    const insertCalls = mockClient.query.mock.calls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO Lancamentos')
+    );
+    expect(insertCalls).toHaveLength(3);
+
+    // Verifica a normalização do terceiro "Dodo" para null
+    const paramsDodo = insertCalls[1][1]; // O segundo terceiro do array, params é o índice 1
+    expect(paramsDodo[9]).toBeNull(); // O índice 9 no array de inserção é o NomeTerceiro
+  });
+
+  test('deve fazer ROLLBACK em caso de falha', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockRejectedValueOnce(new Error('Falha no Insert'));
+
+    await expect(lancamentoRepo.addLancamentosBulk(1, {}, ['Mae'])).rejects.toThrow('Falha no Insert');
+
+    expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+    expect(mockClient.release).toHaveBeenCalled();
+  });
+});
+
+// ==========================================================================
+// deleteLancamentosEmLote — exclusão em massa com verificação de array
+// ==========================================================================
+describe('deleteLancamentosEmLote', () => {
+  test('deve deletar múltiplos lançamentos e retornar a quantidade de linhas afetadas', async () => {
+    db.query.mockResolvedValueOnce({ rowCount: 3 });
+    const result = await lancamentoRepo.deleteLancamentosEmLote(1, [10, 11, 12]);
+    expect(result).toBe(3);
+    expect(db.query).toHaveBeenCalledTimes(1);
+    expect(db.query.mock.calls[0][1]).toEqual([[10, 11, 12], 1]);
+  });
+
+  test('deve retornar 0 se array for vazio ou inválido', async () => {
+    const result = await lancamentoRepo.deleteLancamentosEmLote(1, []);
+    expect(result).toBe(0);
+    expect(db.query).not.toHaveBeenCalled();
   });
 });
