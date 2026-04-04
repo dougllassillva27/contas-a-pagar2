@@ -198,6 +198,7 @@ module.exports = function (repo) {
         dadosTerceirosRaw,
         ordemCardsRaw,
         faturaManualVal,
+        mesFechado,
         terceirosDistinct,
       ] = await Promise.all([
         repo.getDashboardTotals(userId, month, year),
@@ -208,6 +209,7 @@ module.exports = function (repo) {
         repo.getDadosTerceiros(userId, month, year),
         repo.getOrdemCards(userId),
         repo.getFaturaManual(userId, month, year),
+        repo.isMesFechado(userId, month, year),
         repo.getDistinctTerceiros(userId),
       ]);
 
@@ -226,6 +228,7 @@ module.exports = function (repo) {
         query: req.query,
         user: req.session.user,
         faturaManual: faturaManualVal,
+        mesFechado,
         safeJs,
       });
     })
@@ -269,6 +272,15 @@ module.exports = function (repo) {
     '/api/lancamentos/recentes',
     asyncHandler(async (req, res) => {
       res.json(await repo.getUltimosLancamentos(req.session.user.id));
+    })
+  );
+
+  router.post(
+    '/api/meses-fechados/toggle',
+    asyncHandler(async (req, res) => {
+      const { month, year } = req.body;
+      const novoStatus = await repo.toggleMesFechado(req.session.user.id, parseInt(month, 10), parseInt(year, 10));
+      res.json({ success: true, mesFechado: novoStatus });
     })
   );
 
@@ -343,6 +355,19 @@ module.exports = function (repo) {
   router.post(
     '/api/lancamentos/copiar',
     asyncHandler(async (req, res) => {
+      const currentMonth = parseInt(req.body.month, 10);
+      const currentYear = parseInt(req.body.year, 10);
+
+      let nextMonth = currentMonth + 1;
+      let nextYear = currentYear;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear++;
+      }
+
+      if (await repo.isMesFechado(req.session.user.id, nextMonth, nextYear)) {
+        return res.status(403).json({ error: 'O mês de destino está fechado para alterações.' });
+      }
       await repo.copyMonth(req.session.user.id, parseInt(req.body.month, 10), parseInt(req.body.year, 10));
       res.json({ success: true });
     })
@@ -351,6 +376,11 @@ module.exports = function (repo) {
   router.delete(
     '/api/lancamentos/mes',
     asyncHandler(async (req, res) => {
+      const m = parseInt(req.query.month, 10);
+      const y = parseInt(req.query.year, 10);
+      if (await repo.isMesFechado(req.session.user.id, m, y)) {
+        return res.status(403).json({ error: 'Este mês está fechado. Reabra-o para deletar lançamentos.' });
+      }
       await repo.deleteMonth(req.session.user.id, parseInt(req.query.month, 10), parseInt(req.query.year, 10));
       res.json({ success: true });
     })
@@ -363,6 +393,11 @@ module.exports = function (repo) {
   router.delete(
     '/api/lancamentos/pessoa/:nome',
     asyncHandler(async (req, res) => {
+      const m = parseInt(req.query.month, 10);
+      const y = parseInt(req.query.year, 10);
+      if (await repo.isMesFechado(req.session.user.id, m, y)) {
+        return res.status(403).json({ error: 'Este mês está fechado. Reabra-o para deletar lançamentos.' });
+      }
       await repo.deleteLancamentosPorPessoa(
         req.session.user.id,
         req.params.nome,
@@ -429,6 +464,10 @@ module.exports = function (repo) {
         terceiros,
         bulk_mode,
       } = req.body;
+
+      if (await repo.isMesFechado(req.session.user.id, parseInt(context_month, 10), parseInt(context_year, 10))) {
+        return res.status(403).json({ error: 'Este mês está fechado para novos lançamentos.' });
+      }
 
       // ✅ MODO BULK: lançamento em massa para múltiplos terceiros
       if (bulk_mode && Array.isArray(terceiros) && terceiros.length > 0) {
@@ -520,6 +559,13 @@ module.exports = function (repo) {
       if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: 'Array de IDs inválido ou vazio.' });
       }
+
+      const mesesAnos = await repo.getMesesAnosPorIds(req.session.user.id, ids);
+      for (const { mes, ano } of mesesAnos) {
+        if (await repo.isMesFechado(req.session.user.id, mes, ano)) {
+          return res.status(403).json({ error: 'Um ou mais itens selecionados pertencem a um mês fechado.' });
+        }
+      }
       const deletedCount = await repo.deleteLancamentosEmLote(req.session.user.id, ids);
       res.json({ success: true, deleted: deletedCount });
     })
@@ -528,6 +574,14 @@ module.exports = function (repo) {
   router.delete(
     '/api/lancamentos/:id',
     asyncHandler(async (req, res) => {
+      const item = await repo.getLancamento(req.session.user.id, req.params.id);
+      if (item) {
+        const dt = new Date(item.datavencimento);
+        if (await repo.isMesFechado(req.session.user.id, dt.getMonth() + 1, dt.getFullYear())) {
+          return res.status(403).json({ error: 'Este lançamento pertence a um mês fechado e não pode ser excluído.' });
+        }
+      }
+
       await repo.deleteLancamento(req.session.user.id, req.params.id);
       res.json({ success: true });
     })

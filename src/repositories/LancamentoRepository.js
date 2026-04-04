@@ -327,6 +327,20 @@ async function reorderLancamentos(userId, itens) {
   }
 }
 
+async function getLancamento(userId, id) {
+  const res = await db.query('SELECT * FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2', [id, userId]);
+  return res.rows[0];
+}
+
+async function getMesesAnosPorIds(userId, ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+  const res = await db.query(
+    'SELECT DISTINCT EXTRACT(MONTH FROM DataVencimento) as mes, EXTRACT(YEAR FROM DataVencimento) as ano FROM Lancamentos WHERE Id = ANY($1::int[]) AND UsuarioId = $2',
+    [ids, userId]
+  );
+  return res.rows;
+}
+
 async function deleteLancamento(userId, id) {
   await db.query('DELETE FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2', [id, userId]);
 }
@@ -462,6 +476,8 @@ module.exports = {
   getDetalhesRendas,
   getDistinctTerceiros,
   getLancamentosTerceiro,
+  getLancamento,
+  getMesesAnosPorIds,
   addLancamento,
   addLancamentosBulk, // ✅ Novo método exportado
   updateLancamento,
