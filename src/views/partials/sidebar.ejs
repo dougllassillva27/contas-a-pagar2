@@ -38,6 +38,14 @@
 
         <div class="sidebar-divider"></div>
 
+        <button class="sidebar-btn" onclick="fecharSidebarE(toggleMesFechado)" id="btnToggleMes">
+            <% if (typeof mesFechado !== 'undefined' && mesFechado) { %>
+                <span class="material-icons" style="color: var(--blue);">lock_open</span> Reabrir Mês
+            <% } else { %>
+                <span class="material-icons" style="color: var(--red);">lock</span> Fechar Mês
+            <% } %>
+        </button>
+
         <button class="sidebar-btn btn-danger-sidebar" onclick="fecharSidebarE(() => abrirConfirmacaoAcao('DELETAR'))">
             <span class="material-icons">delete</span> Deletar Mês
         </button>
