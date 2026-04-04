@@ -65,6 +65,16 @@ document.addEventListener('keydown', (e) => {
       abrirModalUltimas();
     }
   }
+
+  // Atalho: Alt + N (N de "Novo") para abrir o modal de Adicionar Lançamento
+  if (e.altKey && e.key.toLowerCase() === 'n') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    const modalAdicionar = document.getElementById('modalAdicionar');
+    if (modalAdicionar && !document.querySelector('.modal-overlay.active')) {
+      abrirModalAdicionar();
+    }
+  }
 });
 
 // --- VERIFICAÇÃO DE MÊS FECHADO ---
