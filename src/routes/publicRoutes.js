@@ -5,9 +5,10 @@
 
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const { LIMITES } = require('../constants');
 
-module.exports = function (repo, senhas) {
+module.exports = function (repo) {
   // ============================================================================
   // GET /login — Renderiza página de login
   // ============================================================================
@@ -29,49 +30,47 @@ module.exports = function (repo, senhas) {
     // ✅ LOG SEGURO: Não loga a senha, apenas o evento de tentativa
     console.log(`[LOGIN] Tentativa de login - IP: ${req.ip || req.connection.remoteAddress || 'N/A'}`);
 
-    // Identifica o usuário pelo segredo digitado
-    let targetUserId = null;
-    if (passwordDigitada === senhas.dodo) {
-      targetUserId = 1;
-    } else if (passwordDigitada === senhas.vitoria) {
-      targetUserId = 2;
-    }
+    let userLogado = null;
+    try {
+      const dodo = await repo.obterUsuarioPorLogin('dodo');
+      const vitoria = await repo.obterUsuarioPorLogin('vitoria');
 
-    if (targetUserId) {
-      try {
-        const user = await repo.getUsuarioById(targetUserId);
-        if (user) {
-          req.session.user = { id: user.id, nome: user.nome, login: user.login };
-
-          // ✅ LOG SEGURO: Confirma sucesso sem expor dados sensíveis
-          console.log(`[LOGIN] ✅ Sucesso - Usuário: ${user.nome} (Lembrar: ${lembrar})`);
-
-          // ✅ PERSISTÊNCIA: Gera o token se solicitado
-          if (lembrar) {
-            try {
-              const novoToken = await repo.criarToken(user.id, 90);
-              const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 dias
-
-              res.cookie('remember_me', novoToken.token, {
-                maxAge,
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-              });
-
-              console.log(`[LOGIN] 🔑 Token persistente gerado para usuário ${user.id}`);
-            } catch (errToken) {
-              console.error(`[LOGIN] ❌ Erro ao gerar token: ${errToken.message}`);
-            }
-          }
-
-          return res.redirect('/');
-        }
-      } catch (err) {
-        // ✅ LOG SEGURO: Loga erro sem expor stack trace completo
-        console.error(`[LOGIN] ❌ Erro de banco de dados: ${err.message}`);
-        return res.render('login', { error: 'Erro de conexão.' });
+      // Valida usando bcrypt contra o hash seguro do banco
+      if (dodo && dodo.senhahash && (await bcrypt.compare(passwordDigitada, dodo.senhahash))) {
+        userLogado = dodo;
+      } else if (vitoria && vitoria.senhahash && (await bcrypt.compare(passwordDigitada, vitoria.senhahash))) {
+        userLogado = vitoria;
       }
+
+      if (userLogado) {
+        req.session.user = { id: userLogado.id, nome: userLogado.nome, login: userLogado.login };
+
+        console.log(`[LOGIN] ✅ Sucesso - Usuário: ${userLogado.nome} (Lembrar: ${lembrar})`);
+
+        // ✅ PERSISTÊNCIA: Gera o token se solicitado
+        if (lembrar) {
+          try {
+            const novoToken = await repo.criarToken(userLogado.id, 90);
+            const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 dias
+
+            res.cookie('remember_me', novoToken.token, {
+              maxAge,
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'strict',
+            });
+
+            console.log(`[LOGIN] 🔑 Token persistente gerado para usuário ${userLogado.id}`);
+          } catch (errToken) {
+            console.error(`[LOGIN] ❌ Erro ao gerar token: ${errToken.message}`);
+          }
+        }
+
+        return res.redirect('/');
+      }
+    } catch (err) {
+      console.error(`[LOGIN] ❌ Erro de banco de dados: ${err.message}`);
+      return res.render('login', { error: 'Erro de conexão.' });
     }
 
     // ✅ LOG SEGURO: Loga falha sem expor a senha tentada

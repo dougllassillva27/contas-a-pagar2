@@ -25,10 +25,6 @@ const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ⚠️ Observação de segurança:
-// - manter fallback inseguro é útil em DEV, mas em PROD é recomendado definir .env com valores fortes.
-const SENHA_MESTRA = (process.env.SENHA_MESTRA || 'senha_padrao_insegura').trim();
-const SENHA_VITORIA = (process.env.SENHA_VITORIA || 'vitoria_padrao_insegura').trim();
 const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
 
 // ==============================================================================
@@ -42,14 +38,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
 app.use(requestLogger);
+
+app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies Secure em HTTPS
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'segredo_sessao_inseguro',
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false, // Em HTTPS (Render em PROD), o ideal seria true, mas requer proxy confiável
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true, // Previne acesso via JavaScript (XSS)
+      sameSite: 'strict', // Proteção contra CSRF
       maxAge: 24 * 60 * 60 * 1000, // 24 horas (tempo padrão da sessão)
     },
   })
@@ -114,7 +114,7 @@ app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
 app.use(telegramRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
-app.use(publicRoutes(repo, { dodo: SENHA_MESTRA, vitoria: SENHA_VITORIA }));
+app.use(publicRoutes(repo));
 
 // 3. Middlewares de Autenticação
 // ✅ Proteção principal: exige que exista user na session (restaurado ou logado agora)
