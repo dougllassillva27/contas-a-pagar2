@@ -99,3 +99,15 @@ CREATE INDEX IF NOT EXISTS idx_tokens_expires ON TokensPersistentes(DataExpiraca
 
 -- Limpeza automática de tokens expirados (opcional - rodar periodicamente)
 -- DELETE FROM TokensPersistentes WHERE DataExpiracao < NOW();
+
+-- ==============================================================================
+-- 6. Tabela MesesFechados (Controle de Mês Trancado)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS MesesFechados (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Mes INT NOT NULL,
+    Ano INT NOT NULL,
+    DataFechamento TIMESTAMP DEFAULT NOW(),
+    UNIQUE(UsuarioId, Mes, Ano)
+);

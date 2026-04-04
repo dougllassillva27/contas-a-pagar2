@@ -11,6 +11,7 @@ Migrado para a nuvem utilizando **PostgreSQL**, com deploy em **Render** e banco
 Este projeto nasceu para substituir planilhas complexas por uma interface visual, intuitiva e focada em **Contas a Pagar**.
 
 Permite:
+
 - Controle financeiro pessoal mensal
 - Separação de gastos de terceiros (familiares que utilizam o mesmo cartão)
 - Organização por prioridade (ordem customizável)
@@ -23,6 +24,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 ## 🚀 Funcionalidades Principais
 
 ### 📊 Dashboard & Controle
+
 - **Visão Geral**
   - Total de Rendas (com modo privacidade 👁️)
   - Total de Contas
@@ -43,6 +45,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 ---
 
 ### 🌐 Portal de Terceiros (Acesso Público)
+
 - **URL direta por pessoa** — cada terceiro acessa suas contas via link único contextuallizado (ex: `/contas/1/Mae`)
 - **Isolamento de Dados** — garante que terceiros com o mesmo nome em contas de usuários diferentes não tenham seus dados misturados
 - **Sem necessidade de login** — acesso público e read-only
@@ -54,6 +57,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 ---
 
 ### 🤖 Bot do Telegram
+
 - **Lançamentos via chat** — registre contas direto pelo Telegram
 - **Conversa interativa** — o bot pergunta campo por campo
 - **Botões inline** — selecione usuário e tipo com um toque
@@ -64,6 +68,10 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ## ⚙️ Ferramentas Avançadas
 
+- **Fechamento de Mês (Month Lock)**
+  - Congela o mês selecionado para impedir a criação ou exclusão acidental de contas.
+  - Ideal para manter a integridade dos dados após a conferência e conciliação bancária.
+  - Mudanças de status (pago/pendente/conferido) continuam liberadas.
 - **Copiar Mês**
   - Replica contas fixas
   - Replica parcelas pendentes
@@ -85,33 +93,37 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ## 🩺 Monitoramento e Keep Alive
 
-Para evitar o *cold start* (hibernação) do plano gratuito do Render, o projeto utiliza um script no Google Apps Script simulando um navegador real. Essa estratégia impede o serviço de host de abater conexões vindas de *bots conhecidos* (como ocorria no UptimeRobot).
+Para evitar o _cold start_ (hibernação) do plano gratuito do Render, o projeto utiliza um script no Google Apps Script simulando um navegador real. Essa estratégia impede o serviço de host de abater conexões vindas de _bots conhecidos_ (como ocorria no UptimeRobot).
 
 ### Estratégia Adotada (Passo a Passo)
+
 1. Crie um novo projeto gratuito no [Google Apps Script](https://script.google.com/).
 2. Adicione a função responsável por fazer um GET disfarçado e salve o código:
    ```javascript
    function pingRenderHost() {
-     var url = "https://SEU_PROJETO.onrender.com/ping";
+     var url = 'https://SEU_PROJETO.onrender.com/ping';
      var options = {
-       method: "get",
+       method: 'get',
        muteHttpExceptions: true,
-       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36" }
+       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36' },
      };
      UrlFetchApp.fetch(url, options);
    }
    ```
-3. Configure um **Acionador (Trigger)** baseado no tempo (*Minutes timer*) para executar a função `pingRenderHost` a cada **10 minutos**.
+3. Configure um **Acionador (Trigger)** baseado no tempo (_Minutes timer_) para executar a função `pingRenderHost` a cada **10 minutos**.
 
-- **Vantagem Principal**: IPs originários da infraestrutura do Google Drive não caem em filtros primários em balanceadores Cloudflare e o *spoofing* do cabeçalho `User-Agent` finaliza a ilusão de tráfego real.
+- **Vantagem Principal**: IPs originários da infraestrutura do Google Drive não caem em filtros primários em balanceadores Cloudflare e o _spoofing_ do cabeçalho `User-Agent` finaliza a ilusão de tráfego real.
 
 ### 🔍 Endpoint `/health`
+
 O projeto possui um endpoint de health check pensado para:
+
 - Monitoramento de uptime profundo.
 - Verificação de conectividade com o banco Neon.
 - Diagnóstico rápido da aplicação.
 
 **Exemplo de resposta saudável:**
+
 ```json
 {
   "service": "contas-a-pagar",
@@ -131,6 +143,7 @@ O projeto possui um endpoint de health check pensado para:
 O sistema possui um endpoint de automação que realiza a cópia das contas de todos os usuários de forma automática e gratuita via **Google Apps Script**.
 
 ### Como Configurar (Google Apps Script)
+
 1. Abra seu projeto no [Google Apps Script](https://script.google.com/).
 2. Cole a função abaixo (também disponível em [scripts/google-apps-script-example.js](src/scripts/google-apps-script-example.js)):
 
@@ -143,7 +156,7 @@ function verificarEExecutarCopia() {
   const hoje = new Date();
   const amanha = new Date(hoje);
   amanha.setDate(hoje.getDate() + 1);
-  
+
   if (amanha.getDate() === 1) {
     Logger.log('📅 Último dia detectado. Iniciando...');
     dispararWebhookCopia();
@@ -152,19 +165,20 @@ function verificarEExecutarCopia() {
 
 function dispararWebhookCopia() {
   const URL_BASE = 'https://SUA_URL.onrender.com';
-  const API_TOKEN = 'SEU_API_TOKEN'; 
+  const API_TOKEN = 'SEU_API_TOKEN';
   const url = URL_BASE + '/api/v1/integracao/copiar-mensal';
-  
+
   const options = {
-    'method': 'post',
-    'headers': { 'x-api-key': API_TOKEN },
-    'muteHttpExceptions': true
+    method: 'post',
+    headers: { 'x-api-key': API_TOKEN },
+    muteHttpExceptions: true,
   };
-  
+
   const response = UrlFetchApp.fetch(url, options);
   Logger.log(response.getContentText());
 }
 ```
+
 3. No menu lateral, vá em **Acionadores** (ícone de relógio).
 4. Clique em **Adicionar Acionador**.
 5. Configure:
@@ -176,22 +190,23 @@ function dispararWebhookCopia() {
 > **Por que diário?** O script possui uma proteção interna que checa se "amanhã é dia 1". Ele rodará todo dia, mas a cópia real só acontece no **exato último dia do mês**.
 
 ### Segurança
+
 O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o seu robô possa disparar a cópia.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-| Tecnologia | Detalhes |
-| :--- | :--- |
-| **Runtime** | Node.js v18+ |
-| **Framework** | Express 5.x |
-| **Database** | PostgreSQL (Neon.tech) |
-| **Hospedagem**| Render.com (Plano Gratuito) |
-| **Frontend** | EJS + Vanilla CSS (Grid/Flex) |
-| **Monitoramento**| Google Apps Script (Triggers) |
-| **Bot Telegram** | node-telegram-bot-api (webhook) |
-| **Testes** | Jest 30 + Supertest 7 |
+| Tecnologia        | Detalhes                        |
+| :---------------- | :------------------------------ |
+| **Runtime**       | Node.js v18+                    |
+| **Framework**     | Express 5.x                     |
+| **Database**      | PostgreSQL (Neon.tech)          |
+| **Hospedagem**    | Render.com (Plano Gratuito)     |
+| **Frontend**      | EJS + Vanilla CSS (Grid/Flex)   |
+| **Monitoramento** | Google Apps Script (Triggers)   |
+| **Bot Telegram**  | node-telegram-bot-api (webhook) |
+| **Testes**        | Jest 30 + Supertest 7           |
 
 ---
 
@@ -199,19 +214,19 @@ O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o
 
 O projeto segue uma arquitetura **modular** com separação clara de responsabilidades:
 
-| Camada | Diretório | Responsabilidade |
-| :--- | :--- | :--- |
-| **Entrada** | `src/app.js` | Configuração do Express, sessão e montagem dos módulos |
-| **Módulos** | `src/modules/` | Funcionalidades independentes (Bot Telegram, Estimativa de Luz) |
-| **Rotas** | `src/routes/` | Handlers de cada grupo de endpoints |
-| **Middlewares** | `src/middlewares/` | Autenticação web (sessão), API (token) e logger |
-| **Helpers** | `src/helpers/` | Parsing, async handler e inicialização do banco |
-| **Dados** | `src/repositories/` | Repositories especializados por domínio + facade |
-| **Constantes** | `src/constants.js` | Valores centralizados (status, tipos, limites) |
-| **Conexão** | `src/config/` | Pool de conexão PostgreSQL |
-| **Views** | `src/views/` | Templates EJS com partials reutilizáveis |
-| **Frontend** | `public/` | CSS, JavaScript do cliente e assets estáticos |
-| **Testes** | `__tests__/` | Unitários, repositórios (mock), bot e integração |
+| Camada          | Diretório           | Responsabilidade                                                |
+| :-------------- | :------------------ | :-------------------------------------------------------------- |
+| **Entrada**     | `src/app.js`        | Configuração do Express, sessão e montagem dos módulos          |
+| **Módulos**     | `src/modules/`      | Funcionalidades independentes (Bot Telegram, Estimativa de Luz) |
+| **Rotas**       | `src/routes/`       | Handlers de cada grupo de endpoints                             |
+| **Middlewares** | `src/middlewares/`  | Autenticação web (sessão), API (token) e logger                 |
+| **Helpers**     | `src/helpers/`      | Parsing, async handler e inicialização do banco                 |
+| **Dados**       | `src/repositories/` | Repositories especializados por domínio + facade                |
+| **Constantes**  | `src/constants.js`  | Valores centralizados (status, tipos, limites)                  |
+| **Conexão**     | `src/config/`       | Pool de conexão PostgreSQL                                      |
+| **Views**       | `src/views/`        | Templates EJS com partials reutilizáveis                        |
+| **Frontend**    | `public/`           | CSS, JavaScript do cliente e assets estáticos                   |
+| **Testes**      | `__tests__/`        | Unitários, repositórios (mock), bot e integração                |
 
 ---
 
@@ -251,6 +266,7 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   │   ├── AnotacaoRepository.js          # Bloco de notas
 │   │   ├── FaturaManualRepository.js      # Fatura manual (UPSERT)
 │   │   ├── OrdemCardsRepository.js        # Ordem dos cards do dashboard
+│   │   ├── MesFechadoRepository.js        # Controle de congelamento de meses
 │   │   └── BackupRepository.js            # Exportação JSON completa
 │   ├── routes/
 │   │   ├── publicRoutes.js                # Login / Logout / Portal de Terceiros
@@ -279,24 +295,36 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 ## 🚀 Instalação e Configuração Local
 
 ### 1️⃣ Clonar
+
 ```bash
 git clone https://github.com/dougllassillva27/contas-a-pagar2.git
 cd contas-a-pagar2
 ```
 
 ### 2️⃣ Instalar Dependências
+
 ```bash
 npm install
 ```
 
 ### 3️⃣ Criar Banco de Dados
+
 Execute o script SQL (disponível em `schema_postgreSQL.sql`):
+
 ```sql
 CREATE TABLE Usuarios (
     Id SERIAL PRIMARY KEY,
     Nome VARCHAR(50),
     Login VARCHAR(50),
     SenhaHash VARCHAR(255)
+);
+
+CREATE TABLE MesesFechados (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT,
+    Mes INT,
+    Ano INT,
+    DataFechamento TIMESTAMP
 );
 
 CREATE TABLE Lancamentos (
@@ -340,7 +368,9 @@ VALUES ('Admin', 'admin', 'HASH_DA_SENHA');
 ```
 
 ### 4️⃣ Variáveis de Ambiente
+
 Crie o arquivo `.env`:
+
 ```env
 DATABASE_URL=postgres://usuario:senha@endpoint-neon.tech/neondb?sslmode=require
 PORT=3000
@@ -357,9 +387,11 @@ RENDER_EXTERNAL_URL=https://seu-app.onrender.com
 ```
 
 ### 5️⃣ Rodar
+
 ```bash
 npm start
 ```
+
 Acesse: `http://localhost:3000`
 
 ---
@@ -367,10 +399,12 @@ Acesse: `http://localhost:3000`
 ## ☁️ Deploy (Render + Neon)
 
 ### Neon
+
 - Criar projeto e copiar connection string.
 - Executar o script SQL acima.
 
 ### Render
+
 - **New Web Service**: Conectar repositório GitHub.
 - **Build Command**: `npm install`
 - **Start Command**: `node src/app.js`
@@ -379,6 +413,7 @@ Acesse: `http://localhost:3000`
 ---
 
 ## 🔒 Segurança
+
 - **Senhas hashadas** com `bcryptjs` (nunca armazenadas em texto puro).
 - **Proteção contra brute-force** — delay configurável em tentativas de login.
 - **Autenticação de sessão** para rotas web (`express-session`).
@@ -390,6 +425,7 @@ Acesse: `http://localhost:3000`
 ---
 
 ## 💡 Dicas de Uso
+
 - **Modo Privacidade**: Use para esconder valores na tela inicial.
 - **Interação Mobile**: Double Tap para ações rápidas.
 - **Relatórios**: Utilize o botão "Imprimir" para gerar PDF de cobrança.
@@ -399,6 +435,7 @@ Acesse: `http://localhost:3000`
 ---
 
 ## 🎯 Objetivos do Projeto
+
 - Simplicidade operacional e performance.
 - Organização visual e independência geográfica.
 - Código limpo e manutenível (Clean Code).
@@ -407,5 +444,6 @@ Acesse: `http://localhost:3000`
 ---
 
 ## 📄 Licença
+
 ISC — Desenvolvido por [Douglas Silva](https://github.com/dougllassillva27).
 💸
