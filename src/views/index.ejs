@@ -47,9 +47,35 @@
 
     <div class="main-grid">
         <div class="panel">
-            <div class="panel-header"><h2>Anotações</h2><small id="statusSave" style="opacity: 0; color: var(--blue);">Salvo!</small></div>
-            <div class="anotacoes-wrapper">
-                <textarea id="anotacoesArea" placeholder="Digite aqui..." oninput="salvarAnotacao()"><%= anotacoes %></textarea>
+            <div class="panel-header" style="flex-direction: column; align-items: stretch; gap: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0;">Anotações</h2>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons" id="statusSaveIcon" style="color: var(--text-secondary); opacity: 0.5; font-size: 18px; transition: 0.3s;">cloud_done</span>
+                        <button id="btnAnotacaoModo" onclick="alternarModoAnotacao()" style="background: transparent; border: none; color: var(--blue); cursor: pointer; padding: 4px;" title="Modo Edição">
+                            <span class="material-icons" style="font-size: 16px;">edit</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- ABAS GLOBAL/MENSAL -->
+                <div style="display: flex; gap: 5px;">
+                    <button id="btnAnotacaoMensal" class="active" onclick="alternarAbaAnotacao(false)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; flex: 1;">Mês Atual</button>
+                    <button id="btnAnotacaoGlobal" onclick="alternarAbaAnotacao(true)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; flex: 1;">Global</button>
+                </div>
+            </div>
+            <div class="anotacoes-wrapper" style="display: flex; flex-direction: column; flex-grow: 1;">
+                <!-- BARRA DE FERRAMENTAS (Só aparece editando) -->
+                <div id="anotacoesToolbar" style="display: none; gap: 5px; margin-bottom: 8px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px;">
+                    <button type="button" onclick="inserirFormatacao('**', '**')" title="Negrito" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 4px; display: flex; align-items: center;"><span class="material-icons" style="font-size: 16px;">format_bold</span></button>
+                    <button type="button" onclick="inserirFormatacao('*', '*')" title="Itálico" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 4px; display: flex; align-items: center;"><span class="material-icons" style="font-size: 16px;">format_italic</span></button>
+                    <button type="button" onclick="inserirFormatacao('- [ ] ', '')" title="Checklist" style="background: transparent; border: none; color: var(--text-primary); cursor: pointer; padding: 4px; display: flex; align-items: center;"><span class="material-icons" style="font-size: 16px;">check_box</span></button>
+                </div>
+
+                <!-- VISUALIZADOR RENDERIZADO (Checklists clicáveis) -->
+                <div id="anotacoesPreview" style="flex-grow: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-y: auto;"></div>
+
+                <!-- ÁREA DE EDIÇÃO RAW -->
+                <textarea id="anotacoesArea" oninput="salvarAnotacao()" placeholder="Suas anotações (suporta markdown básico)..." style="display: none; flex-grow: 1; width: 100%;"><%= typeof anotacoes !== 'undefined' && anotacoes ? (anotacoes.conteudo || anotacoes) : '' %></textarea>
             </div>
         </div>
 
