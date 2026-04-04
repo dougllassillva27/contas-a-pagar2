@@ -1285,11 +1285,12 @@ function mascaraParcela(input) {
 }
 
 async function enviarLancamento(e, tipoTransacao) {
-  if (!id && checkBloqueioMesFechado()) return; // Apenas bloqueia POST (inserir), edição permite passar
   e.preventDefault();
   const form = e.target;
   const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
     .value;
+
+  if (!id && checkBloqueioMesFechado()) return; // Apenas bloqueia POST (inserir), edição permite passar
 
   // Verifica se é modo bulk (apenas para CONTAS)
   const btnSim = document.getElementById('bulkBtnSim');
