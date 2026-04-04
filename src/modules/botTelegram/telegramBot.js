@@ -287,6 +287,18 @@ async function finalizarEInserir(bot, chatId, repo) {
   try {
     const isFixa = dadosBrutos.tipo === 'fixa';
     const dbTipo = isFixa ? TIPO.FIXA : TIPO.CARTAO;
+    const dataBase = new Date();
+
+    // 🔒 VALIDAÇÃO DE MÊS FECHADO
+    const isFechado = await repo.isMesFechado(dadosBrutos.usuarioId, dataBase.getMonth() + 1, dataBase.getFullYear());
+    if (isFechado) {
+      await bot.sendMessage(
+        chatId,
+        '❌ *Acesso Negado\\!*\nO mês atual está trancado no sistema\\.\nPor favor, acesse o painel web, reabra o mês e tente novamente\\.',
+        { parse_mode: 'MarkdownV2' }
+      );
+      return;
+    }
 
     const dados = {
       usuarioId: dadosBrutos.usuarioId,
@@ -297,7 +309,7 @@ async function finalizarEInserir(bot, chatId, repo) {
       parcelaAtual: dadosBrutos.parcelaAtual || null,
       totalParcelas: dadosBrutos.totalParcelas || null,
       nomeTerceiro: dadosBrutos.terceiro || null,
-      dataBase: new Date(),
+      dataBase: dataBase,
     };
 
     await repo.addLancamento(dados.usuarioId, {
