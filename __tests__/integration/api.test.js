@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../../src/app');
 const repo = require('../../src/repositories/FinanceiroRepository');
+const bcrypt = require('bcryptjs');
 
 // Mockamos o repositório inteiro para não precisarmos de um banco de dados real rodando!
 jest.mock('../../src/repositories/FinanceiroRepository');
@@ -11,12 +12,16 @@ describe('Integração API (Mocked DB)', () => {
   beforeAll(async () => {
     agent = request.agent(app);
 
-    // Simula um usuário válido para o login e a criação de token
-    repo.getUsuarioById.mockResolvedValue({ id: 1, nome: 'Dodo', login: 'dodo' });
+    // Cria um hash real rápido para o teste passar na validação do bcrypt
+    const testHash = bcrypt.hashSync('senha_teste', 4);
+    repo.obterUsuarioPorLogin.mockImplementation(async (login) => {
+      if (login === 'dodo') return { id: 1, nome: 'Dodo', login: 'dodo', senhahash: testHash };
+      return null;
+    });
     repo.criarToken.mockResolvedValue({ token: 'fake-token' });
 
     // Fazemos o login para preencher a sessão do Supertest
-    await agent.post('/login').send({ password: process.env.SENHA_MESTRA });
+    await agent.post('/login').send({ password: 'senha_teste' });
   });
 
   afterEach(() => {
