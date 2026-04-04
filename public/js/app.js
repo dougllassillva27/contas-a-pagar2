@@ -55,6 +55,16 @@ document.addEventListener('keydown', (e) => {
     }
     fecharMenuContexto();
   }
+
+  // Atalho: Alt + A (A de "Adições") para abrir Últimas Adições com a mão esquerda
+  if (e.altKey && e.key.toLowerCase() === 'a') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    const modalUltimas = document.getElementById('modalUltimasContas');
+    if (modalUltimas && !document.querySelector('.modal-overlay.active')) {
+      abrirModalUltimas();
+    }
+  }
 });
 
 // --- VERIFICAÇÃO DE MÊS FECHADO ---
