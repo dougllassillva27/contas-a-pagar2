@@ -39,8 +39,9 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
   - Controle com parcelamento (`01/10`)
   - Controle por mês
   - Separação por pessoa
-- **Bloco de Notas**
-  - Persistente por usuário
+- **Bloco de Notas Avançado**
+  - Abas para anotações Mensais e Globais (atemporais)
+  - Suporte a Markdown básico e Checklists interativos salvos em nuvem
 
 ---
 
@@ -69,9 +70,9 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 ## ⚙️ Ferramentas Avançadas
 
 - **Fechamento de Mês (Month Lock)**
-  - Congela o mês selecionado para impedir a criação ou exclusão acidental de contas.
+  - Trava de segurança que congela o mês selecionado, impedindo a criação ou exclusão acidental de lançamentos.
   - Ideal para manter a integridade dos dados após a conferência e conciliação bancária.
-  - Mudanças de status (pago/pendente/conferido) continuam liberadas.
+  - Mudanças de status rotineiras (pago/pendente/conferido) continuam liberadas na interface.
 - **Copiar Mês**
   - Replica contas fixas
   - Replica parcelas pendentes
@@ -135,6 +136,16 @@ O projeto possui um endpoint de health check pensado para:
   "timestamp": "2026-03-10T23:05:00.000Z"
 }
 ```
+
+---
+
+## ⌨️ Atalhos de Teclado (Power Users)
+
+Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o dashboard suporta atalhos globais:
+
+- <kbd>Alt</kbd> + <kbd>A</kbd>: Abre o painel de **Últimas Adições**.
+- <kbd>Alt</kbd> + <kbd>N</kbd>: Abre o formulário de **Novo Lançamento**.
+- <kbd>Esc</kbd>: Fecha qualquer modal ativo ou menu de contexto instantaneamente.
 
 ---
 
