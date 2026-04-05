@@ -28,6 +28,15 @@ const { STATUS, TIPO } = require('../../constants');
 function criarBot({ token, chatIdPermitido, repo }) {
   const bot = new TelegramBot(token, { polling: false });
 
+  // Configura o menu interativo nativo do Telegram (botão "/")
+  bot
+    .setMyCommands([
+      { command: 'iniciar', description: 'Iniciar novo lançamento' },
+      { command: 'cancelar', description: 'Cancelar lançamento em andamento' },
+      { command: 'help', description: 'Ver comandos e ajuda' },
+    ])
+    .catch((err) => console.error('[Telegram] Erro ao definir comandos:', err.message));
+
   // --- Mensagens de texto ---
   bot.on('message', async (msg) => {
     const chatId = String(msg.chat.id);
@@ -70,7 +79,7 @@ function criarBot({ token, chatIdPermitido, repo }) {
 async function tratarComando(bot, chatId, comando) {
   const cmd = comando.toLowerCase().split(' ')[0];
 
-  if (cmd === '/novo' || cmd === '/start') {
+  if (cmd === '/novo' || cmd === '/start' || cmd === '/iniciar') {
     iniciarConversa(chatId);
     await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
     return;
@@ -87,7 +96,7 @@ async function tratarComando(bot, chatId, comando) {
       '🏦 *Bot Contas a Pagar*',
       '',
       '📌 *Comandos:*',
-      '/novo \\- Iniciar novo lançamento',
+      '/iniciar \\- Iniciar novo lançamento',
       '/cancelar \\- Cancelar lançamento em andamento',
       '/help \\- Ver esta ajuda',
     ].join('\n');
@@ -105,10 +114,8 @@ async function tratarComando(bot, chatId, comando) {
 async function processarTexto(bot, chatId, texto, repo) {
   const conversa = obterConversa(chatId);
 
-  // Se não há conversa ativa, inicia uma nova
+  // Se não há conversa ativa, apenas ignora
   if (!conversa) {
-    iniciarConversa(chatId);
-    await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
     return;
   }
 
