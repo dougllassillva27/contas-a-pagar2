@@ -132,7 +132,7 @@ Saída esperada:
 | `/cancelar`         | Cancela o lançamento em andamento |
 | `/help`             | Exibe a lista de comandos         |
 
-> **Dica:** Enviar qualquer texto sem conversa ativa também inicia um novo lançamento automaticamente.
+> **Dica:** O bot ignora mensagens de texto livre caso nenhum lançamento tenha sido iniciado com `/iniciar`.
 
 ---
 
