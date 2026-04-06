@@ -32,6 +32,8 @@ function criarBot({ token, chatIdPermitido, repo }) {
   bot
     .setMyCommands([
       { command: 'iniciar', description: 'Iniciar novo lançamento' },
+      { command: 'iniciardodo', description: 'Lançamento rápido para Dodo' },
+      { command: 'iniciarvitoria', description: 'Lançamento rápido para Vitória' },
       { command: 'cancelar', description: 'Cancelar lançamento em andamento' },
       { command: 'help', description: 'Ver comandos e ajuda' },
     ])
@@ -77,11 +79,33 @@ function criarBot({ token, chatIdPermitido, repo }) {
 // ==============================================================================
 
 async function tratarComando(bot, chatId, comando) {
-  const cmd = comando.toLowerCase().split(' ')[0];
+  const partes = comando.toLowerCase().trim().split(/\s+/);
+  const cmd = partes[0];
+  let arg = partes[1]; // Ex: "dodo" em "/iniciar dodo"
 
-  if (cmd === '/novo' || cmd === '/start' || cmd === '/iniciar') {
+  // Alias para atalhos clicáveis sem espaço
+  if (cmd === '/iniciardodo' || cmd === '/iniciar_dodo') arg = 'dodo';
+  if (cmd === '/iniciarvitoria' || cmd === '/iniciar_vitoria') arg = 'vitoria';
+
+  const isIniciar = [
+    '/novo',
+    '/start',
+    '/iniciar',
+    '/iniciardodo',
+    '/iniciarvitoria',
+    '/iniciar_dodo',
+    '/iniciar_vitoria',
+  ].includes(cmd);
+
+  if (isIniciar) {
     iniciarConversa(chatId);
-    await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
+    if (arg === 'dodo' || arg === 'vitoria') {
+      const usuarioId = arg === 'dodo' ? 1 : 2;
+      const proxima = avancarConversa(chatId, 'usuarioId', usuarioId);
+      await enviarPergunta(bot, chatId, proxima);
+    } else {
+      await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
+    }
     return;
   }
 
@@ -97,6 +121,8 @@ async function tratarComando(bot, chatId, comando) {
       '',
       '📌 *Comandos:*',
       '/iniciar \\- Iniciar novo lançamento',
+      '/iniciardodo \\- Lançamento rápido \\(Dodo\\)',
+      '/iniciarvitoria \\- Lançamento rápido \\(Vitória\\)',
       '/cancelar \\- Cancelar lançamento em andamento',
       '/help \\- Ver esta ajuda',
     ].join('\n');
