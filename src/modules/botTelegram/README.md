@@ -126,13 +126,15 @@ Saída esperada:
 
 ## 🚀 Comandos do Bot
 
-| Comando             | Descrição                         |
-| ------------------- | --------------------------------- |
-| `/novo` ou `/start` | Inicia um novo lançamento         |
-| `/cancelar`         | Cancela o lançamento em andamento |
-| `/help`             | Exibe a lista de comandos         |
+| Comando             | Descrição                          |
+| ------------------- | ---------------------------------- |
+| `/novo` ou `/start` | Inicia um novo lançamento          |
+| `/iniciardodo`      | Atalho: Inicia direto para Dodo    |
+| `/iniciarvitoria`   | Atalho: Inicia direto para Vitória |
+| `/cancelar`         | Cancela o lançamento em andamento  |
+| `/help`             | Exibe a lista de comandos          |
 
-> **Dica:** O bot ignora mensagens de texto livre caso nenhum lançamento tenha sido iniciado com `/iniciar`.
+> **Dica:** Você também pode digitar os comandos com espaço (ex: `/iniciar dodo`). O bot ignorará mensagens de texto livre sem comando ativo.
 
 ---
 
