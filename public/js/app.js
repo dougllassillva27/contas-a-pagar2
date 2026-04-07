@@ -1426,7 +1426,7 @@ async function enviarLancamentoBulk(form) {
 // ==============================================================================
 // ✅ ANOTAÇÕES E CHECKLISTS (Global, Markdown e UX de Salvamento)
 // ==============================================================================
-let isAnotacaoGlobal = false;
+let isAnotacaoGlobal = true;
 let isAnotacaoEditMode = false;
 let currentAnotacaoText = '';
 let timeoutAnotacao = null;
