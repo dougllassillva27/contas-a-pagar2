@@ -204,7 +204,7 @@ module.exports = function (repo) {
         repo.getDashboardTotals(userId, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
-        repo.getAnotacoes(userId, month, year),
+        repo.getAnotacoes(userId, 0, 0), // Global como padrão no carregamento SSR
         repo.getResumoPessoas(userId, month, year, userName),
         repo.getDadosTerceiros(userId, month, year),
         repo.getOrdemCards(userId),
