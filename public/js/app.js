@@ -1632,7 +1632,7 @@ function compartilharLinkTerceiro() {
   if (!nome || nome === 'ULTIMAS') return;
 
   const userId = document.body.dataset.userid;
-  const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
+  const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
 
   // Detecção de PC vs Celular
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1663,7 +1663,7 @@ function abrirLinkCompartilhado() {
   const nome = pessoaSelecionadaContexto;
   if (nome) {
     const userId = document.body.dataset.userid;
-    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
+    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
     window.open(url, '_blank');
     fecharModalCompartilhar();
   }
@@ -1676,7 +1676,7 @@ function copiarLinkCompartilhado() {
   const nome = pessoaSelecionadaContexto;
   if (nome) {
     const userId = document.body.dataset.userid;
-    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}`;
+    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
     copiarAoClipboard(url);
     fecharModalCompartilhar();
     mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
