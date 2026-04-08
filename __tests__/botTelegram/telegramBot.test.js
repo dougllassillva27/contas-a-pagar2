@@ -24,6 +24,7 @@ describe('Telegram Bot - Funcionalidades e Travas', () => {
         if (event === 'message') messageHandler = handler;
       }),
       sendMessage: jest.fn(),
+      setMyCommands: jest.fn().mockResolvedValue(true),
     };
     TelegramBot.mockImplementation(() => botInstance);
 
