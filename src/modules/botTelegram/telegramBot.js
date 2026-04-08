@@ -22,6 +22,8 @@ const MENU_PRINCIPAL = {
     [
       { text: '🧑 Lançar Dodo', callback_data: 'iniciar:dodo' },
       { text: '👩 Lançar Vitória', callback_data: 'iniciar:vitoria' },
+      { text: '🧑 Dodo', callback_data: 'iniciar:dodo' },
+      { text: '👩 Vitória', callback_data: 'iniciar:vitoria' },
     ],
   ],
 };
@@ -123,6 +125,9 @@ async function tratarComando(bot, chatId, comando) {
     cancelarConversa(chatId);
     await bot.sendMessage(chatId, '❌ Lançamento cancelado\\.', {
       parse_mode: 'MarkdownV2',
+      parse_mode: 'MarkdownV2',
+    });
+    await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
       reply_markup: MENU_PRINCIPAL,
     });
     return;
@@ -404,10 +409,17 @@ async function finalizarEInserir(bot, chatId, repo) {
     });
 
     await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2', reply_markup: MENU_PRINCIPAL });
+    await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2' });
+    await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
+      reply_markup: MENU_PRINCIPAL,
+    });
   } catch (err) {
     console.error('[Telegram] Erro ao inserir lançamento:', err.message);
     await bot.sendMessage(chatId, formatarErro('Erro interno ao registrar. Tente novamente.'), {
       parse_mode: 'MarkdownV2',
+      parse_mode: 'MarkdownV2',
+    });
+    await bot.sendMessage(chatId, '👇 Tentar novamente ou lançar outra conta?', {
       reply_markup: MENU_PRINCIPAL,
     });
   }
