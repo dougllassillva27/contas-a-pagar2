@@ -16,6 +16,13 @@ const { parseValor, normalizarParcelasPorTipo } = require('../../helpers/parseHe
 const { formatarSucesso, formatarErro } = require('./responseFormatter');
 const { STATUS, TIPO } = require('../../constants');
 
+// Teclado persistente na base do chat para agilidade
+const MENU_PRINCIPAL = {
+  keyboard: [[{ text: '🧑 Lançar Dodo' }, { text: '👩 Lançar Vitória' }]],
+  resize_keyboard: true,
+  is_persistent: true,
+};
+
 /**
  * Cria e configura a instância do bot do Telegram.
  *
@@ -50,6 +57,16 @@ function criarBot({ token, chatIdPermitido, repo }) {
 
     const texto = (msg.text || '').trim();
     if (!texto) return;
+
+    // Intercepta botões fixos do menu principal
+    if (texto === '🧑 Lançar Dodo') {
+      await tratarComando(bot, chatId, '/iniciardodo');
+      return;
+    }
+    if (texto === '👩 Lançar Vitória') {
+      await tratarComando(bot, chatId, '/iniciarvitoria');
+      return;
+    }
 
     // Comandos especiais
     if (texto.startsWith('/')) {
@@ -111,7 +128,10 @@ async function tratarComando(bot, chatId, comando) {
 
   if (cmd === '/cancelar') {
     cancelarConversa(chatId);
-    await bot.sendMessage(chatId, '❌ Lançamento cancelado\\.');
+    await bot.sendMessage(chatId, '❌ Lançamento cancelado\\.', {
+      parse_mode: 'MarkdownV2',
+      reply_markup: MENU_PRINCIPAL,
+    });
     return;
   }
 
@@ -126,11 +146,14 @@ async function tratarComando(bot, chatId, comando) {
       '/cancelar \\- Cancelar lançamento em andamento',
       '/help \\- Ver esta ajuda',
     ].join('\n');
-    await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2' });
+    await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2', reply_markup: MENU_PRINCIPAL });
     return;
   }
 
-  await bot.sendMessage(chatId, 'Comando não reconhecido\\. Use /help', { parse_mode: 'MarkdownV2' });
+  await bot.sendMessage(chatId, 'Comando não reconhecido\\. Use /help', {
+    parse_mode: 'MarkdownV2',
+    reply_markup: MENU_PRINCIPAL,
+  });
 }
 
 // ==============================================================================
@@ -226,8 +249,9 @@ async function processarCallback(bot, chatId, data, repo) {
       await enviarPergunta(bot, chatId, proxima);
     }
   } else if (campo === 'terceiro') {
-    // Botão "Pular" para terceiro
-    await avancarEEnviarProxima(bot, chatId, 'terceiro', null, repo);
+    // Se for 'eu' ou 'pular', salva null (conta própria), senão salva o nome
+    const nomeTerceiro = valor === 'eu' || valor === 'pular' ? null : valor;
+    await avancarEEnviarProxima(bot, chatId, 'terceiro', nomeTerceiro, repo);
   }
 }
 
@@ -299,10 +323,27 @@ async function enviarPergunta(bot, chatId, etapa) {
       break;
 
     case ETAPAS.TERCEIRO:
-      await bot.sendMessage(chatId, '🏷️ *Terceiro \\(de quem é a conta\\)?*\n_Ex: Morr, Mãe, Davi_', {
+      await bot.sendMessage(chatId, '🏷️ *Terceiro \\(de quem é a conta\\)?*\n_Selecione ou digite o nome:_', {
         parse_mode: 'MarkdownV2',
         reply_markup: {
-          inline_keyboard: [[{ text: '⏭️ Pular (conta própria)', callback_data: 'terceiro:pular' }]],
+          inline_keyboard: [
+            [
+              { text: '👤 Eu (própria)', callback_data: 'terceiro:eu' },
+              { text: '🏠 Casa', callback_data: 'terceiro:Casa' },
+            ],
+            [
+              { text: '❤️ Morr', callback_data: 'terceiro:Morr' },
+              { text: '👩‍👧 Mãe', callback_data: 'terceiro:Mãe' },
+            ],
+            [
+              { text: '👴 Vô', callback_data: 'terceiro:Vô' },
+              { text: '👦 Davi', callback_data: 'terceiro:Davi' },
+            ],
+            [
+              { text: '👧 Amanda', callback_data: 'terceiro:Amanda' },
+              { text: '👦 Lorenzo', callback_data: 'terceiro:Lorenzo' },
+            ],
+          ],
         },
       });
       break;
@@ -356,11 +397,12 @@ async function finalizarEInserir(bot, chatId, repo) {
       dataBase: dados.dataBase,
     });
 
-    await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2' });
+    await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2', reply_markup: MENU_PRINCIPAL });
   } catch (err) {
     console.error('[Telegram] Erro ao inserir lançamento:', err.message);
     await bot.sendMessage(chatId, formatarErro('Erro interno ao registrar. Tente novamente.'), {
       parse_mode: 'MarkdownV2',
+      reply_markup: MENU_PRINCIPAL,
     });
   }
 }
