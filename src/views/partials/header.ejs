@@ -7,9 +7,9 @@
             <% } %>
         </h1>
         <div class="nav-links">
-            <a href="/?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="nav-btn">‹ Anterior</a>
-            <a href="/" class="nav-btn <%= (!query.month) ? 'active' : '' %>">Mês Atual</a>
-            <a href="/?month=<%= nav.prox.month %>&year=<%= nav.prox.year %>" class="nav-btn">Próximo ›</a>
+            <a href="<%= typeof currentPath !== 'undefined' ? currentPath : '/' %>?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="nav-btn">‹ Anterior</a>
+            <a href="<%= typeof currentPath !== 'undefined' ? currentPath : '/' %>" class="nav-btn <%= (typeof query === 'undefined' || !query.month) ? 'active' : '' %>">Mês Atual</a>
+            <a href="<%= typeof currentPath !== 'undefined' ? currentPath : '/' %>?month=<%= nav.prox.month %>&year=<%= nav.prox.year %>" class="nav-btn">Próximo ›</a>
         </div>
     </div>
 
