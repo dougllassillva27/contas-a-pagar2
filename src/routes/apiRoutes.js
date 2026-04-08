@@ -230,6 +230,7 @@ module.exports = function (repo) {
         faturaManual: faturaManualVal,
         mesFechado,
         safeJs,
+        currentPath: req.path,
       });
     })
   );
@@ -265,6 +266,7 @@ module.exports = function (repo) {
         user: req.session.user,
         mesFechado,
         query: req.query,
+        currentPath: req.path,
       });
     })
   );
