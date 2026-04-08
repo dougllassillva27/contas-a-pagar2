@@ -234,6 +234,43 @@ module.exports = function (repo) {
     })
   );
 
+  // --- DASHBOARD DE TERCEIROS ---
+  router.get(
+    '/terceiros',
+    asyncHandler(async (req, res) => {
+      const userId = req.session.user.id;
+      const { month, year, nav } = calcularContextoNavegacao(req.query);
+
+      const [dadosTerceirosRaw, terceirosDistinctRaw, mesFechado] = await Promise.all([
+        repo.getDadosTerceiros(userId, month, year),
+        repo.getDistinctTerceiros(userId),
+        repo.isMesFechado(userId, month, year),
+      ]);
+
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
+
+      // Mescla todos os terceiros distintos com os dados do mês atual
+      const todosTerceiros = terceirosDistinctRaw.map((t) => {
+        const nome = t.nometerceiro;
+        const dadosMes = terceirosMap[nome];
+        return {
+          nome,
+          totalGeral: dadosMes ? dadosMes.totalGeral : 0,
+        };
+      });
+
+      // Ordena alfabeticamente
+      todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
+
+      res.render('terceiros-dashboard', {
+        nav,
+        terceiros: todosTerceiros,
+        user: req.session.user,
+        mesFechado,
+      });
+    })
+  );
+
   // --- TOTAIS (para atualização parcial sem reload) ---
   router.get(
     '/api/dashboard/totals',

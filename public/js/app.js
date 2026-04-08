@@ -75,6 +75,13 @@ document.addEventListener('keydown', (e) => {
       abrirModalAdicionar();
     }
   }
+
+  // Atalho: Alt + T para abrir a Gestão de Terceiros
+  if (e.altKey && e.key.toLowerCase() === 't') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    window.location.href = `/terceiros?month=${currentMonth}&year=${currentYear}`;
+  }
 });
 
 // --- VERIFICAÇÃO DE MÊS FECHADO ---
