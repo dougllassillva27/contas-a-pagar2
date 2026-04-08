@@ -80,7 +80,7 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey && e.key.toLowerCase() === 't') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
-    window.location.href = `/terceiros?month=${currentMonth}&year=${currentYear}`;
+    window.open(`/terceiros?month=${currentMonth}&year=${currentYear}`, '_blank');
   }
 });
 

@@ -250,10 +250,11 @@ module.exports = function (repo) {
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
 
       // Mescla todos os terceiros distintos com os dados do mês atual
+      const extrairNome = (t) => (typeof t === 'string' ? t : t.nometerceiro || t.NomeTerceiro);
       const todosTerceiros = terceirosDistinctRaw
-        .filter((t) => t.nometerceiro && t.nometerceiro.trim() !== '') // Previne erro 500 ignorando contas próprias (null)
-        .map((t) => {
-          const nome = t.nometerceiro;
+        .map(extrairNome)
+        .filter((nome) => nome && nome.trim() !== '') // Previne erro 500 ignorando contas próprias (null)
+        .map((nome) => {
           const dadosMes = terceirosMap[nome];
           return {
             nome,
