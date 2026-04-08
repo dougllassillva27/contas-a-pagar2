@@ -16,11 +16,14 @@ const { parseValor, normalizarParcelasPorTipo } = require('../../helpers/parseHe
 const { formatarSucesso, formatarErro } = require('./responseFormatter');
 const { STATUS, TIPO } = require('../../constants');
 
-// Teclado persistente na base do chat para agilidade
+// Teclado inline acoplado ao balão da mensagem
 const MENU_PRINCIPAL = {
-  keyboard: [[{ text: '🧑 Lançar Dodo' }, { text: '👩 Lançar Vitória' }]],
-  resize_keyboard: true,
-  is_persistent: true,
+  inline_keyboard: [
+    [
+      { text: '🧑 Lançar Dodo', callback_data: 'iniciar:dodo' },
+      { text: '👩 Lançar Vitória', callback_data: 'iniciar:vitoria' },
+    ],
+  ],
 };
 
 /**
@@ -57,16 +60,6 @@ function criarBot({ token, chatIdPermitido, repo }) {
 
     const texto = (msg.text || '').trim();
     if (!texto) return;
-
-    // Intercepta botões fixos do menu principal
-    if (texto === '🧑 Lançar Dodo') {
-      await tratarComando(bot, chatId, '/iniciardodo');
-      return;
-    }
-    if (texto === '👩 Lançar Vitória') {
-      await tratarComando(bot, chatId, '/iniciarvitoria');
-      return;
-    }
 
     // Comandos especiais
     if (texto.startsWith('/')) {
@@ -165,7 +158,11 @@ async function processarTexto(bot, chatId, texto, repo) {
 
   // Se não há conversa ativa, responde com o menu em vez de ficar mudo
   if (!conversa) {
-    await bot.sendMessage(chatId, '👇 Olá! Escolha uma opção no menu abaixo para iniciar um lançamento:', {
+    // Remove o teclado antigo do rodapé (se existir) enviando msg silenciosa e apagando na sequência
+    const msgClean = await bot.sendMessage(chatId, '...', { reply_markup: { remove_keyboard: true } });
+    bot.deleteMessage(chatId, msgClean.message_id).catch(() => {});
+
+    await bot.sendMessage(chatId, '👇 Olá! Clique em um dos botões abaixo para iniciar um lançamento:', {
       reply_markup: MENU_PRINCIPAL,
     });
     return;
@@ -229,6 +226,15 @@ async function processarTexto(bot, chatId, texto, repo) {
 // ==============================================================================
 
 async function processarCallback(bot, chatId, data, repo) {
+  // Callbacks têm formato: "campo:valor" (ex: "usuario:1", "tipo:fixa", "iniciar:dodo")
+  const [campo, valor] = data.split(':');
+
+  // Intercepta botões inline do menu principal antes de verificar conversa
+  if (campo === 'iniciar') {
+    await tratarComando(bot, chatId, `/iniciar${valor}`);
+    return;
+  }
+
   const conversa = obterConversa(chatId);
   if (!conversa) {
     await bot.sendMessage(chatId, 'Nenhum lançamento em andamento\\. Use /novo para iniciar\\.', {
@@ -236,9 +242,6 @@ async function processarCallback(bot, chatId, data, repo) {
     });
     return;
   }
-
-  // Callbacks têm formato: "campo:valor" (ex: "usuario:1", "tipo:fixa")
-  const [campo, valor] = data.split(':');
 
   if (campo === 'usuario') {
     await avancarEEnviarProxima(bot, chatId, 'usuarioId', parseInt(valor, 10), repo);
