@@ -39,6 +39,9 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
   - Controle com parcelamento (`01/10`)
   - Controle por mês
   - Separação por pessoa
+- **Gestão de Terceiros**
+  - Painel dedicado (`/terceiros`) para visualização de gastos totais por pessoa
+  - Geração e cópia ágil de links públicos preservando o mês ativo
 - **Bloco de Notas Avançado**
   - Abas para anotações Mensais e Globais (atemporais)
   - Suporte a Markdown básico e Checklists interativos salvos em nuvem
@@ -47,13 +50,14 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ### 🌐 Portal de Terceiros (Acesso Público)
 
-- **URL direta por pessoa** — cada terceiro acessa suas contas via link único contextuallizado (ex: `/contas/1/Mae`)
-- **Isolamento de Dados** — garante que terceiros com o mesmo nome em contas de usuários diferentes não tenham seus dados misturados
-- **Sem necessidade de login** — acesso público e read-only
-- **Navegação entre meses** — botões Anterior / Próximo para consultar histórico
-- **Compartilhar link** — no dashboard admin, clique direito no nome do terceiro → "Compartilhar link" copia a URL para o clipboard
-- **SEO protegido** — meta tags `noindex, nofollow` impedem indexação por buscadores
-- **Mobile-first** — totalmente responsivo e com design dark mode consistente
+- **Painel Centralizado (`/terceiros`)** — tela dedicada para gerenciar todos os links de compartilhamento da sua base, com atalhos rápidos para Copiar e Abrir.
+- **URL direta por pessoa** — cada terceiro acessa suas contas via link único contextualizado com o mês e ano ativos (ex: `/contas/1/Mae?month=3&year=2026`).
+- **Isolamento de Dados** — garante que terceiros com o mesmo nome em contas de usuários diferentes não tenham seus dados misturados.
+- **Sem necessidade de login** — acesso público e read-only.
+- **Navegação entre meses** — botões Anterior / Próximo para consultar histórico.
+- **Compartilhar link** — via dashboard de terceiros ou clicando com o botão direito no nome do terceiro na tela inicial.
+- **SEO protegido** — meta tags `noindex, nofollow` impedem indexação por buscadores.
+- **Mobile-first** — totalmente responsivo e com design dark mode consistente.
 
 ---
 
@@ -145,6 +149,7 @@ Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o 
 
 - <kbd>Alt</kbd> + <kbd>A</kbd>: Abre o painel de **Últimas Adições**.
 - <kbd>Alt</kbd> + <kbd>N</kbd>: Abre o formulário de **Novo Lançamento**.
+- <kbd>Alt</kbd> + <kbd>T</kbd>: Abre a tela de **Gestão de Terceiros** preservando o mês atual.
 - <kbd>Esc</kbd>: Fecha qualquer modal ativo ou menu de contexto instantaneamente.
 
 ---
