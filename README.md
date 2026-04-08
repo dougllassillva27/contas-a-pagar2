@@ -40,8 +40,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
   - Controle por mês
   - Separação por pessoa
 - **Gestão de Terceiros**
-  - Painel dedicado (`/terceiros`) para visualização de gastos totais por pessoa
-  - Geração e cópia ágil de links públicos preservando o mês ativo
+  - **Painel Centralizado (`/terceiros`)**: Área administrativa exclusiva (protegida por autenticação) para visualizar o total de gastos de cada pessoa e gerenciar o compartilhamento de links públicos de forma ágil.
 - **Bloco de Notas Avançado**
   - Abas para anotações Mensais e Globais (atemporais)
   - Suporte a Markdown básico e Checklists interativos salvos em nuvem
@@ -50,14 +49,13 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ### 🌐 Portal de Terceiros (Acesso Público)
 
-- **Painel Centralizado (`/terceiros`)** — tela dedicada para gerenciar todos os links de compartilhamento da sua base, com atalhos rápidos para Copiar e Abrir.
-- **URL direta por pessoa** — cada terceiro acessa suas contas via link único contextualizado com o mês e ano ativos (ex: `/contas/1/Mae?month=3&year=2026`).
+- **URL Inteligente e Direta** — cada terceiro acessa suas próprias contas via link único já contextualizado com o mês e ano ativos (ex: `/contas/1/Mae?month=3&year=2026`).
 - **Isolamento de Dados** — garante que terceiros com o mesmo nome em contas de usuários diferentes não tenham seus dados misturados.
-- **Sem necessidade de login** — acesso público e read-only.
-- **Navegação entre meses** — botões Anterior / Próximo para consultar histórico.
-- **Compartilhar link** — via dashboard de terceiros ou clicando com o botão direito no nome do terceiro na tela inicial.
-- **SEO protegido** — meta tags `noindex, nofollow` impedem indexação por buscadores.
-- **Mobile-first** — totalmente responsivo e com design dark mode consistente.
+- **Sem necessidade de login** — acesso 100% público e _read-only_ (somente leitura) para o cliente final.
+- **Navegação Histórica** — botões Anterior / Próximo para consultar faturas passadas.
+- **Compartilhamento Descomplicado** — links gerados pelo administrador via tela de gestão de terceiros ou menu de contexto.
+- **Privacidade e SEO** — meta tags `noindex, nofollow` impedem indexação por buscadores (Google, Bing).
+- **Mobile-first** — interface totalmente responsiva com design dark mode imersivo.
 
 ---
 
