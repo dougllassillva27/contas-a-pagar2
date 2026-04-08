@@ -26,6 +26,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
+app.locals.API_TOKEN = API_TOKEN; // Disponibiliza o token globalmente para as views EJS
 
 // ==============================================================================
 // Configuração do Express
