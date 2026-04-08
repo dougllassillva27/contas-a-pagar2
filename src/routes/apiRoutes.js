@@ -241,26 +241,20 @@ module.exports = function (repo) {
       const userId = req.session.user.id;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      const [dadosTerceirosRaw, terceirosDistinctRaw, mesFechado] = await Promise.all([
+      const [dadosTerceirosRaw, mesFechado] = await Promise.all([
         repo.getDadosTerceiros(userId, month, year),
-        repo.getDistinctTerceiros(userId),
         repo.isMesFechado(userId, month, year),
       ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
 
-      // Mescla todos os terceiros distintos com os dados do mês atual
-      const extrairNome = (t) => (typeof t === 'string' ? t : t.nometerceiro || t.NomeTerceiro);
-      const todosTerceiros = terceirosDistinctRaw
-        .map(extrairNome)
-        .filter((nome) => nome && nome.trim() !== '') // Previne erro 500 ignorando contas próprias (null)
-        .map((nome) => {
-          const dadosMes = terceirosMap[nome];
-          return {
-            nome,
-            totalGeral: dadosMes ? dadosMes.totalGeral : 0,
-          };
-        });
+      // Extrai apenas os terceiros que possuem movimento no mês atual
+      const todosTerceiros = Object.values(terceirosMap)
+        .filter((t) => t.nome && t.nome.trim() !== '') // Ignora contas próprias (null/vazias)
+        .map((t) => ({
+          nome: t.nome,
+          totalGeral: t.totalGeral,
+        }));
 
       // Ordena alfabeticamente
       todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
