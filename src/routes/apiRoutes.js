@@ -250,14 +250,16 @@ module.exports = function (repo) {
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
 
       // Mescla todos os terceiros distintos com os dados do mês atual
-      const todosTerceiros = terceirosDistinctRaw.map((t) => {
-        const nome = t.nometerceiro;
-        const dadosMes = terceirosMap[nome];
-        return {
-          nome,
-          totalGeral: dadosMes ? dadosMes.totalGeral : 0,
-        };
-      });
+      const todosTerceiros = terceirosDistinctRaw
+        .filter((t) => t.nometerceiro && t.nometerceiro.trim() !== '') // Previne erro 500 ignorando contas próprias (null)
+        .map((t) => {
+          const nome = t.nometerceiro;
+          const dadosMes = terceirosMap[nome];
+          return {
+            nome,
+            totalGeral: dadosMes ? dadosMes.totalGeral : 0,
+          };
+        });
 
       // Ordena alfabeticamente
       todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
