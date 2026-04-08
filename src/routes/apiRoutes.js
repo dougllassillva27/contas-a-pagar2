@@ -269,6 +269,7 @@ module.exports = function (repo) {
         terceiros: todosTerceiros,
         user: req.session.user,
         mesFechado,
+        query: req.query,
       });
     })
   );
