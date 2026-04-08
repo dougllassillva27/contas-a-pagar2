@@ -264,3 +264,30 @@ button:active {
 .btn-excluir:hover {
   background-color: var(--danger-hover);
 }
+
+/* =========================================
+   Scrollbar Customizada (Herdada do App Principal)
+   ========================================= */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--card-bg);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-color);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333 var(--card-bg);
+}
