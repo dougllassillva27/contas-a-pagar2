@@ -69,6 +69,17 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ---
 
+### 💡 Módulo de Estimativa de Luz
+
+- **Microsserviço Integrado** — calcula e acompanha o consumo mensal de energia elétrica.
+- **Precisão Real** — utiliza tarifas exatas da distribuidora (TUSD + TE + Iluminação Pública) com precisão de centavos.
+- **KISS (Keep It Simple, Stupid)** — interface minimalista focada apenas nos dados essenciais: leitura anterior e atual.
+- **Reutilização Inteligente** — permite puxar a última leitura com um clique para iniciar um novo mês.
+- **Segurança** — rotas de API protegidas nativamente por validação de API Key.
+- Documentação completa em `calcularLuz/README.md`
+
+---
+
 ## ⚙️ Ferramentas Avançadas
 
 - **Fechamento de Mês (Month Lock)**
