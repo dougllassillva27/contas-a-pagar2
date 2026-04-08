@@ -163,8 +163,11 @@ async function tratarComando(bot, chatId, comando) {
 async function processarTexto(bot, chatId, texto, repo) {
   const conversa = obterConversa(chatId);
 
-  // Se não há conversa ativa, apenas ignora
+  // Se não há conversa ativa, responde com o menu em vez de ficar mudo
   if (!conversa) {
+    await bot.sendMessage(chatId, '👇 Olá! Escolha uma opção no menu abaixo para iniciar um lançamento:', {
+      reply_markup: MENU_PRINCIPAL,
+    });
     return;
   }
 
