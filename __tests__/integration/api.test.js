@@ -103,4 +103,48 @@ describe('Integração API (Mocked DB)', () => {
       expect(res.body.mesFechado).toBe(false);
     });
   });
+
+  // ==========================================================================
+  // Testes de Renderização de Views (Dashboard e Terceiros)
+  // ==========================================================================
+  describe('Renderização de Views (GET / e GET /terceiros)', () => {
+    beforeEach(() => {
+      // Configura retornos padrão blindados para evitar crashes de null pointer no render do EJS
+      repo.getDashboardTotals.mockResolvedValue({ totalrendas: 0, totalcontas: 0, faltapagar: 0, saldoprevisto: 0 });
+      repo.getLancamentosPorTipo.mockResolvedValue([]);
+      repo.getAnotacoes.mockResolvedValue({ conteudo: '' });
+      repo.getResumoPessoas.mockResolvedValue([]);
+      repo.getOrdemCards.mockResolvedValue([]);
+      repo.getFaturaManual.mockResolvedValue(0);
+      repo.isMesFechado.mockResolvedValue(false);
+      repo.getDistinctTerceiros.mockResolvedValue([]);
+    });
+
+    test('GET / - deve buscar as anotações globais (0, 0) por padrão na inicialização', async () => {
+      repo.getDadosTerceiros.mockResolvedValue([]);
+
+      const res = await agent.get('/');
+
+      expect(res.status).toBe(200);
+      // Verifica se a injeção via SSR alterou de mês atual para Mês Global (0, 0)
+      expect(repo.getAnotacoes).toHaveBeenCalledWith(1, 0, 0);
+    });
+
+    test('GET /terceiros - deve filtrar nomes nulos (contas próprias) para evitar Erro 500 na ordenação', async () => {
+      // Simula o retorno bruto do banco onde a conta própria retorna nometerceiro = null
+      repo.getDadosTerceiros.mockResolvedValue([
+        { nometerceiro: 'Mae', status: 'PENDENTE', tipo: 'CARTAO', valor: 100 },
+        { nometerceiro: null, status: 'PENDENTE', tipo: 'FIXA', valor: 50 }, // Conta própria (causadora do crash)
+        { nometerceiro: '   ', status: 'PAGO', tipo: 'CARTAO', valor: 30 }, // Cadastro com espaço em branco
+      ]);
+
+      const res = await agent.get('/terceiros');
+
+      // O sucesso (200) prova que o erro "Cannot read properties of null (reading 'localeCompare')" foi interceptado pelo .filter()
+      expect(res.status).toBe(200);
+      // O HTML retornado deve ser renderizado apenas com os cards válidos
+      expect(res.text).toContain('Mae');
+      expect(res.text).not.toContain('null');
+    });
+  });
 });
