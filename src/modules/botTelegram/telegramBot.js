@@ -20,8 +20,6 @@ const { STATUS, TIPO } = require('../../constants');
 const MENU_PRINCIPAL = {
   inline_keyboard: [
     [
-      { text: '🧑 Lançar Dodo', callback_data: 'iniciar:dodo' },
-      { text: '👩 Lançar Vitória', callback_data: 'iniciar:vitoria' },
       { text: '🧑 Dodo', callback_data: 'iniciar:dodo' },
       { text: '👩 Vitória', callback_data: 'iniciar:vitoria' },
     ],
@@ -125,7 +123,6 @@ async function tratarComando(bot, chatId, comando) {
     cancelarConversa(chatId);
     await bot.sendMessage(chatId, '❌ Lançamento cancelado\\.', {
       parse_mode: 'MarkdownV2',
-      parse_mode: 'MarkdownV2',
     });
     await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
       reply_markup: MENU_PRINCIPAL,
@@ -163,9 +160,23 @@ async function processarTexto(bot, chatId, texto, repo) {
 
   // Se não há conversa ativa, responde com o menu em vez de ficar mudo
   if (!conversa) {
-    // Remove o teclado antigo do rodapé (se existir) enviando msg silenciosa e apagando na sequência
+    // Intercepta cliques residuais do teclado antigo (cache do app)
+    if (texto === '🧑 Lançar Dodo' || texto === '👩 Lançar Vitória') {
+      const msgClean = await bot.sendMessage(chatId, 'Limpando botões antigos...', {
+        reply_markup: { remove_keyboard: true },
+      });
+      setTimeout(() => bot.deleteMessage(chatId, msgClean.message_id).catch(() => {}), 1500);
+
+      const arg = texto === '🧑 Lançar Dodo' ? 'dodo' : 'vitoria';
+      await tratarComando(bot, chatId, `/iniciar${arg}`);
+      return;
+    }
+
+    // Remove o teclado antigo do rodapé (se existir) enviando msg silenciosa e apagando com delay
     const msgClean = await bot.sendMessage(chatId, '...', { reply_markup: { remove_keyboard: true } });
-    bot.deleteMessage(chatId, msgClean.message_id).catch(() => {});
+    setTimeout(() => {
+      bot.deleteMessage(chatId, msgClean.message_id).catch(() => {});
+    }, 1500);
 
     await bot.sendMessage(chatId, '👇 Olá! Clique em um dos botões abaixo para iniciar um lançamento:', {
       reply_markup: MENU_PRINCIPAL,
@@ -408,7 +419,6 @@ async function finalizarEInserir(bot, chatId, repo) {
       dataBase: dados.dataBase,
     });
 
-    await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2', reply_markup: MENU_PRINCIPAL });
     await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2' });
     await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
       reply_markup: MENU_PRINCIPAL,
@@ -416,7 +426,6 @@ async function finalizarEInserir(bot, chatId, repo) {
   } catch (err) {
     console.error('[Telegram] Erro ao inserir lançamento:', err.message);
     await bot.sendMessage(chatId, formatarErro('Erro interno ao registrar. Tente novamente.'), {
-      parse_mode: 'MarkdownV2',
       parse_mode: 'MarkdownV2',
     });
     await bot.sendMessage(chatId, '👇 Tentar novamente ou lançar outra conta?', {
