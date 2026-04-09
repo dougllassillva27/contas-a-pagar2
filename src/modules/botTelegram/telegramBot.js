@@ -78,6 +78,12 @@ function criarBot({ token, chatIdPermitido, repo }) {
     if (chatId !== String(chatIdPermitido)) return;
 
     await bot.answerCallbackQuery(query.id);
+
+    // Remove os botões inline da mensagem clicada para limpar o histórico visual do chat
+    bot
+      .editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: query.message.message_id })
+      .catch(() => {});
+
     await processarCallback(bot, chatId, query.data, repo);
   });
 
@@ -162,21 +168,18 @@ async function processarTexto(bot, chatId, texto, repo) {
   if (!conversa) {
     // Intercepta cliques residuais do teclado antigo (cache do app)
     if (texto === '🧑 Lançar Dodo' || texto === '👩 Lançar Vitória') {
-      const msgClean = await bot.sendMessage(chatId, 'Limpando botões antigos...', {
+      // Mantém a mensagem visível para forçar a limpeza definitiva do cache no mobile
+      await bot.sendMessage(chatId, '🔄 Sincronizando interface...', {
         reply_markup: { remove_keyboard: true },
       });
-      setTimeout(() => bot.deleteMessage(chatId, msgClean.message_id).catch(() => {}), 1500);
 
       const arg = texto === '🧑 Lançar Dodo' ? 'dodo' : 'vitoria';
       await tratarComando(bot, chatId, `/iniciar${arg}`);
       return;
     }
 
-    // Remove o teclado antigo do rodapé (se existir) enviando msg silenciosa e apagando com delay
-    const msgClean = await bot.sendMessage(chatId, '...', { reply_markup: { remove_keyboard: true } });
-    setTimeout(() => {
-      bot.deleteMessage(chatId, msgClean.message_id).catch(() => {});
-    }, 1500);
+    // Remove o teclado antigo do rodapé de forma definitiva mantendo a instrução no histórico
+    await bot.sendMessage(chatId, '🔄 Sincronizando interface...', { reply_markup: { remove_keyboard: true } });
 
     await bot.sendMessage(chatId, '👇 Olá! Clique em um dos botões abaixo para iniciar um lançamento:', {
       reply_markup: MENU_PRINCIPAL,
