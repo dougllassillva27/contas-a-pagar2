@@ -161,7 +161,7 @@ Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o 
 - <kbd>Alt</kbd> + <kbd>T</kbd>: Abre a tela de **Gestão de Terceiros** preservando o mês atual.
 - <kbd>Alt</kbd> + <kbd>B</kbd>: Realiza o **Backup JSON** do sistema.
 - <kbd>Alt</kbd> + <kbd>C</kbd>: Alterna o status de **Fechamento do Mês** (Cadeado).
-- <kbd>Alt</kbd> + <kbd>P</kbd>: Abre a tela de **Relatório/Impressão** do mês atual.
+- <kbd>Alt</kbd> + <kbd>I</kbd>: Abre a tela de **Relatório/Impressão** do mês atual.
 - <kbd>Esc</kbd>: Fecha qualquer modal ativo ou menu de contexto instantaneamente.
 
 ---

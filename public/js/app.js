@@ -90,8 +90,8 @@ document.addEventListener('keydown', (e) => {
     fazerBackup();
   }
 
-  // Atalho: Alt + P para abrir o Relatório/Imprimir
-  if (e.altKey && e.key.toLowerCase() === 'p') {
+  // Atalho: Alt + I para abrir o Relatório/Imprimir (usando e.code para evitar conflitos de layout)
+  if (e.altKey && e.code === 'KeyI') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
     window.open(`/relatorio?month=${currentMonth}&year=${currentYear}`, '_blank');
