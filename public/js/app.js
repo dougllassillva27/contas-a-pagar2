@@ -82,6 +82,27 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     window.open(`/terceiros?month=${currentMonth}&year=${currentYear}`, '_blank');
   }
+
+  // Atalho: Alt + B para fazer Backup
+  if (e.altKey && e.key.toLowerCase() === 'b') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    fazerBackup();
+  }
+
+  // Atalho: Alt + P para abrir o Relatório/Imprimir
+  if (e.altKey && e.key.toLowerCase() === 'p') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    window.open(`/relatorio?month=${currentMonth}&year=${currentYear}`, '_blank');
+  }
+
+  // Atalho: Alt + C para alternar Fechamento do Mês (Cadeado/Concluir)
+  if (e.altKey && e.key.toLowerCase() === 'c') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    toggleMesFechado();
+  }
 });
 
 // --- VERIFICAÇÃO DE MÊS FECHADO ---
