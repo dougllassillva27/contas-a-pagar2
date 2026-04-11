@@ -13,7 +13,7 @@ const {
   cancelarConversa,
 } = require('./conversationManager');
 const { parseValor, normalizarParcelasPorTipo } = require('../../helpers/parseHelpers');
-const { formatarSucesso, formatarErro } = require('./responseFormatter');
+const { formatarSucesso, formatarSucessoBulk, formatarErro } = require('./responseFormatter');
 const { STATUS, TIPO } = require('../../constants');
 
 // Teclado inline acoplado ao balão da mensagem
@@ -383,29 +383,33 @@ async function enviarPergunta(bot, chatId, etapa) {
       break;
 
     case ETAPAS.TERCEIRO:
-      await bot.sendMessage(chatId, '🏷️ *Terceiro \\(de quem é a conta\\)?*\n_Selecione ou digite o nome:_', {
-        parse_mode: 'MarkdownV2',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '👤 Eu (própria)', callback_data: 'terceiro:eu' },
-              { text: '🏠 Casa', callback_data: 'terceiro:Casa' },
+      await bot.sendMessage(
+        chatId,
+        '🏷️ *Terceiro \\(de quem é a conta\\)?*\n_Selecione ou digite nomes separados por vírgula:_',
+        {
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '👤 Eu (própria)', callback_data: 'terceiro:eu' },
+                { text: '🏠 Casa', callback_data: 'terceiro:Casa' },
+              ],
+              [
+                { text: '❤️ Morr', callback_data: 'terceiro:Morr' },
+                { text: '👩‍👧 Mãe', callback_data: 'terceiro:Mãe' },
+              ],
+              [
+                { text: '👴 Vô', callback_data: 'terceiro:Vô' },
+                { text: '👦 Davi', callback_data: 'terceiro:Davi' },
+              ],
+              [
+                { text: '👧 Amanda', callback_data: 'terceiro:Amanda' },
+                { text: '👦 Lorenzo', callback_data: 'terceiro:Lorenzo' },
+              ],
             ],
-            [
-              { text: '❤️ Morr', callback_data: 'terceiro:Morr' },
-              { text: '👩‍👧 Mãe', callback_data: 'terceiro:Mãe' },
-            ],
-            [
-              { text: '👴 Vô', callback_data: 'terceiro:Vô' },
-              { text: '👦 Davi', callback_data: 'terceiro:Davi' },
-            ],
-            [
-              { text: '👧 Amanda', callback_data: 'terceiro:Amanda' },
-              { text: '👦 Lorenzo', callback_data: 'terceiro:Lorenzo' },
-            ],
-          ],
-        },
-      });
+          },
+        }
+      );
       break;
   }
 }
@@ -446,18 +450,44 @@ async function finalizarEInserir(bot, chatId, repo) {
       dataBase: dataBase,
     };
 
-    await repo.addLancamento(dados.usuarioId, {
-      descricao: dados.descricao,
-      valor: dados.valor,
-      tipo: dados.tipo,
-      status: dados.status,
-      parcelaAtual: dados.parcelaAtual,
-      totalParcelas: dados.totalParcelas,
-      nomeTerceiro: dados.nomeTerceiro,
-      dataBase: dados.dataBase,
-    });
+    // Interceptação para Lançamento em Lote (Bulk)
+    let isBulk = false;
+    let listaTerceiros = [];
+    if (dadosBrutos.terceiro && dadosBrutos.terceiro.includes(',')) {
+      listaTerceiros = dadosBrutos.terceiro
+        .split(',')
+        .map((n) => n.trim())
+        .filter((n) => n.length > 0);
+      if (listaTerceiros.length > 1) {
+        isBulk = true;
+      }
+    }
 
-    await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2' });
+    if (isBulk) {
+      const result = await repo.addLancamentosBulk(
+        dados.usuarioId,
+        {
+          descricao: dados.descricao,
+          valor: dados.valor,
+          tipo: dados.tipo,
+          status: dados.status,
+          parcelaAtual: dados.parcelaAtual,
+          totalParcelas: dados.totalParcelas,
+          dataBase: dados.dataBase,
+        },
+        listaTerceiros
+      );
+      await bot.sendMessage(chatId, formatarSucessoBulk(dados, listaTerceiros, result.criados), {
+        parse_mode: 'MarkdownV2',
+      });
+    } else {
+      await repo.addLancamento(dados.usuarioId, {
+        ...dados,
+        // Asseguramos não passar o id para o insert, o resto já está estruturado
+      });
+      await bot.sendMessage(chatId, formatarSucesso(dados), { parse_mode: 'MarkdownV2' });
+    }
+
     await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
       reply_markup: MENU_PRINCIPAL,
     });
