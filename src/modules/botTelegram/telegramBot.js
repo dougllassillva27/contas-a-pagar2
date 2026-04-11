@@ -79,12 +79,7 @@ function criarBot({ token, chatIdPermitido, repo }) {
 
     await bot.answerCallbackQuery(query.id);
 
-    // Remove os botões inline da mensagem clicada para limpar o histórico visual do chat
-    bot
-      .editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: query.message.message_id })
-      .catch(() => {});
-
-    await processarCallback(bot, chatId, query.data, repo);
+    await processarCallback(bot, chatId, query, repo);
   });
 
   return bot;
@@ -244,18 +239,22 @@ async function processarTexto(bot, chatId, texto, repo) {
 // Processar callback de botões inline
 // ==============================================================================
 
-async function processarCallback(bot, chatId, data, repo) {
+async function processarCallback(bot, chatId, query, repo) {
+  const data = query.data;
+  const messageId = query.message.message_id;
   // Callbacks têm formato: "campo:valor" (ex: "usuario:1", "tipo:fixa", "iniciar:dodo")
   const [campo, valor] = data.split(':');
 
   // Intercepta botões inline do menu principal antes de verificar conversa
   if (campo === 'iniciar') {
+    bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await tratarComando(bot, chatId, `/iniciar${valor}`);
     return;
   }
 
   const conversa = obterConversa(chatId);
   if (!conversa) {
+    bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId }).catch(() => {});
     await bot.sendMessage(chatId, 'Nenhum lançamento em andamento\\. Use /novo para iniciar\\.', {
       parse_mode: 'MarkdownV2',
     });
@@ -264,11 +263,24 @@ async function processarCallback(bot, chatId, data, repo) {
 
   if (campo === 'usuario') {
     const label = valor === '1' ? '🧑 Dodo' : '👩 Vitória';
-    await bot.sendMessage(chatId, `👉 Selecionado: ${label}`);
+    await bot
+      .editMessageText(`👤 *Conta de quem?*\n👉 _Selecionado: ${label}_`, {
+        chat_id: chatId,
+        message_id: messageId,
+        parse_mode: 'MarkdownV2',
+      })
+      .catch(() => {});
     await avancarEEnviarProxima(bot, chatId, 'usuarioId', parseInt(valor, 10), repo);
   } else if (campo === 'tipo') {
     const labels = { fixa: '🔁 Fixa', unica: '1️⃣ Única', parcelada: '📊 Parcelada' };
-    await bot.sendMessage(chatId, `👉 Selecionado: ${labels[valor] || valor}`);
+    const label = labels[valor] || valor;
+    await bot
+      .editMessageText(`📌 *Tipo de conta:*\n👉 _Selecionado: ${label}_`, {
+        chat_id: chatId,
+        message_id: messageId,
+        parse_mode: 'MarkdownV2',
+      })
+      .catch(() => {});
 
     // Salvar tipo normalizado para a lógica de parcelas
     conversa.dados.tipo = valor;
@@ -282,7 +294,13 @@ async function processarCallback(bot, chatId, data, repo) {
     // Se for 'eu' ou 'pular', salva null (conta própria), senão salva o nome
     const nomeTerceiro = valor === 'eu' || valor === 'pular' ? null : valor;
     const label = nomeTerceiro ? nomeTerceiro : '👤 Conta Própria';
-    await bot.sendMessage(chatId, `👉 Selecionado: ${label}`);
+    await bot
+      .editMessageText(`🏷️ *Terceiro \\(de quem é a conta\\)?*\n👉 _Selecionado: ${label}_`, {
+        chat_id: chatId,
+        message_id: messageId,
+        parse_mode: 'MarkdownV2',
+      })
+      .catch(() => {});
 
     await avancarEEnviarProxima(bot, chatId, 'terceiro', nomeTerceiro, repo);
   }
