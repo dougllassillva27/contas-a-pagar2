@@ -250,7 +250,7 @@ async function processarCallback(bot, chatId, query, repo) {
     const label = valor === 'dodo' ? '🧑 Dodo' : '👩 Vitória';
 
     bot
-      .editMessageText(`✅ Lançar para: ${label}`, {
+      .editMessageText(`✅ Lançar para: ${label}\n\u2800`, {
         chat_id: chatId,
         message_id: messageId,
       })
@@ -272,7 +272,7 @@ async function processarCallback(bot, chatId, query, repo) {
   if (campo === 'usuario') {
     const label = valor === '1' ? '🧑 Dodo' : '👩 Vitória';
     await bot
-      .editMessageText(`✅ *Conta:* ${label}`, {
+      .editMessageText(`✅ *Conta:* ${label}\n\u2800`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
@@ -283,7 +283,7 @@ async function processarCallback(bot, chatId, query, repo) {
     const labels = { fixa: '🔁 Fixa', unica: '1️⃣ Única', parcelada: '📊 Parcelada' };
     const label = labels[valor] || valor;
     await bot
-      .editMessageText(`✅ *Tipo:* ${label}`, {
+      .editMessageText(`✅ *Tipo:* ${label}\n\u2800`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
@@ -303,7 +303,7 @@ async function processarCallback(bot, chatId, query, repo) {
     const nomeTerceiro = valor === 'eu' || valor === 'pular' ? null : valor;
     const label = nomeTerceiro ? nomeTerceiro : '👤 Conta Própria';
     await bot
-      .editMessageText(`✅ *Terceiro:* ${label}`, {
+      .editMessageText(`✅ *Terceiro:* ${label}\n\u2800`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
