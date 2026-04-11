@@ -247,11 +247,10 @@ async function processarCallback(bot, chatId, query, repo) {
 
   // Intercepta botões inline do menu principal antes de verificar conversa
   if (campo === 'iniciar') {
-    const originalText = query.message.text || '👇 Deseja lançar mais alguma conta?';
     const label = valor === 'dodo' ? '🧑 Dodo' : '👩 Vitória';
 
     bot
-      .editMessageText(`${originalText}\n👉 Selecionado: ${label}`, {
+      .editMessageText(`✅ Lançar para: ${label}`, {
         chat_id: chatId,
         message_id: messageId,
       })
@@ -273,7 +272,7 @@ async function processarCallback(bot, chatId, query, repo) {
   if (campo === 'usuario') {
     const label = valor === '1' ? '🧑 Dodo' : '👩 Vitória';
     await bot
-      .editMessageText(`👤 *Conta de quem?*\n👉 _Selecionado: ${label}_`, {
+      .editMessageText(`✅ *Conta:* ${label}`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
@@ -284,7 +283,7 @@ async function processarCallback(bot, chatId, query, repo) {
     const labels = { fixa: '🔁 Fixa', unica: '1️⃣ Única', parcelada: '📊 Parcelada' };
     const label = labels[valor] || valor;
     await bot
-      .editMessageText(`📌 *Tipo de conta:*\n👉 _Selecionado: ${label}_`, {
+      .editMessageText(`✅ *Tipo:* ${label}`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
@@ -304,7 +303,7 @@ async function processarCallback(bot, chatId, query, repo) {
     const nomeTerceiro = valor === 'eu' || valor === 'pular' ? null : valor;
     const label = nomeTerceiro ? nomeTerceiro : '👤 Conta Própria';
     await bot
-      .editMessageText(`🏷️ *Terceiro \\(de quem é a conta\\)?*\n👉 _Selecionado: ${label}_`, {
+      .editMessageText(`✅ *Terceiro:* ${label}`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
