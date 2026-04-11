@@ -27,7 +27,39 @@ function formatarSucesso(dados) {
   const detalheTipo = montarDetalheTipo(dados);
   const terceiro = dados.nomeTerceiro || '—';
 
-  return ['🏦 *Contas a Pagar \\- Lançamentos*', '', '✅ CONTA LANÇADA COM SUCESSO', '', `👤 Usuário: ${escaparMarkdown(nomeUsuario)}`, `📋 Descrição: ${escaparMarkdown(dados.descricao)}`, `💰 Valor: ${escaparMarkdown(valorFormatado)}`, `📌 Tipo: ${escaparMarkdown(detalheTipo)}`, `🏷️ Terceiro: ${escaparMarkdown(terceiro)}`].join('\n');
+  return [
+    '🏦 *Contas a Pagar \\- Lançamentos*',
+    '',
+    '✅ CONTA LANÇADA COM SUCESSO',
+    '',
+    `👤 Usuário: ${escaparMarkdown(nomeUsuario)}`,
+    `📋 Descrição: ${escaparMarkdown(dados.descricao)}`,
+    `💰 Valor: ${escaparMarkdown(valorFormatado)}`,
+    `📌 Tipo: ${escaparMarkdown(detalheTipo)}`,
+    `🏷️ Terceiro: ${escaparMarkdown(terceiro)}`,
+  ].join('\n');
+}
+
+/**
+ * Formata a resposta de sucesso para lançamentos em lote (bulk).
+ */
+function formatarSucessoBulk(dados, terceiros, quantidade) {
+  const nomeUsuario = NOMES_USUARIOS[dados.usuarioId] || `Usuário ${dados.usuarioId}`;
+  const valorFormatado = `R$ ${dados.valor.toFixed(2).replace('.', ',')}`;
+  const detalheTipo = montarDetalheTipo(dados);
+  const listaTerceiros = terceiros.join(', ');
+
+  return [
+    '🏦 *Contas a Pagar \\- Lançamentos em Lote*',
+    '',
+    `✅ ${quantidade} CONTAS LANÇADAS COM SUCESSO`,
+    '',
+    `👤 Usuário: ${escaparMarkdown(nomeUsuario)}`,
+    `📋 Descrição: ${escaparMarkdown(dados.descricao)}`,
+    `💰 Valor: ${escaparMarkdown(valorFormatado)}`,
+    `📌 Tipo: ${escaparMarkdown(detalheTipo)}`,
+    `🏷️ Terceiros: ${escaparMarkdown(listaTerceiros)}`,
+  ].join('\n');
 }
 
 /**
@@ -58,4 +90,4 @@ function escaparMarkdown(texto) {
   return String(texto).replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
 }
 
-module.exports = { formatarSucesso, formatarErro, escaparMarkdown, NOMES_USUARIOS };
+module.exports = { formatarSucesso, formatarSucessoBulk, formatarErro, escaparMarkdown, NOMES_USUARIOS };
