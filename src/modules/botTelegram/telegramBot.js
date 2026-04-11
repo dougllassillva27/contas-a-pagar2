@@ -247,7 +247,16 @@ async function processarCallback(bot, chatId, query, repo) {
 
   // Intercepta botões inline do menu principal antes de verificar conversa
   if (campo === 'iniciar') {
-    bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId }).catch(() => {});
+    const originalText = query.message.text || '👇 Deseja lançar mais alguma conta?';
+    const label = valor === 'dodo' ? '🧑 Dodo' : '👩 Vitória';
+
+    bot
+      .editMessageText(`${originalText}\n👉 Selecionado: ${label}`, {
+        chat_id: chatId,
+        message_id: messageId,
+      })
+      .catch(() => {});
+
     await tratarComando(bot, chatId, `/iniciar${valor}`);
     return;
   }
