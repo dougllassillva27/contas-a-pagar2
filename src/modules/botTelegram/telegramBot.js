@@ -263,8 +263,13 @@ async function processarCallback(bot, chatId, data, repo) {
   }
 
   if (campo === 'usuario') {
+    const label = valor === '1' ? '🧑 Dodo' : '👩 Vitória';
+    await bot.sendMessage(chatId, `👉 Selecionado: ${label}`);
     await avancarEEnviarProxima(bot, chatId, 'usuarioId', parseInt(valor, 10), repo);
   } else if (campo === 'tipo') {
+    const labels = { fixa: '🔁 Fixa', unica: '1️⃣ Única', parcelada: '📊 Parcelada' };
+    await bot.sendMessage(chatId, `👉 Selecionado: ${labels[valor] || valor}`);
+
     // Salvar tipo normalizado para a lógica de parcelas
     conversa.dados.tipo = valor;
     const proxima = avancarConversa(chatId, 'tipo', valor);
@@ -276,6 +281,9 @@ async function processarCallback(bot, chatId, data, repo) {
   } else if (campo === 'terceiro') {
     // Se for 'eu' ou 'pular', salva null (conta própria), senão salva o nome
     const nomeTerceiro = valor === 'eu' || valor === 'pular' ? null : valor;
+    const label = nomeTerceiro ? nomeTerceiro : '👤 Conta Própria';
+    await bot.sendMessage(chatId, `👉 Selecionado: ${label}`);
+
     await avancarEEnviarProxima(bot, chatId, 'terceiro', nomeTerceiro, repo);
   }
 }
