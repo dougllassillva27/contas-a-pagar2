@@ -106,10 +106,10 @@ module.exports = function (repo) {
   });
 
   // ============================================================================
-  // GET /docs/Lajeado.md — Página pública estilizada
-  // Mantém a URL desejada, mas renderiza HTML bonito em vez do markdown cru
+  // GET /lajeado.html — Página pública do planejamento Lajeado
+  // URL oficializada para acesso de terceiros e visitantes
   // ============================================================================
-  router.get('/docs/Lajeado.md', async (req, res) => {
+  router.get('/lajeado.html', async (req, res) => {
     let muralLajeado = '';
     try {
       // Soft Auth: Tenta reidratar a sessão silenciosamente via cookie se não houver sessão ativa (comum no Mobile)
@@ -122,10 +122,16 @@ module.exports = function (repo) {
         }
       }
 
-      if (user) {
-        const item = await repo.getAnotacoes(user.id, -1, -1);
-        muralLajeado = item ? item.conteudo || item : '';
+      // Para guias anônimas ou visitantes sem sessão, busca o Mural Público
+      let item = null;
+      if (user) item = await repo.getAnotacoes(user.id, -1, -1);
+
+      // Fallback: se estiver deslogado (anônimo) ou vazio, puxa o conteúdo consolidado do Admin (ID 1)
+      if ((!item || !item.conteudo) && (!user || user.id !== 1)) {
+        item = await repo.getAnotacoes(1, -1, -1);
       }
+
+      muralLajeado = item ? item.conteudo || item : '';
     } catch (err) {
       console.error('[LAJEADO] Erro ao carregar mural:', err.message);
     }
