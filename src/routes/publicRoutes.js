@@ -112,8 +112,18 @@ module.exports = function (repo) {
   router.get('/docs/Lajeado.md', async (req, res) => {
     let muralLajeado = '';
     try {
-      if (req.session && req.session.user) {
-        const item = await repo.getAnotacoes(req.session.user.id, -1, -1);
+      // Soft Auth: Tenta reidratar a sessão silenciosamente via cookie se não houver sessão ativa (comum no Mobile)
+      let user = req.session?.user;
+      if (!user && req.cookies?.remember_me) {
+        const u = await repo.buscarUsuarioPorToken(req.cookies.remember_me);
+        if (u) {
+          req.session.user = { id: u.id, nome: u.nome, login: u.login };
+          user = req.session.user;
+        }
+      }
+
+      if (user) {
+        const item = await repo.getAnotacoes(user.id, -1, -1);
         muralLajeado = item ? item.conteudo || item : '';
       }
     } catch (err) {
