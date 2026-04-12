@@ -520,6 +520,56 @@
           width: 100%;
         }
       }
+
+      /* --- Estilos do Mural --- */
+      .mural-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        margin-top: 24px;
+      }
+      .mural-header {
+        margin-top: 0;
+        font-size: 1.5rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+      .mural-desc {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+      }
+      .mural-textarea {
+        width: 100%;
+        min-height: 220px;
+        background: rgba(0,0,0,0.15);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        resize: vertical;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .mural-textarea:focus {
+        border-color: var(--blue);
+        background: rgba(0,0,0,0.25);
+      }
+      .mural-status {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        height: 24px;
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+      }
     </style>
   </head>
   <body>
@@ -802,6 +852,13 @@
         </article>
       </section>
 
+      <section class="mural-card">
+        <h2 class="mural-header">Mural de Anotações</h2>
+        <p class="mural-desc">Espaço livre para anotações rápidas do planejamento. O conteúdo é salvo automaticamente no cache do seu navegador.</p>
+        <textarea id="muralTextarea" class="mural-textarea" placeholder="Digite suas anotações, lembretes ou metas aqui..."></textarea>
+        <div id="muralStatus" class="mural-status"></div>
+      </section>
+
       <div class="footer-note">
         Página pública estilizada a partir do conteúdo original de <code>Lajeado.md</code>.
       </div>
@@ -816,5 +873,29 @@
     >
       ↑
     </button>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const textarea = document.getElementById('muralTextarea');
+        const status = document.getElementById('muralStatus');
+        const STORAGE_KEY = 'mural_lajeado_cache';
+
+        // Restaura dados do LocalStorage ao carregar a página
+        const savedText = localStorage.getItem(STORAGE_KEY);
+        if (savedText) textarea.value = savedText;
+
+        let timeout;
+        textarea.addEventListener('input', () => {
+          status.textContent = 'Salvando...';
+          status.style.color = 'var(--text-secondary)';
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            localStorage.setItem(STORAGE_KEY, textarea.value);
+            status.textContent = '✓ Salvo localmente';
+            status.style.color = 'var(--green)';
+          }, 600);
+        });
+      });
+    </script>
   </body>
 </html>
