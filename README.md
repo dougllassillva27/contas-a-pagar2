@@ -64,6 +64,8 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 - **Lançamentos via chat** — registre contas direto pelo Telegram
 - **Conversa interativa** — o bot pergunta campo por campo
 - **Botões inline** — selecione usuário e tipo com um toque
+- **UX Minimalista** — Respostas consolidadas na mesma linha (in-place) mantendo o histórico de chat super limpo.
+- **Lançamento em Lote (Bulk)** — Permite inserir múltiplos nomes separados por vírgula na etapa de terceiros para lançamentos simultâneos.
 - **Segurança** — restrito ao seu Chat ID
 - Documentação completa em [`botTelegram/README.md`](botTelegram/README.md)
 
