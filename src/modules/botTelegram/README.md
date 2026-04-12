@@ -30,11 +30,11 @@ O bot substitui o app **Atalhos HTTP** (Android) como forma de inserir lançamen
     │   🔢 Quantas parcelas?  ─── 10 ou 1/10     (texto livre)
     │
     ▼
-🏷️ Terceiro?  ─── Morr, Mãe, Davi...            (texto livre)
+🏷️ Terceiro?  ─── Morr, Mãe...                  (texto livre c/ vírgula p/ Lote)
                ─── [⏭️ Pular (conta própria)]    (botão inline)
     │
     ▼
-✅ CONTA LANÇADA COM SUCESSO
+✅ CONTA(S) LANÇADA(S) COM SUCESSO
 ```
 
 > **Nota:** A pergunta sobre parcelas **só aparece** quando o tipo selecionado é "Parcelada".
