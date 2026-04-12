@@ -521,6 +521,30 @@
         }
       }
 
+      /* --- Layout Dividido (Sidebar Mural) --- */
+      .lajeado-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+        align-items: start;
+      }
+      .lajeado-sidebar {
+        position: sticky;
+        top: 32px;
+        height: calc(100vh - 64px);
+        display: flex;
+        flex-direction: column;
+      }
+      @media (max-width: 1024px) {
+        .lajeado-layout {
+          grid-template-columns: 1fr;
+        }
+        .lajeado-sidebar {
+          position: static;
+          height: auto;
+        }
+      }
+
       /* --- Estilos do Mural --- */
       .mural-card {
         background: var(--bg-card);
@@ -528,7 +552,12 @@
         border-radius: 24px;
         padding: 24px;
         box-shadow: var(--shadow);
-        margin-top: 24px;
+      }
+      .sidebar-mural {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-top: 0;
       }
       .mural-header {
         margin-top: 0;
@@ -555,6 +584,11 @@
         resize: vertical;
         outline: none;
         transition: border-color 0.2s;
+      }
+      .sidebar-mural .mural-textarea {
+        flex: 1;
+        resize: none;
+        min-height: 250px;
       }
       .mural-textarea:focus {
         border-color: var(--blue);
@@ -715,6 +749,8 @@
     %>
 
     <main class="page">
+      <div class="lajeado-layout">
+        <div class="lajeado-content">
       <section class="hero">
         <div class="hero-top">
           <div class="hero-copy">
@@ -851,13 +887,17 @@
           </div>
         </article>
       </section>
+        </div>
 
-      <section class="mural-card">
-        <h2 class="mural-header">Mural de Anotações</h2>
-        <p class="mural-desc">Espaço livre para anotações rápidas do planejamento. O conteúdo é salvo automaticamente no cache do seu navegador.</p>
-        <textarea id="muralTextarea" class="mural-textarea" placeholder="Digite suas anotações, lembretes ou metas aqui..."></textarea>
-        <div id="muralStatus" class="mural-status"></div>
-      </section>
+        <aside class="lajeado-sidebar">
+          <section class="mural-card sidebar-mural">
+            <h2 class="mural-header">Mural de Anotações</h2>
+            <p class="mural-desc">Espaço livre para anotações do planejamento. O conteúdo é salvo na nuvem automaticamente.</p>
+            <textarea id="muralTextarea" class="mural-textarea" placeholder="Digite suas anotações, lembretes ou metas aqui..."><%= typeof muralLajeado !== 'undefined' ? muralLajeado : '' %></textarea>
+            <div id="muralStatus" class="mural-status"></div>
+          </section>
+        </aside>
+      </div>
 
       <div class="footer-note">
         Página pública estilizada a partir do conteúdo original de <code>Lajeado.md</code>.
@@ -878,22 +918,31 @@
       document.addEventListener('DOMContentLoaded', () => {
         const textarea = document.getElementById('muralTextarea');
         const status = document.getElementById('muralStatus');
-        const STORAGE_KEY = 'mural_lajeado_cache';
-
-        // Restaura dados do LocalStorage ao carregar a página
-        const savedText = localStorage.getItem(STORAGE_KEY);
-        if (savedText) textarea.value = savedText;
 
         let timeout;
         textarea.addEventListener('input', () => {
           status.textContent = 'Salvando...';
           status.style.color = 'var(--text-secondary)';
           clearTimeout(timeout);
-          timeout = setTimeout(() => {
-            localStorage.setItem(STORAGE_KEY, textarea.value);
-            status.textContent = '✓ Salvo localmente';
-            status.style.color = 'var(--green)';
-          }, 600);
+          timeout = setTimeout(async () => {
+            try {
+              const res = await fetch('/api/anotacoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ conteudo: textarea.value, month: -1, year: -1 })
+              });
+              if (res.ok) {
+                status.textContent = '✓ Salvo na nuvem';
+                status.style.color = 'var(--green)';
+              } else {
+                status.textContent = '❌ Erro ao salvar (Faça login)';
+                status.style.color = 'var(--red)';
+              }
+            } catch(e) {
+              status.textContent = '❌ Erro de rede';
+              status.style.color = 'var(--red)';
+            }
+          }, 800);
         });
       });
     </script>
