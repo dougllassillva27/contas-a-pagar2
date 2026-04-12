@@ -109,8 +109,17 @@ module.exports = function (repo) {
   // GET /docs/Lajeado.md — Página pública estilizada
   // Mantém a URL desejada, mas renderiza HTML bonito em vez do markdown cru
   // ============================================================================
-  router.get('/docs/Lajeado.md', (req, res) => {
-    return res.render('lajeado');
+  router.get('/docs/Lajeado.md', async (req, res) => {
+    let muralLajeado = '';
+    try {
+      if (req.session && req.session.user) {
+        const item = await repo.getAnotacoes(req.session.user.id, -1, -1);
+        muralLajeado = item ? item.conteudo || item : '';
+      }
+    } catch (err) {
+      console.error('[LAJEADO] Erro ao carregar mural:', err.message);
+    }
+    return res.render('lajeado', { muralLajeado });
   });
 
   // ============================================================================
