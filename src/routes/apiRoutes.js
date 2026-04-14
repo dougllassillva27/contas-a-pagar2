@@ -331,6 +331,25 @@ module.exports = function (repo) {
     })
   );
 
+  // --- API DA LAJEADO (DADOS JSON E MURAL) ---
+  router.post(
+    '/api/lajeado',
+    asyncHandler(async (req, res) => {
+      const { dados } = req.body;
+      await repo.saveLajeado(req.session.user.id, dados);
+      res.json({ success: true });
+    })
+  );
+
+  router.post(
+    '/api/lajeado/mural',
+    asyncHandler(async (req, res) => {
+      const { conteudo } = req.body;
+      await repo.updateLajeadoMural(req.session.user.id, conteudo);
+      res.json({ success: true });
+    })
+  );
+
   router.get(
     '/api/anotacoes',
     asyncHandler(async (req, res) => {

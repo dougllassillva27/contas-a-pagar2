@@ -16,6 +16,7 @@ const FaturaManualRepository = require('./FaturaManualRepository');
 const OrdemCardsRepository = require('./OrdemCardsRepository');
 const BackupRepository = require('./BackupRepository');
 const MesFechadoRepository = require('./MesFechadoRepository');
+const LajeadoRepository = require('./LajeadoRepository');
 
 module.exports = {
   // Usuários
@@ -38,4 +39,7 @@ module.exports = {
 
   // Fechamento de Mês
   ...MesFechadoRepository,
+
+  // Lajeado (Mural Público Dinâmico)
+  ...LajeadoRepository,
 };
