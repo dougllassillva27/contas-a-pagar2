@@ -609,16 +609,21 @@
         transition: color 0.3s ease;
       }
 
-      /* --- Modal do Editor JSON --- */
-      .lajeado-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-      .lajeado-modal-overlay.active { display: flex; }
-      .lajeado-modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 800px; display: flex; flex-direction: column; box-shadow: var(--shadow); }
-      .lajeado-modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-      .lajeado-modal-header h3 { margin: 0; font-size: 1.2rem; }
-      .lajeado-modal-body { padding: 24px; }
-      .lajeado-modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
-      .json-editor { width: 100%; height: 50vh; font-family: monospace; font-size: 13px; background: #111; color: #a0a0a0; border: 1px solid var(--border); padding: 16px; border-radius: 8px; resize: vertical; outline: none; line-height: 1.5; }
-      .json-editor:focus { border-color: var(--blue); color: #fff; }
+      /* --- Elementos do Modo Edição Visual --- */
+      .edit-input {
+        background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff;
+        padding: 6px 10px; border-radius: 8px; font-family: inherit; font-size: 0.95rem; outline: none; width: 100%; transition: border-color 0.2s;
+      }
+      .edit-input:focus { border-color: var(--blue); }
+      .tag-input { text-align: center; font-size: 0.75rem; padding: 4px; }
+      .btn-del {
+        background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); color: var(--red); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: 0.2s;
+      }
+      .btn-del:hover { background: var(--red); color: white; }
+      .btn-add { background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); color: var(--text-secondary); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; width: 100%; transition: 0.2s; font-weight: 600; }
+      .btn-add:hover { background: rgba(255,255,255,0.1); color: #fff; }
+      .btn-add.primary { border-color: rgba(56,120,225,0.4); color: var(--blue); background: rgba(56,120,225,0.05); }
+      .btn-add.primary:hover { background: var(--blue); color: white; }
     </style>
   </head>
   <body>
@@ -631,9 +636,9 @@
             <div class="eyebrow">
               Planejamento financeiro • Lajeado
               <% if (typeof user !== 'undefined' && user) { %>
-                <span onclick="abrirEditorLajeado()" style="margin-left: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: var(--warning); text-decoration: underline;" title="Editar informações do painel">
-                  <span class="material-icons" style="font-size: 14px;">edit</span> Editor JSON
-                </span>
+                <button onclick="toggleLayoutEditMode()" style="margin-left: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,167,38,0.15); color: var(--warning); border: 1px solid rgba(255,167,38,0.3); padding: 4px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; transition: 0.2s;" title="Editar painel visualmente">
+                  <span class="material-icons" style="font-size: 14px;">edit</span> Modo Edição
+                </button>
               <% } %>
             </div>
             <h1>Organização de contas</h1>
@@ -804,22 +809,13 @@
       ↑
     </button>
 
-    <!-- Modal do Editor JSON (Apenas p/ Logados) -->
+    <!-- Floating Action Bar do Modo Edição -->
     <% if (typeof user !== 'undefined' && user) { %>
-      <div id="modalEditorLajeado" class="lajeado-modal-overlay">
-        <div class="lajeado-modal-content">
-          <div class="lajeado-modal-header">
-            <h3>Editar Dados da Página (JSON)</h3>
-            <button onclick="fecharEditorLajeado()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
-          </div>
-          <div class="lajeado-modal-body">
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0; margin-bottom: 12px;">Modifique a estrutura de meses, valores e tags diretamente via código. Mantenha o formato JSON intacto.</p>
-            <textarea id="jsonEditorTextarea" class="json-editor"></textarea>
-          </div>
-          <div class="lajeado-modal-footer">
-            <button onclick="fecharEditorLajeado()" class="hero-btn">Cancelar</button>
-            <button id="btnSalvarLajeado" onclick="salvarDadosLajeado()" class="hero-btn primary">Salvar Alterações</button>
-          </div>
+      <div id="barSalvarLayout" style="display:none; position:fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 2px solid var(--blue); padding: 12px 24px; border-radius: 50px; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.8); align-items: center; gap: 20px;">
+        <span style="font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;"><span class="material-icons" style="color: var(--warning);">edit</span> Modo Edição</span>
+        <div style="display:flex; gap:12px;">
+          <button onclick="toggleLayoutEditMode()" class="hero-btn" style="min-height: 40px; padding: 0 20px; background: rgba(255,255,255,0.05); border: none;">Cancelar</button>
+          <button id="btnSalvarLajeado" onclick="salvarLayoutDados()" class="hero-btn primary" style="min-height: 40px; padding: 0 20px; box-shadow: 0 4px 15px rgba(56, 120, 225, 0.4);">Salvar Alterações</button>
         </div>
       </div>
     <% } %>
@@ -906,31 +902,124 @@
         });
       });
 
-      // Lógica do Modal JSON
+      // Lógica do Motor WYSIWYG (Visual Editor)
       <% if (typeof user !== 'undefined' && user) { %>
-        function abrirEditorLajeado() {
-          document.getElementById('modalEditorLajeado').classList.add('active');
-          document.getElementById('jsonEditorTextarea').value = JSON.stringify(<%- JSON.stringify(dados) %>, null, 2);
+        const dadosRaw = <%- JSON.stringify(dados) %>;
+        let lajeadoData = null;
+
+        function toggleLayoutEditMode() {
+          if (!lajeadoData) {
+            lajeadoData = JSON.parse(JSON.stringify(dadosRaw)); // Deep Clone Seguro
+            renderPainelVisual();
+            document.getElementById('barSalvarLayout').style.display = 'flex';
+          } else {
+            if(confirm('Descartar alterações não salvas?')) {
+              window.location.reload();
+            }
+          }
         }
-        function fecharEditorLajeado() {
-          document.getElementById('modalEditorLajeado').classList.remove('active');
+
+        window.addMes = function(personKey) {
+          lajeadoData[personKey].meses.push({ titulo: "Novo Mês", statusLabel: "Atenção", statusClass: "warning", metricas: [] });
+          renderPainelVisual();
         }
-        async function salvarDadosLajeado() {
+        window.removeMes = function(personKey, mIdx) {
+          if(confirm('Excluir este mês inteiro?')) {
+            lajeadoData[personKey].meses.splice(mIdx, 1);
+            renderPainelVisual();
+          }
+        }
+        window.addMetrica = function(personKey, mIdx) {
+          lajeadoData[personKey].meses[mIdx].metricas.push({ label: "", valor: "R$ 0,00", classe: "blue" });
+          renderPainelVisual();
+        }
+        window.removeMetrica = function(personKey, mIdx, metIdx) {
+          lajeadoData[personKey].meses[mIdx].metricas.splice(metIdx, 1);
+          renderPainelVisual();
+        }
+
+        function renderPainelVisual() {
+          const container = document.getElementById('conteudo');
+          let html = '';
+
+          ['douglas', 'vitoria'].forEach(personKey => {
+            const p = lajeadoData[personKey];
+            if (!p) return;
+            p.meses = p.meses || [];
+
+            html += `<article class="person-card" style="border: 1px solid var(--blue); box-shadow: 0 0 0 2px rgba(56,120,225,0.2);">`;
+            html += `
+            <header class="person-header" style="background: rgba(56, 120, 225, 0.05); border-bottom: 1px solid rgba(56, 120, 225, 0.2);">
+              <div class="person-title-row">
+                <input class="edit-input" style="font-size: 1.4rem; font-weight: bold; flex: 1;" value="${p.nome}" onchange="lajeadoData['${personKey}'].nome=this.value">
+                <input class="edit-input tag-input" style="width: 180px;" value="${p.tag}" onchange="lajeadoData['${personKey}'].tag=this.value">
+              </div>
+              <div class="person-stats">
+                <div class="person-stat"><small>Guardado</small><input class="edit-input" value="${p.resumo.guardado}" onchange="lajeadoData['${personKey}'].resumo.guardado=this.value"></div>
+                <div class="person-stat"><small>Saque aniversário</small><input class="edit-input" value="${p.resumo.saque}" onchange="lajeadoData['${personKey}'].resumo.saque=this.value"></div>
+                <div class="person-stat"><small>Total</small><input class="edit-input" value="${p.resumo.total}" onchange="lajeadoData['${personKey}'].resumo.total=this.value"></div>
+              </div>
+            </header>
+            <div class="person-body">
+              <div class="month-list">
+            `;
+
+            p.meses.forEach((mes, mIdx) => {
+              mes.metricas = mes.metricas || [];
+              html += `
+              <section class="month-card" style="border: 1px dashed rgba(255,255,255,0.2); background: rgba(0,0,0,0.15);">
+                <div class="month-top" style="flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                  <input class="edit-input" style="flex:1; min-width: 140px; font-weight: bold;" value="${mes.titulo}" onchange="lajeadoData['${personKey}'].meses[${mIdx}].titulo=this.value">
+                  <div style="display:flex; gap: 8px;">
+                    <input class="edit-input" style="width: 110px; font-size: 0.8rem;" placeholder="Status (Atenção)" value="${mes.statusLabel}" onchange="lajeadoData['${personKey}'].meses[${mIdx}].statusLabel=this.value">
+                    <select class="edit-input" style="width: 110px; font-size: 0.8rem;" onchange="lajeadoData['${personKey}'].meses[${mIdx}].statusClass=this.value">
+                      <option value="success" ${mes.statusClass==='success'?'selected':''}>Verde</option>
+                      <option value="warning" ${mes.statusClass==='warning'?'selected':''}>Amarelo</option>
+                      <option value="info" ${mes.statusClass==='info'?'selected':''}>Azul</option>
+                      <option value="danger" ${mes.statusClass==='danger'?'selected':''}>Vermelho</option>
+                    </select>
+                    <button onclick="removeMes('${personKey}', ${mIdx})" class="btn-del" title="Excluir Mês"><span class="material-icons" style="font-size:18px;">delete</span></button>
+                  </div>
+                </div>
+                <div class="month-metrics" style="display:grid; gap:8px;">
+              `;
+
+              mes.metricas.forEach((met, metIdx) => {
+                html += `
+                <div class="metric" style="gap:8px; padding-bottom:8px; border-bottom: 1px solid rgba(255,255,255,0.05); display:flex; align-items:center;">
+                  <input class="edit-input" placeholder="Nova conta" value="${met.label}" onchange="lajeadoData['${personKey}'].meses[${mIdx}].metricas[${metIdx}].label=this.value" style="flex:1;">
+                  <input class="edit-input" placeholder="R$ 0,00" value="${met.valor}" onchange="lajeadoData['${personKey}'].meses[${mIdx}].metricas[${metIdx}].valor=this.value" style="width:100px;">
+                  <select class="edit-input" onchange="lajeadoData['${personKey}'].meses[${mIdx}].metricas[${metIdx}].classe=this.value" style="width:100px;">
+                    <option value="blue" ${met.classe==='blue'?'selected':''}>Azul</option>
+                    <option value="red" ${met.classe==='red'?'selected':''}>Vermelho</option>
+                    <option value="green" ${met.classe==='green'?'selected':''}>Verde</option>
+                  </select>
+                  <button onclick="removeMetrica('${personKey}', ${mIdx}, ${metIdx})" class="btn-del" title="Remover"><span class="material-icons" style="font-size:18px;">close</span></button>
+                </div>`;
+              });
+              html += `<div style="text-align:center; margin-top:8px;"><button class="btn-add" onclick="addMetrica('${personKey}', ${mIdx})">+ Nova Linha (Métrica)</button></div>`;
+              html += `</div></section>`;
+            });
+            html += `<div style="text-align:center; margin-top:20px;"><button class="btn-add primary" onclick="addMes('${personKey}')">+ Adicionar Novo Mês</button></div>`;
+            html += `</div></div></article>`;
+          });
+          container.innerHTML = html;
+        }
+
+        async function salvarLayoutDados() {
           const btn = document.getElementById('btnSalvarLajeado');
           const originalText = btn.innerText;
           btn.innerText = 'Salvando...';
           try {
-            const val = document.getElementById('jsonEditorTextarea').value;
-            const parsed = JSON.parse(val); 
             const res = await fetch('/api/lajeado', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ dados: parsed })
+              body: JSON.stringify({ dados: lajeadoData })
             });
             if(res.ok) window.location.reload();
             else { alert('Erro ao salvar no servidor.'); btn.innerText = originalText; }
           } catch(e) {
-            alert('JSON inválido! Verifique a sintaxe. Erro: ' + e.message);
+            alert('Erro de rede: ' + e.message);
             btn.innerText = originalText;
           }
         }
