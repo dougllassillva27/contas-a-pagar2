@@ -111,6 +111,17 @@ async function initDatabase() {
       )
     `);
 
+    // 7. Tabela Lajeado (Para painel customizado público com suporte a JSONB)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS Lajeado (
+          Id SERIAL PRIMARY KEY,
+          UsuarioId INT UNIQUE REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          Dados JSONB,
+          Mural TEXT,
+          AtualizadoEm TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);

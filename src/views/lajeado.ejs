@@ -608,157 +608,34 @@
         color: var(--text-secondary);
         transition: color 0.3s ease;
       }
+
+      /* --- Modal do Editor JSON --- */
+      .lajeado-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+      .lajeado-modal-overlay.active { display: flex; }
+      .lajeado-modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 800px; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+      .lajeado-modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+      .lajeado-modal-header h3 { margin: 0; font-size: 1.2rem; }
+      .lajeado-modal-body { padding: 24px; }
+      .lajeado-modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+      .json-editor { width: 100%; height: 50vh; font-family: monospace; font-size: 13px; background: #111; color: #a0a0a0; border: 1px solid var(--border); padding: 16px; border-radius: 8px; resize: vertical; outline: none; line-height: 1.5; }
+      .json-editor:focus { border-color: var(--blue); color: #fff; }
     </style>
   </head>
   <body>
-    <%
-      const dados = {
-        douglas: {
-          nome: 'Douglas',
-          tag: 'Planejamento principal',
-          resumo: {
-            guardado: 'R$ 12.491,67',
-            saque: 'R$ 2.113,48',
-            total: 'R$ 14.605,15'
-          },
-          meses: [
-            {
-              titulo: '05/Abril',
-              statusLabel: 'Atenção',
-              statusClass: 'warning',
-              metricas: [
-                { label: 'Contas', valor: 'R$ 4.595,15', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 1.267,00', classe: 'red' }
-              ]
-            },
-            {
-              titulo: '05/Maio',
-              statusLabel: 'Atenção',
-              statusClass: 'warning',
-              metricas: [
-                { label: 'Contas', valor: 'R$ 4.055,10', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 725,95', classe: 'red' }
-              ]
-            },
-            {
-              titulo: '05/Junho',
-              statusLabel: 'Quase lá',
-              statusClass: 'info',
-              metricas: [
-                { label: 'Contas', valor: 'R$ 3.717,90', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 388,75', classe: 'red' }
-              ]
-            },
-            {
-              titulo: '05/Julho',
-              statusLabel: 'Quase lá',
-              statusClass: 'info',
-              metricas: [
-                { label: 'Contas', valor: 'R$ 3.665,07', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 335,92', classe: 'red' }
-              ]
-            },
-            {
-              titulo: '05/Agosto (acabou o seguro)',
-              statusLabel: 'Fôlego extra',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Contas', valor: 'R$ 3.653,51', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 2.843,01', classe: 'green' }
-              ]
-            },
-            {
-              titulo: '05/Setembro',
-              statusLabel: 'Fôlego extra',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Contas', valor: 'R$ 3.559,76', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 2.749,26', classe: 'green' }
-              ]
-            }
-          ]
-        },
-        vitoria: {
-          nome: 'Vitória',
-          tag: 'Planejamento compartilhado',
-          resumo: {
-            guardado: 'R$ 5.729,89',
-            saque: '—',
-            total: 'R$ 5.729,89'
-          },
-          meses: [
-            {
-              titulo: '05/Abril',
-              statusLabel: 'Atenção',
-              statusClass: 'warning',
-              metricas: [
-                { label: 'Cartão Dodo', valor: 'R$ 1.541,90', classe: 'blue' },
-                { label: 'Contas', valor: 'R$ 6.344,36', classe: 'blue' },
-                { label: 'Faltando', valor: 'R$ 344,36', classe: 'red' }
-              ]
-            },
-            {
-              titulo: '05/Maio',
-              statusLabel: 'Sobra positiva',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Cartão Dodo', valor: 'R$ 938,44', classe: 'blue' },
-                { label: 'Contas', valor: 'R$ 4.401,18', classe: 'blue' },
-                { label: 'Sobrando', valor: 'R$ 1.598,82', classe: 'green' }
-              ]
-            },
-            {
-              titulo: '05/Junho',
-              statusLabel: 'Sobra positiva',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Cartão Dodo', valor: 'R$ 767,65', classe: 'blue' },
-                { label: 'Contas', valor: 'R$ 4.125,02', classe: 'blue' },
-                { label: 'Sobrando', valor: 'R$ 1.874,98', classe: 'green' }
-              ]
-            },
-            {
-              titulo: '05/Julho',
-              statusLabel: 'Sobra positiva',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Cartão Dodo', valor: 'R$ 666,49', classe: 'blue' },
-                { label: 'Contas', valor: 'R$ 3.992,23', classe: 'blue' },
-                { label: 'Sobrando', valor: 'R$ 2.007,77', classe: 'green' }
-              ]
-            },
-            {
-              titulo: '05/Agosto',
-              statusLabel: 'Sobra positiva',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Cartão Dodo', valor: 'R$ 666,49', classe: 'blue' },
-                { label: 'Contas', valor: 'R$ 3.940,98', classe: 'blue' },
-                { label: 'Sobrando', valor: 'R$ 2.059,02', classe: 'green' }
-              ]
-            },
-            {
-              titulo: '05/Setembro',
-              statusLabel: 'Sobra positiva',
-              statusClass: 'success',
-              metricas: [
-                { label: 'Cartão Dodo', valor: 'R$ 666,49', classe: 'blue' },
-                { label: 'Contas', valor: 'R$ 3.940,98', classe: 'blue' },
-                { label: 'Sobrando', valor: 'R$ 2.059,02', classe: 'green' }
-              ]
-            }
-          ]
-        }
-      };
-    %>
-
     <main class="page">
       <div class="lajeado-layout">
         <div class="lajeado-content">
       <section class="hero">
         <div class="hero-top">
           <div class="hero-copy">
-            <div class="eyebrow">Planejamento financeiro • Lajeado</div>
+            <div class="eyebrow">
+              Planejamento financeiro • Lajeado
+              <% if (typeof user !== 'undefined' && user) { %>
+                <span onclick="abrirEditorLajeado()" style="margin-left: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: var(--warning); text-decoration: underline;" title="Editar informações do painel">
+                  <span class="material-icons" style="font-size: 14px;">edit</span> Editor JSON
+                </span>
+              <% } %>
+            </div>
             <h1>Organização de contas</h1>
             <p>
               Página pública organizada no mesmo clima visual do sistema principal,
@@ -927,6 +804,26 @@
       ↑
     </button>
 
+    <!-- Modal do Editor JSON (Apenas p/ Logados) -->
+    <% if (typeof user !== 'undefined' && user) { %>
+      <div id="modalEditorLajeado" class="lajeado-modal-overlay">
+        <div class="lajeado-modal-content">
+          <div class="lajeado-modal-header">
+            <h3>Editar Dados da Página (JSON)</h3>
+            <button onclick="fecharEditorLajeado()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+          </div>
+          <div class="lajeado-modal-body">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0; margin-bottom: 12px;">Modifique a estrutura de meses, valores e tags diretamente via código. Mantenha o formato JSON intacto.</p>
+            <textarea id="jsonEditorTextarea" class="json-editor"></textarea>
+          </div>
+          <div class="lajeado-modal-footer">
+            <button onclick="fecharEditorLajeado()" class="hero-btn">Cancelar</button>
+            <button id="btnSalvarLajeado" onclick="salvarDadosLajeado()" class="hero-btn primary">Salvar Alterações</button>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const textarea = document.getElementById('muralTextarea');
@@ -989,10 +886,10 @@
           clearTimeout(timeout);
           timeout = setTimeout(async () => {
             try {
-              const res = await fetch('/api/anotacoes', {
+              const res = await fetch('/api/lajeado/mural', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ conteudo: textarea.value, month: -1, year: -1 })
+                body: JSON.stringify({ conteudo: textarea.value })
               });
               if (res.ok) {
                 status.textContent = '✓ Salvo na nuvem';
@@ -1008,6 +905,36 @@
           }, 800);
         });
       });
+
+      // Lógica do Modal JSON
+      <% if (typeof user !== 'undefined' && user) { %>
+        function abrirEditorLajeado() {
+          document.getElementById('modalEditorLajeado').classList.add('active');
+          document.getElementById('jsonEditorTextarea').value = JSON.stringify(<%- JSON.stringify(dados) %>, null, 2);
+        }
+        function fecharEditorLajeado() {
+          document.getElementById('modalEditorLajeado').classList.remove('active');
+        }
+        async function salvarDadosLajeado() {
+          const btn = document.getElementById('btnSalvarLajeado');
+          const originalText = btn.innerText;
+          btn.innerText = 'Salvando...';
+          try {
+            const val = document.getElementById('jsonEditorTextarea').value;
+            const parsed = JSON.parse(val); 
+            const res = await fetch('/api/lajeado', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ dados: parsed })
+            });
+            if(res.ok) window.location.reload();
+            else { alert('Erro ao salvar no servidor.'); btn.innerText = originalText; }
+          } catch(e) {
+            alert('JSON inválido! Verifique a sintaxe. Erro: ' + e.message);
+            btn.innerText = originalText;
+          }
+        }
+      <% } %>
     </script>
   </body>
 </html>

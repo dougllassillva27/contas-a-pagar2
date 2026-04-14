@@ -128,6 +128,7 @@ reverse-migrate.sql
 tests/
 buscarContas/
 backup/
+calcularLuz/
 data/
 resumo_skills.json
 skills_completa.json
@@ -141,6 +142,8 @@ resumo_skills.json
 skills_completa.json
 docs/history/contas-a-pagar.7z
 master-skill-config.json
-..
-..
-..
+.aiexclude
+.gitignore
+.gitignore
+post-commit
+resumo_skills - original.json
