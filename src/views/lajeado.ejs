@@ -13,6 +13,10 @@
     />
     <meta name="robots" content="noindex, nofollow" />
 
+    <!-- Injeção das fontes e ícones padrões do sistema principal -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
     <style>
       :root {
         --bg-dark: #121212;
@@ -891,9 +895,18 @@
 
         <aside class="lajeado-sidebar">
           <section class="mural-card sidebar-mural">
-            <h2 class="mural-header">Mural de Anotações</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h2 class="mural-header" style="margin-bottom: 0;">Mural de Anotações</h2>
+              <button id="btnMuralModo" onclick="alternarModoMural()" style="display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s;">
+                <span class="material-icons" style="font-size: 16px;">visibility</span> Preview
+              </button>
+            </div>
             <p class="mural-desc">Espaço livre para anotações do planejamento. O conteúdo é salvo na nuvem automaticamente.</p>
+            
+            <!-- Engine de Preview (Escondida enquanto edita) -->
+            <div id="muralPreview" class="mural-textarea" style="display: none; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></div>
             <textarea id="muralTextarea" class="mural-textarea" placeholder="Digite suas anotações, lembretes ou metas aqui..."><%= typeof muralLajeado !== 'undefined' ? muralLajeado : '' %></textarea>
+            
             <div id="muralStatus" class="mural-status"></div>
           </section>
         </aside>
@@ -918,6 +931,56 @@
       document.addEventListener('DOMContentLoaded', () => {
         const textarea = document.getElementById('muralTextarea');
         const status = document.getElementById('muralStatus');
+        const preview = document.getElementById('muralPreview');
+        const btnModo = document.getElementById('btnMuralModo');
+
+        let isEditMode = true;
+
+        function renderPreview() {
+          let text = textarea.value;
+          if (!text.trim()) {
+            preview.innerHTML = '<div style="color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px;">Nenhuma anotação...</div>';
+            return;
+          }
+
+          // Anti-XSS (Segurança)
+          let parsed = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          
+          // Negrito e Itálico básicos
+          parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+          
+          // Engine Auto-Linkify (Força target="_blank")
+          const urlRegex = /(https?:\/\/[^\s]+)/g;
+          parsed = parsed.replace(urlRegex, function(url) {
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--blue); text-decoration: underline;">${url}</a>`;
+          });
+
+          preview.innerHTML = parsed;
+        }
+
+        window.alternarModoMural = function() {
+          isEditMode = !isEditMode;
+          if (isEditMode) {
+            textarea.style.display = 'block';
+            preview.style.display = 'none';
+            btnModo.innerHTML = '<span class="material-icons" style="font-size:16px;">visibility</span> Preview';
+            btnModo.style.color = 'var(--text-secondary)';
+            btnModo.style.borderColor = 'rgba(255,255,255,0.1)';
+            textarea.focus();
+          } else {
+            textarea.style.display = 'none';
+            preview.style.display = 'block';
+            btnModo.innerHTML = '<span class="material-icons" style="font-size:16px;">edit</span> Editar';
+            btnModo.style.color = 'var(--blue)';
+            btnModo.style.borderColor = 'var(--blue)';
+            renderPreview();
+          }
+        };
+
+        // UX: Se já houver texto ao abrir a página, inicia direto no Modo Leitura (Preview)
+        if (textarea.value.trim() !== '') {
+          window.alternarModoMural();
+        }
 
         let timeout;
         textarea.addEventListener('input', () => {
