@@ -1526,6 +1526,12 @@ function renderAnotacoesPreview() {
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
+    // Auto-linkify URLs (abrir em nova guia)
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    parsed = parsed.replace(urlRegex, function (url) {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--blue); text-decoration: underline;">${url}</a>`;
+    });
+
     if (parsed.trim().startsWith('- [ ]')) {
       const text = parsed.replace('- [ ]', '').trim();
       html += `<div class="checklist-item"><input type="checkbox" onchange="toggleChecklist(${index}, true)"> <span>${text}</span></div>`;
