@@ -215,6 +215,7 @@ module.exports = function (repo) {
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
+      const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
       res.render('index', {
         totais,
@@ -224,6 +225,7 @@ module.exports = function (repo) {
         resumoPessoas,
         nav,
         terceiros: listaTerceiros,
+        totalCasa,
         terceirosDistinct,
         query: req.query,
         user: req.session.user,
@@ -287,9 +289,11 @@ module.exports = function (repo) {
       ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
+      const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
       res.json({
         ...totais,
+        totalCasa,
         fixasPendente: fixas.filter((i) => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0),
         cartaoPendente: cartao.filter((i) => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0),
         cartaoGeral: resumoPessoas.reduce((acc, i) => acc + Number(i.total), 0),
