@@ -176,34 +176,49 @@
             color: var(--text-main);
         }
 
-        /* Tabela Estilizada Minimalista */
+        /* Grid Compacto para os Itens (Substitui Tabela Tradicional) */
         .list-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
+            display: block;
         }
 
-        .list-table th {
-            text-align: left;
-            padding: 14px 26px;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
+        .list-table thead {
+            display: none; /* Esconde o cabeçalho antigo para dar espaço ao grid limpo */
+        }
+
+        .list-table tbody {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+        
+        @media (max-width: 900px) {
+            .list-table tbody {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .list-table tr {
+            display: grid;
+            grid-template-columns: 40px 1fr auto auto;
+            align-items: center;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .list-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02); /* Zebra striping sutil */
         }
 
         .list-table td {
-            padding: 18px 26px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-
-        .list-table tr:last-child td {
-            border-bottom: none;
+            padding: 12px 10px;
+            border: none;
         }
 
         .list-table tr:hover td {
@@ -422,10 +437,20 @@
             .chart-container-card, .actions-bar, .context-menu {
                 display: none !important;
             }
-            .list-table th {
-                color: #000;
-                border-bottom: 2px solid #000;
+            .list-table { display: block !important; }
+            .list-table tbody {
+                display: block;
+                padding: 0;
+                background: transparent !important;
             }
+            .list-table tr {
+                display: flex;
+                justify-content: space-between;
+                page-break-inside: avoid;
+                border-bottom: 1px solid #ddd !important;
+                border-radius: 0;
+            }
+            .toggle-icon { display: none !important; }
             .custom-checkbox {
                 border-color: #000;
                 background: white !important;
@@ -495,23 +520,18 @@
                 if (grupo.itens.length > 0) {
             %>
                 <div class="person-card" data-person="<%= pessoa %>">
-                    <div class="person-header">
+                    <div class="person-header" onclick="toggleGroup(this)" style="cursor: pointer; user-select: none;" title="Clique para expandir/recolher">
                         <h2 class="person-name">
                             <span class="person-dot" data-index="<%= index %>"></span>
                             <%= pessoa %>
                         </h2>
-                        <span class="person-total">R$ <%= Number(grupo.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span class="person-total">R$ <%= Number(grupo.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                            <span class="material-icons toggle-icon" style="color: var(--text-muted); transition: transform 0.3s;">expand_less</span>
+                        </div>
                     </div>
 
                     <table class="list-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px; text-align: center;" title="Marcar como conferido">✓</th>
-                                <th>Despesa / Parcelamento</th>
-                                <th style="width: 120px; text-align: center;">Status</th>
-                                <th style="text-align: right;">Valor</th>
-                            </tr>
-                        </thead>
                         <tbody>
                             <% grupo.itens.forEach(item => { %>
                                 <!-- Salvamos o status original no data attribute para podermos voltar se o usuário desmarcar -->
@@ -673,6 +693,21 @@
                     }
                 }
             });
+        }
+
+        // ==========================================
+        // Acordeão: Recolher / Expandir Grupo
+        // ==========================================
+        function toggleGroup(headerEl) {
+            const table = headerEl.nextElementSibling;
+            const icon = headerEl.querySelector('.toggle-icon');
+            if (table.style.display === 'none') {
+                table.style.display = 'block';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                table.style.display = 'none';
+                icon.style.transform = 'rotate(180deg)';
+            }
         }
 
         // ==============================================================
