@@ -1101,10 +1101,12 @@ async function atualizarTotais() {
     const elContas = document.getElementById('valorContas');
     const elFalta = document.getElementById('valorFaltaPagar');
     const elSaldo = document.getElementById('valorSaldo');
+    const elContasCasa = document.getElementById('valorContasCasa');
 
     if (elRendas) elRendas.textContent = formatarMoeda(totais.totalrendas);
     if (elContas) elContas.textContent = formatarMoeda(totais.totalcontas);
     if (elFalta) elFalta.textContent = formatarMoeda(totais.faltapagar);
+    if (elContasCasa) elContasCasa.textContent = formatarMoeda(totais.totalCasa);
     if (elSaldo) {
       elSaldo.textContent = formatarMoeda(totais.saldoprevisto);
       elSaldo.classList.remove('vermelho', 'verde');

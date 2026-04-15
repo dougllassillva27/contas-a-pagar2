@@ -7,7 +7,7 @@
 
     <%- include('partials/header') %>
 
-    <section class="dashboard-cards">
+    <section class="dashboard-cards" style="<%= user.id === 1 ? 'grid-template-columns: repeat(5, 1fr);' : '' %>">
         <div class="card" onclick="abrirModalRendasDetalhes()" style="position: relative;">
             <span class="material-icons card-icon-eye" id="iconEyeRendas" onclick="toggleRendas(event)">visibility</span>
             <h3>Total de Rendas</h3>
@@ -21,6 +21,13 @@
                 }
             </script>
         </div>
+
+        <% if (user.id === 1) { %>
+        <div class="card">
+            <h3>CONTAS CASA</h3>
+            <p class="valor laranja" id="valorContasCasa">R$ <%= Number(totalCasa || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
+        </div>
+        <% } %>
 
         <div class="card">
             <h3>Suas Contas</h3>
