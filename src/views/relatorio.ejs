@@ -123,13 +123,9 @@
 
         /* Layout Grid da Lista de Pessoas (Maximizando espaço) */
         #pessoas-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 20px;
-            align-items: start;
-        }
-        @media (max-width: 650px) {
-            #pessoas-container { grid-template-columns: 1fr; }
         }
 
         /* Lista de Pessoas (Cards agrupados) */
@@ -193,7 +189,7 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             padding: 16px;
-            background: rgba(0, 0, 0, 0.15);
+            background: transparent;
         }
         
         @media (max-width: 900px) {
@@ -204,21 +200,23 @@
 
         .list-table tr {
             display: grid;
-            grid-template-columns: 40px 1fr auto auto;
+            grid-template-columns: 40px minmax(0, 1fr) auto auto;
             align-items: center;
-            background: var(--bg-card);
+            background: transparent;
             border-radius: 8px;
             border: 1px solid var(--border);
             transition: all 0.2s;
         }
 
-        .list-table tr:nth-child(even) {
-            background: rgba(255, 255, 255, 0.02); /* Zebra striping sutil */
-        }
-
         .list-table td {
             padding: 12px 10px;
             border: none;
+        }
+
+        .list-table td:nth-child(2) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .list-table tr:hover td {
