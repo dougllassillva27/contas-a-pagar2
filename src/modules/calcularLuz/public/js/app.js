@@ -110,7 +110,8 @@ async function fetchHistory() {
 function renderHistoryTable() {
   historyBody.innerHTML = '';
 
-  historyData.forEach((record) => {
+  historyData.slice(0, 5).forEach((record) => {
+    // Limita a exibição aos 5 registros mais recentes
     const tr = document.createElement('tr');
 
     const leituraAnt = parseFloat(record.leitura_anterior) || 0;
@@ -145,7 +146,7 @@ window.reuseRecord = (id) => {
     const lAnt = parseFloat(record.leitura_anterior);
 
     // Se a leitura atual for maior que 0, usa ela. Senão (registro velho), usa a anterior.
-    const valorReuso = lAtual > 0 ? lAtual : lAnt;
+    const valorReuso = lAnt; // Sempre reutiliza a leitura anterior
 
     document.getElementById('mesReferencia').value = '';
     document.getElementById('leituraAnterior').value = valorReuso;
