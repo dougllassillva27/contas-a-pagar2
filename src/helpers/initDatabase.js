@@ -142,15 +142,29 @@ async function initDatabase() {
       console.log('🔄 Semeando histórico antigo do módulo Calcular Luz...');
       const records = [
         {
-          mes: 'Fechada - Leitura Próximo Mês 28/04',
-          ant: 7581.0,
-          atu: 7875.0,
-          kwh: 294.0,
-          val: 318.83,
-          dt: '2026-04-08 17:16:05',
+          mes: 'Fechada - Leitura Próximo Mês 28/04', // Original ID 3
+          ant: 7581.0, // Leitura Anterior
+          atu: 7875.0, // Leitura Atual
+          kwh: 294.0, // Consumo (7875 - 7581)
+          val: 318.83, // Valor Estimado
+          dt: '2026-04-08 17:16:05', // Data do Registro
         },
-        { mes: 'Leitura 08/04', ant: 7875.0, atu: 8012.0, kwh: 137.0, val: 155.82, dt: '2026-04-08 17:16:20' },
-        { mes: 'Leitura 14/04', ant: 7875.0, atu: 8070.0, kwh: 195.0, val: 216.04, dt: '2026-04-14 21:42:39' },
+        {
+          mes: 'Leitura 08/04', // Original ID 4
+          ant: 7875.0, // Leitura Atual do anterior
+          atu: 8012.0,
+          kwh: 137.0, // Consumo (8012 - 7875)
+          val: 155.82,
+          dt: '2026-04-08 17:16:20',
+        },
+        {
+          mes: 'Leitura 14/04', // Original ID 5
+          ant: 8012.0, // ✅ CORRIGIDO: Leitura Atual do anterior
+          atu: 8070.0,
+          kwh: 58.0, // ✅ RECALCULADO: (8070 - 8012)
+          val: 73.79, // ✅ RECALCULADO: (58 * 1.0383) + 13.57
+          dt: '2026-04-14 21:42:39',
+        },
       ];
       for (const r of records) {
         await db.query(
