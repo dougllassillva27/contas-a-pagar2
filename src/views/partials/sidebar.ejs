@@ -10,6 +10,10 @@
     </div>
     
     <div class="sidebar-actions">
+        <button class="sidebar-btn hide-on-mobile" onclick="fecharSidebarE(abrirModalAdicionar)">
+            <span class="material-icons" style="color: var(--green);">add_circle</span> Novo Lançamento
+        </button>
+
         <% if (user.id === 1) { %> 
             <a href="/switch/2" class="sidebar-btn sidebar-btn-users">
                 <span class="material-icons" style="color: var(--orange);">people</span> Vitória
