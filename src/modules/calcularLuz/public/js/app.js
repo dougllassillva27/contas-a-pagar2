@@ -17,10 +17,6 @@ const historyBody = document.getElementById('historyBody');
 // State Management
 let historyData = [];
 
-// Extrai a API Key da URL (injetada via iframe src) para autenticar requisições
-const urlParams = new URLSearchParams(window.location.search);
-const API_KEY = urlParams.get('api_key') || '';
-
 // Formatadores (Visuais apenas)
 const formatReading = (value) => {
   return Number(value).toString().replace('.', ',');
@@ -65,11 +61,10 @@ form.addEventListener('submit', async (e) => {
   };
 
   try {
-    const response = await fetch('/api/salvar', {
+    const response = await fetch('/calcularLuz-v2/api/salvar', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
       },
       body: JSON.stringify(payload),
     });
@@ -90,14 +85,7 @@ form.addEventListener('submit', async (e) => {
 // Fetch History from Backend
 async function fetchHistory() {
   try {
-    const response = await fetch('/api/historico', {
-      headers: { 'x-api-key': API_KEY },
-    });
-
-    if (response.status === 401) {
-      console.error('API Key inválida ou não fornecida.');
-      return;
-    }
+    const response = await fetch('/calcularLuz-v2/api/historico');
     const data = await response.json();
     historyData = data;
     renderHistoryTable();
@@ -125,7 +113,7 @@ function renderHistoryTable() {
     tr.innerHTML = `
             <td>${record.mes_referencia}</td>
             <td>${formatReading(leituraAnt)}</td>
-            <td>${leituraAtualExibicao}</td>
+            <td></td>
             <td>${formatReading(consumo)}</td>
             <td>${formatCurrency(valor)}</td>
             <td class="actions">
@@ -162,9 +150,8 @@ window.deleteRecord = async (id) => {
   if (!confirm('Deseja realmente excluir este registro?')) return;
 
   try {
-    const response = await fetch(`/api/deletar/${id}`, {
+    const response = await fetch(`/calcularLuz-v2/api/deletar/`, {
       method: 'DELETE',
-      headers: { 'x-api-key': API_KEY },
     });
     if (response.ok) {
       fetchHistory();
