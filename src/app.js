@@ -21,6 +21,7 @@ const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
+const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -116,6 +117,9 @@ app.use(telegramRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
 app.use(publicRoutes(repo));
+
+// 2.5 Rota pública para o novo módulo de Data/Hora
+app.use('/dataHora', dataHoraRoutes);
 
 // 3. Middlewares de Autenticação
 // ✅ Proteção principal: exige que exista user na session (restaurado ou logado agora)
