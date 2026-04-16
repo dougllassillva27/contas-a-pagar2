@@ -82,6 +82,15 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ---
 
+### 🕒 Módulo Data/Hora de Brasília
+
+- **Microsserviço Independente** — consulta a World Time API via RapidAPI para obter o horário exato de Brasília.
+- **Fuso Horário Blindado** — imune ao fuso horário do servidor em nuvem (Render roda em UTC), processando os dados através de string parsing para garantir a hora exata (UTC-3).
+- **Suporte Multiformato (API REST)** — acessando `/dataHora` pelo navegador exibe uma interface HTML minimalista. Suporta _content negotiation_ para retornar dados estruturados em JSON, ou diretamente via endpoint `/dataHora/json` para integrações de backend/Postman.
+- **Acesso Livre** — rota pública sem necessidade de autenticação no sistema.
+
+---
+
 ## ⚙️ Ferramentas Avançadas
 
 - **Fechamento de Mês (Month Lock)**
@@ -281,7 +290,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   │   └── db.js                          # Pool PostgreSQL
 │   ├── modules/
 │   │   ├── botTelegram/                   # Bot Telegram (webhook)
-│   │   └── calcularLuz/                   # App de estimativa de conta de luz
+│   │   ├── calcularLuz/                   # App de estimativa de conta de luz
+│   │   └── dataHora/                      # Microsserviço de horário de Brasília
 │   ├── helpers/
 │   │   ├── asyncHandler.js                # Wrapper try/catch para rotas async
 │   │   ├── initDatabase.js                # Criação automática de tabelas
