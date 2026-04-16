@@ -48,6 +48,10 @@
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
+*:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
 body {
   background-color: var(--bg-dark);
   color: var(--text-primary);
@@ -677,15 +681,18 @@ input[type='checkbox'] {
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  visibility: hidden;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
 }
 .modal-overlay.active {
-  display: flex;
+  visibility: visible;
   opacity: 1;
 }
 .modal-overlay.confirm-overlay {
@@ -698,8 +705,8 @@ input[type='checkbox'] {
   padding: 30px;
   border-radius: var(--radius);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  transform: translateY(20px);
-  transition: transform 0.3s ease;
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
@@ -717,7 +724,7 @@ input[type='checkbox'] {
   margin-bottom: 10px;
 }
 .modal-overlay.active .modal-box {
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 .modal-header {
   display: flex;
@@ -1026,9 +1033,13 @@ input[type='checkbox'] {
     grid-template-columns: 1fr;
     gap: 15px;
   }
+  input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+  }
   .list-table td {
     font-size: 0.75rem;
-    padding: 8px 3px;
+    padding: 12px 3px;
   }
   .actions {
     gap: 10px;
