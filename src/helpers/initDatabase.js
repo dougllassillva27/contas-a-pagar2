@@ -122,6 +122,20 @@ async function initDatabase() {
       )
     `);
 
+    // 8. Tabela registros_luz (Módulo Calcular Luz integrado)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS registros_luz (
+          id SERIAL PRIMARY KEY,
+          usuario_id INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          mes_referencia VARCHAR(50) NOT NULL,
+          leitura_anterior NUMERIC(10, 2) NOT NULL,
+          leitura_atual NUMERIC(10, 2) NOT NULL,
+          consumo_kwh NUMERIC(10, 2) NOT NULL,
+          valor_estimado NUMERIC(10, 2) NOT NULL,
+          data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);
