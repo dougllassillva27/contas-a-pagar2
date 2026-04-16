@@ -42,6 +42,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
 app.use(requestLogger);
 
+// ✅ LOG AVANÇADO: Middleware para logar todas as requisições recebidas pelo servidor
+app.use((req, res, next) => {
+  console.log(`[REQUEST_TRACE] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies Secure em HTTPS
 
 app.use(
@@ -122,12 +128,12 @@ app.use(publicRoutes(repo));
 // 2.5 Rota pública para o novo módulo de Data/Hora
 app.use('/dataHora', dataHoraRoutes);
 
-// ✅ NOVO: Módulo Calcular Luz (protegido por sessão)
+// ✅ Módulo Calcular Luz (protegido por sessão) - Rota versionada para cache busting
 // Serve a interface estática (HTML/CSS/JS) do módulo.
-app.use('/calcularLuz', authMiddleware, express.static(path.join(__dirname, 'modules/calcularLuz/public')));
+app.use('/calcularLuz-v2', authMiddleware, express.static(path.join(__dirname, 'modules/calcularLuz/public')));
 
 // Monta as rotas da API do módulo, também protegidas.
-app.use('/calcularLuz/api', authMiddleware, calcularLuzRoutes);
+app.use('/calcularLuz-v2/api', authMiddleware, calcularLuzRoutes);
 
 // 3. Middlewares de Autenticação
 // ✅ Proteção principal: exige que exista user na session (restaurado ou logado agora)
