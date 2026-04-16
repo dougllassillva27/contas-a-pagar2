@@ -100,22 +100,28 @@
                 <span class="total-panel" id="totalPanelFixas">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
-                <table class="list-table">
-                    <tbody class="drag-container" id="listaFixas">
-                        <% fixas.forEach(item => { %>
-                        <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
-                            <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
-                            <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
-                            <td><%= item.descricao %></td>
-                            <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
-                            <td class="actions">
-                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
-                                <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                <% if (fixas.length === 0) { %>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 0.9rem;">
+                        <p>Nenhuma conta cadastrada.</p>
+                    </div>
+                <% } else { %>
+                    <table class="list-table">
+                        <tbody class="drag-container" id="listaFixas">
+                            <% fixas.forEach(item => { %>
+                            <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
+                                <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
+                                <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
+                                <td><%= item.descricao %></td>
+                                <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                                <td class="actions">
+                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } %>
             </div>
         </div>
 
@@ -125,29 +131,35 @@
                 <span class="total-panel vermelho" id="totalPanelCartao">R$ <%= cartao.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
-                <table class="list-table">
-                    <tbody class="drag-container" id="listaCartao">
-                        <% cartao.forEach(item => { %>
-                        <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
-                            <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
-                            <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
-                            <td>
-                                <%= item.descricao %>
-                                <% if(item.parcelaatual && item.totalparcelas) { %>
-                                    <small style="color:var(--text-secondary);">
-                                        (<%= String(item.parcelaatual).padStart(2, '0') %>/<%= String(item.totalparcelas).padStart(2, '0') %>)
-                                    </small>
-                                <% } %>
-                            </td>
-                            <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
-                            <td class="actions">
-                                <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
-                                <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                <% if (cartao.length === 0) { %>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 0.9rem;">
+                        <p>Nenhum lançamento.</p>
+                    </div>
+                <% } else { %>
+                    <table class="list-table">
+                        <tbody class="drag-container" id="listaCartao">
+                            <% cartao.forEach(item => { %>
+                            <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
+                                <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
+                                <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
+                                <td>
+                                    <%= item.descricao %>
+                                    <% if(item.parcelaatual && item.totalparcelas) { %>
+                                        <small style="color:var(--text-secondary);">
+                                            (<%= String(item.parcelaatual).padStart(2, '0') %>/<%= String(item.totalparcelas).padStart(2, '0') %>)
+                                        </small>
+                                    <% } %>
+                                </td>
+                                <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+                                <td class="actions">
+                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } %>
             </div>
         </div>
 
