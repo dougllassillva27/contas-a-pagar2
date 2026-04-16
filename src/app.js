@@ -42,12 +42,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
 app.use(requestLogger);
 
-// ✅ LOG AVANÇADO: Middleware para logar todas as requisições recebidas pelo servidor
-app.use((req, res, next) => {
-  console.log(`[REQUEST_TRACE] ${req.method} ${req.originalUrl}`);
-  next();
-});
-
 app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies Secure em HTTPS
 
 app.use(
