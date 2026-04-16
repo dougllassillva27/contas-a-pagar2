@@ -465,6 +465,58 @@ async function getLancamentosTerceiro(userId, nome, month, year) {
   return result.rows;
 }
 
+// ==============================================================================
+// Funções de Sincronização (Morr -> Cartão Douglas)
+// ==============================================================================
+
+async function getTotalTerceiroCartao(nome, userId, month, year) {
+  const query = `
+    SELECT COALESCE(SUM(Valor), 0)::float AS total
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND NomeTerceiro = $2
+      AND Tipo = '${TIPO.CARTAO}'
+      AND EXTRACT(MONTH FROM DataVencimento) = $3
+      AND EXTRACT(YEAR FROM DataVencimento) = $4
+  `;
+  const result = await db.query(query, [userId, nome, month, year]);
+  return result.rows[0]?.total || 0;
+}
+
+async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, year) {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    const dataVencimento = new Date(year, month - 1, 10);
+
+    const findQuery = `
+      SELECT Id FROM Lancamentos
+      WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
+        AND EXTRACT(MONTH FROM DataVencimento) = $3 AND EXTRACT(YEAR FROM DataVencimento) = $4
+      LIMIT 1
+    `;
+    const findResult = await client.query(findQuery, [userId, nomeConta, month, year]);
+    const existingId = findResult.rows[0]?.id;
+
+    if (existingId) {
+      await client.query('UPDATE Lancamentos SET Valor = $1 WHERE Id = $2', [valor, existingId]);
+    } else {
+      const insertQuery = `
+        INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem)
+        VALUES ($1, $2, $3, $4, $5, $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
+      `;
+      await client.query(insertQuery, [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento]);
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getUltimosLancamentos,
   getRelatorioMensal,
@@ -493,4 +545,6 @@ module.exports = {
   deleteLancamentosPorPessoa,
   deleteMonth,
   copyMonth,
+  getTotalTerceiroCartao,
+  findAndUpdateOrCreateContaFixa,
 };
