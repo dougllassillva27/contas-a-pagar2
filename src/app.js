@@ -22,6 +22,7 @@ const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
 const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
+const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -120,6 +121,13 @@ app.use(publicRoutes(repo));
 
 // 2.5 Rota pública para o novo módulo de Data/Hora
 app.use('/dataHora', dataHoraRoutes);
+
+// ✅ NOVO: Módulo Calcular Luz (protegido por sessão)
+// Serve a interface estática (HTML/CSS/JS) do módulo.
+app.use('/calcularLuz', authMiddleware, express.static(path.join(__dirname, 'modules/calcularLuz/public')));
+
+// Monta as rotas da API do módulo, também protegidas.
+app.use('/calcularLuz/api', authMiddleware, calcularLuzRoutes);
 
 // 3. Middlewares de Autenticação
 // ✅ Proteção principal: exige que exista user na session (restaurado ou logado agora)
