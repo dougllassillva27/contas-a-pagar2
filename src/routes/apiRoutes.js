@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { parseValor, normalizarParcelasPorTipo } = require('../helpers/parseHelpers');
+const syncService = require('../services/syncService');
 const asyncHandler = require('../helpers/asyncHandler');
 const { STATUS, TIPO, LIMITES } = require('../constants');
 
@@ -188,6 +189,11 @@ module.exports = function (repo) {
       const userId = req.session.user.id;
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
+
+      // Sincronização automática da fatura 'Morr' para a conta da Vitória
+      if (userId === 2) {
+        await syncService.sincronizarFaturaMorr(repo, 1, 2, month, year);
+      }
 
       const [
         totais,
