@@ -274,7 +274,7 @@ module.exports = function (repo) {
       const whatsappTemplate =
         configQuery.rows.length > 0 && configQuery.rows[0].whatsapp_template
           ? configQuery.rows[0].whatsapp_template
-          : 'Olá! O link das suas contas do mês {mes}/{ano} já está disponível:\n{link}';
+          : 'Olá {nome_terceiro}! O link das suas contas do mês {mes}/{ano} já está disponível:\n{link}';
 
       todosTerceiros = todosTerceiros.map((t) => ({
         ...t,

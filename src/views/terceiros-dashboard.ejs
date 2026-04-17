@@ -82,7 +82,7 @@
             <h2 style="font-size: 1.1rem; color: var(--text-primary);"><span class="material-icons" style="font-size: 18px; vertical-align: middle; color: #25D366; margin-right: 5px;">chat</span> Template de Mensagem WhatsApp</h2>
         </div>
         <div style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-secondary);">
-            Use as variáveis: <strong style="color: var(--blue);">{mes}</strong>, <strong style="color: var(--blue);">{ano}</strong> e <strong style="color: var(--blue);">{link}</strong> para personalização automática.
+            Use as variáveis: <strong style="color: var(--blue);">{nome_terceiro}</strong>, <strong style="color: var(--blue);">{mes}</strong>, <strong style="color: var(--blue);">{ano}</strong> e <strong style="color: var(--blue);">{link}</strong> para personalização automática.
         </div>
         <textarea id="whatsappTemplateInput" rows="3" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg-color); color: var(--text-primary); resize: vertical; font-family: inherit;"><%= whatsappTemplate %></textarea>
         <div style="text-align: right; margin-top: 10px;">
@@ -239,7 +239,8 @@
             const texto = template
                 .replace(/\{mes\}/g, String(mes).padStart(2, '0'))
                 .replace(/\{ano\}/g, ano)
-                .replace(/\{link\}/g, url);
+                .replace(/\{link\}/g, url)
+                .replace(/\{nome_terceiro\}/g, nome);
                 
             window.location.href = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(texto)}`;
         }
