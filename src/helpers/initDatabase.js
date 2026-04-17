@@ -102,6 +102,17 @@ async function initDatabase() {
       )
     `);
 
+    // 9. Tabela Terceiros (Contatos para WhatsApp)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS terceiros (
+          id SERIAL PRIMARY KEY,
+          usuario_id INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          nome VARCHAR(100) NOT NULL,
+          telefone VARCHAR(20),
+          UNIQUE(usuario_id, nome)
+      )
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);
