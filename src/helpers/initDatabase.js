@@ -113,6 +113,14 @@ async function initDatabase() {
       )
     `);
 
+    // 10. Tabela configuracoes (Preferências do usuário)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS configuracoes (
+          usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          whatsapp_template TEXT
+      )
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);

@@ -270,6 +270,12 @@ module.exports = function (repo) {
       const telefonesMap = {};
       telefonesQuery.rows.forEach((t) => (telefonesMap[t.nome] = t.telefone));
 
+      const configQuery = await db.query('SELECT whatsapp_template FROM configuracoes WHERE usuario_id = $1', [userId]);
+      const whatsappTemplate =
+        configQuery.rows.length > 0 && configQuery.rows[0].whatsapp_template
+          ? configQuery.rows[0].whatsapp_template
+          : 'Olá! O link das suas contas do mês {mes}/{ano} já está disponível:\n{link}';
+
       todosTerceiros = todosTerceiros.map((t) => ({
         ...t,
         telefone: telefonesMap[t.nome] || null,
@@ -285,6 +291,7 @@ module.exports = function (repo) {
         mesFechado,
         query: req.query,
         currentPath: req.path,
+        whatsappTemplate,
       });
     })
   );
@@ -494,6 +501,23 @@ module.exports = function (repo) {
           [userId, nome, cleanPhone]
         );
       }
+      res.json({ success: true });
+    })
+  );
+
+  // --- SALVAR TEMPLATE WHATSAPP ---
+  router.post(
+    '/api/configuracoes/whatsapp',
+    asyncHandler(async (req, res) => {
+      const userId = req.session.user.id;
+      const { template } = req.body;
+      await db.query(
+        `
+        INSERT INTO configuracoes (usuario_id, whatsapp_template) VALUES ($1, $2) 
+        ON CONFLICT (usuario_id) DO UPDATE SET whatsapp_template = EXCLUDED.whatsapp_template
+      `,
+        [userId, template]
+      );
       res.json({ success: true });
     })
   );

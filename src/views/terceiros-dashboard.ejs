@@ -77,6 +77,21 @@
 <body data-month="<%= nav.atual.month %>" data-year="<%= nav.atual.year %>" data-username="<%= user.nome %>" data-userid="<%= user.id %>" data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>">
     <%- include('partials/header') %>
 
+    <div class="panel" style="margin-top: 20px; background: var(--surface); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+        <div class="panel-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; padding-bottom: 10px;">
+            <h2 style="font-size: 1.1rem; color: var(--text-primary);"><span class="material-icons" style="font-size: 18px; vertical-align: middle; color: #25D366; margin-right: 5px;">chat</span> Template de Mensagem WhatsApp</h2>
+        </div>
+        <div style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+            Use as variáveis: <strong style="color: var(--blue);">{mes}</strong>, <strong style="color: var(--blue);">{ano}</strong> e <strong style="color: var(--blue);">{link}</strong> para personalização automática.
+        </div>
+        <textarea id="whatsappTemplateInput" rows="3" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg-color); color: var(--text-primary); resize: vertical; font-family: inherit;"><%= whatsappTemplate %></textarea>
+        <div style="text-align: right; margin-top: 10px;">
+            <button onclick="salvarTemplateWhatsApp()" style="padding: 8px 16px; border: none; border-radius: 6px; background: var(--blue); color: #fff; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                <span class="material-icons" style="font-size: 16px;">save</span> Salvar Template
+            </button>
+        </div>
+    </div>
+
     <div class="panel" style="margin-top: 20px; background: transparent; border: none; padding: 0;">
         <div class="panel-header" style="border-bottom: none; margin-bottom: 0;">
             <h2>Gestão de Links Públicos (Terceiros)</h2>
@@ -219,8 +234,28 @@
             const url = obterUrlTerceiro(nome);
             const mes = document.body.dataset.month;
             const ano = document.body.dataset.year;
-            const texto = `Olá! O link das suas contas do mês ${mes}/${ano} já está disponível:\n${url}`;
+            const template = document.getElementById('whatsappTemplateInput').value;
+            
+            const texto = template
+                .replace(/\{mes\}/g, String(mes).padStart(2, '0'))
+                .replace(/\{ano\}/g, ano)
+                .replace(/\{link\}/g, url);
+                
             window.location.href = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(texto)}`;
+        }
+
+        async function salvarTemplateWhatsApp() {
+            const template = document.getElementById('whatsappTemplateInput').value;
+            if (typeof mostrarLoading === 'function') mostrarLoading();
+            try {
+                const res = await fetch('/api/configuracoes/whatsapp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template }) });
+                if (typeof ocultarLoading === 'function') ocultarLoading();
+                if (res.ok) mostrarAviso('Sucesso', 'Template de mensagem salvo com sucesso!');
+                else mostrarAviso('Erro', 'Falha ao salvar o template.');
+            } catch (err) {
+                if (typeof ocultarLoading === 'function') ocultarLoading();
+                mostrarAviso('Erro', 'Erro de conexão.');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
