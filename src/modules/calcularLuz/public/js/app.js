@@ -104,8 +104,8 @@ function renderHistoryTable() {
 
     const leituraAnt = parseFloat(record.leitura_anterior) || 0;
     const leituraAtual = parseFloat(record.leitura_atual);
-    const consumo = parseFloat(record.consumo_kwh) || parseFloat(record.consumo_conta) || 0;
-    const valor = parseFloat(record.valor_estimado) || parseFloat(record.valor_conta) || 0;
+    const consumo = parseFloat(record.consumo_kwh) || 0;
+    const valor = parseFloat(record.valor_estimado) || 0;
 
     const leituraAtualExibicao =
       !leituraAtual || isNaN(leituraAtual) || leituraAtual === 0 ? '-' : formatReading(leituraAtual);
@@ -113,7 +113,7 @@ function renderHistoryTable() {
     tr.innerHTML = `
             <td>${record.mes_referencia}</td>
             <td>${formatReading(leituraAnt)}</td>
-            <td></td>
+            <td>${leituraAtualExibicao}</td>
             <td>${formatReading(consumo)}</td>
             <td>${formatCurrency(valor)}</td>
             <td class="actions">
@@ -126,18 +126,21 @@ function renderHistoryTable() {
   });
 }
 
-// Reuse logic corrigida
+// ✅ CORRIGIDO: Lógica de reutilização para pegar a leitura ATUAL do registro clicado
 window.reuseRecord = (id) => {
   const record = historyData.find((r) => r.id === id);
   if (record) {
-    const lAtual = parseFloat(record.leitura_atual);
-    const lAnt = parseFloat(record.leitura_anterior);
+    const leituraAtualDoHistorico = parseFloat(record.leitura_atual);
 
-    // Se a leitura atual for maior que 0, usa ela. Senão (registro velho), usa a anterior.
-    const valorReuso = lAnt; // Sempre reutiliza a leitura anterior
+    // Se a leitura atual do histórico for válida, usa ela como a "anterior" do novo formulário
+    if (leituraAtualDoHistorico > 0) {
+      document.getElementById('leituraAnterior').value = leituraAtualDoHistorico;
+    } else {
+      // Fallback para registros muito antigos sem leitura atual, usa a anterior mesmo
+      document.getElementById('leituraAnterior').value = parseFloat(record.leitura_anterior);
+    }
 
     document.getElementById('mesReferencia').value = '';
-    document.getElementById('leituraAnterior').value = valorReuso;
     document.getElementById('leituraAtual').value = '';
 
     document.getElementById('mesReferencia').focus();
@@ -150,7 +153,7 @@ window.deleteRecord = async (id) => {
   if (!confirm('Deseja realmente excluir este registro?')) return;
 
   try {
-    const response = await fetch(`/calcularLuz-v2/api/deletar/`, {
+    const response = await fetch(`/calcularLuz-v2/api/deletar/${id}`, {
       method: 'DELETE',
     });
     if (response.ok) {
