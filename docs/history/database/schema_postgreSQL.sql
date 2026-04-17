@@ -26,8 +26,10 @@ CREATE TABLE IF NOT EXISTS Lancamentos (
     ParcelaAtual INT,
     TotalParcelas INT,
     NomeTerceiro VARCHAR(100),
-    Ordem INT DEFAULT 0,
-    Conferido BOOLEAN DEFAULT FALSE
+    Ordem INT DEFAULT 9999,
+    Conferido BOOLEAN DEFAULT FALSE,
+    DataCriacao TIMESTAMP DEFAULT NOW(),
+    ConferidoExtrato BOOLEAN DEFAULT FALSE
 );
 
 -- 3. Tabela Anotacoes
@@ -39,10 +41,6 @@ CREATE TABLE IF NOT EXISTS Anotacoes (
     Conteudo TEXT,
     UNIQUE(UsuarioId, Mes, Ano)
 );
-
--- Insere anotações iniciais
-INSERT INTO Anotacoes (UsuarioId, Mes, Ano, Conteudo) VALUES (1, 1, 2025, ''), (2, 1, 2025, '')
-ON CONFLICT DO NOTHING; 
 
 -- 4. Tabela OrdemCards
 CREATE TABLE IF NOT EXISTS OrdemCards (
@@ -58,7 +56,8 @@ CREATE TABLE IF NOT EXISTS FaturaManual (
     UsuarioId INT REFERENCES Usuarios(Id),
     Mes INT NOT NULL,
     Ano INT NOT NULL,
-    Valor DECIMAL(18, 2) DEFAULT 0
+    Valor DECIMAL(18, 2) DEFAULT 0,
+    UNIQUE(UsuarioId, Mes, Ano)
 );
 
 -- ==============================================================================
@@ -73,24 +72,6 @@ CREATE TABLE IF NOT EXISTS TokensPersistentes (
     CriadoEm TIMESTAMP DEFAULT NOW()
 );
 
--- ==============================================================================
--- MIGRATION: Ajuste caso a tabela já exista com estrutura antiga (ExpiresAt)
--- ==============================================================================
-DO $$
-BEGIN
-    ALTER TABLE TokensPersistentes ALTER COLUMN Token TYPE VARCHAR(255);
-    ALTER TABLE TokensPersistentes ADD COLUMN IF NOT EXISTS DataExpiracao TIMESTAMP;
-
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tokenspersistentes' AND column_name='expiresat') THEN
-        EXECUTE 'UPDATE TokensPersistentes SET DataExpiracao = ExpiresAt WHERE DataExpiracao IS NULL';
-        ALTER TABLE TokensPersistentes DROP COLUMN ExpiresAt;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tokenspersistentes' AND column_name='revogado') THEN
-        ALTER TABLE TokensPersistentes DROP COLUMN Revogado;
-    END IF;
-END $$;
-
 -- Índice para busca rápida por token
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token ON TokensPersistentes(Token);
 
@@ -98,9 +79,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token ON TokensPersistentes(Token);
 CREATE INDEX IF NOT EXISTS idx_tokens_expires ON TokensPersistentes(DataExpiracao);
 
 -- Limpeza automática de tokens expirados (opcional - rodar periodicamente)
--- DELETE FROM TokensPersistentes WHERE DataExpiracao < NOW();
-
--- ==============================================================================
 -- 6. Tabela MesesFechados (Controle de Mês Trancado)
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS MesesFechados (
@@ -110,4 +88,29 @@ CREATE TABLE IF NOT EXISTS MesesFechados (
     Ano INT NOT NULL,
     DataFechamento TIMESTAMP DEFAULT NOW(),
     UNIQUE(UsuarioId, Mes, Ano)
+);
+
+-- ==============================================================================
+-- 7. Tabela Lajeado (Painel Público Customizado)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS Lajeado (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT UNIQUE REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Dados JSONB,
+    Mural TEXT,
+    AtualizadoEm TIMESTAMP DEFAULT NOW()
+);
+
+-- ==============================================================================
+-- 8. Tabela registros_luz (Módulo Calcular Luz)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS registros_luz (
+    id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    mes_referencia VARCHAR(50) NOT NULL,
+    leitura_anterior NUMERIC(10, 2) NOT NULL,
+    leitura_atual NUMERIC(10, 2) NOT NULL,
+    consumo_kwh NUMERIC(10, 2) NOT NULL,
+    valor_estimado NUMERIC(10, 2) NOT NULL,
+    data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
