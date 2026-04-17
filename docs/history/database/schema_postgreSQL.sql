@@ -114,3 +114,14 @@ CREATE TABLE IF NOT EXISTS registros_luz (
     valor_estimado NUMERIC(10, 2) NOT NULL,
     data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==============================================================================
+-- 9. Tabela Terceiros (Contatos de Terceiros / WhatsApp)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS Terceiros (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Nome VARCHAR(100) NOT NULL,
+    Telefone VARCHAR(20),
+    UNIQUE(UsuarioId, Nome)
+);
