@@ -266,7 +266,7 @@ module.exports = function (repo) {
           totalGeral: t.totalGeral,
         }));
 
-      const telefonesQuery = await db.query('SELECT Nome, Telefone FROM Terceiros WHERE UsuarioId = $1', [userId]);
+      const telefonesQuery = await db.query('SELECT nome, telefone FROM terceiros WHERE usuario_id = $1', [userId]);
       const telefonesMap = {};
       telefonesQuery.rows.forEach((t) => (telefonesMap[t.nome] = t.telefone));
 
@@ -483,13 +483,13 @@ module.exports = function (repo) {
       if (cleanPhone && (cleanPhone.length === 10 || cleanPhone.length === 11)) cleanPhone = '55' + cleanPhone;
 
       if (!cleanPhone || cleanPhone.length === 0) {
-        await db.query('DELETE FROM Terceiros WHERE UsuarioId = $1 AND Nome = $2', [userId, nome]);
+        await db.query('DELETE FROM terceiros WHERE usuario_id = $1 AND nome = $2', [userId, nome]);
       } else {
         await db.query(
           `
-          INSERT INTO Terceiros (UsuarioId, Nome, Telefone) 
+          INSERT INTO terceiros (usuario_id, nome, telefone) 
           VALUES ($1, $2, $3) 
-          ON CONFLICT (UsuarioId, Nome) DO UPDATE SET Telefone = EXCLUDED.Telefone
+          ON CONFLICT (usuario_id, nome) DO UPDATE SET telefone = EXCLUDED.telefone
         `,
           [userId, nome, cleanPhone]
         );
