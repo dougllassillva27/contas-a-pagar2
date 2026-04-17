@@ -170,7 +170,7 @@ async function initDatabase() {
         await db.query(
           `
           INSERT INTO registros_luz 
-          (usuario_id, mes_referencia, leitura_anterior, leitura_atual, consumo_kwh, valor_estimado, data_registro)
+          (usuario_id, mes_referencia, leitura_anterior, leitura_atual, consumo_kwh, valor_estimado, data_registro) 
           VALUES (1, $1, $2, $3, $4, $5, $6)
         `,
           [r.mes, r.ant, r.atu, r.kwh, r.val, r.dt]
