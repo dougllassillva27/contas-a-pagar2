@@ -215,7 +215,7 @@
         }
 
         function enviarWhatsApp(nome, telefone) {
-            if (!telefone) return alert(`Por favor, cadastre o número de ${nome} no botão "Número" primeiro.`);
+            if (!telefone) return mostrarAviso('Atenção', `Por favor, cadastre o número de ${nome} no botão "Número" primeiro.`);
             const url = obterUrlTerceiro(nome);
             const mes = document.body.dataset.month;
             const ano = document.body.dataset.year;
