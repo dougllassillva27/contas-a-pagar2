@@ -136,48 +136,6 @@ async function initDatabase() {
       )
     `);
 
-    // 9. Migração do Histórico Antigo (Calcular Luz)
-    const checkLuz = await db.query('SELECT COUNT(*) FROM registros_luz');
-    if (parseInt(checkLuz.rows[0].count) === 0) {
-      console.log('🔄 Semeando histórico antigo do módulo Calcular Luz...');
-      const records = [
-        {
-          mes: 'Fechada - Leitura Próximo Mês 28/04', // Original ID 3
-          ant: 7581.0, // Leitura Anterior
-          atu: 7875.0, // Leitura Atual
-          kwh: 294.0, // Consumo (7875 - 7581)
-          val: 318.83, // Valor Estimado
-          dt: '2026-04-08 17:16:05', // Data do Registro
-        },
-        {
-          mes: 'Leitura 08/04', // Original ID 4
-          ant: 7875.0, // Leitura Atual do anterior
-          atu: 8012.0,
-          kwh: 137.0, // Consumo (8012 - 7875)
-          val: 155.82,
-          dt: '2026-04-08 17:16:20',
-        },
-        {
-          mes: 'Leitura 14/04', // Original ID 5
-          ant: 8012.0, // ✅ CORRIGIDO: Leitura Atual do anterior
-          atu: 8070.0,
-          kwh: 58.0, // ✅ RECALCULADO: (8070 - 8012)
-          val: 73.79, // ✅ RECALCULADO: (58 * 1.0383) + 13.57
-          dt: '2026-04-14 21:42:39',
-        },
-      ];
-      for (const r of records) {
-        await db.query(
-          `
-          INSERT INTO registros_luz 
-          (usuario_id, mes_referencia, leitura_anterior, leitura_atual, consumo_kwh, valor_estimado, data_registro) 
-          VALUES (1, $1, $2, $3, $4, $5, $6)
-        `,
-          [r.mes, r.ant, r.atu, r.kwh, r.val, r.dt]
-        );
-      }
-    }
-
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);
