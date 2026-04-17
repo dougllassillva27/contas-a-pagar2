@@ -125,3 +125,11 @@ CREATE TABLE IF NOT EXISTS Terceiros (
     Telefone VARCHAR(20),
     UNIQUE(UsuarioId, Nome)
 );
+
+-- ==============================================================================
+-- 10. Tabela configuracoes (Preferências do Usuário)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS configuracoes (
+    usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    whatsapp_template TEXT
+);
