@@ -14,9 +14,10 @@ const path = require('path');
 // Módulos internos
 const db = require('./config/db');
 const repo = require('./repositories/FinanceiroRepository');
-const { authMiddleware, createApiAuth } = require('./middlewares/auth');
+const { authMiddleware, createApiAuth, createAuthHybrid } = require('./middlewares/auth');
 const requestLogger = require('./middlewares/logger');
 const initDatabase = require('./helpers/initDatabase');
+const infraRoutes = require('./routes/infraRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
@@ -62,49 +63,7 @@ app.use(
 // Rotas de Infraestrutura (sem autenticação)
 // ==============================================================================
 
-app.get('/health', async (req, res) => {
-  const inicio = Date.now();
-  const uptimeSegundos = process.uptime();
-  const dias = Math.floor(uptimeSegundos / 86400);
-  const horas = Math.floor((uptimeSegundos % 86400) / 3600);
-  const minutos = Math.floor((uptimeSegundos % 3600) / 60);
-  const segundos = Math.floor(uptimeSegundos % 60);
-  const uptimeFormatado = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
-  const serviceName = 'contas-a-pagar';
-
-  try {
-    await db.query('SELECT 1');
-    const latencyMs = Date.now() - inicio;
-    return res.status(200).json({
-      service: serviceName,
-      status: 'ok',
-      app: 'online',
-      db: 'online',
-      latency_ms: latencyMs,
-      uptime: uptimeFormatado,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (erro) {
-    const latencyMs = Date.now() - inicio;
-    return res.status(503).json({
-      service: serviceName,
-      status: 'error',
-      app: 'online',
-      db: 'offline',
-      latency_ms: latencyMs,
-      uptime: uptimeFormatado,
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
-
-app.get('/ping', (req, res) => {
-  return res.status(200).json({
-    status: 'ok',
-    service: 'contas-a-pagar',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use(infraRoutes);
 
 // ==============================================================================
 // Montagem de Rotas
@@ -119,8 +78,8 @@ app.use(telegramRoutes(repo));
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
 app.use(publicRoutes(repo));
 
-// 2.5 Rota pública para o novo módulo de Data/Hora
-app.use('/dataHora', dataHoraRoutes);
+// 2.5 Módulo Data/Hora — Protegido por Autenticação Híbrida (Sessão Web ou API Key para M2M)
+app.use('/dataHora', createAuthHybrid(API_TOKEN), dataHoraRoutes);
 
 // ✅ Módulo Calcular Luz (protegido por sessão) - Rota versionada para cache busting
 // Serve a interface estática (HTML/CSS/JS) do módulo.

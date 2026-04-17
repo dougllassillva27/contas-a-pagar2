@@ -25,12 +25,12 @@ async function authMiddleware(req, res, next) {
 
       if (user) {
         // Reidrata a sessão
-        req.session.user = { 
-          id: user.id, 
-          nome: user.nome, 
-          login: user.login 
+        req.session.user = {
+          id: user.id,
+          nome: user.nome,
+          login: user.login,
         };
-        
+
         return next();
       } else {
         res.clearCookie('remember_me');
@@ -48,14 +48,27 @@ async function authMiddleware(req, res, next) {
 function createApiAuth(API_TOKEN) {
   return function apiAuth(req, res, next) {
     const clientToken = req.headers['x-api-key'] || req.query.token;
-    
+
     if (!clientToken || clientToken !== API_TOKEN) {
       console.log(`[API-AUTH] Bloqueado. Token fornecido: ${clientToken ? 'Sim' : 'Não'}`);
       return res.status(401).json({ success: false, error: 'Acesso Negado' });
     }
-    
+
     next();
   };
 }
 
-module.exports = { authMiddleware, createApiAuth };
+// Autenticação Híbrida (API Token OU Sessão Web)
+// Usada para proteger rotas que podem ser acessadas via navegador ou via M2M (ex: /dataHora)
+function createAuthHybrid(API_TOKEN) {
+  return function authHybrid(req, res, next) {
+    const clientToken = req.headers['x-api-key'] || req.query.token;
+    if (clientToken && clientToken === API_TOKEN) {
+      return next(); // M2M Autenticado
+    }
+    // Fallback transparente para Sessão Web
+    return authMiddleware(req, res, next);
+  };
+}
+
+module.exports = { authMiddleware, createApiAuth, createAuthHybrid };
