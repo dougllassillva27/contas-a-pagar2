@@ -104,12 +104,12 @@ async function initDatabase() {
 
     // 9. Tabela Terceiros (Contatos para WhatsApp)
     await db.query(`
-      CREATE TABLE IF NOT EXISTS Terceiros (
-          Id SERIAL PRIMARY KEY,
-          UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
-          Nome VARCHAR(100) NOT NULL,
-          Telefone VARCHAR(20),
-          UNIQUE(UsuarioId, Nome)
+      CREATE TABLE IF NOT EXISTS terceiros (
+          id SERIAL PRIMARY KEY,
+          usuario_id INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          nome VARCHAR(100) NOT NULL,
+          telefone VARCHAR(20),
+          UNIQUE(usuario_id, nome)
       )
     `);
 
