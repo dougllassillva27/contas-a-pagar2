@@ -16,6 +16,7 @@ if (!connectionString && process.env.NODE_ENV !== 'test') {
 const pool = new Pool({
   connectionString,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  client_encoding: 'UTF8',
 });
 
 module.exports = {
