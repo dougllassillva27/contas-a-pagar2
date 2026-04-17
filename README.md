@@ -41,6 +41,9 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
   - Separação por pessoa
 - **Gestão de Terceiros**
   - **Painel Centralizado (`/terceiros`)**: Área administrativa exclusiva (protegida por autenticação) para visualizar o total de gastos de cada pessoa e gerenciar o compartilhamento de links públicos de forma ágil.
+  - **Notificador WhatsApp**: Disparo semi-automático de links com mensagens padronizadas diretamente para o aplicativo do destinatário.
+  - **Templates Dinâmicos**: Personalize a mensagem global no próprio painel utilizando variáveis mágicas (`{nome_terceiro}`, `{mes}`, `{ano}`, `{link}`).
+  - **Agenda de Contatos**: Persistência automática dos números de telefone (+55) de cada terceiro no banco de dados para envios com 1 clique.
 - **Bloco de Notas Avançado**
   - Abas para anotações Mensais e Globais (atemporais)
   - Suporte a Markdown básico e Checklists interativos salvos em nuvem
@@ -53,7 +56,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 - **Isolamento de Dados** — garante que terceiros com o mesmo nome em contas de usuários diferentes não tenham seus dados misturados.
 - **Sem necessidade de login** — acesso 100% público e _read-only_ (somente leitura) para o cliente final.
 - **Navegação Histórica** — botões Anterior / Próximo para consultar faturas passadas.
-- **Compartilhamento Descomplicado** — links gerados pelo administrador via tela de gestão de terceiros ou menu de contexto.
+- **Compartilhamento Descomplicado** — links gerados pelo administrador via tela de gestão de terceiros (com atalho direto de envio pro WhatsApp) ou menu de contexto.
 - **Privacidade e SEO** — meta tags `noindex, nofollow` impedem indexação por buscadores (Google, Bing).
 - **Mobile-first** — interface totalmente responsiva com design dark mode imersivo.
 
@@ -351,61 +354,128 @@ npm install
 
 Execute o script SQL (disponível em `schema_postgreSQL.sql`):
 
-```sql
-CREATE TABLE Usuarios (
+````sql
+-- 1. Tabela Usuarios
+CREATE TABLE IF NOT EXISTS Usuarios (
     Id SERIAL PRIMARY KEY,
-    Nome VARCHAR(50),
-    Login VARCHAR(50),
-    SenhaHash VARCHAR(255)
+    Nome VARCHAR(50) NOT NULL,
+    Login VARCHAR(50) NOT NULL UNIQUE,
+    SenhaHash VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE MesesFechados (
-    Id SERIAL PRIMARY KEY,
-    UsuarioId INT,
-    Mes INT,
-    Ano INT,
-    DataFechamento TIMESTAMP
-);
+-- Insere usuários padrão se não existirem
+INSERT INTO Usuarios (Nome, Login, SenhaHash)
+VALUES
+('Dodo', 'dodo', '$2a$10$E.gH1.J1.K1.L1.M1.N1.O1P2Q3R4S5T6U7V8W9X0Y1Z2'),
+('Vitoria', 'vitoria', '$2a$10$E.gH1.J1.K1.L1.M1.N1.O1P2Q3R4S5T6U7V8W9X0Y1Z2')
+ON CONFLICT (Login) DO NOTHING;
 
-CREATE TABLE Lancamentos (
+-- 2. Tabela Lancamentos
+CREATE TABLE IF NOT EXISTS Lancamentos (
     Id SERIAL PRIMARY KEY,
-    UsuarioId INT,
-    Descricao VARCHAR(255),
-    Valor DECIMAL(18,2),
-    Tipo VARCHAR(20),
-    Categoria VARCHAR(50),
-    Status VARCHAR(20),
-    DataVencimento DATE,
+    UsuarioId INT REFERENCES Usuarios(Id),
+    Descricao VARCHAR(255) NOT NULL,
+    Valor DECIMAL(18, 2) NOT NULL,
+    Tipo VARCHAR(20) NOT NULL, -- 'RENDA', 'FIXA', 'CARTAO'
+    Categoria VARCHAR(50), -- 'Salário', 'Extra', etc
+    Status VARCHAR(20) DEFAULT 'PENDENTE',
+    DataVencimento DATE NOT NULL,
     ParcelaAtual INT,
     TotalParcelas INT,
     NomeTerceiro VARCHAR(100),
-    Ordem INT
+    Ordem INT DEFAULT 9999,
+    Conferido BOOLEAN DEFAULT FALSE,
+    DataCriacao TIMESTAMP DEFAULT NOW(),
+    ConferidoExtrato BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE Anotacoes (
+-- 3. Tabela Anotacoes
+CREATE TABLE IF NOT EXISTS Anotacoes (
     Id SERIAL PRIMARY KEY,
-    UsuarioId INT,
-    Conteudo TEXT
-);
-
-CREATE TABLE OrdemCards (
-    Id SERIAL PRIMARY KEY,
-    UsuarioId INT,
-    Nome VARCHAR(255),
-    Ordem INT
-);
-
-CREATE TABLE FaturaManual (
-    Id SERIAL PRIMARY KEY,
-    UsuarioId INT,
+    UsuarioId INT REFERENCES Usuarios(Id),
     Mes INT,
     Ano INT,
-    Valor DECIMAL(18,2)
+    Conteudo TEXT,
+    UNIQUE(UsuarioId, Mes, Ano)
 );
 
-INSERT INTO Usuarios (Nome, Login, SenhaHash)
-VALUES ('Admin', 'admin', 'HASH_DA_SENHA');
-```
+-- 4. Tabela OrdemCards
+CREATE TABLE IF NOT EXISTS OrdemCards (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id),
+    Nome VARCHAR(255) NOT NULL,
+    Ordem INT NOT NULL
+);
+
+-- 5. Tabela FaturaManual
+CREATE TABLE IF NOT EXISTS FaturaManual (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id),
+    Mes INT NOT NULL,
+    Ano INT NOT NULL,
+    Valor DECIMAL(18, 2) DEFAULT 0,
+    UNIQUE(UsuarioId, Mes, Ano)
+);
+
+-- ==============================================================================
+-- Tabela de Tokens Persistentes (Lembrar de mim)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS TokensPersistentes (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Token VARCHAR(255) NOT NULL UNIQUE,
+    DataExpiracao TIMESTAMP NOT NULL,
+    CriadoEm TIMESTAMP DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token ON TokensPersistentes(Token);
+CREATE INDEX IF NOT EXISTS idx_tokens_expires ON TokensPersistentes(DataExpiracao);
+
+-- ==============================================================================
+-- 6. Tabela MesesFechados (Controle de Mês Trancado)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS MesesFechados (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Mes INT NOT NULL,
+    Ano INT NOT NULL,
+    DataFechamento TIMESTAMP DEFAULT NOW(),
+    UNIQUE(UsuarioId, Mes, Ano)
+);
+
+-- ==============================================================================
+-- 7. Tabela registros_luz (Módulo Calcular Luz)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS registros_luz (
+    id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    mes_referencia VARCHAR(50) NOT NULL,
+    leitura_anterior NUMERIC(10, 2) NOT NULL,
+    leitura_atual NUMERIC(10, 2) NOT NULL,
+    consumo_kwh NUMERIC(10, 2) NOT NULL,
+    valor_estimado NUMERIC(10, 2) NOT NULL,
+    data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- 8. Tabela Terceiros (Contatos de Terceiros / WhatsApp)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS Terceiros (
+    Id SERIAL PRIMARY KEY,
+    UsuarioId INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    Nome VARCHAR(100) NOT NULL,
+    Telefone VARCHAR(20),
+    UNIQUE(UsuarioId, Nome)
+);
+
+-- ==============================================================================
+-- 9. Tabela configuracoes (Preferências do Usuário)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS configuracoes (
+    usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
+    whatsapp_template TEXT
+);
+
 
 ### 4️⃣ Variáveis de Ambiente
 
@@ -424,7 +494,7 @@ TELEGRAM_BOT_TOKEN=token_do_botfather
 TELEGRAM_CHAT_ID=seu_chat_id
 TELEGRAM_WEBHOOK_SECRET=string_aleatoria
 RENDER_EXTERNAL_URL=https://seu-app.onrender.com
-```
+````
 
 ### 5️⃣ Rodar
 
