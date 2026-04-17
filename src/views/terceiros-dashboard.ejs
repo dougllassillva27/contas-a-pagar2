@@ -27,12 +27,12 @@
             color: var(--text-primary);
         }
         .terceiro-dash-actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-top: auto;
         }
         .terceiro-dash-actions button {
-            flex: 1;
             padding: 10px;
             border: none;
             border-radius: 8px;
@@ -56,6 +56,20 @@
             color: var(--text-primary);
         }
         .btn-dash-abrir:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .btn-dash-whatsapp {
+            background: rgba(37, 211, 102, 0.1);
+            color: #25D366;
+        }
+        .btn-dash-whatsapp:hover {
+            background: rgba(37, 211, 102, 0.2);
+        }
+        .btn-dash-numero {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+        }
+        .btn-dash-numero:hover {
             background: rgba(255, 255, 255, 0.1);
         }
     </style>
@@ -84,8 +98,14 @@
                         </div>
 
                         <div class="terceiro-dash-actions">
+                            <button class="btn-dash-whatsapp" onclick="enviarWhatsApp('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>')">
+                                <span class="material-icons" style="font-size: 18px;">chat</span> WhatsApp
+                            </button>
                             <button class="btn-dash-copiar" onclick="copiarLinkEspecifico('<%= pessoa.nome %>')">
                                 <span class="material-icons" style="font-size: 18px;">content_copy</span> Copiar
+                            </button>
+                            <button class="btn-dash-numero" onclick="editarTelefone('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>')">
+                                <span class="material-icons" style="font-size: 18px;">edit</span> Número
                             </button>
                             <button class="btn-dash-abrir" onclick="abrirLinkEspecifico('<%= pessoa.nome %>')">
                                 <span class="material-icons" style="font-size: 18px;">open_in_new</span> Abrir
@@ -123,6 +143,36 @@
         function abrirLinkEspecifico(nome) {
             const url = obterUrlTerceiro(nome);
             window.open(url, '_blank');
+        }
+
+        function editarTelefone(nome, telefoneAtual) {
+            let defaultValor = telefoneAtual ? telefoneAtual.replace(/^55/, '') : '';
+            let novoTelefone = prompt(`Digite o celular (DDD + Número) para ${nome}:`, defaultValor);
+            if (novoTelefone !== null) salvarTelefone(nome, novoTelefone);
+        }
+
+        async function salvarTelefone(nome, telefone) {
+            try {
+                const res = await fetch('/api/terceiros/telefone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, telefone })
+                });
+                if (res.ok) window.location.reload();
+                else alert('Erro ao salvar telefone.');
+            } catch (err) {
+                console.error(err);
+                alert('Erro de conexão.');
+            }
+        }
+
+        function enviarWhatsApp(nome, telefone) {
+            if (!telefone) return alert(`Por favor, cadastre o número de ${nome} no botão "Número" primeiro.`);
+            const url = obterUrlTerceiro(nome);
+            const mes = document.body.dataset.month;
+            const ano = document.body.dataset.year;
+            const texto = `Olá! O link das suas contas do mês ${mes}/${ano} já está disponível:\n${url}`;
+            window.location.href = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(texto)}`;
         }
     </script>
 </body>
