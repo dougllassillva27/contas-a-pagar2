@@ -122,6 +122,28 @@
         <% } %>
     </div>
 
+    <!-- Modal Editar Telefone -->
+    <div id="modalEditarTelefone" class="modal-overlay">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Editar WhatsApp</h2>
+                <button class="modal-close" onclick="fecharModalEditarTelefone()"><span class="material-icons">close</span></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">Digite o celular (DDD + Número) para <strong id="editTelefoneNomeDisplay" style="color: var(--text-primary);"></strong>:</p>
+                <input type="hidden" id="editTelefoneNome" />
+                <div class="form-group" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 0.9rem; color: var(--text-secondary);">Celular</label>
+                    <input type="text" id="editTelefoneInput" class="form-control" placeholder="Ex: 51999999999" style="padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--bg-color); color: var(--text-primary);" />
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="fecharModalEditarTelefone()" style="padding: 10px 20px; border: none; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--text-primary); cursor: pointer; font-weight: 600;">Cancelar</button>
+                <button onclick="confirmarSalvarTelefone()" style="padding: 10px 20px; border: none; border-radius: 8px; background: var(--blue); color: #fff; font-weight: 600; cursor: pointer;">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <%- include('partials/modals') %>
     <%- include('partials/sidebar') %>
 
@@ -147,22 +169,48 @@
 
         function editarTelefone(nome, telefoneAtual) {
             let defaultValor = telefoneAtual ? telefoneAtual.replace(/^55/, '') : '';
-            let novoTelefone = prompt(`Digite o celular (DDD + Número) para ${nome}:`, defaultValor);
-            if (novoTelefone !== null) salvarTelefone(nome, novoTelefone);
+            
+            document.getElementById('editTelefoneNome').value = nome;
+            document.getElementById('editTelefoneNomeDisplay').innerText = nome;
+            document.getElementById('editTelefoneInput').value = defaultValor;
+            
+            if (typeof registerModalOpen === 'function') registerModalOpen();
+            document.getElementById('modalEditarTelefone').classList.add('active');
+            
+            setTimeout(() => document.getElementById('editTelefoneInput').focus(), 100);
         }
 
-        async function salvarTelefone(nome, telefone) {
+        function fecharModalEditarTelefone() {
+            if (typeof handleModalClose === 'function') handleModalClose();
+            document.getElementById('modalEditarTelefone').classList.remove('active');
+        }
+
+        async function confirmarSalvarTelefone() {
+            const nome = document.getElementById('editTelefoneNome').value;
+            const telefone = document.getElementById('editTelefoneInput').value;
+            
+            fecharModalEditarTelefone();
+            if (typeof mostrarLoading === 'function') mostrarLoading();
+            
             try {
                 const res = await fetch('/api/terceiros/telefone', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome, telefone })
                 });
-                if (res.ok) window.location.reload();
-                else alert('Erro ao salvar telefone.');
+                
+                if (typeof ocultarLoading === 'function') ocultarLoading();
+                
+                if (res.ok) {
+                    if (typeof mostrarAviso === 'function') mostrarAviso('Sucesso', 'Telefone salvo com sucesso!');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Falha ao salvar telefone.');
+                }
             } catch (err) {
                 console.error(err);
-                alert('Erro de conexão.');
+                if (typeof ocultarLoading === 'function') ocultarLoading();
+                if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Erro de conexão.');
             }
         }
 
@@ -174,6 +222,18 @@
             const texto = `Olá! O link das suas contas do mês ${mes}/${ano} já está disponível:\n${url}`;
             window.location.href = `whatsapp://send?phone=${telefone}&text=${encodeURIComponent(texto)}`;
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputEdit = document.getElementById('editTelefoneInput');
+            if (inputEdit) {
+                inputEdit.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        confirmarSalvarTelefone();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
