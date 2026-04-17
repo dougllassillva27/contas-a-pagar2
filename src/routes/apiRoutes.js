@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { parseValor, normalizarParcelasPorTipo } = require('../helpers/parseHelpers');
+const db = require('../config/db');
 const syncService = require('../services/syncService');
 const asyncHandler = require('../helpers/asyncHandler');
 const { STATUS, TIPO, LIMITES } = require('../constants');
@@ -258,12 +259,21 @@ module.exports = function (repo) {
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
 
       // Extrai apenas os terceiros que possuem movimento no mês atual
-      const todosTerceiros = Object.values(terceirosMap)
+      let todosTerceiros = Object.values(terceirosMap)
         .filter((t) => t.nome && t.nome.trim() !== '') // Ignora contas próprias (null/vazias)
         .map((t) => ({
           nome: t.nome,
           totalGeral: t.totalGeral,
         }));
+
+      const telefonesQuery = await db.query('SELECT Nome, Telefone FROM Terceiros WHERE UsuarioId = $1', [userId]);
+      const telefonesMap = {};
+      telefonesQuery.rows.forEach((t) => (telefonesMap[t.nome] = t.telefone));
+
+      todosTerceiros = todosTerceiros.map((t) => ({
+        ...t,
+        telefone: telefonesMap[t.nome] || null,
+      }));
 
       // Ordena alfabeticamente
       todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -458,6 +468,32 @@ module.exports = function (repo) {
         return res.status(403).json({ error: 'Este mês está fechado. Reabra-o para deletar lançamentos.' });
       }
       await repo.deleteMonth(req.session.user.id, parseInt(req.query.month, 10), parseInt(req.query.year, 10));
+      res.json({ success: true });
+    })
+  );
+
+  // --- SALVAR TELEFONE TERCEIRO ---
+  router.post(
+    '/api/terceiros/telefone',
+    asyncHandler(async (req, res) => {
+      const userId = req.session.user.id;
+      const { nome, telefone } = req.body;
+
+      let cleanPhone = telefone ? telefone.replace(/\D/g, '') : null;
+      if (cleanPhone && (cleanPhone.length === 10 || cleanPhone.length === 11)) cleanPhone = '55' + cleanPhone;
+
+      if (!cleanPhone || cleanPhone.length === 0) {
+        await db.query('DELETE FROM Terceiros WHERE UsuarioId = $1 AND Nome = $2', [userId, nome]);
+      } else {
+        await db.query(
+          `
+          INSERT INTO Terceiros (UsuarioId, Nome, Telefone) 
+          VALUES ($1, $2, $3) 
+          ON CONFLICT (UsuarioId, Nome) DO UPDATE SET Telefone = EXCLUDED.Telefone
+        `,
+          [userId, nome, cleanPhone]
+        );
+      }
       res.json({ success: true });
     })
   );
