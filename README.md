@@ -354,7 +354,7 @@ npm install
 
 Execute o script SQL (disponível em `schema_postgreSQL.sql`):
 
-````sql
+```sql
 -- 1. Tabela Usuarios
 CREATE TABLE IF NOT EXISTS Usuarios (
     Id SERIAL PRIMARY KEY,
@@ -366,8 +366,8 @@ CREATE TABLE IF NOT EXISTS Usuarios (
 -- Insere usuários padrão se não existirem
 INSERT INTO Usuarios (Nome, Login, SenhaHash)
 VALUES
-('Dodo', 'dodo', '$2a$10$E.gH1.J1.K1.L1.M1.N1.O1P2Q3R4S5T6U7V8W9X0Y1Z2'),
-('Vitoria', 'vitoria', '$2a$10$E.gH1.J1.K1.L1.M1.N1.O1P2Q3R4S5T6U7V8W9X0Y1Z2')
+('Dodo', 'dodo', '$HASH_SENHA'),
+('Vitoria', 'vitoria', '$HASH_SENHA')
 ON CONFLICT (Login) DO NOTHING;
 
 -- 2. Tabela Lancamentos
@@ -377,7 +377,7 @@ CREATE TABLE IF NOT EXISTS Lancamentos (
     Descricao VARCHAR(255) NOT NULL,
     Valor DECIMAL(18, 2) NOT NULL,
     Tipo VARCHAR(20) NOT NULL, -- 'RENDA', 'FIXA', 'CARTAO'
-    Categoria VARCHAR(50), -- 'Salário', 'Extra', etc
+    Categoria VARCHAR(50), -- 'Salários', 'Extra', etc
     Status VARCHAR(20) DEFAULT 'PENDENTE',
     DataVencimento DATE NOT NULL,
     ParcelaAtual INT,
@@ -475,7 +475,7 @@ CREATE TABLE IF NOT EXISTS configuracoes (
     usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
     whatsapp_template TEXT
 );
-
+```
 
 ### 4️⃣ Variáveis de Ambiente
 
@@ -494,7 +494,7 @@ TELEGRAM_BOT_TOKEN=token_do_botfather
 TELEGRAM_CHAT_ID=seu_chat_id
 TELEGRAM_WEBHOOK_SECRET=string_aleatoria
 RENDER_EXTERNAL_URL=https://seu-app.onrender.com
-````
+```
 
 ### 5️⃣ Rodar
 
