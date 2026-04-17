@@ -117,7 +117,7 @@ function renderHistoryTable() {
             <td>${formatReading(consumo)}</td>
             <td>${formatCurrency(valor)}</td>
             <td class="actions">
-                <button onclick="reuseRecord(${record.id})" class="btn-reutilizar">Reutilizar</button>
+                <button onclick="reuseRecord(${record.id})" class="btn-reutilizar" title="Usa a 'Leitura Anterior' deste registro para preencher o formulário.">Reutilizar</button>
                 <button onclick="deleteRecord(${record.id})" class="btn-excluir">Excluir</button>
             </td>
         `;
@@ -126,20 +126,13 @@ function renderHistoryTable() {
   });
 }
 
-// ✅ CORRIGIDO: Lógica de reutilização para pegar a leitura ATUAL do registro clicado
+// ✅ CORRIGIDO: Lógica de reutilização para pegar a leitura ANTERIOR do registro clicado
 window.reuseRecord = (id) => {
   const record = historyData.find((r) => r.id === id);
   if (record) {
-    const leituraAtualDoHistorico = parseFloat(record.leitura_atual);
+    const valorReuso = parseFloat(record.leitura_anterior);
 
-    // Se a leitura atual do histórico for válida, usa ela como a "anterior" do novo formulário
-    if (leituraAtualDoHistorico > 0) {
-      document.getElementById('leituraAnterior').value = leituraAtualDoHistorico;
-    } else {
-      // Fallback para registros muito antigos sem leitura atual, usa a anterior mesmo
-      document.getElementById('leituraAnterior').value = parseFloat(record.leitura_anterior);
-    }
-
+    document.getElementById('leituraAnterior').value = valorReuso;
     document.getElementById('mesReferencia').value = '';
     document.getElementById('leituraAtual').value = '';
 
