@@ -183,6 +183,11 @@ function hideCustomTooltip() {
 // ==============================================================================
 
 function abrirModalCalcularLuz() {
+  const iframe = document.getElementById('iframeCalcularLuz');
+  if (iframe && !iframe.src) {
+    iframe.src = `/calcularLuz-v2?v=${Date.now()}`;
+  }
+
   registerModalOpen();
   document.getElementById('modalCalcularLuz').classList.add('active');
   document.body.style.overflow = 'hidden';
