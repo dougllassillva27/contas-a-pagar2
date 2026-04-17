@@ -30,38 +30,6 @@ async function initDatabase() {
       )
      `);
 
-    // 2. Coluna DataCriacao em Lancamentos
-    await db.query(` 
-      ALTER TABLE Lancamentos
-      ADD COLUMN IF NOT EXISTS DataCriacao TIMESTAMP DEFAULT NOW()
-     `);
-
-    // 2.5 Coluna ConferidoExtrato (para separar do checkbox de Últimas Edições)
-    await db.query(` 
-      ALTER TABLE Lancamentos
-      ADD COLUMN IF NOT EXISTS ConferidoExtrato BOOLEAN DEFAULT false
-     `);
-
-    // 3. Adiciona colunas Mes e Ano na tabela Anotacoes se não existirem
-    // Se a tabela já existia e tinha dados, eles ficarão com Mes e Ano = NULL temporariamente
-    await db.query(` 
-      ALTER TABLE Anotacoes
-      ADD COLUMN IF NOT EXISTS Mes INT,
-      ADD COLUMN IF NOT EXISTS Ano INT
-     `);
-
-    // Atualiza os registros antigos (que não tem mês/ano) para o mês/ano atual
-    // Assim não perdemos nenhuma anotação antiga e ela fica no mês vigente.
-    const hoje = new Date();
-    await db.query(
-      ` 
-      UPDATE Anotacoes
-      SET Mes = $1, Ano = $2
-      WHERE Mes IS NULL OR Ano IS NULL
-     `,
-      [hoje.getMonth() + 1, hoje.getFullYear()]
-    );
-
     // 4. Constraints UNIQUE para UPSERTs
     await db.query(` 
       CREATE UNIQUE INDEX IF NOT EXISTS uq_faturamanual_usuario_mes_ano
@@ -69,8 +37,6 @@ async function initDatabase() {
      `);
 
     // Remove o índice antigo que não considerava Mês e Ano, caso exista
-    await db.query(`DROP INDEX IF EXISTS uq_anotacoes_usuario `);
-
     // Habilita a nova constraint UNIQUE por Usuario, Mês e Ano
     await db.query(` 
       CREATE UNIQUE INDEX IF NOT EXISTS uq_anotacoes_usuario_mes_ano
