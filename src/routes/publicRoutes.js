@@ -1,5 +1,5 @@
 // ==============================================================================
-// 🌐 ROTAS PÚBLICAS (LOGIN + PÁGINAS PÚBLICAS)
+// 🌍 ROTAS PÚBLICAS (LOGIN + PÁGINAS PÚBLICAS)
 // Extraído de app.js — sem alteração de lógica
 // ==============================================================================
 
@@ -193,11 +193,13 @@ module.exports = function (repo) {
             const novoToken = await repo.criarToken(userLogado.id, 90);
             const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 dias
 
+            // 🔧 CORREÇÃO APLICADA: 'strict' -> 'lax'
+            // Permite que o cookie seja enviado em navegações cross-site GET (redirecionamentos pós-login)
             res.cookie('remember_me', novoToken.token, {
               maxAge,
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: 'strict',
+              sameSite: 'lax',
             });
 
             console.log(`[LOGIN] 🔑 Token persistente gerado para usuário ${userLogado.id}`);
