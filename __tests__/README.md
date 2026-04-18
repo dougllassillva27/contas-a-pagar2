@@ -55,16 +55,14 @@ __tests__/
     └── api.test.js             ← Rotas HTTP reais (12 testes)
 ```
 
----
-
 ## Tipos de Teste
 
-| Tipo           | O que testa      | Precisa de banco? | Velocidade |
-| -------------- | ---------------- | :---------------: | :--------: |
-| **Unitário**   | Funções isoladas |      ❌ Não       |  ⚡ ~5ms   |
-| **Integração** | Rotas + banco    |      ✅ Sim       |   🔄 ~5s   |
-
----
+| Tipo            | O que testa                          | Precisa de banco? | Velocidade |
+| --------------- | ------------------------------------ | :---------------: | :--------: |
+| **Unitário**    | Funções isoladas, helpers, constants |      ❌ Não       |  ⚡ ~2ms   |
+| **Repositório** | Queries de banco com Mock (pg)       |      ❌ Não       |  ⚡ ~5ms   |
+| **Módulos**     | Rotas isoladas por contexto          |      ❌ Não       |  ⚡ ~10ms  |
+| **Integração**  | Roteador Principal + regras de fluxo |      ✅ Sim       |   🔄 ~3s   |
 
 ## Quando Rodar?
 
