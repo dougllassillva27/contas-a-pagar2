@@ -184,8 +184,9 @@ function hideCustomTooltip() {
 
 function abrirModalCalcularLuz() {
   const iframe = document.getElementById('iframeCalcularLuz');
-  if (iframe && !iframe.src) {
-    iframe.src = `/calcularLuz-v2?v=${Date.now()}`;
+  // getAttribute previne que o JS leia src="" como a URL base da página atual
+  if (iframe && !iframe.getAttribute('src')) {
+    iframe.src = `/calcularLuz-v2/index.html?v=${Date.now()}`;
   }
 
   registerModalOpen();

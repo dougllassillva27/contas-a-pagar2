@@ -6,6 +6,11 @@ const bcrypt = require('bcryptjs');
 // Mockamos o repositório inteiro para não precisarmos de um banco de dados real rodando!
 jest.mock('../../src/repositories/FinanceiroRepository');
 
+// Precisamos mockar o DB também, pois as rotas de terceiros fazem chamadas diretas ao db.query
+jest.mock('../../src/config/db', () => ({
+  query: jest.fn().mockResolvedValue({ rows: [] }),
+}));
+
 describe('Integração API (Mocked DB)', () => {
   let agent;
 
