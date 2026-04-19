@@ -9,7 +9,7 @@
 <meta property="og:description" content="Portal de acompanhamento de contas a pagar (Fixas e Cartão)." />
 <meta property="og:url" content="https://contas-a-pagar-nsti.onrender.com" />
 <meta property="og:type" content="website" />
-<meta property="og:image" content="https://contas-a-pagar-nsti.onrender.com/icons/icon-512x512.png" />
+<meta property="og:image" content="https://contas-a-pagar-nsti.onrender.com/icons/compartilharPWA.webp?v=1" />
 <meta property="og:image:width" content="512" />
 <meta property="og:image:height" content="512" />
 <meta property="og:site_name" content="Contas a Pagar" />
@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="Gestão Financeira pessoal" />
 <meta name="twitter:description" content="Sistema de controle de contas a pagar e rendas." />
-<meta name="twitter:image" content="https://contas-a-pagar-nsti.onrender.com/icons/icon-512x512.png" />
+<meta name="twitter:image" content="https://contas-a-pagar-nsti.onrender.com/icons/compartilharPWA.webp?v=1" />
 
 <title>Gestão Financeira pessoal</title>
 
@@ -30,266 +30,266 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
 <script>
- if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-   navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
-  });
- }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
+    });
+  }
 </script>
 
-<link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=3" />
 <link rel="stylesheet" href="/css/style.css?v=3" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
 <script>
- if (localStorage.getItem('hideRendas') === 'true') {
-  document.documentElement.classList.add('hide-rendas-mode');
- }
+  if (localStorage.getItem('hideRendas') === 'true') {
+    document.documentElement.classList.add('hide-rendas-mode');
+  }
 </script>
 
 <style>
- .draggable-row {
-  cursor: move;
- }
- .draggable-row.dragging {
-  opacity: 0.5;
-  background: #333;
- }
- .drag-handle {
-  cursor: grab;
-  color: var(--text-secondary);
- }
- .drag-handle:active {
-  cursor: grabbing;
-  color: var(--text-primary);
- }
-
- .drag-handle-card {
-  cursor: grab;
- }
- .drag-handle-card:active {
-  cursor: grabbing;
- }
-
- .terceiros-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  width: 100%;
- }
- @media (max-width: 1600px) {
-  .terceiros-grid {
-   grid-template-columns: repeat(3, 1fr);
+  .draggable-row {
+    cursor: move;
   }
- }
- @media (max-width: 1200px) {
-  .terceiros-grid {
-   grid-template-columns: repeat(2, 1fr);
+  .draggable-row.dragging {
+    opacity: 0.5;
+    background: #333;
   }
- }
- @media (max-width: 768px) {
-  .terceiros-grid {
-   grid-template-columns: 1fr;
+  .drag-handle {
+    cursor: grab;
+    color: var(--text-secondary);
   }
- }
+  .drag-handle:active {
+    cursor: grabbing;
+    color: var(--text-primary);
+  }
 
- .draggable-card {
-  transition:
-   transform 0.2s,
-   opacity 0.2s;
- }
- .draggable-card.dragging {
-  opacity: 0.4;
-  border: 2px dashed var(--blue);
-  transform: scale(0.98);
- }
+  .drag-handle-card {
+    cursor: grab;
+  }
+  .drag-handle-card:active {
+    cursor: grabbing;
+  }
 
- /* FIX PARA MOBILE: BLOQUEIO DE SELEÇÃO E CALLOUT */
- .trigger-p-nome {
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -webkit-touch-callout: none !important; /* Impede menu nativo do Android/Chrome */
-  cursor: pointer;
-  padding: 12px 5px;
-  font-weight: 500;
-  display: block;
-  width: 100%;
- }
- .trigger-p-nome:active {
-  background-color: rgba(255, 255, 255, 0.1);
-  /* Feedback visual */
- }
+  .terceiros-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+  @media (max-width: 1600px) {
+    .terceiros-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (max-width: 1200px) {
+    .terceiros-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 768px) {
+    .terceiros-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 
- /* ✅ TOOLTIP CUSTOMIZADO (Substitui tooltip nativo do browser) */
- .custom-tooltip {
-  position: fixed;
-  background: rgba(0, 0, 0, 0.9);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  z-index: 100000;
-  pointer-events: none;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  display: none;
- }
+  .draggable-card {
+    transition:
+      transform 0.2s,
+      opacity 0.2s;
+  }
+  .draggable-card.dragging {
+    opacity: 0.4;
+    border: 2px dashed var(--blue);
+    transform: scale(0.98);
+  }
 
- /* Estilos do Menu de Contexto Otimizado */
- .context-menu {
-  position: fixed;
-  z-index: 10000;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  padding: 4px 0; /* reduzido de 6px */
-  min-width: 220px;
-  user-select: none;
- }
- .context-menu ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
- }
- .context-menu li {
-  padding: 12px 18px; /* reduzido levemente de 14px */
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 0.95rem;
-  color: #eee;
-  transition: background 0.2s;
- }
- .context-menu li:hover {
-  background: #333; /* levemente mais escuro que anterior */
- }
- .context-menu li .material-icons {
-  font-size: 20px;
- }
- .context-menu li.delete-action {
-  color: var(--red);
- }
- .context-menu li.delete-action .material-icons {
-  color: var(--red);
- }
- .context-menu .menu-divider {
-  border-top: 1px solid #444;
-  margin: 4px 0; /* reduzido de 6px */
-  padding: 0 !important;
-  height: 0;
-  list-style: none; /* garante se for li */
- }
- /* Remove hover de divisores se forem li */
- .context-menu li.menu-divider:hover {
-  background: none !important;
-  cursor: default;
- }
+  /* FIX PARA MOBILE: BLOQUEIO DE SELEÇÃO E CALLOUT */
+  .trigger-p-nome {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important; /* Impede menu nativo do Android/Chrome */
+    cursor: pointer;
+    padding: 12px 5px;
+    font-weight: 500;
+    display: block;
+    width: 100%;
+  }
+  .trigger-p-nome:active {
+    background-color: rgba(255, 255, 255, 0.1);
+    /* Feedback visual */
+  }
 
- /* ===========================
+  /* ✅ TOOLTIP CUSTOMIZADO (Substitui tooltip nativo do browser) */
+  .custom-tooltip {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    z-index: 100000;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: none;
+  }
+
+  /* Estilos do Menu de Contexto Otimizado */
+  .context-menu {
+    position: fixed;
+    z-index: 10000;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    padding: 4px 0; /* reduzido de 6px */
+    min-width: 220px;
+    user-select: none;
+  }
+  .context-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .context-menu li {
+    padding: 12px 18px; /* reduzido levemente de 14px */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    color: #eee;
+    transition: background 0.2s;
+  }
+  .context-menu li:hover {
+    background: #333; /* levemente mais escuro que anterior */
+  }
+  .context-menu li .material-icons {
+    font-size: 20px;
+  }
+  .context-menu li.delete-action {
+    color: var(--red);
+  }
+  .context-menu li.delete-action .material-icons {
+    color: var(--red);
+  }
+  .context-menu .menu-divider {
+    border-top: 1px solid #444;
+    margin: 4px 0; /* reduzido de 6px */
+    padding: 0 !important;
+    height: 0;
+    list-style: none; /* garante se for li */
+  }
+  /* Remove hover de divisores se forem li */
+  .context-menu li.menu-divider:hover {
+    background: none !important;
+    cursor: default;
+  }
+
+  /* ===========================
  MODAL "ÚLTIMAS ADIÇÕES" (MAIOR + FONTE MAIOR)
  =========================== */
- #modalUltimasContas .modal-box {
-  width: min(92vw, 980px);
-  max-width: 980px !important; /* sobrescreve o inline antigo */
-  max-height: 82vh;
-  display: flex;
-  flex-direction: column;
- }
-
- #modalUltimasContas .modal-header h2 {
-  font-size: 1.2rem;
- }
-
- #modalUltimasContas .modal-scroll {
-  max-height: calc(82vh - 80px);
-  overflow: auto;
- }
-
- #modalUltimasContas table.list-table {
-  font-size: 14px;
- }
-
- #modalUltimasContas thead th {
-  font-size: 13px;
-  padding: 12px 12px !important;
- }
-
- #modalUltimasContas tbody td {
-  font-size: 14px;
-  padding: 12px 12px !important;
- }
-
- /* Primeira coluna (data) menor e sem quebrar linha */
- #modalUltimasContas tbody td.col-data {
-  font-size: 12px;
-  white-space: nowrap;
-  color: var(--text-secondary);
- }
-
- /* Descrição pode quebrar melhor */
- #modalUltimasContas tbody td.col-desc {
-  word-break: break-word;
- }
-
- /* ✅ AJUSTE (SOMENTE CELULAR): valor não quebrar linha no modal "Últimas" */
- @media (max-width: 768px) {
-  #modalUltimasContas thead th.col-valor,
-  #modalUltimasContas tbody td.col-valor {
-   white-space: nowrap !important;
-  }
-  #modalUltimasContas tbody td.col-valor {
-   min-width: 92px;
+  #modalUltimasContas .modal-box {
+    width: min(92vw, 980px);
+    max-width: 980px !important; /* sobrescreve o inline antigo */
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* melhora experiência de toque ao arrastar */
-  .drag-handle,
-  .drag-handle-card {
-   touch-action: none;
-   -webkit-user-select: none;
-   user-select: none;
+  #modalUltimasContas .modal-header h2 {
+    font-size: 1.2rem;
   }
- }
 
- /* ===========================
+  #modalUltimasContas .modal-scroll {
+    max-height: calc(82vh - 80px);
+    overflow: auto;
+  }
+
+  #modalUltimasContas table.list-table {
+    font-size: 14px;
+  }
+
+  #modalUltimasContas thead th {
+    font-size: 13px;
+    padding: 12px 12px !important;
+  }
+
+  #modalUltimasContas tbody td {
+    font-size: 14px;
+    padding: 12px 12px !important;
+  }
+
+  /* Primeira coluna (data) menor e sem quebrar linha */
+  #modalUltimasContas tbody td.col-data {
+    font-size: 12px;
+    white-space: nowrap;
+    color: var(--text-secondary);
+  }
+
+  /* Descrição pode quebrar melhor */
+  #modalUltimasContas tbody td.col-desc {
+    word-break: break-word;
+  }
+
+  /* ✅ AJUSTE (SOMENTE CELULAR): valor não quebrar linha no modal "Últimas" */
+  @media (max-width: 768px) {
+    #modalUltimasContas thead th.col-valor,
+    #modalUltimasContas tbody td.col-valor {
+      white-space: nowrap !important;
+    }
+    #modalUltimasContas tbody td.col-valor {
+      min-width: 92px;
+    }
+
+    /* melhora experiência de toque ao arrastar */
+    .drag-handle,
+    .drag-handle-card {
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+
+  /* ===========================
  CONFERIDO — opacidade reduzida para contas já somadas
  =========================== */
- #modalUltimasContas tr.conferido {
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
- }
- #modalUltimasContas tr:not(.conferido) {
-  transition: opacity 0.3s ease;
- }
+  #modalUltimasContas tr.conferido {
+    opacity: 0.4;
+    transition: opacity 0.3s ease;
+  }
+  #modalUltimasContas tr:not(.conferido) {
+    transition: opacity 0.3s ease;
+  }
 
- /* ===========================
+  /* ===========================
  LOADING SPINNER (Feedback visual)
  =========================== */
- #modalLoading .modal-box {
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
- }
- .spinner {
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-left-color: var(--blue);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
- }
- @keyframes spin {
-  0% {
-   transform: rotate(0deg);
+  #modalLoading .modal-box {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
-  100% {
-   transform: rotate(360deg);
+  .spinner {
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: var(--blue);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
   }
- }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 </style>
