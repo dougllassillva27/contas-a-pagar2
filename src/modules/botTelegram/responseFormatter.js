@@ -7,22 +7,13 @@
 const { TIPO } = require('../../constants');
 
 /**
- * Mapa de usuario_id → nome para exibição.
- * Centralizado aqui para manutenção fácil.
- */
-const NOMES_USUARIOS = {
-  1: 'Dodo',
-  2: 'Vitória',
-};
-
-/**
  * Formata a resposta de sucesso para enviar no Telegram.
  *
  * @param {object} dados — objeto retornado pelo parser (após inserção)
  * @returns {string} — mensagem formatada
  */
 function formatarSucesso(dados) {
-  const nomeUsuario = NOMES_USUARIOS[dados.usuarioId] || `Usuário ${dados.usuarioId}`;
+  const nomeUsuario = dados.nomeUsuario || `Usuário ${dados.usuarioId}`;
   const valorFormatado = `R$ ${dados.valor.toFixed(2).replace('.', ',')}`;
   const detalheTipo = montarDetalheTipo(dados);
   const terceiro = dados.nomeTerceiro || '—';
@@ -44,7 +35,7 @@ function formatarSucesso(dados) {
  * Formata a resposta de sucesso para lançamentos em lote (bulk).
  */
 function formatarSucessoBulk(dados, terceiros, quantidade) {
-  const nomeUsuario = NOMES_USUARIOS[dados.usuarioId] || `Usuário ${dados.usuarioId}`;
+  const nomeUsuario = dados.nomeUsuario || `Usuário ${dados.usuarioId}`;
   const valorFormatado = `R$ ${dados.valor.toFixed(2).replace('.', ',')}`;
   const detalheTipo = montarDetalheTipo(dados);
   const listaTerceiros = terceiros.join(', ');
@@ -90,4 +81,4 @@ function escaparMarkdown(texto) {
   return String(texto).replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
 }
 
-module.exports = { formatarSucesso, formatarSucessoBulk, formatarErro, escaparMarkdown, NOMES_USUARIOS };
+module.exports = { formatarSucesso, formatarSucessoBulk, formatarErro, escaparMarkdown };

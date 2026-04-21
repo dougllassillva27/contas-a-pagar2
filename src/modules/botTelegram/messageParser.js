@@ -44,7 +44,7 @@ function parseMensagem(mensagem) {
   // --- Validação do usuario_id ---
   const usuarioId = parseInt(usuarioRaw, 10);
   if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
-    return { sucesso: false, erro: 'ID do usuário inválido. Use 1 (Dodo) ou 2 (Vitória).' };
+    return { sucesso: false, erro: 'ID do usuário inválido.' };
   }
 
   // --- Validação da descrição ---
@@ -99,7 +99,15 @@ function parseMensagem(mensagem) {
  * Retorna a mensagem de ajuda com o formato esperado.
  */
 function formatoEsperado() {
-  return '❌ Formato inválido.\n\n' + '📝 Formato esperado:\n' + 'usuario_id; descricao; valor; tipo; parcelas; terceiro\n\n' + '📌 Exemplos:\n' + '1; Internet; R$ 100,00; fixa; ;\n' + '1; Tênis; R$ 500,00; parcelada; 10; Vitoria\n' + '2; Mercado; 250; unica; ;';
+  return (
+    '❌ Formato inválido.\n\n' +
+    '📝 Formato esperado:\n' +
+    'usuario_id; descricao; valor; tipo; parcelas; terceiro\n\n' +
+    '📌 Exemplos:\n' +
+    '1; Internet; R$ 100,00; fixa; ;\n' +
+    '1; Tênis; R$ 500,00; parcelada; 10; Vitoria\n' +
+    '2; Mercado; 250; unica; ;'
+  );
 }
 
 module.exports = { parseMensagem, formatoEsperado };
