@@ -16,15 +16,18 @@ const { parseValor, normalizarParcelasPorTipo } = require('../../helpers/parseHe
 const { formatarSucesso, formatarSucessoBulk, formatarErro } = require('./responseFormatter');
 const { STATUS, TIPO } = require('../../constants');
 
-// Teclado inline acoplado ao balão da mensagem
-const MENU_PRINCIPAL = {
-  inline_keyboard: [
-    [
-      { text: '🧑 Dodo', callback_data: 'iniciar:dodo' },
-      { text: '👩 Vitória', callback_data: 'iniciar:vitoria' },
-    ],
-  ],
-};
+/**
+ * Busca dinamicamente os usuários e monta o teclado principal inline.
+ */
+async function getMenuPrincipal(repo) {
+  const usuarios = await repo.getTodosUsuarios();
+  const botoes = usuarios.map((u) => ({ text: `👤 ${u.nome}`, callback_data: `iniciar:${u.id}` }));
+  const keyboard = [];
+  for (let i = 0; i < botoes.length; i += 2) {
+    keyboard.push(botoes.slice(i, i + 2));
+  }
+  return { inline_keyboard: keyboard };
+}
 
 /**
  * Cria e configura a instância do bot do Telegram.
@@ -63,7 +66,7 @@ function criarBot({ token, chatIdPermitido, repo }) {
 
     // Comandos especiais
     if (texto.startsWith('/')) {
-      await tratarComando(bot, chatId, texto);
+      await tratarComando(bot, chatId, texto, repo);
       return;
     }
 
@@ -89,33 +92,35 @@ function criarBot({ token, chatIdPermitido, repo }) {
 // Comandos (/start, /help, /cancelar, /novo)
 // ==============================================================================
 
-async function tratarComando(bot, chatId, comando) {
+async function tratarComando(bot, chatId, comando, repo) {
   const partes = comando.toLowerCase().trim().split(/\s+/);
-  const cmd = partes[0];
+  let cmd = partes[0];
   let arg = partes[1]; // Ex: "dodo" em "/iniciar dodo"
 
-  // Alias para atalhos clicáveis sem espaço
-  if (cmd === '/iniciardodo' || cmd === '/iniciar_dodo') arg = 'dodo';
-  if (cmd === '/iniciarvitoria' || cmd === '/iniciar_vitoria') arg = 'vitoria';
+  // Compatibilidade com atalhos antigos e genéricos (ex: /iniciardodo -> /iniciar dodo)
+  if (cmd.startsWith('/iniciar') && cmd !== '/iniciar') {
+    arg = cmd.replace('/iniciar', '').replace('_', '');
+    cmd = '/iniciar';
+  }
 
-  const isIniciar = [
-    '/novo',
-    '/start',
-    '/iniciar',
-    '/iniciardodo',
-    '/iniciarvitoria',
-    '/iniciar_dodo',
-    '/iniciar_vitoria',
-  ].includes(cmd);
+  const isIniciar = ['/novo', '/start', '/iniciar'].includes(cmd);
 
   if (isIniciar) {
     iniciarConversa(chatId);
-    if (arg === 'dodo' || arg === 'vitoria') {
-      const usuarioId = arg === 'dodo' ? 1 : 2;
-      const proxima = avancarConversa(chatId, 'usuarioId', usuarioId);
-      await enviarPergunta(bot, chatId, proxima);
+    const usuarios = await repo.getTodosUsuarios();
+
+    let usuarioSelecionado = null;
+    if (arg) {
+      usuarioSelecionado = usuarios.find((u) => u.nome.toLowerCase() === arg || String(u.id) === arg);
+    }
+
+    if (usuarioSelecionado) {
+      const conversa = obterConversa(chatId);
+      conversa.dados.nomeUsuario = usuarioSelecionado.nome;
+      const proxima = avancarConversa(chatId, 'usuarioId', usuarioSelecionado.id);
+      await enviarPergunta(bot, chatId, proxima, repo);
     } else {
-      await enviarPergunta(bot, chatId, ETAPAS.USUARIO);
+      await enviarPergunta(bot, chatId, ETAPAS.USUARIO, repo);
     }
     return;
   }
@@ -126,7 +131,7 @@ async function tratarComando(bot, chatId, comando) {
       parse_mode: 'MarkdownV2',
     });
     await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
-      reply_markup: MENU_PRINCIPAL,
+      reply_markup: await getMenuPrincipal(repo),
     });
     return;
   }
@@ -142,13 +147,13 @@ async function tratarComando(bot, chatId, comando) {
       '/cancelar \\- Cancelar lançamento em andamento',
       '/help \\- Ver esta ajuda',
     ].join('\n');
-    await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2', reply_markup: MENU_PRINCIPAL });
+    await bot.sendMessage(chatId, ajuda, { parse_mode: 'MarkdownV2', reply_markup: await getMenuPrincipal(repo) });
     return;
   }
 
   await bot.sendMessage(chatId, 'Comando não reconhecido\\. Use /help', {
     parse_mode: 'MarkdownV2',
-    reply_markup: MENU_PRINCIPAL,
+    reply_markup: await getMenuPrincipal(repo),
   });
 }
 
@@ -168,8 +173,8 @@ async function processarTexto(bot, chatId, texto, repo) {
         reply_markup: { remove_keyboard: true },
       });
 
-      const arg = texto === '🧑 Lançar Dodo' ? 'dodo' : 'vitoria';
-      await tratarComando(bot, chatId, `/iniciar${arg}`);
+      const arg = texto === '🧑 Lançar Dodo' ? '1' : '2';
+      await tratarComando(bot, chatId, `/iniciar ${arg}`, repo);
       return;
     }
 
@@ -177,7 +182,7 @@ async function processarTexto(bot, chatId, texto, repo) {
     await bot.sendMessage(chatId, '🔄 Sincronizando interface...', { reply_markup: { remove_keyboard: true } });
 
     await bot.sendMessage(chatId, '👇 Olá! Clique em um dos botões abaixo para iniciar um lançamento:', {
-      reply_markup: MENU_PRINCIPAL,
+      reply_markup: await getMenuPrincipal(repo),
     });
     return;
   }
@@ -219,7 +224,7 @@ async function processarTexto(bot, chatId, texto, repo) {
       if (!proxima) {
         await finalizarEInserir(bot, chatId, repo);
       } else {
-        await enviarPergunta(bot, chatId, proxima);
+        await enviarPergunta(bot, chatId, proxima, repo);
       }
       break;
     }
@@ -247,16 +252,18 @@ async function processarCallback(bot, chatId, query, repo) {
 
   // Intercepta botões inline do menu principal antes de verificar conversa
   if (campo === 'iniciar') {
-    const label = valor === 'dodo' ? '🧑 Dodo' : '👩 Vitória';
+    const usuarios = await repo.getTodosUsuarios();
+    const user = usuarios.find((u) => String(u.id) === valor);
+    if (!user) return;
 
     bot
-      .editMessageText(`✅ Lançar para: ${label}\n\u2800`, {
+      .editMessageText(`✅ Lançar para: ${user.nome}\n\u2800`, {
         chat_id: chatId,
         message_id: messageId,
       })
       .catch(() => {});
 
-    await tratarComando(bot, chatId, `/iniciar${valor}`);
+    await tratarComando(bot, chatId, `/iniciar ${user.id}`, repo);
     return;
   }
 
@@ -270,15 +277,19 @@ async function processarCallback(bot, chatId, query, repo) {
   }
 
   if (campo === 'usuario') {
-    const label = valor === '1' ? '🧑 Dodo' : '👩 Vitória';
+    const usuarios = await repo.getTodosUsuarios();
+    const user = usuarios.find((u) => String(u.id) === valor);
+    if (!user) return;
+
     await bot
-      .editMessageText(`✅ *Conta:* ${label}\n\u2800`, {
+      .editMessageText(`✅ *Conta:* ${user.nome}\n\u2800`, {
         chat_id: chatId,
         message_id: messageId,
         parse_mode: 'MarkdownV2',
       })
       .catch(() => {});
-    await avancarEEnviarProxima(bot, chatId, 'usuarioId', parseInt(valor, 10), repo);
+    conversa.dados.nomeUsuario = user.nome;
+    await avancarEEnviarProxima(bot, chatId, 'usuarioId', user.id, repo);
   } else if (campo === 'tipo') {
     const labels = { fixa: '🔁 Fixa', unica: '1️⃣ Única', parcelada: '📊 Parcelada' };
     const label = labels[valor] || valor;
@@ -296,7 +307,7 @@ async function processarCallback(bot, chatId, query, repo) {
     if (!proxima) {
       await finalizarEInserir(bot, chatId, repo);
     } else {
-      await enviarPergunta(bot, chatId, proxima);
+      await enviarPergunta(bot, chatId, proxima, repo);
     }
   } else if (campo === 'terceiro') {
     // Se for 'eu' ou 'pular', salva null (conta própria), senão salva o nome
@@ -324,7 +335,7 @@ async function avancarEEnviarProxima(bot, chatId, campo, valor, repo) {
   if (!proxima) {
     await finalizarEInserir(bot, chatId, repo);
   } else {
-    await enviarPergunta(bot, chatId, proxima);
+    await enviarPergunta(bot, chatId, proxima, repo);
   }
 }
 
@@ -332,19 +343,19 @@ async function avancarEEnviarProxima(bot, chatId, campo, valor, repo) {
 // Enviar pergunta por etapa
 // ==============================================================================
 
-async function enviarPergunta(bot, chatId, etapa) {
+async function enviarPergunta(bot, chatId, etapa, repo) {
   switch (etapa) {
     case ETAPAS.USUARIO:
+      const usuarios = await repo.getTodosUsuarios();
+      const botoes = usuarios.map((u) => ({ text: `👤 ${u.nome}`, callback_data: `usuario:${u.id}` }));
+      const keyboard = [];
+      for (let i = 0; i < botoes.length; i += 2) {
+        keyboard.push(botoes.slice(i, i + 2));
+      }
+
       await bot.sendMessage(chatId, '👤 *Conta de quem?*', {
         parse_mode: 'MarkdownV2',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '🧑 Dodo', callback_data: 'usuario:1' },
-              { text: '👩 Vitória', callback_data: 'usuario:2' },
-            ],
-          ],
-        },
+        reply_markup: { inline_keyboard: keyboard },
       });
       break;
 
@@ -439,6 +450,7 @@ async function finalizarEInserir(bot, chatId, repo) {
 
     const dados = {
       usuarioId: dadosBrutos.usuarioId,
+      nomeUsuario: dadosBrutos.nomeUsuario,
       descricao: dadosBrutos.descricao,
       valor: dadosBrutos.valor,
       tipo: dbTipo,
@@ -488,7 +500,7 @@ async function finalizarEInserir(bot, chatId, repo) {
     }
 
     await bot.sendMessage(chatId, '👇 Deseja lançar mais alguma conta?', {
-      reply_markup: MENU_PRINCIPAL,
+      reply_markup: await getMenuPrincipal(repo),
     });
   } catch (err) {
     console.error('[Telegram] Erro ao inserir lançamento:', err.message);
@@ -496,7 +508,7 @@ async function finalizarEInserir(bot, chatId, repo) {
       parse_mode: 'MarkdownV2',
     });
     await bot.sendMessage(chatId, '👇 Tentar novamente ou lançar outra conta?', {
-      reply_markup: MENU_PRINCIPAL,
+      reply_markup: await getMenuPrincipal(repo),
     });
   }
 }
