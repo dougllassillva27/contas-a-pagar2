@@ -19,6 +19,12 @@ jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
 }));
 const bcrypt = require('bcryptjs');
+
+jest.mock('../../src/middlewares/rateLimiter', () => ({
+  loginLimiter: (req, res, next) => next(),
+  apiLimiter: (req, res, next) => next(),
+}));
+
 const publicRoutes = require('../../src/routes/publicRoutes');
 
 function setupApp() {
