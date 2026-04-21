@@ -8,6 +8,7 @@ describe('formatarSucesso', () => {
   test('formata resposta com todos os campos preenchidos', () => {
     const dados = {
       usuarioId: 1,
+      nomeUsuario: 'Dodo',
       descricao: 'Internet',
       valor: 100.0,
       tipo: 'FIXA',
@@ -29,6 +30,7 @@ describe('formatarSucesso', () => {
   test('formata resposta sem terceiro — mostra traço', () => {
     const dados = {
       usuarioId: 1,
+      nomeUsuario: 'Dodo',
       descricao: 'Luz',
       valor: 80.0,
       tipo: 'FIXA',
@@ -45,6 +47,7 @@ describe('formatarSucesso', () => {
   test('formata resposta tipo parcelado', () => {
     const dados = {
       usuarioId: 1,
+      nomeUsuario: 'Dodo',
       descricao: 'Tênis',
       valor: 500.0,
       tipo: 'CARTAO',
@@ -62,6 +65,7 @@ describe('formatarSucesso', () => {
   test('formata resposta tipo crédito à vista', () => {
     const dados = {
       usuarioId: 2,
+      nomeUsuario: 'Vitória',
       descricao: 'Mercado',
       valor: 250.0,
       tipo: 'CARTAO',
@@ -79,6 +83,7 @@ describe('formatarSucesso', () => {
   test('formata resposta com usuario_id desconhecido', () => {
     const dados = {
       usuarioId: 99,
+      nomeUsuario: undefined,
       descricao: 'Teste',
       valor: 10.0,
       tipo: 'FIXA',

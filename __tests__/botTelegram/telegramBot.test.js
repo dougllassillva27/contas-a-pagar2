@@ -32,6 +32,10 @@ describe('Telegram Bot - Funcionalidades e Travas', () => {
     mockRepo = {
       isMesFechado: jest.fn(),
       addLancamento: jest.fn(),
+      getTodosUsuarios: jest.fn().mockResolvedValue([
+        { id: 1, nome: 'Dodo' },
+        { id: 2, nome: 'Vitória' },
+      ]),
     };
 
     // Criamos o bot passando as dependências falsas
