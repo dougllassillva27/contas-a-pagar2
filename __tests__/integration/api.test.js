@@ -7,7 +7,7 @@ jest.mock('../../src/middlewares/rateLimiter', () => ({
 
 const app = require('../../src/app');
 const repo = require('../../src/repositories/FinanceiroRepository');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 // Mockamos o repositório inteiro para não precisarmos de um banco de dados real rodando!
 jest.mock('../../src/repositories/FinanceiroRepository');

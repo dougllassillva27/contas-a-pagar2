@@ -21,14 +21,14 @@ async function authMiddleware(req, res, next) {
 
   if (token) {
     try {
-      const user = await repo.buscarUsuarioPorToken(token);
+      const user = await repo.validarToken(token);
 
       if (user) {
         // Reidrata a sessão
         req.session.user = {
-          id: user.id,
-          nome: user.nome,
-          login: user.login,
+          id: user.id || user.Id,
+          nome: user.nome || user.Nome,
+          login: user.login || user.Login,
         };
 
         return next();

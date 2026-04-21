@@ -17,6 +17,7 @@ const OrdemCardsRepository = require('./OrdemCardsRepository');
 const BackupRepository = require('./BackupRepository');
 const MesFechadoRepository = require('./MesFechadoRepository');
 const LajeadoRepository = require('./LajeadoRepository');
+const TokenRepository = require('./TokenRepository');
 
 module.exports = {
   // Usuários
@@ -42,4 +43,7 @@ module.exports = {
 
   // Lajeado (Mural Público Dinâmico)
   ...LajeadoRepository,
+
+  // Tokens (Autenticação Persistente)
+  ...TokenRepository,
 };
