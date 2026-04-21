@@ -72,6 +72,11 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     toggleMesFechado();
   }
+  if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'p') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    togglePrivacidadeGlobal();
+  }
 });
 
 function isMesFechado() {
@@ -389,6 +394,28 @@ function limparMascara(input) {
 }
 function handleEnterFatura(e, input) {
   if (e.key === 'Enter') input.blur();
+}
+
+async function togglePrivacidadeGlobal() {
+  const html = document.documentElement;
+  const isHidden = html.classList.contains('hide-global-mode');
+  const newState = !isHidden;
+
+  if (newState) {
+    html.classList.add('hide-global-mode');
+  } else {
+    html.classList.remove('hide-global-mode');
+  }
+
+  try {
+    await fetch('/api/configuracoes/privacidade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privacidade_global: newState }),
+    });
+  } catch (err) {
+    console.error('Erro ao salvar privacidade global', err);
+  }
 }
 
 // ==============================================================================
