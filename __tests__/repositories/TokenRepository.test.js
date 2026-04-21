@@ -37,6 +37,7 @@ describe('gerarToken', () => {
 // ==============================================================================
 describe('criarToken', () => {
   const mockToken = 'abc123def456'.padEnd(64, '0');
+  const hashedToken = require('crypto').createHash('sha256').update(mockToken).digest('hex');
   const mockExpiresAt = new Date('2026-07-17T00:00:00.000Z');
 
   beforeEach(() => {
@@ -52,7 +53,7 @@ describe('criarToken', () => {
 
   test('deve inserir token no banco e retornar dados formatados', async () => {
     db.query.mockResolvedValue({
-      rows: [{ Token: mockToken, ExpiresAt: mockExpiresAt }],
+      rows: [{ ExpiresAt: mockExpiresAt }],
     });
 
     const result = await TokenRepository.criarToken(1, 90);
@@ -60,7 +61,7 @@ describe('criarToken', () => {
     expect(db.query).toHaveBeenCalledTimes(1);
     const [query, params] = db.query.mock.calls[0];
     expect(query).toContain('INSERT INTO TokensPersistentes');
-    expect(params).toEqual(expect.arrayContaining([1, mockToken, expect.any(Date)]));
+    expect(params).toEqual(expect.arrayContaining([1, hashedToken, expect.any(Date)]));
 
     const returnedToken = result.Token || result.token;
     const returnedExpiresAt = result.ExpiresAt || result.expiresAt;
@@ -69,7 +70,7 @@ describe('criarToken', () => {
   });
 
   test('deve usar 90 dias como padrão de expiração', async () => {
-    db.query.mockResolvedValue({ rows: [{ Token: mockToken, ExpiresAt: mockExpiresAt }] });
+    db.query.mockResolvedValue({ rows: [{ ExpiresAt: mockExpiresAt }] });
 
     await TokenRepository.criarToken(1);
 
@@ -87,12 +88,13 @@ describe('criarToken', () => {
 describe('validarToken', () => {
   test('deve retornar usuário quando token é válido e não expirado', async () => {
     const mockUser = { Id: 1, Nome: 'Dodo', Login: 'dodo' };
+    const hashedToken = require('crypto').createHash('sha256').update('valid-token').digest('hex');
     db.query.mockResolvedValue({ rows: [mockUser] });
 
     const result = await TokenRepository.validarToken('valid-token');
 
     expect(result).toEqual(mockUser);
-    expect(db.query).toHaveBeenCalledWith(expect.stringContaining('SELECT'), expect.arrayContaining(['valid-token']));
+    expect(db.query).toHaveBeenCalledWith(expect.stringContaining('SELECT'), expect.arrayContaining([hashedToken]));
   });
 
   test('deve retornar null quando token não existe', async () => {
@@ -103,15 +105,14 @@ describe('validarToken', () => {
     expect(result).toBeNull();
   });
 
-  test('deve retornar null quando token está expirado ou revogado', async () => {
+  test('deve retornar null quando token está expirado', async () => {
     db.query.mockResolvedValue({ rows: [] });
 
     const result = await TokenRepository.validarToken('expired-token');
 
     expect(result).toBeNull();
     const [query] = db.query.mock.calls[0];
-    expect(query).toContain('ExpiresAt > NOW()');
-    expect(query).toContain('Revogado = false');
+    expect(query).toContain('DataExpiracao > NOW()');
   });
 });
 
@@ -119,16 +120,16 @@ describe('validarToken', () => {
 // revogarToken
 // ==============================================================================
 describe('revogarToken', () => {
-  test('deve atualizar token como revogado no banco', async () => {
+  test('deve deletar o token do banco', async () => {
     db.query.mockResolvedValue({ rowCount: 1 });
+    const hashedToken = require('crypto').createHash('sha256').update('token-to-revoke').digest('hex');
 
     await TokenRepository.revogarToken('token-to-revoke');
 
     expect(db.query).toHaveBeenCalledTimes(1);
     const [query, params] = db.query.mock.calls[0];
-    expect(query).toContain('UPDATE TokensPersistentes');
-    expect(query).toContain('SET Revogado = true');
-    expect(params).toEqual(['token-to-revoke']);
+    expect(query).toContain('DELETE FROM TokensPersistentes');
+    expect(params).toEqual([hashedToken]);
   });
 
   test('deve funcionar mesmo se token não existir', async () => {
@@ -142,7 +143,7 @@ describe('revogarToken', () => {
 // limparTokensExpirados
 // ==============================================================================
 describe('limparTokensExpirados', () => {
-  test('deve deletar tokens expirados ou revogados e retornar contador', async () => {
+  test('deve deletar tokens expirados e retornar contador', async () => {
     db.query.mockResolvedValue({ rowCount: 5 });
 
     const result = await TokenRepository.limparTokensExpirados();
@@ -150,8 +151,7 @@ describe('limparTokensExpirados', () => {
     expect(result).toBe(5);
     const [query] = db.query.mock.calls[0];
     expect(query).toContain('DELETE FROM TokensPersistentes');
-    expect(query).toContain('ExpiresAt < NOW()');
-    expect(query).toContain('Revogado = true');
+    expect(query).toContain('DataExpiracao < NOW()');
   });
 
   test('deve retornar 0 se nenhum token for deletado', async () => {
@@ -168,6 +168,7 @@ describe('limparTokensExpirados', () => {
 // ==============================================================================
 describe('renovarToken', () => {
   const mockExpiresAt = new Date('2026-07-17T00:00:00.000Z');
+  const hashedToken = require('crypto').createHash('sha256').update('renewed-token').digest('hex');
 
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-04-17').getTime());
@@ -179,16 +180,21 @@ describe('renovarToken', () => {
 
   test('deve estender expiração de token válido e retornar dados atualizados', async () => {
     db.query.mockResolvedValue({
-      rows: [{ Token: 'renewed-token', ExpiresAt: mockExpiresAt }],
+      rows: [{ ExpiresAt: mockExpiresAt }],
     });
 
     const result = await TokenRepository.renovarToken('renewed-token', 90);
 
-    expect(result).toEqual({ Token: 'renewed-token', ExpiresAt: mockExpiresAt });
+    expect(result).toEqual({
+      Token: 'renewed-token',
+      token: 'renewed-token',
+      ExpiresAt: mockExpiresAt,
+      expiresAt: mockExpiresAt,
+    });
     const [query, params] = db.query.mock.calls[0];
     expect(query).toContain('UPDATE TokensPersistentes');
-    expect(query).toContain('SET ExpiresAt = $2');
-    expect(params[0]).toBe('renewed-token');
+    expect(query).toContain('SET DataExpiracao = $2');
+    expect(params[0]).toBe(hashedToken);
     expect(params[1]).toBeInstanceOf(Date);
   });
 
@@ -201,7 +207,7 @@ describe('renovarToken', () => {
   });
 
   test('deve usar 90 dias como padrão de renovação', async () => {
-    db.query.mockResolvedValue({ rows: [{ Token: 't', ExpiresAt: mockExpiresAt }] });
+    db.query.mockResolvedValue({ rows: [{ ExpiresAt: mockExpiresAt }] });
 
     await TokenRepository.renovarToken('t');
 

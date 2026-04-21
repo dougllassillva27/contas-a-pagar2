@@ -6,6 +6,13 @@ const db = require('../config/db');
 const crypto = require('crypto');
 
 // ==============================================================================
+// Hashing Unidirecional (Protege contra vazamento de DB)
+// ==============================================================================
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// ==============================================================================
 // Gera token criptografado seguro (64 caracteres hex)
 // ==============================================================================
 function gerarToken() {
@@ -16,49 +23,51 @@ function gerarToken() {
 // Cria novo token persistente para usuário
 // ==============================================================================
 async function criarToken(userId, expiresEmDias = 90) {
-  const token = gerarToken();
+  const tokenBruto = gerarToken();
+  const tokenHash = hashToken(tokenBruto);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiresEmDias);
 
   const query = `
-    INSERT INTO TokensPersistentes (UsuarioId, Token, ExpiresAt)
+    INSERT INTO TokensPersistentes (UsuarioId, Token, DataExpiracao)
     VALUES ($1, $2, $3)
-    RETURNING Token, ExpiresAt
+    RETURNING DataExpiracao as "ExpiresAt"
   `;
-  
-  const result = await db.query(query, [userId, token, expiresAt]);
-  return result.rows[0];
+
+  const result = await db.query(query, [userId, tokenHash, expiresAt]);
+  const dbExpires = result.rows[0].ExpiresAt || result.rows[0].expiresat || expiresAt;
+  return { Token: tokenBruto, token: tokenBruto, ExpiresAt: dbExpires, expiresAt: dbExpires };
 }
 
 // ==============================================================================
 // Valida token e retorna usuário se válido
 // ==============================================================================
-async function validarToken(token) {
+async function validarToken(tokenBruto) {
+  const tokenHash = hashToken(tokenBruto);
   const query = `
     SELECT tp.*, u.Id, u.Nome, u.Login
     FROM TokensPersistentes tp
     INNER JOIN Usuarios u ON tp.UsuarioId = u.Id
     WHERE tp.Token = $1
-      AND tp.ExpiresAt > NOW()
-      AND tp.Revogado = false
+      AND tp.DataExpiracao > NOW()
     LIMIT 1
   `;
-  
-  const result = await db.query(query, [token]);
+
+  const result = await db.query(query, [tokenHash]);
   return result.rows[0] || null;
 }
 
 // ==============================================================================
 // Revoga token (logout)
 // ==============================================================================
-async function revogarToken(token) {
+async function revogarToken(tokenBruto) {
+  const tokenHash = hashToken(tokenBruto);
   const query = `
-    UPDATE TokensPersistentes
-    SET Revogado = true
+    DELETE FROM TokensPersistentes
     WHERE Token = $1
   `;
-  
-  await db.query(query, [token]);
+
+  await db.query(query, [tokenHash]);
 }
 
 // ==============================================================================
@@ -67,9 +76,9 @@ async function revogarToken(token) {
 async function limparTokensExpirados() {
   const query = `
     DELETE FROM TokensPersistentes
-    WHERE ExpiresAt < NOW() OR Revogado = true
+    WHERE DataExpiracao < NOW()
   `;
-  
+
   const result = await db.query(query);
   return result.rowCount;
 }
@@ -77,19 +86,22 @@ async function limparTokensExpirados() {
 // ==============================================================================
 // Renova token (estende expiração)
 // ==============================================================================
-async function renovarToken(token, expiresEmDias = 90) {
+async function renovarToken(tokenBruto, expiresEmDias = 90) {
+  const tokenHash = hashToken(tokenBruto);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiresEmDias);
 
   const query = `
     UPDATE TokensPersistentes
-    SET ExpiresAt = $2
-    WHERE Token = $1 AND ExpiresAt > NOW() AND Revogado = false
-    RETURNING Token, ExpiresAt
+    SET DataExpiracao = $2
+    WHERE Token = $1 AND DataExpiracao > NOW()
+    RETURNING DataExpiracao as "ExpiresAt"
   `;
-  
-  const result = await db.query(query, [token, expiresAt]);
-  return result.rows[0] || null;
+
+  const result = await db.query(query, [tokenHash, expiresAt]);
+  if (!result.rows || result.rows.length === 0) return null;
+  const dbExpires = result.rows[0].ExpiresAt || result.rows[0].expiresat || expiresAt;
+  return { Token: tokenBruto, token: tokenBruto, ExpiresAt: dbExpires, expiresAt: dbExpires };
 }
 
 module.exports = {
