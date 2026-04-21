@@ -311,12 +311,14 @@ async function reorderLancamentos(userId, itens) {
   const client = await db.getClient();
   try {
     await client.query('BEGIN');
-    for (let i = 0; i < itens.length; i++) {
-      await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [
-        i,
-        itens[i].id,
-        userId,
-      ]);
+
+    // Associa a nova ordem e classifica estritamente pelo ID da tabela (ASC)
+    // para garantir o RowLock sequencial e eliminar deadlocks concorrentes.
+    const updates = itens.map((item, index) => ({ id: item.id, ordem: index }));
+    updates.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
+
+    for (const u of updates) {
+      await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [u.ordem, u.id, userId]);
     }
     await client.query('COMMIT');
   } catch (err) {
