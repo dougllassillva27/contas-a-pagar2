@@ -116,6 +116,18 @@ describe('Integração API (Mocked DB)', () => {
   });
 
   // ==========================================================================
+  // Testes de Configurações de Privacidade
+  // ==========================================================================
+  describe('Configurações de Privacidade', () => {
+    test('POST /api/configuracoes/privacidade - deve atualizar a privacidade global', async () => {
+      const res = await agent.post('/api/configuracoes/privacidade').send({ privacidade_global: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+  });
+
+  // ==========================================================================
   // Testes de Renderização de Views (Dashboard e Terceiros)
   // ==========================================================================
   describe('Renderização de Views (GET / e GET /terceiros)', () => {

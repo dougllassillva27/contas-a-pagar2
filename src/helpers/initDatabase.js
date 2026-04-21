@@ -123,9 +123,12 @@ async function initDatabase() {
     await db.query(`
       CREATE TABLE IF NOT EXISTS configuracoes (
           usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
-          whatsapp_template TEXT
+          whatsapp_template TEXT,
+          privacidade_global BOOLEAN DEFAULT FALSE
       )
     `);
+
+    await db.query(`ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS privacidade_global BOOLEAN DEFAULT FALSE`);
 
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {

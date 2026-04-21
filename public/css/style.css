@@ -390,6 +390,15 @@ html.hide-rendas-mode #valorRendas {
   user-select: none;
   cursor: default;
 }
+
+/* Privacidade Global acionada pelo atalho Ctrl+Alt+P */
+html.hide-global-mode .dashboard-cards .card .valor {
+  filter: blur(15px);
+  opacity: 0.5;
+  user-select: none;
+  cursor: default;
+}
+
 .card-icon-eye {
   position: absolute;
   top: 15px;
