@@ -563,20 +563,6 @@ async function atualizarTotais() {
   }
 }
 
-async function salvarOrdem(container) {
-  const itens = [...container.querySelectorAll('.draggable-row')].map((row) => ({ id: row.dataset.id }));
-  if (itens.length === 0) return;
-  try {
-    await fetch('/api/lancamentos/reorder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itens }),
-    });
-  } catch (err) {
-    console.error('Erro', err);
-  }
-}
-
 async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
   const form = e.target;
