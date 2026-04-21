@@ -24,6 +24,7 @@ const apiRoutes = require('./routes/apiRoutes');
 const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
 const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
+const { apiLimiter } = require('./middlewares/rateLimiter');
 const crypto = require('crypto');
 
 const app = express();
@@ -104,7 +105,24 @@ app.use('/calcularLuz-v2/api', authMiddleware, calcularLuzRoutes);
 app.use(authMiddleware);
 
 // 4. Rotas protegidas (dashboard, CRUD, APIs)
+// Aplica o rate limiter geral para todas as chamadas de API internas do dashboard
+app.use('/api', apiLimiter);
 app.use(apiRoutes(repo));
+
+// ==============================================================================
+// Error Handler Global (Failsafe final da esteira)
+// Garante que exceções não tratadas retornem payloads JSON estruturados para o front
+// ==============================================================================
+app.use((err, req, res, next) => {
+  console.error('[Global Error]', err.stack);
+  const status = err.status || 500;
+  const message = err.message || 'Erro Interno do Servidor';
+
+  if (req.originalUrl.startsWith('/api') || req.xhr || req.headers.accept?.includes('application/json')) {
+    return res.status(status).json({ success: false, error: message });
+  }
+  res.status(status).send(`<h1>Erro ${status}</h1><p>${message}</p>`);
+});
 
 // ==============================================================================
 // Iniciar Servidor (apenas quando rodado diretamente, não em testes)
