@@ -24,12 +24,23 @@ const apiRoutes = require('./routes/apiRoutes');
 const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
 const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const API_TOKEN = (process.env.API_TOKEN || 'token_padrao_inseguro').trim();
-app.locals.API_TOKEN = API_TOKEN; // Disponibiliza o token globalmente para as views EJS
+const isProd = process.env.NODE_ENV === 'production';
+const ENV_SESSION_SECRET = process.env.SESSION_SECRET;
+const ENV_API_TOKEN = process.env.API_TOKEN;
+
+if (isProd && (!ENV_SESSION_SECRET || !ENV_API_TOKEN)) {
+  console.error('❌ ERRO CRÍTICO DE SEGURANÇA: SESSION_SECRET e API_TOKEN são obrigatórios em produção.');
+  process.exit(1);
+}
+
+const safeSessionSecret = ENV_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const safeApiToken = ENV_API_TOKEN || crypto.randomBytes(32).toString('hex');
+app.locals.API_TOKEN = safeApiToken;
 
 // ==============================================================================
 // Configuração do Express
@@ -47,7 +58,7 @@ app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies S
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'segredo_sessao_inseguro',
+    secret: safeSessionSecret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -70,7 +81,7 @@ app.use(infraRoutes);
 // ==============================================================================
 
 // 1. Integração Android (API com token) — antes do authMiddleware
-app.use(integrationRoutes(repo, createApiAuth(API_TOKEN)));
+app.use(integrationRoutes(repo, createApiAuth(safeApiToken)));
 
 // 1.5 Bot Telegram (webhook) — antes do authMiddleware
 app.use(telegramRoutes(repo));
@@ -79,7 +90,7 @@ app.use(telegramRoutes(repo));
 app.use(publicRoutes(repo));
 
 // 2.5 Módulo Data/Hora — Protegido por Autenticação Híbrida (Sessão Web ou API Key para M2M)
-app.use('/dataHora', createAuthHybrid(API_TOKEN), dataHoraRoutes);
+app.use('/dataHora', createAuthHybrid(safeApiToken), dataHoraRoutes);
 
 // ✅ Módulo Calcular Luz (protegido por sessão) - Rota versionada para cache busting
 // Serve a interface estática (HTML/CSS/JS) do módulo.
