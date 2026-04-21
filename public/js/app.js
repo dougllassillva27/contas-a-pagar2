@@ -563,6 +563,10 @@ async function atualizarTotais() {
   }
 }
 
+function fazerBackup() {
+  window.location.href = '/api/backup';
+}
+
 async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
   const form = e.target;

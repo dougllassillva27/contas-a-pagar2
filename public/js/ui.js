@@ -473,3 +473,165 @@ function mascaraParcela(input) {
   if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, '$1/$2');
   input.value = v;
 }
+
+// ==============================================================================
+// ✅ FUNÇÕES DE COMPARTILHAMENTO (Portal de Terceiros)
+// ==============================================================================
+
+function compartilharLinkTerceiro() {
+  fecharMenuContexto();
+  const nome = pessoaSelecionadaContexto;
+  if (!nome || nome === 'ULTIMAS') return;
+
+  const userId = document.body.dataset.userid;
+  const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    copiarAoClipboard(url);
+    mostrarAviso('Link copiado!', url);
+  } else {
+    const nomeEl = document.getElementById('nomePessoaShare');
+    if (nomeEl) nomeEl.innerText = nome;
+
+    registerModalOpen();
+    document.getElementById('modalCompartilhar').classList.add('active');
+  }
+}
+
+function fecharModalCompartilhar() {
+  handleModalClose();
+  document.getElementById('modalCompartilhar').classList.remove('active');
+}
+
+function abrirLinkCompartilhado() {
+  const nome = pessoaSelecionadaContexto;
+  if (nome) {
+    const userId = document.body.dataset.userid;
+    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
+    window.open(url, '_blank');
+    fecharModalCompartilhar();
+  }
+}
+
+function copiarLinkCompartilhado() {
+  const nome = pessoaSelecionadaContexto;
+  if (nome) {
+    const userId = document.body.dataset.userid;
+    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
+    copiarAoClipboard(url);
+    fecharModalCompartilhar();
+    mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
+  }
+}
+
+function copiarAoClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch((err) => {
+      console.error('Erro ao copiar: ', err);
+      fallbackCopiarAoClipboard(text);
+    });
+  } else {
+    fallbackCopiarAoClipboard(text);
+  }
+}
+
+function fallbackCopiarAoClipboard(text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  const selected = document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  if (selected) {
+    document.getSelection().removeAllRanges();
+    document.getSelection().addRange(selected);
+  }
+}
+// ==============================================================================
+// ✅ CONTROLE DO FORMULÁRIO DE LANÇAMENTO (Parcelas e Lote)
+// ==============================================================================
+
+function toggleParcelas() {
+  const tipo = document.getElementById('contaTipo').value;
+  const div = document.getElementById('grupoParcelas');
+  const input = div.querySelector('input');
+  if (tipo === 'Parcelada') {
+    div.style.display = 'flex';
+    input.required = true;
+  } else {
+    div.style.display = 'none';
+    input.required = false;
+  }
+}
+
+function toggleBulkMode() {
+  const btnSim = document.getElementById('bulkBtnSim');
+  const btnNao = document.getElementById('bulkBtnNao');
+  const singleTerceiroGroup = document.getElementById('grupoTerceiroSingle');
+  const bulkTerceirosGroup = document.getElementById('grupoTerceirosBulk');
+  const bulkCounter = document.getElementById('bulkCounter');
+
+  if (!btnSim || !btnNao || !singleTerceiroGroup || !bulkTerceirosGroup) return;
+
+  const isBulk = btnSim.classList.contains('active');
+
+  if (isBulk) {
+    singleTerceiroGroup.style.display = 'none';
+    bulkTerceirosGroup.style.display = 'flex';
+    atualizarBulkCounter();
+  } else {
+    singleTerceiroGroup.style.display = 'flex';
+    bulkTerceirosGroup.style.display = 'none';
+    if (bulkCounter) bulkCounter.textContent = '';
+  }
+}
+
+window.setBulkMode = function (isBulk) {
+  const btnSim = document.getElementById('bulkBtnSim');
+  const btnNao = document.getElementById('bulkBtnNao');
+
+  if (!btnSim || !btnNao) return;
+
+  btnSim.classList.remove('active');
+  btnNao.classList.remove('active');
+
+  if (isBulk) {
+    btnSim.classList.add('active');
+  } else {
+    btnNao.classList.add('active');
+  }
+
+  toggleBulkMode();
+};
+
+function atualizarBulkCounter() {
+  const bulkInput = document.getElementById('contaTerceirosBulk');
+  const bulkCounter = document.getElementById('bulkCounter');
+  if (!bulkInput || !bulkCounter) return;
+
+  const nomes = bulkInput.value
+    .split(',')
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0);
+
+  if (nomes.length > 0) {
+    bulkCounter.textContent = `${nomes.length} lançamento(s) será(ão) criado(s)`;
+    bulkCounter.style.color = 'var(--blue)';
+  } else {
+    bulkCounter.textContent = 'Adicione pelo menos 1 terceiro';
+    bulkCounter.style.color = 'var(--red)';
+  }
+}
+
+function mascaraParcela(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 4) v = v.substring(0, 4);
+  if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, '$1/$2');
+  input.value = v;
+}
