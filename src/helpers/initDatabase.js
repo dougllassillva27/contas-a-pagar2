@@ -20,6 +20,12 @@ const db = require('../config/db');
  */
 async function initDatabase() {
   try {
+    // Índices de Performance (B-Tree) para queries pesadas de Lancamentos
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuarioid ON Lancamentos(UsuarioId)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_datavencimento ON Lancamentos(DataVencimento)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_tipo ON Lancamentos(Tipo)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_status ON Lancamentos(Status)');
+
     // 1. Tabela OrdemCards
     await db.query(` 
       CREATE TABLE IF NOT EXISTS OrdemCards (
