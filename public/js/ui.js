@@ -390,3 +390,86 @@ function limparMascara(input) {
 function handleEnterFatura(e, input) {
   if (e.key === 'Enter') input.blur();
 }
+
+// ==============================================================================
+// ✅ CONTROLE DO FORMULÁRIO DE LANÇAMENTO (Parcelas e Lote)
+// ==============================================================================
+
+function toggleParcelas() {
+  const tipo = document.getElementById('contaTipo').value;
+  const div = document.getElementById('grupoParcelas');
+  const input = div.querySelector('input');
+  if (tipo === 'Parcelada') {
+    div.style.display = 'flex';
+    input.required = true;
+  } else {
+    div.style.display = 'none';
+    input.required = false;
+  }
+}
+
+function toggleBulkMode() {
+  const btnSim = document.getElementById('bulkBtnSim');
+  const btnNao = document.getElementById('bulkBtnNao');
+  const singleTerceiroGroup = document.getElementById('grupoTerceiroSingle');
+  const bulkTerceirosGroup = document.getElementById('grupoTerceirosBulk');
+  const bulkCounter = document.getElementById('bulkCounter');
+
+  if (!btnSim || !btnNao || !singleTerceiroGroup || !bulkTerceirosGroup) return;
+
+  const isBulk = btnSim.classList.contains('active');
+
+  if (isBulk) {
+    singleTerceiroGroup.style.display = 'none';
+    bulkTerceirosGroup.style.display = 'flex';
+    atualizarBulkCounter();
+  } else {
+    singleTerceiroGroup.style.display = 'flex';
+    bulkTerceirosGroup.style.display = 'none';
+    if (bulkCounter) bulkCounter.textContent = '';
+  }
+}
+
+window.setBulkMode = function (isBulk) {
+  const btnSim = document.getElementById('bulkBtnSim');
+  const btnNao = document.getElementById('bulkBtnNao');
+
+  if (!btnSim || !btnNao) return;
+
+  btnSim.classList.remove('active');
+  btnNao.classList.remove('active');
+
+  if (isBulk) {
+    btnSim.classList.add('active');
+  } else {
+    btnNao.classList.add('active');
+  }
+
+  toggleBulkMode();
+};
+
+function atualizarBulkCounter() {
+  const bulkInput = document.getElementById('contaTerceirosBulk');
+  const bulkCounter = document.getElementById('bulkCounter');
+  if (!bulkInput || !bulkCounter) return;
+
+  const nomes = bulkInput.value
+    .split(',')
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0);
+
+  if (nomes.length > 0) {
+    bulkCounter.textContent = `${nomes.length} lançamento(s) será(ão) criado(s)`;
+    bulkCounter.style.color = 'var(--blue)';
+  } else {
+    bulkCounter.textContent = 'Adicione pelo menos 1 terceiro';
+    bulkCounter.style.color = 'var(--red)';
+  }
+}
+
+function mascaraParcela(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 4) v = v.substring(0, 4);
+  if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, '$1/$2');
+  input.value = v;
+}
