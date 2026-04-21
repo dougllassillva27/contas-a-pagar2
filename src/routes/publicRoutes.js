@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const { loginLimiter } = require('../middlewares/rateLimiter');
 const { LIMITES } = require('../constants');
 
 // Dados fallback padrão caso a tabela Lajeado esteja vazia (Primeiro acesso)
@@ -163,7 +164,8 @@ module.exports = function (repo) {
   // ============================================================================
   // POST /login — Processa autenticação
   // ============================================================================
-  router.post('/login', async (req, res) => {
+  // Aplica o rate limiter antes de processar qualquer lógica de banco/bcrypt
+  router.post('/login', loginLimiter, async (req, res) => {
     const passwordDigitada = (req.body.password || '').trim();
     const lembrar = req.body.lembrar === 'on';
 
@@ -218,10 +220,8 @@ module.exports = function (repo) {
     // ✅ LOG SEGURO: Loga falha sem expor a senha tentada
     console.log('[LOGIN] ❌ Falha - Senha incorreta');
 
-    // Pequeno delay para dificultar brute force básico
-    setTimeout(() => {
-      res.render('login', { error: 'Senha incorreta!' });
-    }, LIMITES.BRUTE_FORCE_DELAY_MS);
+    // Retorno imediato. A defesa agora é feita em camada superior pelo express-rate-limit
+    return res.render('login', { error: 'Senha incorreta!' });
   });
 
   // ============================================================================

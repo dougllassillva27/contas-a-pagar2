@@ -1,4 +1,10 @@
 const request = require('supertest');
+
+jest.mock('../../src/middlewares/rateLimiter', () => ({
+  loginLimiter: (req, res, next) => next(),
+  apiLimiter: (req, res, next) => next(),
+}));
+
 const app = require('../../src/app');
 const repo = require('../../src/repositories/FinanceiroRepository');
 const bcrypt = require('bcryptjs');
