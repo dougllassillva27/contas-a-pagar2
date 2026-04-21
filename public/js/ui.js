@@ -396,25 +396,14 @@ function handleEnterFatura(e, input) {
   if (e.key === 'Enter') input.blur();
 }
 
-async function togglePrivacidadeGlobal() {
+function togglePrivacidadeGlobal() {
   const html = document.documentElement;
-  const isHidden = html.classList.contains('hide-global-mode');
-  const newState = !isHidden;
-
-  if (newState) {
-    html.classList.add('hide-global-mode');
-  } else {
+  if (html.classList.contains('hide-global-mode')) {
     html.classList.remove('hide-global-mode');
-  }
-
-  try {
-    await fetch('/api/configuracoes/privacidade', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ privacidade_global: newState }),
-    });
-  } catch (err) {
-    console.error('Erro ao salvar privacidade global', err);
+    localStorage.setItem('hideGlobal', 'false');
+  } else {
+    html.classList.add('hide-global-mode');
+    localStorage.setItem('hideGlobal', 'true');
   }
 }
 
