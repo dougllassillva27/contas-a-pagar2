@@ -7,6 +7,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Lemos todos os módulos fracionados para emular a nova arquitetura
+const utilsJsPath = path.resolve(__dirname, '../../public/js/utils.js');
+const utilsJsCode = fs.readFileSync(utilsJsPath, 'utf8');
 const uiJsPath = path.resolve(__dirname, '../../public/js/ui.js');
 const uiJsCode = fs.readFileSync(uiJsPath, 'utf8');
 const dragdropJsPath = path.resolve(__dirname, '../../public/js/dragdrop.js');
@@ -36,7 +38,7 @@ describe('Frontend - Lógica do app.js', () => {
     document.body.dataset.mesFechado = 'false';
 
     // 3. Executamos os scripts na ordem exata de dependência
-    window.eval(uiJsCode + '\n' + dragdropJsCode + '\n' + appJsCode);
+    window.eval(utilsJsCode + '\n' + uiJsCode + '\n' + dragdropJsCode + '\n' + appJsCode);
 
     // 4. Mock (simulamos) o Fetch para não tentar bater na API de verdade
     global.fetch = jest.fn(() =>
