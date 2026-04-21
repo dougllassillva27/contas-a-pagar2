@@ -19,6 +19,12 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+    <script>
+        if (localStorage.getItem('relatorioExpandedState') !== 'true') {
+            document.documentElement.classList.add('relatorio-collapsed-default');
+        }
+    </script>
+
     <style>
         /* CSS Reset & Variáveis (Dark Mode Integrado) */
         :root {
@@ -405,6 +411,24 @@
         .context-menu li .material-icons {
             font-size: 20px;
         }
+        .context-menu .menu-divider {
+            border-top: 1px solid #444;
+            margin: 4px 0;
+            padding: 0;
+            height: 0;
+        }
+        .context-menu li.menu-divider:hover {
+            background: transparent;
+            cursor: default;
+        }
+
+        /* Acordeão Oculto por Padrão */
+        html.relatorio-collapsed-default .list-table {
+            display: none;
+        }
+        html.relatorio-collapsed-default .toggle-icon {
+            transform: rotate(180deg);
+        }
 
         /* Folha de Estilo para Impressão e Geração de PDF Enxuta */
         @media print {
@@ -586,6 +610,15 @@
                 <span class="material-icons" style="color: #ef5350;">cancel</span>
                 Marcar todas como Pendentes
             </li>
+            <li class="menu-divider"></li>
+            <li onclick="setAllGroupsState(true)">
+                <span class="material-icons" style="color: var(--primary);">unfold_more</span>
+                Expandir todas as contas
+            </li>
+            <li onclick="setAllGroupsState(false)">
+                <span class="material-icons" style="color: var(--warning);">unfold_less</span>
+                Recolher todas as contas
+            </li>
         </ul>
     </div>
 
@@ -699,13 +732,35 @@
         function toggleGroup(headerEl) {
             const table = headerEl.nextElementSibling;
             const icon = headerEl.querySelector('.toggle-icon');
-            if (table.style.display === 'none') {
+            
+            const isHidden = window.getComputedStyle(table).display === 'none';
+            
+            if (isHidden) {
                 table.style.display = 'block';
                 icon.style.transform = 'rotate(0deg)';
             } else {
                 table.style.display = 'none';
                 icon.style.transform = 'rotate(180deg)';
             }
+        }
+
+        function setAllGroupsState(expand) {
+            document.getElementById('relatorioContextMenu').style.display = 'none';
+            localStorage.setItem('relatorioExpandedState', expand ? 'true' : 'false');
+            
+            if (expand) {
+                document.documentElement.classList.remove('relatorio-collapsed-default');
+            } else {
+                document.documentElement.classList.add('relatorio-collapsed-default');
+            }
+
+            const cards = document.querySelectorAll('.person-card');
+            cards.forEach(card => {
+                const table = card.querySelector('.list-table');
+                const icon = card.querySelector('.toggle-icon');
+                table.style.display = expand ? 'block' : 'none';
+                icon.style.transform = expand ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
         }
 
         // ==============================================================
