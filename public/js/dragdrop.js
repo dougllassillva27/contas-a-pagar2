@@ -119,3 +119,108 @@ async function salvarOrdemCards() {
     console.error(err);
   }
 }
+
+// ===========================
+// ✅ DRAG & DROP LINHAS (PC & MOBILE)
+// ===========================
+function initDragAndDrop() {
+  const draggables = document.querySelectorAll('.draggable-row');
+  const containers = document.querySelectorAll('.drag-container');
+  draggables.forEach((draggable) => {
+    draggable.addEventListener('dragstart', () => {
+      draggable.classList.add('dragging');
+    });
+    draggable.addEventListener('dragend', () => {
+      draggable.classList.remove('dragging');
+      salvarOrdem(draggable.parentElement);
+    });
+  });
+  containers.forEach((container) => {
+    container.ondragover = (e) => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(container, e.clientY);
+      const draggable = document.querySelector('.dragging');
+      if (afterElement == null) container.appendChild(draggable);
+      else container.insertBefore(draggable, afterElement);
+    };
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.draggable-row:not(.dragging)')];
+  return draggableElements.reduce(
+    (closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+      else return closest;
+    },
+    { offset: Number.NEGATIVE_INFINITY }
+  ).element;
+}
+
+function initTouchDragAndDrop() {
+  if (window.__touchDndInicializado) return;
+  window.__touchDndInicializado = true;
+
+  let draggingRow = null;
+  let activeContainer = null;
+
+  function onTouchMove(e) {
+    if (!draggingRow || !activeContainer) return;
+    e.preventDefault();
+
+    const touchY = e.touches[0].clientY;
+    const afterElement = getDragAfterElement(activeContainer, touchY);
+
+    if (afterElement == null) activeContainer.appendChild(draggingRow);
+    else activeContainer.insertBefore(draggingRow, afterElement);
+  }
+
+  async function onTouchEnd() {
+    if (!draggingRow || !activeContainer) return;
+    draggingRow.classList.remove('dragging');
+    try {
+      await salvarOrdem(activeContainer);
+    } catch (_) {}
+    draggingRow = null;
+    activeContainer = null;
+
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('touchend', onTouchEnd);
+  }
+
+  document.querySelectorAll('.drag-container').forEach((container) => {
+    container.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!e.target.closest('.drag-handle')) return;
+
+        const row = e.target.closest('.draggable-row');
+        if (!row) return;
+
+        draggingRow = row;
+        activeContainer = container;
+        draggingRow.classList.add('dragging');
+
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd, { passive: true });
+      },
+      { passive: true }
+    );
+  });
+}
+
+async function salvarOrdem(container) {
+  const itens = [...container.querySelectorAll('.draggable-row')].map((row) => ({ id: row.dataset.id }));
+  if (itens.length === 0) return;
+  try {
+    await fetch('/api/lancamentos/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itens }),
+    });
+  } catch (err) {
+    console.error('Erro', err);
+  }
+}
