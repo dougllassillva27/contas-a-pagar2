@@ -2,6 +2,10 @@
 // ✅ public/js/dragdrop.js — Lógica de Movimentação e Ordenação
 // ==============================================================================
 
+// Versões com debounce para evitar flood de requisições no backend
+const salvarOrdemCardsDebounced = debounce(() => salvarOrdemCards(), 800);
+const salvarOrdemDebounced = debounce((container) => salvarOrdem(container), 800);
+
 // ===========================
 // ✅ DRAG & DROP CARDS (PC Anti-Flicker)
 // ===========================
@@ -16,7 +20,7 @@ function initCardDragAndDrop() {
     });
     draggable.addEventListener('dragend', () => {
       draggable.classList.remove('dragging');
-      salvarOrdemCards();
+      salvarOrdemCardsDebounced();
     });
   });
   container.addEventListener('dragover', (e) => {
@@ -77,9 +81,7 @@ function initTouchCardDragAndDrop() {
   async function onTouchEnd() {
     if (!draggingCard || !activeContainer) return;
     draggingCard.classList.remove('dragging');
-    try {
-      await salvarOrdemCards();
-    } catch (_) {}
+    salvarOrdemCardsDebounced();
     draggingCard = null;
     activeContainer = null;
     document.removeEventListener('touchmove', onTouchMove);
@@ -132,7 +134,7 @@ function initDragAndDrop() {
     });
     draggable.addEventListener('dragend', () => {
       draggable.classList.remove('dragging');
-      salvarOrdem(draggable.parentElement);
+      salvarOrdemDebounced(draggable.parentElement);
     });
   });
   containers.forEach((container) => {
@@ -180,9 +182,7 @@ function initTouchDragAndDrop() {
   async function onTouchEnd() {
     if (!draggingRow || !activeContainer) return;
     draggingRow.classList.remove('dragging');
-    try {
-      await salvarOrdem(activeContainer);
-    } catch (_) {}
+    salvarOrdemDebounced(activeContainer);
     draggingRow = null;
     activeContainer = null;
 
