@@ -220,11 +220,6 @@ module.exports = function (repo) {
         repo.getDistinctTerceiros(userId),
       ]);
 
-      const configQuery = await db.query('SELECT privacidade_global FROM configuracoes WHERE usuario_id = $1', [
-        userId,
-      ]);
-      const privacidadeGlobal = configQuery.rows.length > 0 ? configQuery.rows[0].privacidade_global : false;
-
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
@@ -243,7 +238,6 @@ module.exports = function (repo) {
         user: req.session.user,
         faturaManual: faturaManualVal,
         mesFechado,
-        privacidadeGlobal,
         safeJs,
         currentPath: req.path,
       });
@@ -523,23 +517,6 @@ module.exports = function (repo) {
         ON CONFLICT (usuario_id) DO UPDATE SET whatsapp_template = EXCLUDED.whatsapp_template
       `,
         [userId, template]
-      );
-      res.json({ success: true });
-    })
-  );
-
-  // --- SALVAR MODO PRIVACIDADE GLOBAL ---
-  router.post(
-    '/api/configuracoes/privacidade',
-    asyncHandler(async (req, res) => {
-      const userId = req.session.user.id;
-      const { privacidade_global } = req.body;
-      await db.query(
-        `
-        INSERT INTO configuracoes (usuario_id, privacidade_global) VALUES ($1, $2) 
-        ON CONFLICT (usuario_id) DO UPDATE SET privacidade_global = EXCLUDED.privacidade_global
-      `,
-        [userId, privacidade_global]
       );
       res.json({ success: true });
     })
