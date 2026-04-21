@@ -15,10 +15,10 @@ const repo = {
   isMesFechado: jest.fn().mockResolvedValue(false),
 };
 
-jest.mock('bcryptjs', () => ({
+jest.mock('bcrypt', () => ({
   compare: jest.fn(),
 }));
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 jest.mock('../../src/middlewares/rateLimiter', () => ({
   loginLimiter: (req, res, next) => next(),
