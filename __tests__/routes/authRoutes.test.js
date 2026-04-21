@@ -58,11 +58,12 @@ describe('Rotas de Autenticação Persistente', () => {
 
   describe('POST /api/auth/token', () => {
     test('deve criar token e retornar dados ao usuário autenticado', async () => {
+      const futureDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
       const mockTokenData = {
         token: 'token-123-abc',
-        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // Retorna objeto Date (como no DB)
+        expiresAt: futureDate,
         Token: 'token-123-abc', // Adicionado PascalCase para compatibilidade com rotas legadas
-        ExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        ExpiresAt: futureDate,
       };
       TokenRepository.criarToken.mockResolvedValue(mockTokenData);
 
