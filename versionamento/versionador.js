@@ -20,8 +20,9 @@ const path = require('path');
 const crypto = require('crypto');
 
 // Configurações
-const diretorioPublic = path.resolve(__dirname, '../public'); // Arquivos estáticos
-const diretorioSrc = path.resolve(__dirname, '../src'); // Todo o código-fonte (templates, controllers, etc)
+const isTest = process.env.NODE_ENV === 'test';
+const diretorioPublic = isTest ? process.env.TEST_DIR : path.resolve(__dirname, '../public'); // Arquivos estáticos
+const diretorioSrc = isTest ? process.env.TEST_DIR : path.resolve(__dirname, '../src'); // Todo o código-fonte
 const diretoriosIgnorados = ['node_modules', '.git'];
 const extensoesAlvo = ['.ejs', '.html', '.css', '.js', '.py', '.json'];
 
@@ -98,6 +99,11 @@ function processarConteudo(conteudo, caminhoArquivo) {
     return `srcset=${aspas}${novoSrcset}${aspas}`;
   });
 
+  // Processa navigator.serviceWorker.register()
+  novoConteudo = novoConteudo.replace(/(\.register\()(['"])(.*?)\2/gi, (match, prefix, aspas, url) => {
+    return `${prefix}${aspas}${processarUrl(url, caminhoArquivo)}${aspas}`;
+  });
+
   return novoConteudo;
 }
 
@@ -131,7 +137,12 @@ function varrerDiretorio(dir) {
   });
 }
 
-console.log('Iniciando cache-busting (Src e Public)...');
-varrerDiretorio(diretorioSrc);
-varrerDiretorio(diretorioPublic);
+if (isTest) {
+  console.log('Iniciando cache-busting (MODO TESTE ISOLADO)...');
+  varrerDiretorio(diretorioPublic);
+} else {
+  console.log('Iniciando cache-busting (Src e Public)...');
+  varrerDiretorio(diretorioSrc);
+  varrerDiretorio(diretorioPublic);
+}
 console.log('Versionamento concluído com sucesso.');

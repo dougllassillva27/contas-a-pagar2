@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const url = new url(event.request.url);
 
   // 1. Network First: Navegação HTML (Dashboard/Relatório) e API. NUNCA armazena sessão cruzada.
   if (event.request.mode === 'navigate' || url.pathname.startsWith('/api/')) {
