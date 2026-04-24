@@ -76,10 +76,13 @@ function confirmarExclusaoPessoa() {
   modal.classList.add('active');
 }
 
-document.getElementById('btnConfirmarAcao').onclick = () => {
-  if (acaoConfirmadaCallback) acaoConfirmadaCallback();
-  fecharConfirmacaoAcao();
-};
+const btnConfirmarAcao = document.getElementById('btnConfirmarAcao');
+if (btnConfirmarAcao) {
+  btnConfirmarAcao.onclick = () => {
+    if (acaoConfirmadaCallback) acaoConfirmadaCallback();
+    fecharConfirmacaoAcao();
+  };
+}
 
 // ==============================================================================
 // ✅ CONTADOR DE LOTE NATIVO
