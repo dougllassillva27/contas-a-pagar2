@@ -302,19 +302,28 @@ function confirmarExclusaoLoteUltimas() {
         const err = await res.json();
         mostrarAviso('Acesso Negado', err.error);
       } else if (res.ok) {
+        console.log('[DEBUG LOTE] Resposta OK. Removendo linhas do DOM...');
         selectedRows.forEach((tr) => tr.remove());
+        console.log('[DEBUG LOTE] Linhas removidas. Atualizando Total Nao Conferido...');
         atualizarTotalNaoConferido();
+        console.log('[DEBUG LOTE] Total atualizado. Atualizando Totais da Dashboard (await)...');
         await atualizarTotais();
+        console.log('[DEBUG LOTE] Totais da Dashboard atualizados. Ocultando loading...');
         ocultarLoading();
+        console.log('[DEBUG LOTE] Loading oculto. Mostrando aviso de sucesso...');
         mostrarAviso('Sucesso', `${ids.length} itens excluídos.`);
-        setTimeout(() => window.location.reload(), 3000);
+        console.log('[DEBUG LOTE] Aviso exibido. Agendando reload em 3s...');
+        setTimeout(() => {
+          console.log('[DEBUG LOTE] Executando window.location.reload() AGORA.');
+          window.location.reload();
+        }, 3000);
       } else {
         ocultarLoading();
         mostrarAviso('Erro', 'Falha ao excluir itens.');
       }
     } catch (err) {
       ocultarLoading();
-      console.error(err);
+      console.error('[DEBUG LOTE] ERRO CAPTURADO NO CATCH:', err);
       mostrarAviso('Erro', 'Erro de conexão.');
     }
   };
