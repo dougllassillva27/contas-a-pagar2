@@ -21,9 +21,9 @@ const crypto = require('crypto');
 
 // Configurações
 const diretorioPublic = path.resolve(__dirname, '../public'); // Arquivos estáticos
-const diretorioViews = path.resolve(__dirname, '../src/views'); // Templates do Express
+const diretorioSrc = path.resolve(__dirname, '../src'); // Todo o código-fonte (templates, controllers, etc)
 const diretoriosIgnorados = ['node_modules', '.git'];
-const extensoesAlvo = ['.ejs', '.html', '.css', '.js'];
+const extensoesAlvo = ['.ejs', '.html', '.css', '.js', '.py', '.json'];
 
 /**
  * Gera um hash MD5 baseado no conteúdo físico do arquivo.
@@ -131,7 +131,7 @@ function varrerDiretorio(dir) {
   });
 }
 
-console.log('Iniciando cache-busting (Views EJS e Public)...');
-varrerDiretorio(diretorioViews);
+console.log('Iniciando cache-busting (Src e Public)...');
+varrerDiretorio(diretorioSrc);
 varrerDiretorio(diretorioPublic);
 console.log('Versionamento concluído com sucesso.');
