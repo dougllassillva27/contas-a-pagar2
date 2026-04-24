@@ -643,6 +643,29 @@ module.exports = function (repo) {
 
       const dataBase = new Date(context_year, context_month - 1, 10);
 
+      // 🛡️ FALLBACK DEFENSIVO BACKEND: Garante que vírgulas sempre virem lote, ignorando falha de cache do frontend
+      if (nome_terceiro && typeof nome_terceiro === 'string' && nome_terceiro.includes(',')) {
+        const terceirosArr = nome_terceiro
+          .split(',')
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0);
+        if (terceirosArr.length > 1) {
+          const dadosBase = {
+            descricao: (descricao || '').trim(),
+            valor: parseValor(valor),
+            tipo: classificacao.dbTipo,
+            categoria: classificacao.dbCategoria,
+            status: classificacao.dbStatus,
+            parcelaAtual: classificacao.pAtual,
+            totalParcelas: classificacao.pTotal,
+            dataBase,
+          };
+          const terceirosUnicos = [...new Set(terceirosArr)];
+          const resultado = await repo.addLancamentosBulk(req.session.user.id, dadosBase, terceirosUnicos);
+          return res.json({ success: true, ...resultado });
+        }
+      }
+
       await repo.addLancamento(req.session.user.id, {
         descricao: (descricao || '').trim(),
         valor: parseValor(valor),
