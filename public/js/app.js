@@ -575,15 +575,6 @@ async function enviarLancamento(e, tipoTransacao) {
 
   if (!id && checkBloqueioMesFechado()) return; // Apenas bloqueia POST (inserir), edição permite passar
 
-  // Verifica se é modo bulk (válido para Cartão e Fixa)
-  const btnSim = document.getElementById('bulkBtnSim');
-  const isBulk = btnSim && btnSim.classList.contains('active') && tipoTransacao !== 'RENDA';
-
-  if (isBulk) {
-    await enviarLancamentoBulk(form, tipoTransacao);
-    return;
-  }
-
   const dados = {
     descricao: form.descricao.value,
     valor: form.valor.value,
@@ -635,66 +626,6 @@ async function enviarLancamento(e, tipoTransacao) {
     }
   } catch (err) {
     console.error(err);
-  }
-}
-
-// ==============================================================================
-// ✅ NOVO: Envio de lançamento em massa (bulk)
-// ==============================================================================
-async function enviarLancamentoBulk(form, tipoTransacao) {
-  if (checkBloqueioMesFechado()) return;
-  const bulkInput = document.getElementById('contaTerceirosBulk');
-  if (!bulkInput) return;
-
-  const terceiros = bulkInput.value
-    .split(',')
-    .map((n) => n.trim())
-    .filter((n) => n.length > 0);
-
-  if (terceiros.length === 0) {
-    mostrarAviso('Erro', 'Adicione pelo menos 1 terceiro separado por vírgula.');
-    return;
-  }
-
-  const dados = {
-    descricao: form.descricao.value,
-    valor: form.valor.value,
-    sub_tipo: form.sub_tipo ? form.sub_tipo.value : '',
-    tipo_transacao: tipoTransacao || 'CONTA',
-    context_month: currentMonth,
-    context_year: currentYear,
-    terceiros: terceiros, // Array de terceiros
-    bulk_mode: true, // Flag para backend
-  };
-
-  if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
-
-  try {
-    mostrarLoading();
-    const res = await fetch('/api/lancamentos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados),
-    });
-
-    ocultarLoading();
-
-    if (res.status === 403) {
-      const err = await res.json();
-      mostrarAviso('Acesso Negado', err.error);
-      return;
-    } else if (res.ok) {
-      const result = await res.json();
-      mostrarAviso('Sucesso', `${result.criados || terceiros.length} lançamento(s) criado(s) com sucesso!`);
-      setTimeout(() => window.location.reload(), 1500);
-    } else {
-      const error = await res.json();
-      mostrarAviso('Erro', error.error || 'Falha ao criar lançamentos em massa.');
-    }
-  } catch (err) {
-    ocultarLoading();
-    console.error(err);
-    mostrarAviso('Erro', 'Erro de conexão.');
   }
 }
 
