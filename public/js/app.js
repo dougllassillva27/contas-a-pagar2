@@ -85,6 +85,35 @@ if (btnConfirmarAcao) {
 }
 
 // ==============================================================================
+
+// ==============================================================================
+// CORREÇÃO: Conversão de listas (Excel/WhatsApp) para vírgulas no Lote
+// ==============================================================================
+document.addEventListener('paste', function (e) {
+  const target = e.target;
+  if (target && target.tagName === 'INPUT' && target.getAttribute('oninput')?.includes('atualizarBulkCounterNative')) {
+    const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+
+    if (pasteData && pasteData.match(/\r?\n/)) {
+      e.preventDefault();
+      // Converte quebras de linha em vírgula + espaço
+      const formatted = pasteData
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter((s) => s !== '')
+        .join(', ');
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const val = target.value;
+      target.value = val.substring(0, start) + formatted + val.substring(end);
+      target.selectionStart = target.selectionEnd = start + formatted.length;
+      target.dispatchEvent(new Event('input'));
+    } else {
+      // Força a atualização do contador mesmo num paste normal (Ctrl+V rápido)
+      setTimeout(() => target.dispatchEvent(new Event('input')), 50);
+    }
+  }
+});
 // ✅ CONTADOR DE LOTE NATIVO
 // ==============================================================================
 window.atualizarBulkCounterNative = function (input) {
