@@ -4,6 +4,7 @@
   "description": "Sistema de controle financeiro pessoal com PostgreSQL",
   "main": "src/app.js",
   "scripts": {
+    "build": "node versionamento/versionador.js",
     "start": "node src/app.js",
     "test": "jest --verbose",
     "test:unit": "jest __tests__/helpers __tests__/middlewares --verbose",
