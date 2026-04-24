@@ -187,7 +187,7 @@
 
           <div class="form-group" id="grupoTerceiroSingle">
             <label>Nome do Terceiro (Opcional)</label>
-            <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Eu, Morr, Casa (use vírgula para lote)" />
+            <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Eu, Morr, Casa (use vírgula para lote)" oninput="atualizarBulkCounterNative(this)" />
             <datalist id="nomesTerceiros">
               <% if (typeof terceirosDistinct !== 'undefined' && terceirosDistinct.length > 0) { %>
                 <% terceirosDistinct.forEach(nome => { %>
@@ -195,6 +195,7 @@
                 <% }) %>
               <% } %>
             </datalist>
+            <small id="bulkCounterNative" style="color: var(--blue); display: none; margin-top: 5px; font-weight: 500;"></small>
           </div>
 
           <button type="submit" id="btnSalvarConta" class="btn-primary form-btn" style="background-color: #444">+ Adicionar Conta</button>

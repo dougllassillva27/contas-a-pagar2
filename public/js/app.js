@@ -81,6 +81,29 @@ document.getElementById('btnConfirmarAcao').onclick = () => {
   fecharConfirmacaoAcao();
 };
 
+// ==============================================================================
+// ✅ CONTADOR DE LOTE NATIVO
+// ==============================================================================
+window.atualizarBulkCounterNative = function (input) {
+  const counter = document.getElementById('bulkCounterNative');
+  if (!counter) return;
+  const str = input.value || '';
+  if (str.includes(',')) {
+    const qtd = str
+      .split(',')
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0).length;
+    if (qtd > 1) {
+      counter.style.display = 'block';
+      counter.textContent = `🚀 ${qtd} contas serão lançadas em lote`;
+    } else {
+      counter.style.display = 'none';
+    }
+  } else {
+    counter.style.display = 'none';
+  }
+};
+
 // --- OUTRAS FUNÇÕES ---
 async function abrirModalUltimas() {
   registerModalOpen();
@@ -252,6 +275,7 @@ function confirmarExclusaoLoteUltimas() {
         await atualizarTotais();
         ocultarLoading();
         mostrarAviso('Sucesso', `${ids.length} itens excluídos.`);
+        setTimeout(() => window.location.reload(), 3000);
       } else {
         ocultarLoading();
         mostrarAviso('Erro', 'Falha ao excluir itens.');
@@ -622,7 +646,13 @@ async function enviarLancamento(e, tipoTransacao) {
       const err = await res.json();
       mostrarAviso('Acesso Negado', err.error);
     } else if (res.ok) {
-      window.location.reload();
+      const responseData = await res.json().catch(() => ({}));
+      if (responseData.criados) {
+        mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
+        setTimeout(() => window.location.reload(), 3000);
+      } else {
+        window.location.reload();
+      }
     }
   } catch (err) {
     console.error(err);
