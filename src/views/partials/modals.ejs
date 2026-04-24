@@ -185,33 +185,9 @@
             <input type="text" name="parcelas" id="contaParcelas" class="form-input" placeholder="00/00" maxlength="5" oninput="mascaraParcela(this)" />
           </div>
 
-          <div class="form-group" style="margin-top: 15px;">
-            <label style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; display: block; margin-bottom: 8px;">
-              Dividir entre vários terceiros?
-            </label>
-            <div style="display: flex; gap: 10px;">
-              <button 
-                type="button" 
-                id="bulkBtnNao" 
-                class="bulk-toggle-btn active" 
-                onclick="setBulkMode(false)"
-              >
-                Não
-              </button>
-              <button 
-                type="button" 
-                id="bulkBtnSim" 
-                class="bulk-toggle-btn" 
-                onclick="setBulkMode(true)"
-              >
-                Sim
-              </button>
-            </div>
-          </div>
-
           <div class="form-group" id="grupoTerceiroSingle">
             <label>Nome do Terceiro (Opcional)</label>
-            <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Mãe, Davi..." />
+            <input type="text" name="nome_terceiro" id="contaTerceiro" class="form-input" list="nomesTerceiros" placeholder="Ex: Eu, Morr, Casa (use vírgula para lote)" />
             <datalist id="nomesTerceiros">
               <% if (typeof terceirosDistinct !== 'undefined' && terceirosDistinct.length > 0) { %>
                 <% terceirosDistinct.forEach(nome => { %>
@@ -219,19 +195,6 @@
                 <% }) %>
               <% } %>
             </datalist>
-          </div>
-
-          <div class="form-group" id="grupoTerceirosBulk" style="display: none">
-            <label>Terceiros (separados por vírgula)</label>
-            <textarea 
-              id="contaTerceirosBulk" 
-              class="form-input" 
-              placeholder="Ex: Eu, Casa, Mãe, Davi" 
-              rows="3"
-              oninput="atualizarBulkCounter()"
-              style="resize: none; height: 80px; min-height: 80px; max-height: 80px;"
-            ></textarea>
-            <small id="bulkCounter" style="color: var(--text-secondary); display: block; margin-top: 5px;"></small>
           </div>
 
           <button type="submit" id="btnSalvarConta" class="btn-primary form-btn" style="background-color: #444">+ Adicionar Conta</button>
