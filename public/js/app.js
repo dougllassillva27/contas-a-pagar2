@@ -575,27 +575,44 @@ async function enviarLancamento(e, tipoTransacao) {
 
   if (!id && checkBloqueioMesFechado()) return; // Apenas bloqueia POST (inserir), edição permite passar
 
-  // Verifica se é modo bulk (apenas para CONTAS)
+  // Verifica se é modo bulk (válido para Cartão e Fixa)
   const btnSim = document.getElementById('bulkBtnSim');
-  const isBulk = btnSim && btnSim.classList.contains('active') && tipoTransacao === 'CONTA';
+  const isBulk = btnSim && btnSim.classList.contains('active') && tipoTransacao !== 'RENDA';
 
   if (isBulk) {
-    await enviarLancamentoBulk(form);
+    await enviarLancamentoBulk(form, tipoTransacao);
     return;
   }
 
   const dados = {
     descricao: form.descricao.value,
     valor: form.valor.value,
-    sub_tipo: form.sub_tipo.value,
+    sub_tipo: form.sub_tipo ? form.sub_tipo.value : '',
     tipo_transacao: tipoTransacao,
     context_month: currentMonth,
     context_year: currentYear,
   };
 
-  if (tipoTransacao === 'CONTA') {
+  if (tipoTransacao !== 'RENDA') {
     if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
-    dados.nome_terceiro = form.nome_terceiro.value;
+
+    const rawTerceiro = form.nome_terceiro ? form.nome_terceiro.value : '';
+
+    // Auto-upgrade para bulk se digitado com vírgula no input padrão (novo lançamento)
+    if (!id && rawTerceiro.includes(',')) {
+      const terceirosArr = rawTerceiro
+        .split(',')
+        .map((n) => n.trim())
+        .filter((n) => n.length > 0);
+      if (terceirosArr.length > 1) {
+        dados.terceiros = terceirosArr;
+        dados.bulk_mode = true;
+      } else {
+        dados.nome_terceiro = rawTerceiro;
+      }
+    } else {
+      dados.nome_terceiro = rawTerceiro;
+    }
   }
 
   try {
@@ -624,7 +641,7 @@ async function enviarLancamento(e, tipoTransacao) {
 // ==============================================================================
 // ✅ NOVO: Envio de lançamento em massa (bulk)
 // ==============================================================================
-async function enviarLancamentoBulk(form) {
+async function enviarLancamentoBulk(form, tipoTransacao) {
   if (checkBloqueioMesFechado()) return;
   const bulkInput = document.getElementById('contaTerceirosBulk');
   if (!bulkInput) return;
@@ -642,8 +659,8 @@ async function enviarLancamentoBulk(form) {
   const dados = {
     descricao: form.descricao.value,
     valor: form.valor.value,
-    sub_tipo: form.sub_tipo.value,
-    tipo_transacao: 'CONTA',
+    sub_tipo: form.sub_tipo ? form.sub_tipo.value : '',
+    tipo_transacao: tipoTransacao || 'CONTA',
     context_month: currentMonth,
     context_year: currentYear,
     terceiros: terceiros, // Array de terceiros
