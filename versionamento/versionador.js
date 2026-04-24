@@ -20,9 +20,10 @@ const path = require('path');
 const crypto = require('crypto');
 
 // Configurações
-const diretorioBase = path.resolve(__dirname, '../dist'); // Raiz do build do Vite
-const diretoriosIgnorados = ['node_modules', '.git']; // versionamento/ não entra no dist, mas mantemos o padrão
-const extensoesAlvo = ['.html', '.css', '.js', '.py', '.php', '.json'];
+const diretorioPublic = path.resolve(__dirname, '../public'); // Arquivos estáticos
+const diretorioViews = path.resolve(__dirname, '../src/views'); // Templates do Express
+const diretoriosIgnorados = ['node_modules', '.git'];
+const extensoesAlvo = ['.ejs', '.html', '.css', '.js'];
 
 /**
  * Gera um hash MD5 baseado no conteúdo físico do arquivo.
@@ -45,7 +46,8 @@ function processarUrl(url, caminhoArquivoAtual) {
 
   let caminhoFisico;
   if (urlPura.startsWith('/')) {
-    caminhoFisico = path.join(diretorioBase, urlPura);
+    // No Express, urls absolutas (/) apontam diretamente para a raiz da pasta public
+    caminhoFisico = path.join(diretorioPublic, urlPura);
   } else {
     caminhoFisico = path.join(path.dirname(caminhoArquivoAtual), urlPura);
   }
@@ -104,9 +106,8 @@ function processarConteudo(conteudo, caminhoArquivo) {
  */
 function varrerDiretorio(dir) {
   if (!fs.existsSync(dir)) {
-    console.error(`[ERRO CRÍTICO] O diretório de build (${dir}) não existe.`);
-    console.error('Certifique-se de rodar "vite build" antes de executar este script.');
-    process.exit(1);
+    console.warn(`[AVISO] Diretório não encontrado para versionamento: ${dir}`);
+    return;
   }
 
   const arquivos = fs.readdirSync(dir);
@@ -124,12 +125,13 @@ function varrerDiretorio(dir) {
 
       if (conteudoOriginal !== conteudoProcessado) {
         fs.writeFileSync(caminhoCompleto, conteudoProcessado, 'utf-8');
-        console.log(`[ATUALIZADO] ${caminhoCompleto.replace(diretorioBase, '')}`);
+        console.log(`[ATUALIZADO] ${caminhoCompleto}`);
       }
     }
   });
 }
 
-console.log('Iniciando versionamento de assets estáticos no diretório dist/ ...');
-varrerDiretorio(diretorioBase);
+console.log('Iniciando cache-busting (Views EJS e Public)...');
+varrerDiretorio(diretorioViews);
+varrerDiretorio(diretorioPublic);
 console.log('Versionamento concluído com sucesso.');
