@@ -61,3 +61,57 @@ describe('Script de Versionamento (versionador.js)', () => {
     expect(modifiedHtml).toMatch(/\.register\('\/test-versioning-sw\.js\?v=[a-f0-9]{8}'\)/);
   });
 });
+
+// ==============================================================================
+// TESTE DE MAPEMENTO: DRY-RUN (Zero Side-Effects)
+// ==============================================================================
+describe('Dry-Run: Análise de Impacto do Versionador (Produção)', () => {
+  it('deve listar os arquivos reais elegíveis para versionamento sem alterar o disco', () => {
+    const dryRunScriptPath = path.join(__dirname, 'temp_dry_run.js');
+    const resultPath = path.join(__dirname, 'dry_run_result.json');
+
+    // Script temporário que intercepta a gravação
+    const interceptorScript = `
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Força o motor a ler as pastas REAIS do projeto ignorando o modo de teste
+      process.env.NODE_ENV = 'production';
+      
+      const originalWrite = fs.writeFileSync;
+      const affectedFiles = [];
+      
+      // Monkey Patch: Bloqueia a escrita física e guarda apenas o caminho
+      fs.writeFileSync = function(caminho, conteudo, enc) {
+        affectedFiles.push(caminho);
+      };
+      
+      // Suprime logs normais do versionador para não sujar a leitura
+      console.log = () => {}; 
+      
+      // Executa o motor real
+      require('../versionamento/versionador.js');
+      
+      // Salva o relatório no disco usando a função original
+      originalWrite(path.join(__dirname, 'dry_run_result.json'), JSON.stringify(affectedFiles));
+    `;
+
+    fs.writeFileSync(dryRunScriptPath, interceptorScript);
+    execSync(`node "${dryRunScriptPath}"`);
+
+    const files = JSON.parse(fs.readFileSync(resultPath, 'utf-8'));
+
+    fs.unlinkSync(dryRunScriptPath);
+    fs.unlinkSync(resultPath);
+
+    console.log('\n[DRY RUN] O versionador identificou atualizações nestes arquivos originais:');
+    if (files.length === 0) {
+      console.log(' -> Todos os arquivos já estão com os hashes de cache atualizados.');
+    } else {
+      files.forEach((f) => console.log(' -> ' + f));
+    }
+    console.log('-------------------------------------------------------------------\n');
+
+    expect(Array.isArray(files)).toBe(true);
+  });
+});
