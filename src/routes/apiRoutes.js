@@ -196,6 +196,11 @@ module.exports = function (repo) {
         await syncService.sincronizarFaturaMorr(repo, 1, 2, month, year);
       }
 
+      // Sincronização automática da divisão do terceiro 'Casa' (Dodo e Morr)
+      if (userId === 1) {
+        await syncService.sincronizarDivisaoCasa(repo, 1, month, year);
+      }
+
       const [
         totais,
         fixas,
