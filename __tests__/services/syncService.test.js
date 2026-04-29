@@ -67,16 +67,27 @@ describe('syncService', () => {
   });
 
   describe('sincronizarDivisaoCasa', () => {
-    test('deve dividir o total da Casa por 2 e lançar metade para Dodo, Morr e Vitória', async () => {
+    test('deve fixar em 750 quando o total da Casa for menor que 1500 (ex: 1000)', async () => {
       mockRepo.getTotalTerceiroCartao.mockResolvedValue(1000);
       mockRepo.findAndUpdateOrCreateContaFixaComTerceiro.mockResolvedValue();
 
       await syncService.sincronizarDivisaoCasa(mockRepo, 1, 2, 4, 2026);
 
       expect(mockRepo.getTotalTerceiroCartao).toHaveBeenCalledWith('Casa', 1, 4, 2026);
-      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 500, 4, 2026, null);
-      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 500, 4, 2026, 'Morr');
-      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(2, 'Casa', 500, 4, 2026, null);
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 750, 4, 2026, null);
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 750, 4, 2026, 'Morr');
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(2, 'Casa', 750, 4, 2026, null);
+    });
+
+    test('deve dividir o total por 2 quando passar de 1500 (ex: 2000)', async () => {
+      mockRepo.getTotalTerceiroCartao.mockResolvedValue(2000);
+      mockRepo.findAndUpdateOrCreateContaFixaComTerceiro.mockResolvedValue();
+
+      await syncService.sincronizarDivisaoCasa(mockRepo, 1, 2, 4, 2026);
+
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 1000, 4, 2026, null);
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 1000, 4, 2026, 'Morr');
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(2, 'Casa', 1000, 4, 2026, null);
     });
 
     test('deve tratar erros silenciosamente na divisão da Casa', async () => {

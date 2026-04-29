@@ -30,7 +30,11 @@ async function sincronizarDivisaoCasa(repo, sourceUserId, targetUserId, mes, ano
   try {
     const totalCasa = await repo.getTotalTerceiroCartao('Casa', sourceUserId, mes, ano);
     const valorOriginal = totalCasa || 0;
-    const metade = valorOriginal / 2;
+
+    // Regra de negócio: mínimo de 750 para cada. Acima disso (fatura > 1500), divide real.
+    let metade = valorOriginal / 2;
+    if (metade < 750) metade = 750;
+    metade = Math.round(metade * 100) / 100; // Evita dízima na conciliação futura
 
     await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, null); // Dodo (conta própria)
     await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, 'Morr'); // Morr no dashboard do Dodo
