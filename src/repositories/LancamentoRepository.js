@@ -519,6 +519,49 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
   }
 }
 
+async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valor, month, year, nomeTerceiro) {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    const dataVencimento = new Date(year, month - 1, 10);
+
+    const terceiroCondition = nomeTerceiro ? 'NomeTerceiro = $5' : "(NomeTerceiro IS NULL OR NomeTerceiro = '')";
+    const queryParams = nomeTerceiro
+      ? [userId, nomeConta, month, year, nomeTerceiro]
+      : [userId, nomeConta, month, year];
+
+    const findQuery = `
+      SELECT Id FROM Lancamentos
+      WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
+        AND EXTRACT(MONTH FROM DataVencimento) = $3 AND EXTRACT(YEAR FROM DataVencimento) = $4
+        AND ${terceiroCondition}
+      LIMIT 1
+    `;
+    const findResult = await client.query(findQuery, queryParams);
+    const existingId = findResult.rows[0]?.id;
+
+    if (existingId) {
+      await client.query('UPDATE Lancamentos SET Valor = $1 WHERE Id = $2', [valor, existingId]);
+    } else {
+      const insertQuery = `
+        INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
+      `;
+      const insertParams = nomeTerceiro
+        ? [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, nomeTerceiro]
+        : [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, null];
+      await client.query(insertQuery, insertParams);
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getUltimosLancamentos,
   getRelatorioMensal,
@@ -549,4 +592,5 @@ module.exports = {
   copyMonth,
   getTotalTerceiroCartao,
   findAndUpdateOrCreateContaFixa,
+  findAndUpdateOrCreateContaFixaComTerceiro,
 };
