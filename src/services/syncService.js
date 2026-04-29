@@ -24,19 +24,20 @@ async function sincronizarFaturaMorr(repo, sourceUserId, targetUserId, month, ye
 
 /**
  * Busca o total de gastos do terceiro 'Casa', divide por 2, e lança as metades
- * para o usuário Dodo (como conta própria) e para o terceiro 'Morr'.
+ * para o usuário Dodo (conta própria), Morr (terceiro) e Vitória (conta própria).
  */
-async function sincronizarDivisaoCasa(repo, usuarioId, mes, ano) {
+async function sincronizarDivisaoCasa(repo, sourceUserId, targetUserId, mes, ano) {
   try {
-    const totalCasa = await repo.getTotalTerceiroCartao('Casa', usuarioId, mes, ano);
+    const totalCasa = await repo.getTotalTerceiroCartao('Casa', sourceUserId, mes, ano);
     const valorOriginal = totalCasa || 0;
     const metade = valorOriginal / 2;
 
-    await repo.findAndUpdateOrCreateContaFixaComTerceiro(usuarioId, 'Casa', metade, mes, ano, null); // Dodo (conta própria)
-    await repo.findAndUpdateOrCreateContaFixaComTerceiro(usuarioId, 'Casa', metade, mes, ano, 'Morr'); // Morr
+    await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, null); // Dodo (conta própria)
+    await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, 'Morr'); // Morr no dashboard do Dodo
+    await repo.findAndUpdateOrCreateContaFixaComTerceiro(targetUserId, 'Casa', metade, mes, ano, null); // Vitória (conta própria espelhada)
 
     console.log(
-      `[SYNC] Divisão Casa sincronizada para o usuário ${usuarioId}. Total: ${valorOriginal} -> 2x ${metade}`
+      `[SYNC] Divisão Casa sincronizada. Source: ${sourceUserId}, Target: ${targetUserId}. Total: ${valorOriginal} -> ${metade}`
     );
   } catch (error) {
     console.error('[SYNC] Erro ao sincronizar divisão Casa:', error.message);
