@@ -191,14 +191,15 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      // Sincronização automática da fatura 'Morr' para a conta da Vitória
+      // Sincronização automática da fatura 'Morr' e divisão 'Casa' para a Vitória
       if (userId === 2) {
         await syncService.sincronizarFaturaMorr(repo, 1, 2, month, year);
+        await syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year);
       }
 
-      // Sincronização automática da divisão do terceiro 'Casa' (Dodo e Morr)
+      // Sincronização automática da divisão do terceiro 'Casa'
       if (userId === 1) {
-        await syncService.sincronizarDivisaoCasa(repo, 1, month, year);
+        await syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year);
       }
 
       const [

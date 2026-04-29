@@ -67,22 +67,23 @@ describe('syncService', () => {
   });
 
   describe('sincronizarDivisaoCasa', () => {
-    test('deve dividir o total da Casa por 2 e lançar metade para Dodo e metade para Morr', async () => {
+    test('deve dividir o total da Casa por 2 e lançar metade para Dodo, Morr e Vitória', async () => {
       mockRepo.getTotalTerceiroCartao.mockResolvedValue(1000);
       mockRepo.findAndUpdateOrCreateContaFixaComTerceiro.mockResolvedValue();
 
-      await syncService.sincronizarDivisaoCasa(mockRepo, 1, 4, 2026);
+      await syncService.sincronizarDivisaoCasa(mockRepo, 1, 2, 4, 2026);
 
       expect(mockRepo.getTotalTerceiroCartao).toHaveBeenCalledWith('Casa', 1, 4, 2026);
       expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 500, 4, 2026, null);
       expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 500, 4, 2026, 'Morr');
+      expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(2, 'Casa', 500, 4, 2026, null);
     });
 
     test('deve tratar erros silenciosamente na divisão da Casa', async () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       mockRepo.getTotalTerceiroCartao.mockRejectedValue(new Error('Erro BD'));
 
-      await expect(syncService.sincronizarDivisaoCasa(mockRepo, 1, 4, 2026)).resolves.not.toThrow();
+      await expect(syncService.sincronizarDivisaoCasa(mockRepo, 1, 2, 4, 2026)).resolves.not.toThrow();
       expect(consoleErrorSpy).toHaveBeenCalledWith('[SYNC] Erro ao sincronizar divisão Casa:', 'Erro BD');
 
       consoleErrorSpy.mockRestore();
