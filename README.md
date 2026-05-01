@@ -1,8 +1,17 @@
+<div align="center">
+
 # 💸 Gestão Financeira Pessoal (Cloud Edition)
 
-Sistema web robusto e acessível de qualquer lugar para controle de contas a pagar, gestão de cartão de crédito e organização financeira familiar.
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon.tech-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
+[![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![Jest](https://img.shields.io/badge/Jest-30.x-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
+
+Sistema web robusto, PWA-Ready e focado em altíssima performance para controle de contas a pagar, gestão de cartões de crédito em lote e organização financeira familiar distribuída.
 
 Migrado para a nuvem utilizando **PostgreSQL**, com deploy em **Render** e banco hospedado no **Neon**, permitindo acesso via celular ou desktop de qualquer lugar, mantendo privacidade e performance.
+
+</div>
 
 ---
 
@@ -71,7 +80,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 - **UX Minimalista** — Respostas consolidadas na mesma linha (in-place) mantendo o histórico de chat super limpo.
 - **Lançamento em Lote (Bulk)** — Permite inserir múltiplos nomes separados por vírgula na etapa de terceiros para lançamentos simultâneos.
 - **Segurança** — restrito ao seu Chat ID
-- Documentação completa em [`botTelegram/README.md`](botTelegram/README.md)
+- Documentação completa em `botTelegram/README.md`
 
 ---
 
@@ -144,7 +153,7 @@ Para evitar o _cold start_ (hibernação) do plano gratuito do Render, o projeto
 
 ### Estratégia Adotada (Passo a Passo)
 
-1. Crie um novo projeto gratuito no [Google Apps Script](https://script.google.com/).
+1. Crie um novo projeto gratuito no Google Apps Script.
 2. Adicione a função responsável por fazer um GET disfarçado e salve o código:
    ```javascript
    function pingRenderHost() {
@@ -205,8 +214,8 @@ O sistema possui um endpoint de automação que realiza a cópia das contas de t
 
 ### Como Configurar (Google Apps Script)
 
-1. Abra seu projeto no [Google Apps Script](https://script.google.com/).
-2. Cole a função abaixo (também disponível em [scripts/google-apps-script-example.js](src/scripts/google-apps-script-example.js)):
+1. Abra seu projeto no Google Apps Script.
+2. Cole a função abaixo (também disponível em scripts/google-apps-script-example.js):
 
 ```javascript
 /**
@@ -596,5 +605,5 @@ npm test
 
 ## 📄 Licença
 
-ISC — Desenvolvido por [Douglas Silva](https://github.com/dougllassillva27).
+ISC — Desenvolvido por Douglas Silva.
 💸
