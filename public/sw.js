@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dodo-finance-v4';
+const CACHE_NAME = 'dodo-finance-v5';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Força atualização imediata, ignorando ciclo de vida padrão do PWA
