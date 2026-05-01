@@ -503,7 +503,7 @@ CREATE TABLE IF NOT EXISTS configuracoes (
 Crie o arquivo `.env`:
 
 ```env
-DATABASE_URL=postgres://usuario:senha@endpoint-neon.tech/neondb?sslmode=require
+DATABASE_URL=postgres://usuario:senha@endpoint-neon.tech/neondb?sslmode=verify-full
 PORT=3000
 SESSION_SECRET=seu_segredo_aqui
 SENHA_MESTRA=sua_senha_aqui
