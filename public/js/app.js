@@ -16,6 +16,7 @@ let isBackNavigation = false;
 let pessoaSelecionadaContexto = null;
 let acaoConfirmadaCallback = null;
 let idExcluir = null;
+let isSubmitting = false;
 
 // ==============================================================================
 // ✅ ATUALIZAÇÃO DOM SEM RELOAD (Soft Refresh)
@@ -734,6 +735,9 @@ function fazerBackup() {
 
 async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
+  if (isSubmitting) return;
+  isSubmitting = true;
+
   const form = e.target;
   const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -746,6 +750,7 @@ async function enviarLancamento(e, tipoTransacao) {
     .value;
 
   if (!id && checkBloqueioMesFechado()) {
+    isSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.style.opacity = '1';
@@ -814,6 +819,7 @@ async function enviarLancamento(e, tipoTransacao) {
   } catch (err) {
     console.error(err);
   } finally {
+    isSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.style.opacity = '1';
