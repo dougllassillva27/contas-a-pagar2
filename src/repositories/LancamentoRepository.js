@@ -504,10 +504,19 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
       await client.query('UPDATE Lancamentos SET Valor = $1 WHERE Id = $2', [valor, existingId]);
     } else {
       const insertQuery = `
-        INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem)
-        VALUES ($1, $2, $3, $4, $5, $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
+        INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem, DataCriacao)
+        VALUES ($1, $2, $3, $4, $5, $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), $7)
       `;
-      await client.query(insertQuery, [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento]);
+      // Define DataCriacao como a data de vencimento para não aparecer em "Últimas Adições"
+      await client.query(insertQuery, [
+        userId,
+        nomeConta,
+        valor,
+        TIPO.FIXA,
+        STATUS.PENDENTE,
+        dataVencimento,
+        dataVencimento,
+      ]);
     }
 
     await client.query('COMMIT');
@@ -544,12 +553,13 @@ async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valo
       await client.query('UPDATE Lancamentos SET Valor = $1 WHERE Id = $2', [valor, existingId]);
     } else {
       const insertQuery = `
-        INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
+        INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), $8)
       `;
+      // Define DataCriacao como a data de vencimento para não aparecer em "Últimas Adições"
       const insertParams = nomeTerceiro
-        ? [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, nomeTerceiro]
-        : [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, null];
+        ? [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, nomeTerceiro, dataVencimento]
+        : [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, null, dataVencimento];
       await client.query(insertQuery, insertParams);
     }
 
