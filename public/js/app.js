@@ -657,14 +657,21 @@ async function alternarStatus(checkbox, id) {
     });
     if (!res.ok) {
       // Reverte se falhou
-      checkbox.checked = !novoStatus;
+      checkbox.checked = !checkbox.checked;
       return;
     }
+
+    // Atualiza visual instantaneamente
+    if (row) {
+      if (checkbox.checked) row.classList.add('linha-paga');
+      else row.classList.remove('linha-paga');
+    }
+
     // Busca os totais atualizados do servidor e atualiza os cards
     await atualizarTotais();
   } catch (err) {
     // Reverte em caso de erro de rede
-    checkbox.checked = !novoStatus;
+    checkbox.checked = !checkbox.checked;
     console.error(err);
   }
 }
