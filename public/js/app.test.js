@@ -80,4 +80,33 @@ describe('Frontend - Lógica do app.js', () => {
       })
     );
   });
+
+  test('não deve permitir envios duplicados se o usuário clicar duas vezes rapidamente (Double Click)', async () => {
+    const form = document.getElementById('formConta');
+    const mockEvent = { preventDefault: jest.fn(), target: form };
+
+    // Simulamos um delay na API de 100ms para que o primeiro request "segure" a variável isSubmitting
+    global.fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => {
+            resolve({
+              ok: true,
+              status: 200,
+              json: () => Promise.resolve({ success: true }),
+              text: () => Promise.resolve('<html></html>'),
+            });
+          }, 100)
+        )
+    );
+
+    // Disparamos dois eventos de submit simultâneos (simulando um dedo rápido ou mouse duplo)
+    const req1 = window.enviarLancamento(mockEvent, 'CONTA');
+    const req2 = window.enviarLancamento(mockEvent, 'CONTA');
+
+    await Promise.all([req1, req2]);
+
+    // Validação: Apenas 1 request pode ter passado. O segundo bateu na trava "isSubmitting" e deu return.
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
 });
