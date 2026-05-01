@@ -26,7 +26,7 @@ async function softRefresh() {
     if (!res.ok) throw new Error('Failed to fetch');
     const text = await res.text();
     const parser = new DOMParser();
-    const doc = parser.parseDocument(text, 'text/html');
+    const doc = parser.parseFromString(text, 'text/html');
 
     const replaceHTML = (selector) => {
       const current = document.querySelector(selector);
