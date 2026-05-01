@@ -136,6 +136,7 @@ if (require.main === module) {
     console.log('🚀 Servidor rodando na porta ' + PORT);
     console.log('📅 Data: ' + new Date().toLocaleString('pt-BR'));
     console.log('🌐 Ambiente: ' + (process.env.NODE_ENV || 'development'));
+    console.log('🔗 Link: http://localhost:' + PORT);
     console.log('====================================================');
     app.listen(PORT);
   });
