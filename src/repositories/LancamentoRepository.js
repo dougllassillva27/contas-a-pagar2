@@ -507,8 +507,16 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
         INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem, DataCriacao)
         VALUES ($1, $2, $3, $4, $5, $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), $7)
       `;
-      // Define DataCriacao como NULL para não aparecer em "Últimas Adições" (ordenado com NULLS LAST)
-      await client.query(insertQuery, [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, null]);
+      // Define DataCriacao como uma data antiga para não aparecer em "Últimas Adições" e respeitar NOT NULL
+      await client.query(insertQuery, [
+        userId,
+        nomeConta,
+        valor,
+        TIPO.FIXA,
+        STATUS.PENDENTE,
+        dataVencimento,
+        '1970-01-01',
+      ]);
     }
 
     await client.query('COMMIT');
@@ -548,10 +556,10 @@ async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valo
         INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao)
         VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), $8)
       `;
-      // Define DataCriacao como NULL para não aparecer em "Últimas Adições" (ordenado com NULLS LAST)
+      // Define DataCriacao como uma data antiga para não aparecer em "Últimas Adições" e respeitar NOT NULL
       const insertParams = nomeTerceiro
-        ? [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, nomeTerceiro, null]
-        : [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, null, null];
+        ? [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, nomeTerceiro, '1970-01-01']
+        : [userId, nomeConta, valor, TIPO.FIXA, STATUS.PENDENTE, dataVencimento, null, '1970-01-01'];
       await client.query(insertQuery, insertParams);
     }
 
