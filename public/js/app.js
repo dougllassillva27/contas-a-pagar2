@@ -735,10 +735,23 @@ function fazerBackup() {
 async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
   const form = e.target;
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.5';
+  }
+
   const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
     .value;
 
-  if (!id && checkBloqueioMesFechado()) return; // Apenas bloqueia POST (inserir), edição permite passar
+  if (!id && checkBloqueioMesFechado()) {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+    }
+    return; // Apenas bloqueia POST (inserir), edição permite passar
+  }
 
   const dados = {
     descricao: form.descricao.value,
@@ -800,6 +813,11 @@ async function enviarLancamento(e, tipoTransacao) {
     }
   } catch (err) {
     console.error(err);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+    }
   }
 }
 
