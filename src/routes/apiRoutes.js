@@ -213,6 +213,7 @@ module.exports = function (repo) {
         faturaManualVal,
         mesFechado,
         terceirosDistinct,
+        configuracoes,
       ] = await Promise.all([
         repo.getDashboardTotals(userId, month, year),
         repo.getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
@@ -224,6 +225,7 @@ module.exports = function (repo) {
         repo.getFaturaManual(userId, month, year),
         repo.isMesFechado(userId, month, year),
         repo.getDistinctTerceiros(userId),
+        repo.getConfiguracoes(userId),
       ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
@@ -246,6 +248,7 @@ module.exports = function (repo) {
         mesFechado,
         safeJs,
         currentPath: req.path,
+        configuracoes,
       });
     })
   );
@@ -528,6 +531,20 @@ module.exports = function (repo) {
     })
   );
 
+  // --- SALVAR CONFIGURAÇÕES GERAIS ---
+  router.post(
+    '/api/configuracoes',
+    asyncHandler(async (req, res) => {
+      const userId = req.session.user.id;
+      const { chave, valor } = req.body;
+
+      if (!chave || valor === undefined) {
+        return res.status(400).json({ error: 'Chave e valor são obrigatórios.' });
+      }
+      await repo.saveConfiguracao(userId, chave, valor);
+      res.json({ success: true });
+    })
+  );
   // ================================================================================
   // AÇÕES EM LOTE PARA TERCEIROS
   // ================================================================================

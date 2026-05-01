@@ -48,6 +48,32 @@
   </div>
 </div>
 
+<%# ================= MODAL: CONFIGURAÇÕES ================= %>
+<div class="modal-overlay" id="modalConfiguracoes">
+  <div class="modal-box" style="max-width: 500px">
+    <div class="modal-header">
+      <h2 id="modalTituloConfig">Configurações</h2>
+      <button class="modal-close" onclick="fecharModalConfiguracoes()">&times;</button>
+    </div>
+    <div class="modal-scroll">
+      <form id="formConfig" onsubmit="event.preventDefault(); salvarConfiguracoes();">
+        <div class="form-group">
+          <label for="configDivisaoMinimo">Valor Mínimo da Divisão "Casa"</label>
+          <input type="text" id="configDivisaoMinimo" class="form-input" placeholder="R$ 750,00" />
+          <small style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 5px;">
+            Define o valor base para a divisão da conta "Casa". Se a fatura for menor, este valor será usado.
+          </small>
+        </div>
+        <div style="text-align: right; margin-top: 20px;">
+          <button type="submit" class="btn-primary form-btn" style="width: auto; padding: 10px 25px;">
+            Salvar Configurações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <%# ================= MODAL: CALCULAR LUZ (IFRAME) ================= %>
 <div class="modal-overlay" id="modalCalcularLuz">
   <div class="modal-box modal-lg">

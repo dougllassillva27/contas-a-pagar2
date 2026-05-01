@@ -20,6 +20,7 @@ describe('syncService', () => {
       getTotalTerceiroCartao: jest.fn(),
       findAndUpdateOrCreateContaFixa: jest.fn(),
       findAndUpdateOrCreateContaFixaComTerceiro: jest.fn(),
+      getConfiguracoes: jest.fn().mockResolvedValue({ divisao_casa_minimo: 750 }),
     };
 
     // Espiona console.log para validar o log de sucesso

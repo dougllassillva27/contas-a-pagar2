@@ -22,6 +22,7 @@ window.addEventListener('popstate', () => {
     else if (activeModal.id === 'modalAviso') fecharModalAviso();
     else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
     else if (activeModal.id === 'modalCalcularLuz') fecharModalCalcularLuz();
+    else if (activeModal.id === 'modalConfiguracoes') fecharModalConfiguracoes();
     else fecharModais();
     isBackNavigation = false;
   }
@@ -36,6 +37,7 @@ document.addEventListener('keydown', (e) => {
       else if (activeModal.id === 'modalAviso') fecharModalAviso();
       else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
       else if (activeModal.id === 'modalCalcularLuz') fecharModalCalcularLuz();
+      else if (activeModal.id === 'modalConfiguracoes') fecharModalConfiguracoes();
       else fecharModais();
     }
     fecharMenuContexto();
@@ -153,6 +155,19 @@ function fecharModalCalcularLuz() {
   handleModalClose();
   document.getElementById('modalCalcularLuz').classList.remove('active');
   document.body.style.overflow = '';
+}
+
+function abrirModalConfiguracoes() {
+  registerModalOpen();
+  const valorMinimo = document.body.dataset.configDivisaoMinimo || '750.00';
+  const valorFormatado = parseFloat(valorMinimo).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  document.getElementById('configDivisaoMinimo').value = 'R$ ' + valorFormatado;
+  document.getElementById('modalConfiguracoes').classList.add('active');
+}
+
+function fecharModalConfiguracoes() {
+  handleModalClose();
+  document.getElementById('modalConfiguracoes').classList.remove('active');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

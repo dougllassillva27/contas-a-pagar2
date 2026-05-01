@@ -18,6 +18,7 @@ const BackupRepository = require('./BackupRepository');
 const MesFechadoRepository = require('./MesFechadoRepository');
 const LajeadoRepository = require('./LajeadoRepository');
 const TokenRepository = require('./TokenRepository');
+const ConfiguracaoRepository = require('./ConfiguracaoRepository');
 
 module.exports = {
   // Usuários
@@ -46,4 +47,7 @@ module.exports = {
 
   // Tokens (Autenticação Persistente)
   ...TokenRepository,
+
+  // Configurações do Usuário
+  ...ConfiguracaoRepository,
 };

@@ -3,7 +3,14 @@
 <head>
     <%- include('partials/head') %>
 </head>
-<body data-month="<%= nav.atual.month %>" data-year="<%= nav.atual.year %>" data-username="<%= user.nome %>" data-userid="<%= user.id %>" data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>">
+<body 
+    data-month="<%= nav.atual.month %>" 
+    data-year="<%= nav.atual.year %>" 
+    data-username="<%= user.nome %>" 
+    data-userid="<%= user.id %>" 
+    data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>"
+    data-config-divisao-minimo="<%= configuracoes.divisao_casa_minimo || '750.00' %>"
+>
 
     <%- include('partials/header') %>
 

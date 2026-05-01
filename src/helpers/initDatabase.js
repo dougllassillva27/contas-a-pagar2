@@ -130,6 +130,15 @@ async function initDatabase() {
 
     await db.query(`ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS privacidade_global BOOLEAN DEFAULT FALSE`);
 
+    // Adiciona a nova coluna para o valor mínimo da divisão da casa
+    await db.query(`
+      ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS divisao_casa_minimo NUMERIC(10, 2) DEFAULT 750.00
+    `);
+
+    // Garante que o usuário 1 tenha um registro inicial
+    await db.query(`INSERT INTO configuracoes (usuario_id) VALUES (1) ON CONFLICT (usuario_id) DO NOTHING`);
+    await db.query(`INSERT INTO configuracoes (usuario_id) VALUES (2) ON CONFLICT (usuario_id) DO NOTHING`);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);
