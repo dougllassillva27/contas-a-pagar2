@@ -115,7 +115,7 @@
                     <table class="list-table">
                         <tbody class="drag-container" id="listaFixas">
                             <% fixas.forEach(item => { %>
-                            <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
+                            <tr class="draggable-row <%= item.status === 'PAGO' ? 'linha-paga' : '' %>" draggable="true" data-id="<%= item.id %>">
                                 <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
                                 <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
                                 <td><%= item.descricao %></td>
@@ -146,7 +146,7 @@
                     <table class="list-table">
                         <tbody class="drag-container" id="listaCartao">
                             <% cartao.forEach(item => { %>
-                            <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
+                            <tr class="draggable-row <%= item.status === 'PAGO' ? 'linha-paga' : '' %>" draggable="true" data-id="<%= item.id %>">
                                 <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
                                 <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
                                 <td>
@@ -262,7 +262,7 @@
                             <table class="list-table">
                                 <tbody class="drag-container" id="listaFixas<%= pessoa.nome.replace(/\s/g, '') %>">
                                     <% pessoa.itensFixas.forEach(item => { %>
-                                    <tr class="draggable-row" draggable="true" data-id="<%= item.id %>">
+                                    <tr class="draggable-row <%= item.status === 'PAGO' ? 'linha-paga' : '' %>" draggable="true" data-id="<%= item.id %>">
                                         <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
                                         <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
                                         <td><%= item.descricao %></td>
