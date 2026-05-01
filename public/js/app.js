@@ -795,6 +795,7 @@ async function enviarLancamento(e, tipoTransacao) {
         await softRefresh();
         fecharModais();
         ocultarLoading();
+        mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!');
       }
     }
   } catch (err) {
