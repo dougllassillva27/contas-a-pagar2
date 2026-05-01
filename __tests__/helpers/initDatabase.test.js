@@ -20,12 +20,12 @@ describe('initDatabase.js', () => {
     jest.restoreAllMocks();
   });
 
-  test('deve rodar todos os scripts de criação (16 queries)', async () => {
+  test('deve rodar todos os scripts de criação (19 queries)', async () => {
     db.query.mockResolvedValue();
     await initDatabase();
 
-    // Conta exata de queries no initDatabase.js
-    expect(db.query).toHaveBeenCalledTimes(16);
+    // Conta exata de queries no initDatabase.js (agora com as 3 queries de configuração)
+    expect(db.query).toHaveBeenCalledTimes(19);
     expect(console.log).toHaveBeenCalledWith('✅ Database inicializado com sucesso.');
   });
 

@@ -28,12 +28,14 @@ async function sincronizarFaturaMorr(repo, sourceUserId, targetUserId, month, ye
  */
 async function sincronizarDivisaoCasa(repo, sourceUserId, targetUserId, mes, ano) {
   try {
+    const config = await repo.getConfiguracoes(sourceUserId);
+    const valorMinimo = config.divisao_casa_minimo || 750;
     const totalCasa = await repo.getTotalTerceiroCartao('Casa', sourceUserId, mes, ano);
     const valorOriginal = totalCasa || 0;
 
-    // Regra de negócio: mínimo de 750 para cada. Acima disso (fatura > 1500), divide real.
+    // Regra de negócio: mínimo configurável para cada. Acima disso, divide real.
     let metade = valorOriginal / 2;
-    if (metade < 750) metade = 750;
+    if (metade < valorMinimo) metade = valorMinimo;
     metade = Math.round(metade * 100) / 100; // Evita dízima na conciliação futura
 
     await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, null); // Dodo (conta própria)

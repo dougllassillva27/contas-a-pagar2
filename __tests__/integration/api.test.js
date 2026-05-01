@@ -129,6 +129,7 @@ describe('Integração API (Mocked DB)', () => {
       repo.getFaturaManual.mockResolvedValue(0);
       repo.isMesFechado.mockResolvedValue(false);
       repo.getDistinctTerceiros.mockResolvedValue([]);
+      repo.getConfiguracoes.mockResolvedValue({ divisao_casa_minimo: 750.0 });
     });
 
     test('GET / - deve buscar as anotações globais (0, 0) por padrão na inicialização', async () => {
