@@ -206,7 +206,7 @@ function abrirMenuContexto(e, pessoa) {
 
   document
     .querySelectorAll(
-      '#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas):not(#btnExcluirSelecionados)'
+      '#customContextMenu li:not(.delete-action):not(#btnMarcarCalculadas):not(#btnExcluirSelecionados):not(#btnMoverAnterior):not(#btnMoverSeguinte)'
     )
     .forEach((li) => {
       li.style.display = isUltimas ? 'none' : 'flex';
@@ -217,15 +217,25 @@ function abrirMenuContexto(e, pessoa) {
   const btnMarcar = document.getElementById('btnMarcarCalculadas');
   if (btnMarcar) btnMarcar.style.display = isUltimas ? 'flex' : 'none';
   const btnExcluirSelecionados = document.getElementById('btnExcluirSelecionados');
-  if (btnExcluirSelecionados) {
-    if (isUltimas) {
-      const selectedCount = document.querySelectorAll('#listaUltimasConteudo tr.selected-row').length;
-      if (selectedCount > 0) {
-        btnExcluirSelecionados.style.display = 'flex';
-        document.getElementById('textExcluirSelecionados').innerText = `Excluir ${selectedCount} item(s)`;
-      } else btnExcluirSelecionados.style.display = 'none';
-    } else btnExcluirSelecionados.style.display = 'none';
+  const btnMoverAnterior = document.getElementById('btnMoverAnterior');
+  const btnMoverSeguinte = document.getElementById('btnMoverSeguinte');
+
+  let selectedCount = 0;
+  if (isUltimas) {
+    selectedCount = document.querySelectorAll('#listaUltimasConteudo tr.selected-row').length;
   }
+
+  if (btnExcluirSelecionados) {
+    if (isUltimas && selectedCount > 0) {
+      btnExcluirSelecionados.style.display = 'flex';
+      document.getElementById('textExcluirSelecionados').innerText = `Excluir ${selectedCount} item(s)`;
+    } else {
+      btnExcluirSelecionados.style.display = 'none';
+    }
+  }
+
+  if (btnMoverAnterior) btnMoverAnterior.style.display = isUltimas && selectedCount > 0 ? 'flex' : 'none';
+  if (btnMoverSeguinte) btnMoverSeguinte.style.display = isUltimas && selectedCount > 0 ? 'flex' : 'none';
 
   const divUltimas = document.getElementById('menuDividerUltimas');
   if (divUltimas) divUltimas.style.display = isUltimas ? 'flex' : 'none';

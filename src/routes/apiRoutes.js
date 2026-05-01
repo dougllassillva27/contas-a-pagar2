@@ -753,6 +753,44 @@ module.exports = function (repo) {
     })
   );
 
+  // ✅ NOVA ROTA: Deslocamento de mês em lote
+  router.post(
+    '/api/lancamentos/mover-mes',
+    asyncHandler(async (req, res) => {
+      const { ids, direcao } = req.body;
+      const offset = parseInt(direcao, 10);
+      const userId = req.session.user.id;
+
+      if (!Array.isArray(ids) || ids.length === 0 || ![-1, 1].includes(offset)) {
+        return res.status(400).json({ error: 'Payload inválido.' });
+      }
+
+      // Validação de Trava de Mês: Verifica Origem e Destino
+      const mesesAnos = await repo.getMesesAnosPorIds(userId, ids);
+      for (const { mes, ano } of mesesAnos) {
+        if (await repo.isMesFechado(userId, mes, ano)) {
+          return res.status(403).json({ error: 'Origem bloqueada. Um ou mais itens pertencem a um mês fechado.' });
+        }
+        let targetMes = Number(mes) + offset;
+        let targetAno = Number(ano);
+        if (targetMes > 12) {
+          targetMes = 1;
+          targetAno++;
+        } else if (targetMes < 1) {
+          targetMes = 12;
+          targetAno--;
+        }
+
+        if (await repo.isMesFechado(userId, targetMes, targetAno)) {
+          return res.status(403).json({ error: 'Destino bloqueado. O mês alvo está fechado para um ou mais itens.' });
+        }
+      }
+
+      const updatedCount = await repo.moverLancamentosMes(userId, ids, offset);
+      res.json({ success: true, updated: updatedCount });
+    })
+  );
+
   router.delete(
     '/api/lancamentos/:id',
     asyncHandler(async (req, res) => {
