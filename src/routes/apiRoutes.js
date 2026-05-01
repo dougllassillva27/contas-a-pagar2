@@ -193,13 +193,13 @@ module.exports = function (repo) {
 
       // Sincronização automática da fatura 'Morr' e divisão 'Casa' para a Vitória
       if (userId === 2) {
-        await syncService.sincronizarFaturaMorr(repo, 1, 2, month, year);
-        await syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year);
+        syncService.sincronizarFaturaMorr(repo, 1, 2, month, year).catch(console.error);
+        syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year).catch(console.error);
       }
 
       // Sincronização automática da divisão do terceiro 'Casa'
       if (userId === 1) {
-        await syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year);
+        syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year).catch(console.error);
       }
 
       const [

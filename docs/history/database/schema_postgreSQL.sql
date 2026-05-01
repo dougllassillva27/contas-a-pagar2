@@ -173,5 +173,6 @@ CREATE TABLE IF NOT EXISTS Terceiros (
 CREATE TABLE IF NOT EXISTS configuracoes (
     usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
     whatsapp_template TEXT,
-    privacidade_global BOOLEAN DEFAULT FALSE
+    privacidade_global BOOLEAN DEFAULT FALSE,
+    divisao_casa_minimo NUMERIC(10, 2) DEFAULT 750.00
 );

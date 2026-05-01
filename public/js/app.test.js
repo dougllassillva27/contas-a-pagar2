@@ -46,6 +46,10 @@ describe('Frontend - Lógica do app.js', () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ success: true }),
+        text: () =>
+          Promise.resolve(
+            '<html><head></head><body data-month="3" data-year="2026" data-username="Dodo" data-mes-fechado="false"><header></header><div class="dashboard-cards"></div><div class="main-grid"></div><nav id="mobileSidebar"></nav></body></html>'
+          ),
       })
     );
   });
