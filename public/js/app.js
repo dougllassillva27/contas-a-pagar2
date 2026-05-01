@@ -648,6 +648,7 @@ async function executarDeleteMes() {
 // ==============================================================================
 async function alternarStatus(checkbox, id) {
   const novoStatus = checkbox.checked ? 'PAGO' : 'PENDENTE';
+  const row = checkbox.closest('tr');
   try {
     const res = await fetch(`/api/lancamentos/${id}/status`, {
       method: 'PATCH',
