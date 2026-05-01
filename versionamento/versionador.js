@@ -82,9 +82,12 @@ function processarConteudo(conteudo, caminhoArquivo) {
   });
 
   // Processa url() do CSS
-  novoConteudo = novoConteudo.replace(/url\((['"]?)(.*?)\1\)/gi, (match, aspas, url) => {
-    return `url(${aspas}${processarUrl(url, caminhoArquivo)}${aspas})`;
-  });
+  const ext = path.extname(caminhoArquivo).toLowerCase();
+  if (['.css', '.html', '.ejs'].includes(ext)) {
+    novoConteudo = novoConteudo.replace(/url\((['"]?)(.*?)\1\)/gi, (match, aspas, url) => {
+      return `url(${aspas}${processarUrl(url, caminhoArquivo)}${aspas})`;
+    });
+  }
 
   // Processa srcset (imagens responsivas)
   novoConteudo = novoConteudo.replace(/srcset=(['"])(.*?)\1/gi, (match, aspas, srcset) => {
