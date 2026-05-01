@@ -876,3 +876,45 @@ document.getElementById('btnConfirmarExclusao').onclick = async () => {
     ocultarLoading();
   }
 };
+
+// ==============================================================================
+// ✅ CONFIGURAÇÕES DO USUÁRIO
+// ==============================================================================
+async function salvarConfiguracoes() {
+  const inputMinimo = document.getElementById('configDivisaoMinimo');
+  if (!inputMinimo) return;
+
+  const valorRaw = inputMinimo.value;
+  // Converte "R$ 1.234,56" para 1234.56
+  const valorNumerico = parseFloat(valorRaw.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+
+  if (isNaN(valorNumerico)) {
+    if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Valor inválido.');
+    return;
+  }
+
+  if (typeof mostrarLoading === 'function') mostrarLoading();
+  try {
+    const res = await fetch('/api/configuracoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chave: 'divisao_casa_minimo', valor: valorNumerico }),
+    });
+    if (typeof ocultarLoading === 'function') ocultarLoading();
+    if (res.ok) window.location.reload();
+    else if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Falha ao salvar configuração.');
+  } catch (err) {
+    if (typeof ocultarLoading === 'function') ocultarLoading();
+    if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Erro de conexão.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const formConfig = document.getElementById('formConfig');
+  if (formConfig) {
+    formConfig.addEventListener('submit', (e) => {
+      e.preventDefault();
+      salvarConfiguracoes();
+    });
+  }
+});
