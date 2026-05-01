@@ -56,7 +56,7 @@
       <button class="modal-close" onclick="fecharModalConfiguracoes()">&times;</button>
     </div>
     <div class="modal-scroll">
-      <form id="formConfig" onsubmit="event.preventDefault(); salvarConfiguracoes();">
+      <form id="formConfig">
         <div class="form-group">
           <label for="configDivisaoMinimo">Valor Mínimo da Divisão "Casa"</label>
           <input type="text" id="configDivisaoMinimo" class="form-input" placeholder="R$ 750,00" />
@@ -64,12 +64,10 @@
             Define o valor base para a divisão da conta "Casa". Se a fatura for menor, este valor será usado.
           </small>
         </div>
-        <div style="text-align: right; margin-top: 20px;">
-          <button type="submit" class="btn-primary form-btn" style="width: auto; padding: 10px 25px;">
-            Salvar Configurações
-          </button>
-        </div>
       </form>
+    </div>
+    <div class="modal-footer" style="text-align: right; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+      <button type="submit" form="formConfig" class="btn-primary" style="width: auto; padding: 10px 25px;">Salvar Configurações</button>
     </div>
   </div>
 </div>
