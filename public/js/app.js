@@ -17,6 +17,73 @@ let pessoaSelecionadaContexto = null;
 let acaoConfirmadaCallback = null;
 let idExcluir = null;
 
+// ==============================================================================
+// ✅ ATUALIZAÇÃO DOM SEM RELOAD (Soft Refresh)
+// ==============================================================================
+async function softRefresh() {
+  try {
+    const res = await fetch(window.location.href);
+    if (!res.ok) throw new Error('Failed to fetch');
+    const text = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseDocument(text, 'text/html');
+
+    const replaceHTML = (selector) => {
+      const current = document.querySelector(selector);
+      const updated = doc.querySelector(selector);
+      if (current && updated) current.innerHTML = updated.innerHTML;
+    };
+
+    replaceHTML('header');
+    replaceHTML('.dashboard-cards');
+    replaceHTML('.main-grid');
+    replaceHTML('#mobileSidebar');
+
+    const currentTerceiros = document.querySelector('.terceiros-grid');
+    const newTerceiros = doc.querySelector('.terceiros-grid');
+
+    if (currentTerceiros && newTerceiros) {
+      currentTerceiros.innerHTML = newTerceiros.innerHTML;
+    } else if (!currentTerceiros && newTerceiros) {
+      const mainGrid = document.querySelector('.main-grid');
+      if (mainGrid) {
+        mainGrid.insertAdjacentHTML(
+          'afterend',
+          '<div id="terceirosHeader" style="margin: 30px 0 15px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;"><h2 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 20px;">Painéis de Terceiros</h2></div><div class="terceiros-grid drag-container-cards">' +
+            newTerceiros.innerHTML +
+            '</div>'
+        );
+      }
+    } else if (currentTerceiros && !newTerceiros) {
+      const header = currentTerceiros.previousElementSibling;
+      if (header && header.tagName === 'DIV') header.remove();
+      currentTerceiros.remove();
+    }
+
+    document.body.dataset.mesFechado = doc.body.dataset.mesFechado;
+
+    if (typeof initDragAndDrop === 'function') initDragAndDrop();
+    if (typeof initCardDragAndDrop === 'function') initCardDragAndDrop();
+    if (typeof initTouchCardDragAndDrop === 'function') {
+      window.__touchCardDndInicializado = false;
+      initTouchCardDragAndDrop();
+    }
+    if (typeof initDoubleTapMobile === 'function') initDoubleTapMobile();
+    if (typeof initTouchDragAndDrop === 'function') {
+      window.__touchDndInicializado = false;
+      initTouchDragAndDrop();
+    }
+
+    if (document.getElementById('anotacoesArea')) {
+      currentAnotacaoText = document.getElementById('anotacoesArea').value;
+      if (typeof renderAnotacoesPreview === 'function') renderAnotacoesPreview();
+    }
+  } catch (err) {
+    console.error('Soft refresh failed:', err);
+    window.location.reload();
+  }
+}
+
 // --- AÇÕES EM LOTE ---
 async function executarAcaoEmLotePessoa(novoStatus) {
   fecharMenuContexto();
@@ -31,7 +98,7 @@ async function executarAcaoEmLotePessoa(novoStatus) {
         year: currentYear,
       }),
     });
-    if (res.ok) window.location.reload();
+    if (res.ok) await softRefresh();
     else mostrarAviso('Erro', 'Falha ao atualizar lote.');
   } catch (err) {
     console.error(err);
@@ -66,7 +133,9 @@ function confirmarExclusaoPessoa() {
         const err = await res.json();
         mostrarAviso('Acesso Negado', err.error);
       } else {
-        window.location.reload();
+        await softRefresh();
+        fecharModais();
+        ocultarLoading();
       }
     } catch (e) {
       ocultarLoading();
@@ -154,7 +223,8 @@ async function moverMes(e, ids, direcao) {
       ocultarLoading();
       mostrarAviso('Acesso Negado', data.error);
     } else if (res.ok) {
-      window.location.reload();
+      await softRefresh();
+      ocultarLoading();
     } else {
       ocultarLoading();
       mostrarAviso('Erro', data.error || 'Falha ao mover lançamentos.');
@@ -302,7 +372,7 @@ async function toggleMesFechado() {
     });
     ocultarLoading();
     if (res.ok) {
-      window.location.reload();
+      await softRefresh();
     } else {
       mostrarAviso('Erro', 'Falha ao alterar status do mês.');
     }
@@ -344,10 +414,9 @@ function confirmarExclusaoLoteUltimas() {
       } else if (res.ok) {
         selectedRows.forEach((tr) => tr.remove());
         atualizarTotalNaoConferido();
-        await atualizarTotais();
+        await softRefresh();
         ocultarLoading();
         mostrarAviso('Sucesso', `${ids.length} itens excluídos.`);
-        setTimeout(() => window.location.reload(), 3000);
       } else {
         ocultarLoading();
         mostrarAviso('Erro', 'Falha ao excluir itens.');
@@ -537,7 +606,7 @@ async function executarCopia() {
       return;
     } else if (res.ok) {
       mostrarAviso('Sucesso', 'Contas copiadas!');
-      setTimeout(() => window.location.reload(), 1500);
+      await softRefresh();
     } else {
       mostrarAviso('Erro', 'Falha ao copiar.');
     }
@@ -560,7 +629,7 @@ async function executarDeleteMes() {
       return;
     } else if (res.ok) {
       mostrarAviso('Sucesso', 'Mês limpo!');
-      setTimeout(() => window.location.reload(), 1500);
+      await softRefresh();
     } else {
       mostrarAviso('Erro', 'Falha ao limpar o mês.');
     }
@@ -721,9 +790,11 @@ async function enviarLancamento(e, tipoTransacao) {
       const responseData = await res.json().catch(() => ({}));
       if (responseData.criados) {
         mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
-        setTimeout(() => window.location.reload(), 3000);
+        await softRefresh();
       } else {
-        window.location.reload();
+        await softRefresh();
+        fecharModais();
+        ocultarLoading();
       }
     }
   } catch (err) {
@@ -910,7 +981,9 @@ document.getElementById('btnConfirmarExclusao').onclick = async () => {
       const err = await res.json();
       mostrarAviso('Acesso Negado', err.error);
     } else {
-      window.location.reload();
+      await softRefresh();
+      fecharModais();
+      ocultarLoading();
     }
   } catch (e) {
     ocultarLoading();
@@ -941,8 +1014,10 @@ async function salvarConfiguracoes() {
       body: JSON.stringify({ chave: 'divisao_casa_minimo', valor: valorNumerico }),
     });
     if (typeof ocultarLoading === 'function') ocultarLoading();
-    if (res.ok) window.location.reload();
-    else if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Falha ao salvar configuração.');
+    if (res.ok) {
+      await softRefresh();
+      fecharModais();
+    } else if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Falha ao salvar configuração.');
   } catch (err) {
     if (typeof ocultarLoading === 'function') ocultarLoading();
     if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Erro de conexão.');

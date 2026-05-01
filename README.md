@@ -16,6 +16,7 @@ Permite:
 - Separação de gastos de terceiros (familiares que utilizam o mesmo cartão)
 - Organização por prioridade (ordem customizável)
 - Comparação de fatura real vs sistema
+- Sincronização e espelhamento automático entre contas
 
 Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL e arquitetura cloud.
 
@@ -100,6 +101,10 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
   - Trava de segurança que congela o mês selecionado, impedindo a criação ou exclusão acidental de lançamentos.
   - Ideal para manter a integridade dos dados após a conferência e conciliação bancária.
   - Mudanças de status rotineiras (pago/pendente/conferido) continuam liberadas na interface.
+- **Mover Mês (Shift)**
+  - Deslocamento ágil de contas (especialmente de Cartão de Crédito) para o mês anterior ou seguinte, corrigindo faturamentos deslocados com 1 clique.
+  - Funciona individualmente (ícones `❮` e `❯` nas linhas) ou em massa (seleção múltipla no modal de Últimas Adições).
+  - Respeita rigorosamente a Trava de Mês Fechado (_Month Lock_) nas duas pontas (origem e destino da alteração).
 - **Copiar Mês**
   - Replica contas fixas
   - Replica parcelas pendentes
@@ -473,7 +478,9 @@ CREATE TABLE IF NOT EXISTS Terceiros (
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS configuracoes (
     usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
-    whatsapp_template TEXT
+    whatsapp_template TEXT,
+    privacidade_global BOOLEAN DEFAULT FALSE,
+    divisao_casa_minimo NUMERIC(10, 2) DEFAULT 750.00
 );
 ```
 
