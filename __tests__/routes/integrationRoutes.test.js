@@ -28,7 +28,13 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock nativo do fetch para anular a notificação assíncrona (fire and forget) do Telegram
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
     app = setupApp();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('deve bloquear requisições sem x-api-key (401)', async () => {

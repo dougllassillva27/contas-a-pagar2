@@ -1,5 +1,13 @@
 const request = require('supertest');
 
+// Mock do TelegramBot para evitar "Open Handles" de rede na inicialização do app
+jest.mock('node-telegram-bot-api', () => {
+  return jest.fn().mockImplementation(() => ({
+    setMyCommands: jest.fn().mockResolvedValue(true),
+    on: jest.fn(),
+  }));
+});
+
 jest.mock('../../src/middlewares/rateLimiter', () => ({
   loginLimiter: (req, res, next) => next(),
   apiLimiter: (req, res, next) => next(),
@@ -15,6 +23,12 @@ jest.mock('../../src/repositories/FinanceiroRepository');
 // Precisamos mockar o DB também, pois as rotas de terceiros fazem chamadas diretas ao db.query
 jest.mock('../../src/config/db', () => ({
   query: jest.fn().mockResolvedValue({ rows: [] }),
+}));
+
+// Mock do syncService para evitar "Open Handles" no Jest após o fire-and-forget (otimização de performance)
+jest.mock('../../src/services/syncService', () => ({
+  sincronizarFaturaMorr: jest.fn().mockResolvedValue(),
+  sincronizarDivisaoCasa: jest.fn().mockResolvedValue(),
 }));
 
 describe('Integração API (Mocked DB)', () => {
