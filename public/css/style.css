@@ -1051,11 +1051,11 @@ input[type='checkbox'] {
     padding: 12px 3px;
   }
   .actions {
-    gap: 10px;
+    gap: 6px;
   }
   .actions span {
     font-size: 18px;
-    padding: 5px;
+    padding: 4px;
   }
   .drag-container td:nth-child(3) {
     white-space: normal;

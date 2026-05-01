@@ -378,6 +378,21 @@ async function deleteLancamentosEmLote(userId, ids) {
   return result.rowCount;
 }
 
+// ==============================================================================
+// ✅ NOVO: Deslocamento de mês (Anterior/Seguinte)
+// ==============================================================================
+async function moverLancamentosMes(userId, ids, offsetMeses) {
+  if (!Array.isArray(ids) || ids.length === 0) return 0;
+  const intervalStr = `${offsetMeses} month`;
+  const query = `
+    UPDATE Lancamentos 
+    SET DataVencimento = DataVencimento + $1::interval 
+    WHERE Id = ANY($2::int[]) AND UsuarioId = $3
+  `;
+  const result = await db.query(query, [intervalStr, ids, userId]);
+  return result.rowCount;
+}
+
 // ⚠️ ATENÇÃO: Esta função copia do mês informado para o PRÓXIMO mês.
 // O frontend envia o mês que o usuário está visualizando.
 // Exemplo: se o usuário está em Fevereiro e clica "Copiar",
@@ -596,6 +611,7 @@ module.exports = {
   updateConferidoBatchRecent,
   reorderLancamentos,
   deleteLancamentosEmLote, // ✅ Novo método exportado
+  moverLancamentosMes, // ✅ Novo método exportado
   deleteLancamento,
   deleteLancamentosPorPessoa,
   deleteMonth,

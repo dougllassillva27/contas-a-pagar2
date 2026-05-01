@@ -136,6 +136,44 @@ window.atualizarBulkCounterNative = function (input) {
   }
 };
 
+// ==============================================================================
+// ✅ MOVER MÊS (Individual e Lote)
+// ==============================================================================
+async function moverMes(e, ids, direcao) {
+  if (e) e.stopPropagation(); // Evita marcar a linha no modal de últimas adições
+  if (checkBloqueioMesFechado()) return; // A trava principal também barra no JS antes de bater na API
+  mostrarLoading();
+  try {
+    const res = await fetch('/api/lancamentos/mover-mes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, direcao }),
+    });
+    const data = await res.json();
+    if (res.status === 403) {
+      ocultarLoading();
+      mostrarAviso('Acesso Negado', data.error);
+    } else if (res.ok) {
+      window.location.reload();
+    } else {
+      ocultarLoading();
+      mostrarAviso('Erro', data.error || 'Falha ao mover lançamentos.');
+    }
+  } catch (err) {
+    ocultarLoading();
+    console.error(err);
+    mostrarAviso('Erro', 'Erro de rede ao mover contas.');
+  }
+}
+
+function moverLoteUltimas(direcao) {
+  fecharMenuContexto();
+  const selectedRows = document.querySelectorAll('#listaUltimasConteudo tr.selected-row');
+  const ids = Array.from(selectedRows).map((tr) => Number(tr.dataset.id));
+  if (ids.length === 0) return;
+  moverMes(null, ids, direcao);
+}
+
 // --- OUTRAS FUNÇÕES ---
 async function abrirModalUltimas() {
   registerModalOpen();
@@ -206,6 +244,8 @@ async function abrirModalUltimas() {
                 <td class="col-desc">${descHTML}</td>
                 <td class="col-valor" style="text-align:right; font-weight:bold; white-space:nowrap;">${valorCurrency}</td>
                 <td class="actions" style="text-align:center;">
+                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span>
+                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span>
                     <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span>
                     <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${item.id})">delete</span>
                 </td>
@@ -410,7 +450,7 @@ async function abrirModalCartaoPessoa(pessoa) {
         item.parcelaatual && item.totalparcelas
           ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2, '0')}/${String(item.totalparcelas).padStart(2, '0')})</small>`
           : '';
-      html += `<tr class="draggable-row" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
+      html += `<tr class="draggable-row" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
     });
     container.innerHTML = html;
     initDragAndDrop();

@@ -23,6 +23,14 @@
       <span class="material-icons" style="color: var(--blue)">task_alt</span>
       Marcar todas como já calculadas
     </li>
+    <li onclick="moverLoteUltimas(-1)" id="btnMoverAnterior" style="display: none">
+      <span class="material-icons" style="color: var(--orange)">fast_rewind</span>
+      Mover para mês anterior
+    </li>
+    <li onclick="moverLoteUltimas(1)" id="btnMoverSeguinte" style="display: none">
+      <span class="material-icons" style="color: var(--blue)">fast_forward</span>
+      Mover para próximo mês
+    </li>
     <li onclick="confirmarExclusaoLoteUltimas()" id="btnExcluirSelecionados" style="display: none; color: var(--red)">
       <span class="material-icons">delete_sweep</span>
       <span id="textExcluirSelecionados">Excluir selecionados</span>

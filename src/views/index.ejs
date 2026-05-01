@@ -159,6 +159,8 @@
                                 </td>
                                 <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                 <td class="actions">
+                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], -1)" title="Mover para mês anterior">chevron_left</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], 1)" title="Mover para próximo mês">chevron_right</span>
                                     <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
                                     <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
                                 </td>
