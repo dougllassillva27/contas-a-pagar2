@@ -124,6 +124,20 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ---
 
+## ⚡ Arquitetura e Alta Performance
+
+- **Soft Refresh (DOM Diffing Nativo)**
+  - O frontend intercepta requisições CRUD (Adicionar, Editar, Mover, Deletar) e atualiza a interface cirurgicamente em _background_ utilizando `DOMParser`. O tempo de resposta para o usuário cai de ~5s (F5 tradicional) para ~0.5s, criando uma experiência _App-like_.
+- **Sincronização Fire-and-Forget**
+  - Cálculos pesados de divisão de contas e espelhamentos de terceiros rodam em background na _Event Loop_ do Node.js, não bloqueando o carregamento (SSR) do Dashboard.
+- **Trava Anti-Corrida (Memory Locks)**
+  - O frontend possui um state machine rigoroso (`isSubmitting`) que atua na _thread_ principal do JavaScript, impossibilitando envios duplicados mesmo com _double-clicks_ agressivos (mouse gamer ou tela touch).
+- **Cache-Busting Customizado (`versionador.js`)**
+  - Motor próprio de versionamento no _build-time_ que varre a aplicação inteira, calcula o MD5 dos arquivos estáticos reais e injeta as hashes `?v=hash` no HTML/CSS.
+  - Blinda a aplicação contra "Service Workers zumbis" e agressividade do cache de navegadores mobile (iOS/Android).
+
+---
+
 ## 🩺 Monitoramento e Keep Alive
 
 Para evitar o _cold start_ (hibernação) do plano gratuito do Render, o projeto utiliza um script no Google Apps Script simulando um navegador real. Essa estratégia impede o serviço de host de abater conexões vindas de _bots conhecidos_ (como ocorria no UptimeRobot).
@@ -510,6 +524,26 @@ npm start
 ```
 
 Acesse: `http://localhost:3000`
+
+---
+
+## 🧪 Testes Automatizados (Jest & Supertest)
+
+A aplicação possui uma suíte de testes robusta contendo **190 testes automatizados** com execução ultrarrápida (~2.5s totais).
+
+- **Unitários**: Regras de negócio, _parseHelpers_, formatadores e cálculo de datas (fuso UTC-3 blindado).
+- **Repositórios**: Mock da biblioteca `pg`. Validação de transações (`BEGIN/COMMIT/ROLLBACK`), `UPSERTs` e lógicas de paginação sem tocar no banco de dados físico.
+- **Middlewares**: Validação de injeção de tokens persistentes, `x-api-key` e falhas de sessão.
+- **Integração M2M**: Testes fim-a-ponta na API Android e endpoints de _webhook_ do Telegram.
+- **UI & DOM**: Validações anti-duplo-clique e injeção do `DOMParser` testadas em ambiente `jsdom`.
+- **Memory Leaks**: Mocks dedicados de _Fetch API_ e instâncias assíncronas de Rede (Telegram) para garantir encerramento gracioso (sem _Open Handles_).
+
+**Para executar a suíte localmente:**
+
+```bash
+# Todos os testes
+npm test
+```
 
 ---
 
