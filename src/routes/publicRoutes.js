@@ -165,33 +165,6 @@ module.exports = function (repo) {
   });
 
   // ============================================================================
-  // GET /contas/:userId/:nome — Rota de Compatibilidade Legada (Fallback)
-  // Mantém links antigos de WhatsApp funcionando e redireciona para o UUID seguro
-  // ============================================================================
-  router.get('/contas/:userId/:nome', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId, 10);
-      const nome = req.params.nome;
-
-      const queryToken = await db.query('SELECT token_publico FROM terceiros WHERE usuario_id = $1 AND nome = $2', [
-        userId,
-        nome,
-      ]);
-      if (queryToken.rows.length > 0 && queryToken.rows[0].token_publico) {
-        const qs = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
-        return res.redirect(302, `/contas/${queryToken.rows[0].token_publico}${qs}`);
-      }
-
-      return res
-        .status(404)
-        .send('<h1>404 - Link Revogado</h1><p>Este portal não existe ou o link foi desativado.</p>');
-    } catch (err) {
-      console.error(`[FALLBACK TERCEIRO] Erro ao redirecionar link legado:`, err.message);
-      return res.status(404).send('<h1>404 - Erro</h1>');
-    }
-  });
-
-  // ============================================================================
   // GET /contas/:tokenPublico — Portal público de terceiros (Blindado)
   // Impede vazamento de dados de outros usuários baseando acesso em UUID
   // ============================================================================
