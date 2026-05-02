@@ -135,17 +135,6 @@ const safeJs = (str) =>
 // ==============================================================================
 
 module.exports = function (repo) {
-  // --- SWITCH USUÁRIO ---
-  router.get(
-    '/switch/:id',
-    asyncHandler(async (req, res) => {
-      const targetId = parseInt(req.params.id, 10);
-      const user = await repo.getUsuarioById(targetId);
-      if (user) req.session.user = { id: user.id, nome: user.nome, login: user.login };
-      res.redirect('/');
-    })
-  );
-
   // --- RELATÓRIO ---
   router.get(
     '/relatorio',
