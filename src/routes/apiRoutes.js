@@ -275,9 +275,20 @@ module.exports = function (repo) {
           totalGeral: t.totalGeral,
         }));
 
-      const telefonesQuery = await db.query('SELECT nome, telefone FROM terceiros WHERE usuario_id = $1', [userId]);
-      const telefonesMap = {};
-      telefonesQuery.rows.forEach((t) => (telefonesMap[t.nome] = t.telefone));
+      // ✅ FIX IDOR: Garante que todo terceiro ativo tenha um registro na tabela para possuir um TokenPublico
+      for (const t of todosTerceiros) {
+        await db.query(
+          'INSERT INTO terceiros (usuario_id, nome) VALUES ($1, $2) ON CONFLICT (usuario_id, nome) DO NOTHING',
+          [userId, t.nome]
+        );
+      }
+
+      const terceirosQuery = await db.query(
+        'SELECT nome, telefone, token_publico FROM terceiros WHERE usuario_id = $1',
+        [userId]
+      );
+      const infoMap = {};
+      terceirosQuery.rows.forEach((t) => (infoMap[t.nome] = t));
 
       const configQuery = await db.query('SELECT whatsapp_template FROM configuracoes WHERE usuario_id = $1', [userId]);
       const whatsappTemplate =
@@ -287,7 +298,8 @@ module.exports = function (repo) {
 
       todosTerceiros = todosTerceiros.map((t) => ({
         ...t,
-        telefone: telefonesMap[t.nome] || null,
+        telefone: infoMap[t.nome]?.telefone || null,
+        tokenPublico: infoMap[t.nome]?.token_publico || null,
       }));
 
       // Ordena alfabeticamente

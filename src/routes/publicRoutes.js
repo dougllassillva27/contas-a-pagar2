@@ -8,6 +8,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { loginLimiter } = require('../middlewares/rateLimiter');
 const { LIMITES } = require('../constants');
+const db = require('../config/db');
 const DEFAULT_LAJEADO_DADOS = require('../config/defaultLajeado');
 
 module.exports = function (repo) {
@@ -164,13 +165,35 @@ module.exports = function (repo) {
   });
 
   // ============================================================================
-  // GET /contas/:nome — Portal público de terceiros
-  // Permite que terceiros visualizem suas contas sem login
+  // GET /contas/:tokenPublico — Portal público de terceiros (Blindado)
+  // Impede vazamento de dados de outros usuários baseando acesso em UUID
   // ============================================================================
-  router.get('/contas/:userId/:nome', async (req, res) => {
+  router.get('/contas/:tokenPublico', async (req, res) => {
+    let nomeFallback = 'Desconhecido';
     try {
-      const userId = parseInt(req.params.userId, 10);
-      const nome = decodeURIComponent(req.params.nome);
+      const { tokenPublico } = req.params;
+
+      // Validação do padrão UUID v4 para barrar exploits de payload
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(tokenPublico)) {
+        return res
+          .status(404)
+          .send('<h1>404 - Página não encontrada</h1><p>O link acessado é inválido ou malformado.</p>');
+      }
+
+      const queryToken = await db.query('SELECT usuario_id, nome FROM terceiros WHERE token_publico = $1', [
+        tokenPublico,
+      ]);
+      if (queryToken.rows.length === 0) {
+        return res
+          .status(404)
+          .send('<h1>404 - Link Revogado</h1><p>Este portal de contas não existe mais ou o link foi desativado.</p>');
+      }
+
+      const userId = queryToken.rows[0].usuario_id;
+      const nome = queryToken.rows[0].nome;
+      nomeFallback = nome;
+
       const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
       const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
 
@@ -204,8 +227,8 @@ module.exports = function (repo) {
       const totalGeral = totalFixas + totalCartao;
 
       res.render('terceiro', {
-        userId,
         nome,
+        tokenPublico,
         nav,
         itensFixas,
         itensCartao,
@@ -215,9 +238,10 @@ module.exports = function (repo) {
         temDados: lancamentos.length > 0,
       });
     } catch (err) {
-      console.error(`[PORTAL TERCEIRO] Erro ao buscar contas de ${req.params.nome}:`, err.message);
+      console.error(`[PORTAL TERCEIRO] Erro ao carregar portal público:`, err.message);
       res.status(500).render('terceiro', {
-        nome: req.params.nome,
+        nome: nomeFallback,
+        tokenPublico: req.params.tokenPublico || null,
         nav: {
           atual: {
             month: new Date().getMonth() + 1,
