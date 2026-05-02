@@ -19,6 +19,16 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Trava de segurança: impede a injeção acidental em ambiente local (dev)
+if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+  console.log('=== [AVISO DE SEGURANÇA] ===');
+  console.log('O script de versionamento/cache-busting só deve rodar em PRD (NODE_ENV=production).');
+  console.log('Para testar localmente, defina NODE_ENV=production ou rode via CI/CD.');
+  console.log('Execução abortada para proteger os arquivos fonte locais.');
+  console.log('============================');
+  process.exit(0);
+}
+
 // Configurações
 const isTest = process.env.NODE_ENV === 'test';
 const diretorioPublic = isTest ? process.env.TEST_DIR : path.resolve(__dirname, '../public'); // Arquivos estáticos
