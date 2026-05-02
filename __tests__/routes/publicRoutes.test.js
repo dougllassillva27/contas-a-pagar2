@@ -25,6 +25,11 @@ jest.mock('../../src/middlewares/rateLimiter', () => ({
   apiLimiter: (req, res, next) => next(),
 }));
 
+jest.mock('../../src/config/db', () => ({
+  query: jest.fn(),
+}));
+const db = require('../../src/config/db');
+
 const publicRoutes = require('../../src/routes/publicRoutes');
 
 function setupApp() {
@@ -68,8 +73,14 @@ describe('Rotas Públicas (publicRoutes)', () => {
     expect(res.headers.location).toBe('/login');
   });
 
-  test('GET /contas/:userId/:nome - deve renderizar portal de terceiros', async () => {
-    const res = await request(app).get('/contas/1/Teste');
+  test('GET /contas/:tokenPublico - deve renderizar portal de terceiros com UUID', async () => {
+    // Simula que o UUID existe no banco e pertence ao usuário 1 (Teste)
+    db.query.mockResolvedValueOnce({ rows: [{ usuario_id: 1, nome: 'Teste' }] });
+    const validUUID = '123e4567-e89b-12d3-a456-426614174000';
+    const res = await request(app).get(`/contas/${validUUID}`);
     expect(res.status).toBe(200);
+    expect(db.query).toHaveBeenCalledWith(expect.stringContaining('SELECT usuario_id, nome FROM terceiros'), [
+      validUUID,
+    ]);
   });
 });
