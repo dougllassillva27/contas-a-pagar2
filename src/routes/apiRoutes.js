@@ -526,6 +526,21 @@ module.exports = function (repo) {
     })
   );
 
+  // --- OBTER TOKEN TERCEIRO (Para Compartilhamento de Atalho no Dashboard) ---
+  router.get(
+    '/api/terceiros/:nome/token',
+    asyncHandler(async (req, res) => {
+      const userId = req.session.user.id;
+      const nome = req.params.nome;
+      // Garante retorno usando UPSERT caso o terceiro seja criado no ato do compartilhamento
+      const query = await db.query(
+        'INSERT INTO terceiros (usuario_id, nome) VALUES ($1, $2) ON CONFLICT (usuario_id, nome) DO UPDATE SET nome = EXCLUDED.nome RETURNING token_publico',
+        [userId, nome]
+      );
+      res.json({ token: query.rows[0].token_publico });
+    })
+  );
+
   // --- SALVAR TEMPLATE WHATSAPP ---
   router.post(
     '/api/configuracoes/whatsapp',

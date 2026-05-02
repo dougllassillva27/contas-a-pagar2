@@ -519,25 +519,35 @@ function mascaraParcela(input) {
 // ✅ FUNÇÕES DE COMPARTILHAMENTO (Portal de Terceiros)
 // ==============================================================================
 
-function compartilharLinkTerceiro() {
+let urlCompartilhamentoContexto = '';
+
+async function compartilharLinkTerceiro() {
   fecharMenuContexto();
   const nome = pessoaSelecionadaContexto;
   if (!nome || nome === 'ULTIMAS') return;
 
-  const userId = document.body.dataset.userid;
-  const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
+  mostrarLoading();
+  try {
+    const res = await fetch(`/api/terceiros/${encodeURIComponent(nome)}/token`);
+    const data = await res.json();
+    ocultarLoading();
 
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    urlCompartilhamentoContexto = `${window.location.origin}/contas/${data.token}?month=${currentMonth}&year=${currentYear}`;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  if (isMobile) {
-    copiarAoClipboard(url);
-    mostrarAviso('Link copiado!', url);
-  } else {
-    const nomeEl = document.getElementById('nomePessoaShare');
-    if (nomeEl) nomeEl.innerText = nome;
+    if (isMobile) {
+      copiarAoClipboard(urlCompartilhamentoContexto);
+      mostrarAviso('Link copiado!', urlCompartilhamentoContexto);
+    } else {
+      const nomeEl = document.getElementById('nomePessoaShare');
+      if (nomeEl) nomeEl.innerText = nome;
 
-    registerModalOpen();
-    document.getElementById('modalCompartilhar').classList.add('active');
+      registerModalOpen();
+      document.getElementById('modalCompartilhar').classList.add('active');
+    }
+  } catch (err) {
+    ocultarLoading();
+    mostrarAviso('Erro', 'Não foi possível gerar o link de compartilhamento.');
   }
 }
 
@@ -547,21 +557,15 @@ function fecharModalCompartilhar() {
 }
 
 function abrirLinkCompartilhado() {
-  const nome = pessoaSelecionadaContexto;
-  if (nome) {
-    const userId = document.body.dataset.userid;
-    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
-    window.open(url, '_blank');
+  if (urlCompartilhamentoContexto) {
+    window.open(urlCompartilhamentoContexto, '_blank');
     fecharModalCompartilhar();
   }
 }
 
 function copiarLinkCompartilhado() {
-  const nome = pessoaSelecionadaContexto;
-  if (nome) {
-    const userId = document.body.dataset.userid;
-    const url = `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${currentMonth}&year=${currentYear}`;
-    copiarAoClipboard(url);
+  if (urlCompartilhamentoContexto) {
+    copiarAoClipboard(urlCompartilhamentoContexto);
     fecharModalCompartilhar();
     mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
   }
