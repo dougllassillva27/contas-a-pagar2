@@ -115,9 +115,14 @@ async function initDatabase() {
           usuario_id INT REFERENCES Usuarios(Id) ON DELETE CASCADE,
           nome VARCHAR(100) NOT NULL,
           telefone VARCHAR(20),
+          token_publico UUID DEFAULT gen_random_uuid() UNIQUE,
           UNIQUE(usuario_id, nome)
       )
     `);
+
+    await db.query(
+      `ALTER TABLE terceiros ADD COLUMN IF NOT EXISTS token_publico UUID DEFAULT gen_random_uuid() UNIQUE`
+    );
 
     // 10. Tabela configuracoes (Preferências do usuário)
     await db.query(`

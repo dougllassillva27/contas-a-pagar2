@@ -113,16 +113,16 @@
                         </div>
 
                         <div class="terceiro-dash-actions">
-                            <button class="btn-dash-whatsapp" onclick="enviarWhatsApp('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>')">
+                            <button class="btn-dash-whatsapp" onclick="enviarWhatsApp('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>', '<%= pessoa.tokenPublico %>')">
                                 <span class="material-icons" style="font-size: 18px;">chat</span> WhatsApp
                             </button>
-                            <button class="btn-dash-copiar" onclick="copiarLinkEspecifico('<%= pessoa.nome %>')">
+                            <button class="btn-dash-copiar" onclick="copiarLinkEspecifico('<%= pessoa.nome %>', '<%= pessoa.tokenPublico %>')">
                                 <span class="material-icons" style="font-size: 18px;">content_copy</span> Copiar
                             </button>
                             <button class="btn-dash-numero" onclick="editarTelefone('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>')">
                                 <span class="material-icons" style="font-size: 18px;">edit</span> Número
                             </button>
-                            <button class="btn-dash-abrir" onclick="abrirLinkEspecifico('<%= pessoa.nome %>')">
+                            <button class="btn-dash-abrir" onclick="abrirLinkEspecifico('<%= pessoa.tokenPublico %>')">
                                 <span class="material-icons" style="font-size: 18px;">open_in_new</span> Abrir
                             </button>
                         </div>
@@ -167,21 +167,20 @@
     <script src="/js/dragdrop.js" defer></script>
     <script src="/js/app.js" defer></script>
     <script>
-        function obterUrlTerceiro(nome) {
-            const userId = document.body.dataset.userid;
+        function obterUrlTerceiro(tokenPublico) {
             const month = document.body.dataset.month;
             const year = document.body.dataset.year;
-            return `${window.location.origin}/contas/${userId}/${encodeURIComponent(nome)}?month=${month}&year=${year}`;
+            return `${window.location.origin}/contas/${tokenPublico}?month=${month}&year=${year}`;
         }
 
-        function copiarLinkEspecifico(nome) {
-            const url = obterUrlTerceiro(nome);
+        function copiarLinkEspecifico(nome, tokenPublico) {
+            const url = obterUrlTerceiro(tokenPublico);
             copiarAoClipboard(url);
             mostrarAviso('Sucesso', 'Link de ' + nome + ' copiado para a área de transferência!');
         }
 
-        function abrirLinkEspecifico(nome) {
-            const url = obterUrlTerceiro(nome);
+        function abrirLinkEspecifico(tokenPublico) {
+            const url = obterUrlTerceiro(tokenPublico);
             window.open(url, '_blank');
         }
 
@@ -232,9 +231,9 @@
             }
         }
 
-        function enviarWhatsApp(nome, telefone) {
+        function enviarWhatsApp(nome, telefone, tokenPublico) {
             if (!telefone) return mostrarAviso('Atenção', `Por favor, cadastre o número de ${nome} no botão "Número" primeiro.`);
-            const url = obterUrlTerceiro(nome);
+            const url = obterUrlTerceiro(tokenPublico);
             const mes = document.body.dataset.month;
             const ano = document.body.dataset.year;
             const template = document.getElementById('whatsappTemplateInput').value;
