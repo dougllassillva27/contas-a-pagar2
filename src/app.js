@@ -10,6 +10,7 @@ const express = require('express');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
+const helmet = require('helmet');
 const path = require('path');
 
 // Módulos internos
@@ -51,9 +52,10 @@ app.locals.API_TOKEN = safeApiToken;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(compression());
+app.use(helmet({ contentSecurityPolicy: false })); // Hardening básico sem quebrar EJS inline scripts
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' })); // Previne DoS por payload massivo
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
 app.use(requestLogger);
 

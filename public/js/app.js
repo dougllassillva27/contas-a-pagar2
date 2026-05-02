@@ -19,6 +19,19 @@ let idExcluir = null;
 let isSubmitting = false;
 
 // ==============================================================================
+// ✅ HELPERS DE SEGURANÇA
+// ==============================================================================
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ==============================================================================
 // ✅ ATUALIZAÇÃO DOM SEM RELOAD (Soft Refresh)
 // ==============================================================================
 async function softRefresh() {
@@ -265,12 +278,13 @@ async function abrirModalUltimas() {
 
     let html = '';
     data.forEach((item) => {
-      const quem = item.nometerceiro || currentUserName;
+      const quem = escapeHTML(item.nometerceiro || currentUserName);
 
       // ✅ Mantém "R$" + valor em uma única linha (usa NBSP do currency pt-BR)
       const valorCurrency = Number(item.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      const descText = item.descricao + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
+      const descText =
+        escapeHTML(item.descricao) + (item.parcelaatual ? ` (${item.parcelaatual}/${item.totalparcelas})` : '');
 
       let badgeCmp = '';
       if (item.datavencimento) {
@@ -294,8 +308,8 @@ async function abrirModalUltimas() {
         : '--/--/----';
 
       // Segurança básica para strings dentro do onclick
-      const safeDesc = String(item.descricao || '').replace(/'/g, "\\'");
-      const safePessoa = String(item.nometerceiro || '').replace(/'/g, "\\'");
+      const safeDesc = escapeHTML(item.descricao || '').replace(/'/g, "\\'");
+      const safePessoa = escapeHTML(item.nometerceiro || '').replace(/'/g, "\\'");
 
       const tipo = item.parcelaatual ? 'Parcelada' : 'Única';
       const pAtual = item.parcelaatual || '';
@@ -512,16 +526,16 @@ async function abrirModalCartaoPessoa(pessoa) {
     let html = '';
     itens.forEach((item) => {
       const v = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      const safeDesc = item.descricao.replace(/'/g, "\\'");
+      const safeDesc = escapeHTML(item.descricao).replace(/'/g, "\\'");
       const pAtual = item.parcelaatual || '';
       const pTotal = item.totalparcelas || '';
-      const safePessoa = (item.nometerceiro || '').replace(/'/g, "\\'");
+      const safePessoa = escapeHTML(item.nometerceiro || '').replace(/'/g, "\\'");
       let parcelasTexto =
         item.parcelaatual && item.totalparcelas
           ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2, '0')}/${String(item.totalparcelas).padStart(2, '0')})</small>`
           : '';
       const classePago = item.status === 'PAGO' ? ' linha-paga' : '';
-      html += `<tr class="draggable-row${classePago}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${item.descricao} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
+      html += `<tr class="draggable-row${classePago}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${escapeHTML(item.descricao)} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
     });
     container.innerHTML = html;
     initDragAndDrop();
@@ -543,8 +557,8 @@ async function abrirModalRendasDetalhes() {
     let html = '';
     rendas.forEach((renda) => {
       const valorFormatado = Number(renda.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-      const safeDesc = renda.descricao.replace(/'/g, "\\'");
-      html += `<div class="list-item"><div class="desc">${renda.descricao}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${valorFormatado}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${renda.id}, '${safeDesc}', '${valorFormatado}', '${renda.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${renda.id})">delete</span></div></div></div>`;
+      const safeDesc = escapeHTML(renda.descricao).replace(/'/g, "\\'");
+      html += `<div class="list-item"><div class="desc">${escapeHTML(renda.descricao)}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${valorFormatado}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${renda.id}, '${safeDesc}', '${valorFormatado}', '${renda.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${renda.id})">delete</span></div></div></div>`;
     });
     container.innerHTML = html || 'Vazio';
   } catch (err) {

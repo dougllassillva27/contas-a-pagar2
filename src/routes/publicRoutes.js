@@ -27,6 +27,7 @@ module.exports = function (repo) {
   // ============================================================================
   // Aplica o rate limiter antes de processar qualquer lógica de banco/bcrypt
   router.post('/login', loginLimiter, async (req, res) => {
+    const loginDigitado = (req.body.login || req.body.username || '').trim();
     const passwordDigitada = (req.body.password || '').trim();
     const lembrar = req.body.lembrar === 'on';
 
@@ -34,15 +35,29 @@ module.exports = function (repo) {
     console.log(`[LOGIN] Tentativa de login - IP: ${req.ip || req.connection.remoteAddress || 'N/A'}`);
 
     let userLogado = null;
-    try {
-      const dodo = await repo.obterUsuarioPorLogin('dodo');
-      const vitoria = await repo.obterUsuarioPorLogin('vitoria');
+    // Dummy hash (custo 10) para evitar Timing Attacks (User Enumeration)
+    const dummyHash = '$2b$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ123456';
 
-      // Valida usando bcrypt contra o hash seguro do banco
-      if (dodo && dodo.senhahash && (await bcrypt.compare(passwordDigitada, dodo.senhahash))) {
-        userLogado = dodo;
-      } else if (vitoria && vitoria.senhahash && (await bcrypt.compare(passwordDigitada, vitoria.senhahash))) {
-        userLogado = vitoria;
+    try {
+      if (loginDigitado) {
+        const user = await repo.obterUsuarioPorLogin(loginDigitado);
+        if (user && user.senhahash) {
+          const match = await bcrypt.compare(passwordDigitada, user.senhahash);
+          if (match) userLogado = user;
+        } else {
+          await bcrypt.compare(passwordDigitada, dummyHash);
+        }
+      } else {
+        // Fallback legado (sem campo login no form) com blindagem de timing attack
+        const dodo = await repo.obterUsuarioPorLogin('dodo');
+        const vitoria = await repo.obterUsuarioPorLogin('vitoria');
+        if (dodo && dodo.senhahash && (await bcrypt.compare(passwordDigitada, dodo.senhahash))) {
+          userLogado = dodo;
+        } else if (vitoria && vitoria.senhahash && (await bcrypt.compare(passwordDigitada, vitoria.senhahash))) {
+          userLogado = vitoria;
+        } else {
+          await bcrypt.compare(passwordDigitada, dummyHash);
+        }
       }
 
       if (userLogado) {
