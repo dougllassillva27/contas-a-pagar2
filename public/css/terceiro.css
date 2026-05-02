@@ -64,10 +64,11 @@ body {
 .tp-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
 }
 
 .tp-header-info {
@@ -87,11 +88,23 @@ body {
   color: var(--blue);
 }
 
-.tp-mes-label {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  text-transform: capitalize;
+.tp-mes-destaque-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tp-mes-label-grande {
+  font-size: 1.1rem;
+  color: var(--blue);
+  background: rgba(56, 120, 225, 0.15);
+  padding: 8px 24px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
   margin: 0;
+  box-shadow: 0 4px 15px rgba(56, 120, 225, 0.1);
 }
 
 /* --- Navegação mensal --- */
@@ -358,8 +371,14 @@ body {
 
   .tp-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .tp-mes-destaque-container {
+    position: static;
+    transform: none;
   }
 
   .tp-titulo {
