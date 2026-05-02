@@ -38,7 +38,9 @@
     <header class="tp-header">
         <div class="tp-header-info">
             <h1 class="tp-titulo">Contas de <span class="tp-nome-destaque"><%= nome %></span></h1>
-            <p class="tp-mes-label"><%= mesAnoCapitalizado %></p>
+        </div>
+        <div class="tp-mes-destaque-container">
+            <p class="tp-mes-label-grande"><%= mesAnoCapitalizado %></p>
         </div>
         <nav class="tp-nav">
             <a href="/contas/<%= tokenPublico %>?month=<%= nav.ant.month %>&year=<%= nav.ant.year %>" class="tp-nav-btn">
