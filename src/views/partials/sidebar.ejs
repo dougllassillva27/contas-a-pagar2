@@ -14,16 +14,6 @@
             <span class="material-icons" style="color: var(--green);">add_circle</span> Novo Lançamento
         </button>
 
-        <% if (user.id === 1) { %> 
-            <a href="/switch/2" class="sidebar-btn sidebar-btn-users">
-                <span class="material-icons" style="color: var(--orange);">people</span> Vitória
-            </a>
-        <% } else { %>
-            <a href="/switch/1" class="sidebar-btn sidebar-btn-users">
-                <span class="material-icons" style="color: var(--blue);">people</span> Dodo
-            </a>
-        <% } %>
-
         <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalUltimas)">
             <span class="material-icons">history</span> Últimas
         </button>
