@@ -63,7 +63,8 @@ async function getRelatorioMensal(userId, month, year) {
           NomeTerceiro, 
           Ordem
    `;
-  const result = await db.query(query, [userId, month, year]);
+  const { startDate, endDate } = getMesRange(month, year);
+  const result = await db.query(query, [userId, startDate, endDate]);
   return result.rows;
 }
 
@@ -88,7 +89,7 @@ async function getDashboardTotals(userId, month, year) {
 async function getDashboardDataBatched(userId, month, year, userName) {
   const { startDate, endDate } = getMesRange(month, year);
   const tiposContas = `'${TIPO.FIXA}', '${TIPO.CARTAO}'`;
-  
+
   const query = `
     WITH lancamentos_mes AS MATERIALIZED (
       SELECT * FROM Lancamentos 
@@ -150,10 +151,10 @@ async function getDashboardDataBatched(userId, month, year, userName) {
       
       (SELECT row_to_json(t) FROM (SELECT * FROM configuracoes WHERE usuario_id = $1) t) AS configuracoes
   `;
-  
+
   const result = await db.query(query, [userId, startDate, endDate, userName, month, year]);
   const row = result.rows[0] || {};
-  
+
   return {
     totais: row.totais || { totalrendas: 0, totalcontas: 0, faltapagar: 0, saldoprevisto: 0 },
     fixas: row.fixas || [],
@@ -460,10 +461,11 @@ async function deleteLancamentosPorPessoa(userId, pessoa, month, year, userName)
 
 async function deleteMonth(userId, month, year) {
   const { startDate, endDate } = getMesRange(month, year);
-  await db.query(
-    'DELETE FROM Lancamentos WHERE UsuarioId = $1 AND DataVencimento >= $2 AND DataVencimento < $3',
-    [userId, startDate, endDate]
-  );
+  await db.query('DELETE FROM Lancamentos WHERE UsuarioId = $1 AND DataVencimento >= $2 AND DataVencimento < $3', [
+    userId,
+    startDate,
+    endDate,
+  ]);
 }
 
 // ==============================================================================
@@ -620,14 +622,14 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
     SELECT $1, $2, $5, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01'
     WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing);
   `;
-  
+
   await db.query(query, [userId, nomeConta, startDate, endDate, valor, dataVencimento]);
 }
 
 async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valor, month, year, nomeTerceiro) {
   const dataVencimento = new Date(year, month - 1, 10);
   const { startDate, endDate } = getMesRange(month, year);
-  
+
   const terceiro = nomeTerceiro || null;
   const terceiroCondition = terceiro ? 'NomeTerceiro = $7' : "(NomeTerceiro IS NULL OR NomeTerceiro = '')";
 
