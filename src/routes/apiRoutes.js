@@ -191,7 +191,7 @@ module.exports = function (repo) {
         syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year).catch(console.error);
       }
 
-      const [
+      const {
         totais,
         fixas,
         cartao,
@@ -203,19 +203,7 @@ module.exports = function (repo) {
         mesFechado,
         terceirosDistinct,
         configuracoes,
-      ] = await Promise.all([
-        repo.getDashboardTotals(userId, month, year),
-        repo.getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
-        repo.getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
-        repo.getAnotacoes(userId, 0, 0), // Global como padrão no carregamento SSR
-        repo.getResumoPessoas(userId, month, year, userName),
-        repo.getDadosTerceiros(userId, month, year),
-        repo.getOrdemCards(userId),
-        repo.getFaturaManual(userId, month, year),
-        repo.isMesFechado(userId, month, year),
-        repo.getDistinctTerceiros(userId),
-        repo.getConfiguracoes(userId),
-      ]);
+      } = await repo.getDashboardDataBatched(userId, Number(month), Number(year), userName);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
@@ -314,11 +302,11 @@ module.exports = function (repo) {
       const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
 
       const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw] = await Promise.all([
-        repo.getDashboardTotals(req.session.user.id, month, year),
-        repo.getLancamentosPorTipo(req.session.user.id, TIPO.FIXA, month, year),
-        repo.getLancamentosPorTipo(req.session.user.id, TIPO.CARTAO, month, year),
-        repo.getResumoPessoas(req.session.user.id, month, year, req.session.user.nome),
-        repo.getDadosTerceiros(req.session.user.id, month, year),
+        repo.getDashboardTotals(req.session.user.id, Number(month), Number(year)),
+        repo.getLancamentosPorTipo(req.session.user.id, TIPO.FIXA, Number(month), Number(year)),
+        repo.getLancamentosPorTipo(req.session.user.id, TIPO.CARTAO, Number(month), Number(year)),
+        repo.getResumoPessoas(req.session.user.id, Number(month), Number(year), req.session.user.nome),
+        repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year)),
       ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);

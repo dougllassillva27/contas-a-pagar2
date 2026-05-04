@@ -135,25 +135,28 @@ describe('Integração API (Mocked DB)', () => {
   describe('Renderização de Views (GET / e GET /terceiros)', () => {
     beforeEach(() => {
       // Configura retornos padrão blindados para evitar crashes de null pointer no render do EJS
-      repo.getDashboardTotals.mockResolvedValue({ totalrendas: 0, totalcontas: 0, faltapagar: 0, saldoprevisto: 0 });
-      repo.getLancamentosPorTipo.mockResolvedValue([]);
-      repo.getAnotacoes.mockResolvedValue({ conteudo: '' });
-      repo.getResumoPessoas.mockResolvedValue([]);
-      repo.getOrdemCards.mockResolvedValue([]);
-      repo.getFaturaManual.mockResolvedValue(0);
+      repo.getDashboardDataBatched.mockResolvedValue({
+        totais: { totalrendas: 0, totalcontas: 0, faltapagar: 0, saldoprevisto: 0 },
+        fixas: [],
+        cartao: [],
+        anotacoes: '',
+        resumoPessoas: [],
+        dadosTerceirosRaw: [],
+        ordemCardsRaw: [],
+        faturaManualVal: 0,
+        mesFechado: false,
+        terceirosDistinct: [],
+        configuracoes: { divisao_casa_minimo: 750.0 }
+      });
+      repo.getDadosTerceiros.mockResolvedValue([]);
       repo.isMesFechado.mockResolvedValue(false);
-      repo.getDistinctTerceiros.mockResolvedValue([]);
-      repo.getConfiguracoes.mockResolvedValue({ divisao_casa_minimo: 750.0 });
     });
 
-    test('GET / - deve buscar as anotações globais (0, 0) por padrão na inicialização', async () => {
-      repo.getDadosTerceiros.mockResolvedValue([]);
-
+    test('GET / - carrega dashboard agrupado', async () => {
       const res = await agent.get('/');
 
       expect(res.status).toBe(200);
-      // Verifica se a injeção via SSR alterou de mês atual para Mês Global (0, 0)
-      expect(repo.getAnotacoes).toHaveBeenCalledWith(1, 0, 0);
+      expect(repo.getDashboardDataBatched).toHaveBeenCalled();
     });
 
     test('GET /terceiros - deve filtrar nomes nulos (contas próprias) para evitar Erro 500 na ordenação', async () => {

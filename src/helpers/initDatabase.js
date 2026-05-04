@@ -25,7 +25,15 @@ async function initDatabase() {
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_datavencimento ON Lancamentos(DataVencimento)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_tipo ON Lancamentos(Tipo)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_status ON Lancamentos(Status)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_datacriacao ON Lancamentos(DataCriacao)');
 
+    // Novos índices compostos para otimização de dashboard e inserções
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_data ON Lancamentos(UsuarioId, DataVencimento)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_ordem ON Lancamentos(UsuarioId, Ordem)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_datacriacao ON Lancamentos(UsuarioId, DataCriacao DESC)');
+    
+    // Índice funcional para otimizar o date_trunc na consulta de Últimos Lançamentos
+    await db.query("CREATE INDEX IF NOT EXISTS idx_lancamentos_trunc_data ON Lancamentos (UsuarioId, date_trunc('second', DataCriacao) DESC)");
     // 1. Tabela OrdemCards
     await db.query(` 
       CREATE TABLE IF NOT EXISTS OrdemCards (
