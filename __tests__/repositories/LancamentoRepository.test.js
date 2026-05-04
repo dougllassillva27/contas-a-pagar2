@@ -316,14 +316,17 @@ describe('getLancamentosTerceiro', () => {
     ];
     db.query.mockResolvedValue({ rows: mockRows });
 
-    const result = await lancamentoRepo.getLancamentosTerceiro('Mae', 3, 2026);
+    const result = await lancamentoRepo.getLancamentosTerceiro(1, 'Mae', 3, 2026);
 
     expect(result).toEqual(mockRows);
     expect(db.query).toHaveBeenCalledTimes(1);
 
     // Verifica os parâmetros da query
     const [query, params] = db.query.mock.calls[0];
-    expect(params).toEqual(['Mae', 3, 2026]);
+    expect(params[0]).toEqual(1);
+    expect(params[1]).toEqual('Mae');
+    expect(params[2]).toMatch('2026-03-01');
+    expect(params[3]).toMatch('2026-04-01');
     expect(query).toContain('NomeTerceiro');
     expect(query).toContain('FIXA');
     expect(query).toContain('CARTAO');
@@ -334,7 +337,7 @@ describe('getLancamentosTerceiro', () => {
   test('retorna array vazio se terceiro não tem lançamentos', async () => {
     db.query.mockResolvedValue({ rows: [] });
 
-    const result = await lancamentoRepo.getLancamentosTerceiro('Inexistente', 1, 2026);
+    const result = await lancamentoRepo.getLancamentosTerceiro(1, 'Inexistente', 1, 2026);
 
     expect(result).toEqual([]);
     expect(db.query).toHaveBeenCalledTimes(1);
@@ -361,7 +364,9 @@ describe('getDashboardTotals', () => {
     expect(db.query).toHaveBeenCalledTimes(1);
 
     const [querySQL, params] = db.query.mock.calls[0];
-    expect(params).toEqual([1, 4, 2026]);
+    expect(params[0]).toBe(1);
+    expect(params[1]).toMatch('2026-04-01');
+    expect(params[2]).toMatch('2026-05-01');
     expect(querySQL).toContain('totalrendas');
     expect(querySQL).toContain('totalcontas');
     expect(querySQL).toContain('faltapagar');

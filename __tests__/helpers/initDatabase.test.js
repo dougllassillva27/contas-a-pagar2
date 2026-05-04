@@ -24,8 +24,8 @@ describe('initDatabase.js', () => {
     db.query.mockResolvedValue();
     await initDatabase();
 
-    // Conta exata de queries no initDatabase.js (agora incluindo o ALTER TABLE do token_publico)
-    expect(db.query).toHaveBeenCalledTimes(20);
+    // Conta exata de queries no initDatabase.js (agora incluindo o ALTER TABLE do token_publico e os novos índices)
+    expect(db.query).toHaveBeenCalledTimes(25);
     expect(console.log).toHaveBeenCalledWith('✅ Database inicializado com sucesso.');
   });
 

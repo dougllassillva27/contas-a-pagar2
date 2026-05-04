@@ -28,9 +28,13 @@ async function sincronizarFaturaMorr(repo, sourceUserId, targetUserId, month, ye
  */
 async function sincronizarDivisaoCasa(repo, sourceUserId, targetUserId, mes, ano) {
   try {
-    const config = await repo.getConfiguracoes(sourceUserId);
+    // Busca as configurações e o total da casa em paralelo (N+1 Optimization)
+    const [config, totalCasa] = await Promise.all([
+      repo.getConfiguracoes(sourceUserId),
+      repo.getTotalTerceiroCartao('Casa', sourceUserId, mes, ano)
+    ]);
+
     const valorMinimo = config.divisao_casa_minimo || 750;
-    const totalCasa = await repo.getTotalTerceiroCartao('Casa', sourceUserId, mes, ano);
     const valorOriginal = totalCasa || 0;
 
     // Regra de negócio: mínimo configurável para cada. Acima disso, divide real.
@@ -38,9 +42,12 @@ async function sincronizarDivisaoCasa(repo, sourceUserId, targetUserId, mes, ano
     if (metade < valorMinimo) metade = valorMinimo;
     metade = Math.round(metade * 100) / 100; // Evita dízima na conciliação futura
 
-    await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, null); // Dodo (conta própria)
-    await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, 'Morr'); // Morr no dashboard do Dodo
-    await repo.findAndUpdateOrCreateContaFixaComTerceiro(targetUserId, 'Casa', metade, mes, ano, null); // Vitória (conta própria espelhada)
+    // Executa as operações de gravação atômica concorrentemente
+    await Promise.all([
+      repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, null), // Dodo (conta própria)
+      repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, 'Morr'), // Morr no dashboard do Dodo
+      repo.findAndUpdateOrCreateContaFixaComTerceiro(targetUserId, 'Casa', metade, mes, ano, null) // Vitória (conta própria espelhada)
+    ]);
 
     console.log(
       `[SYNC] Divisão Casa sincronizada. Source: ${sourceUserId}, Target: ${targetUserId}. Total: ${valorOriginal} -> ${metade}`
