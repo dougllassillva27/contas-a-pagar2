@@ -321,8 +321,12 @@ async function abrirModalUltimas() {
       // Checkbox "conferido" — persistente no banco
       const isConferido = item.conferido === true;
       const classeConferido = isConferido ? ' conferido' : '';
+      const classeUltima =
+        item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1
+          ? ' ultima-parcela'
+          : '';
 
-      html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" class="${classeConferido}" data-id="${item.id}" onclick="toggleRowSelection(event, this)">
+      html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" class="${classeConferido}${classeUltima}" data-id="${item.id}" onclick="toggleRowSelection(event, this)">
                 <td style="text-align:center;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
                 <td class="col-data">${inseridoEm}</td>
                 <td style="font-weight:500; color:var(--blue);">${quem}</td>
@@ -535,7 +539,11 @@ async function abrirModalCartaoPessoa(pessoa) {
           ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2, '0')}/${String(item.totalparcelas).padStart(2, '0')})</small>`
           : '';
       const classePago = item.status === 'PAGO' ? ' linha-paga' : '';
-      html += `<tr class="draggable-row${classePago}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${escapeHTML(item.descricao)} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
+      const classeUltima =
+        item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1
+          ? ' ultima-parcela'
+          : '';
+      html += `<tr class="draggable-row${classePago}${classeUltima}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${escapeHTML(item.descricao)} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
     });
     container.innerHTML = html;
     initDragAndDrop();

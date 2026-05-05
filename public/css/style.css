@@ -590,6 +590,14 @@ textarea:focus {
   background-color: rgba(0, 0, 0, 0.2) !important;
   transition: all 0.3s ease;
 }
+
+.list-table tr.ultima-parcela {
+  background: rgba(255, 167, 38, 0.12) !important; /* Destaque sutil dourado/laranja */
+}
+.list-table tr.ultima-parcela:hover {
+  background: rgba(255, 167, 38, 0.18) !important;
+}
+
 .list-table td {
   padding: 10px 12px;
   font-size: 0.9rem;

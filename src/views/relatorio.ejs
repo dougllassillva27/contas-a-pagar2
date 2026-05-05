@@ -229,6 +229,14 @@
             background: rgba(255, 255, 255, 0.03);
         }
 
+        .list-table tr.ultima-parcela {
+            background-color: rgba(255, 167, 38, 0.12) !important;
+            border-color: rgba(255, 167, 38, 0.2);
+        }
+        .list-table tr.ultima-parcela:hover td {
+            background-color: rgba(255, 167, 38, 0.18) !important;
+        }
+
         /* Custom Checkbox Interativa */
         .checkbox-wrapper {
             display: flex;
@@ -501,6 +509,11 @@
             .tr-conferido .item-valor {
                 color: #000 !important;
             }
+            .list-table tr.ultima-parcela {
+                background-color: rgba(255, 167, 38, 0.12) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -557,7 +570,7 @@
                         <tbody>
                             <% grupo.itens.forEach(item => { %>
                                 <!-- Salvamos o status original no data attribute para podermos voltar se o usuário desmarcar -->
-                                <tr class="<%= item.conferidoextrato ? 'tr-conferido' : '' %>" data-original-status="<%= item.status %>" data-id="<%= item.id %>">
+                                <tr class="<%= item.conferidoextrato ? 'tr-conferido' : '' %> <%= (item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1) ? 'ultima-parcela' : '' %>" data-original-status="<%= item.status %>" data-id="<%= item.id %>">
                                     <td style="text-align: center;">
                                         <div class="checkbox-wrapper">
                                             <input type="checkbox" class="custom-checkbox chk-conferido" 
