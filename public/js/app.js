@@ -325,18 +325,19 @@ async function abrirModalUltimas() {
         item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1
           ? ' ultima-parcela'
           : '';
+      const titleUltima = classeUltima ? ' data-tooltip="Última parcela ✅"' : '';
 
       html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;" class="${classeConferido}${classeUltima}" data-id="${item.id}" onclick="toggleRowSelection(event, this)">
                 <td style="text-align:center;"><input type="checkbox" onchange="alternarConferido(this, ${item.id})" ${isConferido ? 'checked' : ''}></td>
                 <td class="col-data">${inseridoEm}</td>
                 <td style="font-weight:500; color:var(--blue);">${quem}</td>
-                <td class="col-desc">${descHTML}</td>
+                <td class="col-desc"${titleUltima}>${descHTML}</td>
                 <td class="col-valor" style="text-align:right; font-weight:bold; white-space:nowrap;">${valorCurrency}</td>
                 <td class="actions" style="text-align:center;">
-                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span>
-                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span>
-                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span>
-                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${item.id})">delete</span>
+                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span>
+                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span>
+                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+                    <span class="material-icons" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${item.id})" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                 </td>
             </tr>`;
     });
@@ -543,7 +544,8 @@ async function abrirModalCartaoPessoa(pessoa) {
         item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1
           ? ' ultima-parcela'
           : '';
-      html += `<tr class="draggable-row${classePago}${classeUltima}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td>${escapeHTML(item.descricao)} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" title="Mover para mês anterior">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" title="Mover para próximo mês">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})">delete</span></td></tr>`;
+      const titleUltima = classeUltima ? ' data-tooltip="Última parcela ✅"' : '';
+      html += `<tr class="draggable-row${classePago}${classeUltima}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td${titleUltima}>${escapeHTML(item.descricao)} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span><span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span><span class="material-icons" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span><span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(${item.id})" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span></td></tr>`;
     });
     container.innerHTML = html;
     initDragAndDrop();
@@ -566,7 +568,7 @@ async function abrirModalRendasDetalhes() {
     rendas.forEach((renda) => {
       const valorFormatado = Number(renda.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
       const safeDesc = escapeHTML(renda.descricao).replace(/'/g, "\\'");
-      html += `<div class="list-item"><div class="desc">${escapeHTML(renda.descricao)}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${valorFormatado}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${renda.id}, '${safeDesc}', '${valorFormatado}', '${renda.categoria}')">edit</span><span class="material-icons" onclick="confirmarExclusao(${renda.id})">delete</span></div></div></div>`;
+      html += `<div class="list-item"><div class="desc">${escapeHTML(renda.descricao)}</div><div style="display:flex;gap:15px;"><div class="val">R$ ${valorFormatado}</div><div class="actions"><span class="material-icons" onclick="editarRenda(${renda.id}, '${safeDesc}', '${valorFormatado}', '${renda.categoria}')" data-tooltip="Editar renda" data-tooltip-dir="left">edit</span><span class="material-icons" onclick="confirmarExclusao(${renda.id})" data-tooltip="Excluir renda" data-tooltip-dir="left">delete</span></div></div></div>`;
     });
     container.innerHTML = html || 'Vazio';
   } catch (err) {
