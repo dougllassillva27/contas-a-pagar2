@@ -121,8 +121,8 @@
                                 <td><%= item.descricao %></td>
                                 <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                 <td class="actions">
-                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)">edit</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                                 </td>
                             </tr>
                             <% }) %>
@@ -149,7 +149,7 @@
                             <tr class="draggable-row <%= item.status === 'PAGO' ? 'linha-paga' : '' %> <%= (item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1) ? 'ultima-parcela' : '' %>" draggable="true" data-id="<%= item.id %>">
                                 <td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td>
                                 <td width="30"><input type="checkbox" onchange="alternarStatus(this, <%= item.id %>)" <%= item.status === 'PAGO' ? 'checked' : '' %>></td>
-                                <td>
+                                <td <%- (item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1) ? 'data-tooltip="Última parcela ✅"' : '' %>>
                                     <%= item.descricao %>
                                     <% if(item.parcelaatual && item.totalparcelas) { %>
                                         <small style="color:var(--text-secondary);">
@@ -159,10 +159,10 @@
                                 </td>
                                 <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                 <td class="actions">
-                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], -1)" title="Mover para mês anterior">chevron_left</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], 1)" title="Mover para próximo mês">chevron_right</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)">edit</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                                 </td>
                             </tr>
                             <% }) %>
@@ -199,7 +199,7 @@
                         <tr>
                             <td width="30" style="color: var(--text-secondary);">
                                 <span class="material-icons" style="font-size: 16px; cursor: pointer;" 
-                                      onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')">visibility</span>
+                                      onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')" data-tooltip="Visualizar contas" data-tooltip-dir="right">visibility</span>
                             </td>
                             <td style="padding:0;">
                                 <span class="trigger-p-nome" 
@@ -243,7 +243,7 @@
                             </div>
                         </div>
                         <button class="btn-secondary" style="border: none; background: rgba(0,0,0,0.2);" 
-                                onclick="abrirModalCartaoPessoa('<%= pessoa.nome %>')">
+                                onclick="abrirModalCartaoPessoa('<%= pessoa.nome %>')" data-tooltip="Visualizar contas" data-tooltip-dir="right">
                             <span class="material-icons">visibility</span> Ver
                         </button>
                     </div>
@@ -268,8 +268,8 @@
                                         <td><%= item.descricao %></td>
                                         <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                         <td class="actions">
-                                            <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, '<%= safeJs(pessoa.nome) %>')">edit</span>
-                                            <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)">delete</span>
+                                            <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, '<%= safeJs(pessoa.nome) %>')" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+                                            <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                                         </td>
                                     </tr>
                                     <% }) %>
