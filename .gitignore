@@ -249,3 +249,9 @@ docs/bkp/contas-a-pagar.7z
 docs/security/
 docs/contexto
 docs/versionamento
+
+# Ignorar cache e mídias temporárias do Graphify
+graphify-out/cache/
+graphify-out/media/
+docs/bkp/contas-a-pagar.7z
+GEMINI.md

@@ -1,0 +1,458 @@
+{
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\history\\database\\migrate.js": {
+    "mtime": 1770848333.0,
+    "hash": "24491d8d53ee828946cf6625d41ee99c"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\history\\database\\reverse-migrate.sql": {
+    "mtime": 1770853088.0,
+    "hash": "28a9fef25bc2efb8e85dc378ab6bc378"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\history\\database\\schema_postgreSQL.sql": {
+    "mtime": 1777608939.1328697,
+    "hash": "61b27966a886c27b8111713c69d4d194"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\history\\database\\whatch-deploy.ps1": {
+    "mtime": 1772552053.0,
+    "hash": "dd18e4562b52590bf3608715d876726a"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\sw.js": {
+    "mtime": 1777731645.4115982,
+    "hash": "5721119e4301abbad66253a93c21fd75"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\app.js": {
+    "mtime": 1777996931.6943843,
+    "hash": "c186d246771a9e5b8b352b862f14fa09"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\app.test.js": {
+    "mtime": 1777652712.6762955,
+    "hash": "8a507d758175de250a4b6c70832ffbbf"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\dragdrop.js": {
+    "mtime": 1776741530.9247234,
+    "hash": "14a7d10f7760df23a7c229299d077b75"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\login.js": {
+    "mtime": 1774137272.0534656,
+    "hash": "08f32dbb68dfc4efc953efbaa9858854"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\ui.js": {
+    "mtime": 1777995728.8757956,
+    "hash": "138dd6c1bba739121fd80944fa409822"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\utils.js": {
+    "mtime": 1776741527.9522047,
+    "hash": "96dcb9660a15deb618f26ef74a2f34e3"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\app.js": {
+    "mtime": 1777687202.0647802,
+    "hash": "1d9632f795cf97680ddcffc257ccc818"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\constants.js": {
+    "mtime": 1771847517.0,
+    "hash": "e3bb2eab977e09af079e2a2803244c33"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\config\\db.js": {
+    "mtime": 1777854599.4980066,
+    "hash": "14c5bad63af9f74a7f8319c1c4fdbc58"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\config\\defaultLajeado.js": {
+    "mtime": 1776744202.355198,
+    "hash": "ad2f15825eb4fd2123ae5a84b0b3abf7"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\helpers\\asyncHandler.js": {
+    "mtime": 1776469398.0034146,
+    "hash": "c8b628761fac719a8c5b86d07d5cb5fa"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\helpers\\ConfiguracaoRepository.js": {
+    "mtime": 1777605269.9272883,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\helpers\\initDatabase.js": {
+    "mtime": 1777856747.7524335,
+    "hash": "e58650bc7dbae900796ac53237ab341d"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\helpers\\LajeadoRepository.js": {
+    "mtime": 1776193450.8944848,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\helpers\\parseHelpers.js": {
+    "mtime": 1771775399.0,
+    "hash": "75034555f24dc404fb0f3c9b6c22fe5b"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\middlewares\\auth.js": {
+    "mtime": 1776743650.423463,
+    "hash": "bf377e7c4431cf1b00bba3e69753af28"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\middlewares\\logger.js": {
+    "mtime": 1774138755.355632,
+    "hash": "5eb66b3aaaa4ee3b2ae942d7eaccfb1f"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\middlewares\\rateLimiter.js": {
+    "mtime": 1776741915.5066116,
+    "hash": "cf2113d9b9f09dd2ae547878322d30c3"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\conversationManager.js": {
+    "mtime": 1771898509.0,
+    "hash": "cfa6a49aa35f37dd19ada5c817deb19f"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\messageParser.js": {
+    "mtime": 1776738489.7427845,
+    "hash": "b858bb384ef961afade9d1d3a8de3662"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\responseFormatter.js": {
+    "mtime": 1776738487.3838117,
+    "hash": "35066bd062a446f971504b088839f9ed"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\setupWebhook.js": {
+    "mtime": 1774809031.694927,
+    "hash": "6ebaa72d02dd2b6a8df464f5f9343c02"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\telegramBot.js": {
+    "mtime": 1776738492.680289,
+    "hash": "d7834f0de5f7f11fe667d3d1a95b7c11"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\telegramRoutes.js": {
+    "mtime": 1771898509.0,
+    "hash": "61850f3a106148d32347775e967b606c"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\calcularLuz\\calcularLuzRoutes.js": {
+    "mtime": 1776372751.1990864,
+    "hash": "ab077f36573cc6e9db98499575abeb7e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\calcularLuz\\public\\js\\app.js": {
+    "mtime": 1776389530.167774,
+    "hash": "a0e358cce5058188b6bd69d3e27db6da"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\dataHora\\dataHoraRoutes.js": {
+    "mtime": 1776346415.416473,
+    "hash": "b3b5739fcc2aa3b87fa3669205055483"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\AnotacaoRepository.js": {
+    "mtime": 1772538946.0,
+    "hash": "30cbab5803e47ac8b2ccd0d11e7c7b2d"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\BackupRepository.js": {
+    "mtime": 1771848247.0,
+    "hash": "0c2613338beace5121b82e5e2246d5ab"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\ConfiguracaoRepository.js": {
+    "mtime": 1777605270.478374,
+    "hash": "d5a840df321789a564d4ce03d739eea9"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\FaturaManualRepository.js": {
+    "mtime": 1771848241.0,
+    "hash": "ce8d796a90eb92f7e6372cd443fdcb56"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\FinanceiroRepository.js": {
+    "mtime": 1777604339.587835,
+    "hash": "8572d7847d2c7d9d1a0716d6f3de6138"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\LajeadoRepository.js": {
+    "mtime": 1776193451.908056,
+    "hash": "0bac5da52be7f37f0c15f2d9aae9c888"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\LancamentoRepository.js": {
+    "mtime": 1777894070.2167847,
+    "hash": "3341f75e57205e02fe9eaed65d1918a6"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\MesFechadoRepository.js": {
+    "mtime": 1775261740.862033,
+    "hash": "658dbcf1bfbbed6c749c8e272c9b3fc7"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\OrdemCardsRepository.js": {
+    "mtime": 1771848245.0,
+    "hash": "2fe7eea24db656f4e4c52feca43e91c4"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\TokenRepository.js": {
+    "mtime": 1776743914.2947986,
+    "hash": "5b114cc0919ec731e2d23be126d55520"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\UsuarioRepository.js": {
+    "mtime": 1776743658.3754468,
+    "hash": "b466280609a933fe0c4123c42fc4347e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\apiRoutes.js": {
+    "mtime": 1777856040.8176532,
+    "hash": "646ca5a81e6809e2e9bc7fdca5c0acd9"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\authRoutes.js": {
+    "mtime": 1774137298.954271,
+    "hash": "e72d9afd3485a911852caf04bf6bbbca"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\infraRoutes.js": {
+    "mtime": 1776429916.222825,
+    "hash": "0c784c11c8dffdcec6c4b0a0f03921d4"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\integrationRoutes.js": {
+    "mtime": 1774957004.162421,
+    "hash": "d475f81095c5c5b37e325475389c223e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\publicRoutes.js": {
+    "mtime": 1777721069.9003847,
+    "hash": "a9a26c0c7cb495ee0d7d3a854c37670f"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\scripts\\google-apps-script-example.js": {
+    "mtime": 1777857995.806812,
+    "hash": "b9a42f4ffee72e27d3f95974c02484bc"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\services\\syncService.js": {
+    "mtime": 1777856840.4402864,
+    "hash": "eaf42661887f4a7b020e03ee9b3e1323"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\index.ejs": {
+    "mtime": 1777996929.9230053,
+    "hash": "bbd2581bf1794f2c71310536593ecbbe"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\lajeado.ejs": {
+    "mtime": 1776642986.7574387,
+    "hash": "40f4ecff6a55926b05fe3d50061bb671"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\login.ejs": {
+    "mtime": 1777739819.832733,
+    "hash": "86c495ae1621f3790d940742edd26167"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\relatorio.ejs": {
+    "mtime": 1777996729.7307346,
+    "hash": "060032e262824589570240f58129f187"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\terceiro.ejs": {
+    "mtime": 1777995721.6405494,
+    "hash": "a1c25121d1eac3a244915e081f4d28a9"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\terceiros-dashboard.ejs": {
+    "mtime": 1777740030.6535518,
+    "hash": "3d7af8ca0ff088322bf58a7a61b440f4"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\partials\\head.ejs": {
+    "mtime": 1777739858.3281684,
+    "hash": "a554c3253ef0a4c4d4525e6d1ac8ae25"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\partials\\header.ejs": {
+    "mtime": 1775653206.5269055,
+    "hash": "b6a11b8d2a5c923d380c8452b75f9884"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\partials\\modals.ejs": {
+    "mtime": 1777608539.2347271,
+    "hash": "d5f850b8d00b9f0278172de6eadb1871"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\partials\\sidebar.ejs": {
+    "mtime": 1777689565.6174755,
+    "hash": "e0589e085f8da35856e532390291ed7c"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\versionamento\\versionador.js": {
+    "mtime": 1777740049.7892694,
+    "hash": "9403374758e722651898095d06c0fe81"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\constants.test.js": {
+    "mtime": 1776485529.9182127,
+    "hash": "419bcc24dd70f3adecb773410cd657ff"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\versioning.test.js": {
+    "mtime": 1777069374.6456847,
+    "hash": "e1ede66f7bb4374496737748b580c875"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\botTelegram\\messageParser.test.js": {
+    "mtime": 1774534515.304996,
+    "hash": "f6ab02f108138d0cd5670e73f937d697"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\botTelegram\\responseFormatter.test.js": {
+    "mtime": 1776738494.511168,
+    "hash": "070ff18179435d937be7c110ac1400dc"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\botTelegram\\telegramBot.test.js": {
+    "mtime": 1776738495.9223268,
+    "hash": "fbc607b0df6a5c14febe3dcbbc22d7a8"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\config\\db.test.js": {
+    "mtime": 1776485666.723705,
+    "hash": "059df09a16cbc9725545651fabae3cb2"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\dataHora\\dataHora.test.js": {
+    "mtime": 1776355504.4413555,
+    "hash": "c34573462f649a4ad13582d2d4ee2ffa"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\helpers\\asyncHandler.test.js": {
+    "mtime": 1776469409.2713518,
+    "hash": "687194d4795bd681821de754727e225c"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\helpers\\initDatabase.test.js": {
+    "mtime": 1777856755.2132666,
+    "hash": "05c2fe41eff2dbe80d47fc9b3513512e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\helpers\\parseHelpers.test.js": {
+    "mtime": 1771781931.0,
+    "hash": "bea45873b73c51ccc38620bdb5857bea"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\integration\\api.test.js": {
+    "mtime": 1777856103.3674376,
+    "hash": "32ab4ae0ca6735185b2b70133e2b1136"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\middlewares\\auth.test.js": {
+    "mtime": 1774544691.2486982,
+    "hash": "a3a87b2ea074bde4a3f139c205f774c6"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\middlewares\\logger.test.js": {
+    "mtime": 1776469030.3383665,
+    "hash": "bd7ecc707452772929934076278bfd49"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\modules\\calcularLuz\\calcularLuzRoutes.test.js": {
+    "mtime": 1776485229.3437884,
+    "hash": "cbca7fc0d3f0f3e63632709cd9783db9"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\AnotacaoRepository.test.js": {
+    "mtime": 1776469650.582499,
+    "hash": "17f64fda661bd1eb53964bd62e3be8d6"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\BackupRepository.test.js": {
+    "mtime": 1776470917.7831037,
+    "hash": "2becee4462a9796b7d55cb5b0ab65938"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\FaturaManualRepository.test.js": {
+    "mtime": 1776469769.467955,
+    "hash": "ec49528958e1312234f571ad5568afa9"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\LajeadoRepository.test.js": {
+    "mtime": 1776470939.2330039,
+    "hash": "dff30a4fa1e5f147fac8e91424820fa5"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\LancamentoRepository.test.js": {
+    "mtime": 1777853988.8317437,
+    "hash": "149440fa7e6a260982f1b2185327912e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\MesFechadoRepository.test.js": {
+    "mtime": 1775266223.1506166,
+    "hash": "e68c18ed5b131fd29213d1cb8b9945a4"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\OrdemCardsRepository.test.js": {
+    "mtime": 1776470318.989592,
+    "hash": "6e3561c4b83f85347e3b44d2abbfdaa4"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\TokenRepository.test.js": {
+    "mtime": 1776743665.1681333,
+    "hash": "bface72a7e9adbf45a6ff09117c514e4"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\UsuarioRepository.test.js": {
+    "mtime": 1771848428.0,
+    "hash": "42985e43c1d6605ac952163d841ba542"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\routes\\authRoutes.test.js": {
+    "mtime": 1776740027.1013415,
+    "hash": "1dfdc6f570adb55050bf64f9c13b2cd5"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\routes\\infraRoutes.test.js": {
+    "mtime": 1776470968.8825088,
+    "hash": "def97077de428aedda3c0555b9233abb"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\routes\\integrationRoutes.test.js": {
+    "mtime": 1777656202.90992,
+    "hash": "62812b01d3f322adf07b1983f0858cc5"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\routes\\publicRoutes.test.js": {
+    "mtime": 1777687829.4181285,
+    "hash": "820e4c11538402ab18ba3936bede0eff"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\services\\syncService.test.js": {
+    "mtime": 1777605013.914761,
+    "hash": "c123559c7910c02806d0f77514df095a"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\ui\\appTooltips.test.js": {
+    "mtime": 1778003861.170553,
+    "hash": "7f0887d04f25e2524b426850b7633302"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\ui\\viewsTooltips.test.js": {
+    "mtime": 1777997810.0014977,
+    "hash": "4039bfadc8fe8c8a14ecbebb16c21602"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\GEMINI.md": {
+    "mtime": 1777818711.858958,
+    "hash": "4855b101c6b1e4d2c2ebda135ddc4f0c"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\README.md": {
+    "mtime": 1777676652.0300753,
+    "hash": "d0a9b4e11bbfcc50b2992fdcb6b06cf5"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\resumo-de-trabalho.md": {
+    "mtime": 1778003866.2669783,
+    "hash": "ace0ddb0584b4ded1d046ed65c741668"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\Lajeado.md": {
+    "mtime": 1774909657.7250233,
+    "hash": "703c3e0e37976e77ebbc897ca6a43dec"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\contexto\\contexto_contas-a-pagar.yaml": {
+    "mtime": 1777857472.1735263,
+    "hash": "0ff50fa7774704c1e724924155d7111a"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\contexto\\contexto_contas-a-pagar_sumario.yaml": {
+    "mtime": 1777857478.221977,
+    "hash": "6af913261bebd3e6a28b75d8b48f2b1e"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\history\\resumo-de-trabalho-arquivado.md": {
+    "mtime": 1776800754.447718,
+    "hash": "09fd5f45f2ce1b6984ae36c5f4db9a3f"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\security\\report.md": {
+    "mtime": 1777689354.697718,
+    "hash": "2253b1d1c2492681c90fe89fe9433c8f"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\skills\\commit.md": {
+    "mtime": 1776823556.713541,
+    "hash": "4e5c2bc1f6af07c4174d696ac4c52e99"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\versionamento\\versionador.md": {
+    "mtime": 1777742843.4183464,
+    "hash": "f3b8a440c1722de62baa3c5eace45837"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\botTelegram\\README.md": {
+    "mtime": 1775952170.099963,
+    "hash": "e85124d536ecd9d9d3e809248bce4fc8"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\calcularLuz\\public\\index.html": {
+    "mtime": 1777739775.957736,
+    "hash": "9d91559b084926c1d5b2882292191165"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\README.md": {
+    "mtime": 1776486716.0719576,
+    "hash": "9187ab217897c95ad2dc99ef1f4aff02"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\social-media.webp": {
+    "mtime": 1776640460.0483322,
+    "hash": "6bd00ada6e05aa78260466c3a617e2ce"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\favicons\\favicon.png": {
+    "mtime": 1776634472.7241936,
+    "hash": "16c21344d0565912c7e43fbdfcbf5997"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\favicons\\favicon.webp": {
+    "mtime": 1776634512.5282073,
+    "hash": "5eb3edfb8d6e3e62c33e0d559c019223"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\favicons\\Faviconn- original.png": {
+    "mtime": 1776634439.9338255,
+    "hash": "cef0d942f66032a89688f954af7c77b3"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\social-media\\Dodo Finance - original texto em baixo.png": {
+    "mtime": 1776640339.3232772,
+    "hash": "71a46bfc439cfac3486b61394925928c"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\social-media\\Dodo Finance - original texto lado.png": {
+    "mtime": 1776633592.4298353,
+    "hash": "fd7d2329e3f6f8747b3fbd866a7d89f0"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\social-media\\Dodo Finance - redondo.png": {
+    "mtime": 1776633642.3587403,
+    "hash": "f0d94af34f9c6a48b570481c58694adc"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\social-media\\icon-192x192.png": {
+    "mtime": 1771961433.0,
+    "hash": "00a5bec0db8a595e73f4b2de9bc89b67"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\social-media\\icon-512x512.png": {
+    "mtime": 1771961433.0,
+    "hash": "00a5bec0db8a595e73f4b2de9bc89b67"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\icons\\social-media\\social-media.webp": {
+    "mtime": 1776640460.0483322,
+    "hash": "6bd00ada6e05aa78260466c3a617e2ce"
+  }
+}
