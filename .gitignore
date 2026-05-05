@@ -241,11 +241,6 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
-docs/bkp/contas-a-pagar.7z
-docs/bkp/contas-a-pagar.7z
-docs/bkp/contas-a-pagar.7z
-docs/bkp/contas-a-pagar.7z
-docs/bkp/contas-a-pagar.7z
 docs/security/
 docs/contexto
 docs/versionamento
@@ -255,3 +250,20 @@ graphify-out/cache/
 graphify-out/media/
 docs/bkp/contas-a-pagar.7z
 GEMINI.md
+
+# backups / dumps / compactados
+*.7z
+*.zip
+*.rar
+*.bak
+*.backup
+*.dump
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+docs/bkp/
+docs/history/
+backup/
+data/
