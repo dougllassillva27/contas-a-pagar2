@@ -130,7 +130,7 @@
                         </thead>
                         <tbody>
                             <% itensCartao.forEach(item => { %>
-                            <tr>
+                            <tr class="<%= (item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1) ? 'ultima-parcela' : '' %>">
                                 <td>
                                     <%= item.descricao %>
                                     <% if(item.parcelaatual && item.totalparcelas) { %>
