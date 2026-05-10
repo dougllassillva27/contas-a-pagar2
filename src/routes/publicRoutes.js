@@ -20,7 +20,7 @@ module.exports = function (repo) {
     if (req.session.user) {
       return res.redirect('/');
     }
-    res.render('login', { error: null });
+    res.render('login', { error: null, titulo: 'Gestão Financeira - Login' });
   });
 
   // ============================================================================
@@ -157,7 +157,7 @@ module.exports = function (repo) {
         dados = DEFAULT_LAJEADO_DADOS;
       }
 
-      return res.render('lajeado', { dados, muralLajeado, user: user || null });
+      return res.render('lajeado', { dados, muralLajeado, user: user || null, titulo: 'Gestão Financeira - Lajeado' });
     } catch (err) {
       console.error('[LAJEADO] Erro ao carregar mural:', err.message);
       return res.render('lajeado', { dados: DEFAULT_LAJEADO_DADOS, muralLajeado: '', user: null });
