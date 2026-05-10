@@ -2,36 +2,36 @@
 <div id="customContextMenu" class="context-menu" style="display: none">
   <ul>
     <%# ✅ NOVO: Botão de Compartilhar Link %>
-    <li onclick="compartilharLinkTerceiro()">
+    <li onclick="compartilharLinkTerceiro()" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--blue)">share</span>
       Compartilhar Link
     </li>
     <li class="menu-divider"></li>
-    <li onclick="executarAcaoEmLotePessoa('PAGO')">
+    <li onclick="executarAcaoEmLotePessoa('PAGO')" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--verde)">check_circle</span>
       Marcar todas como Pagas
     </li>
-    <li onclick="executarAcaoEmLotePessoa('PENDENTE')">
+    <li onclick="executarAcaoEmLotePessoa('PENDENTE')" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--orange)">history</span>
       Marcar todas como Pendentes
     </li>
-    <li onclick="confirmarExclusaoPessoa()" class="delete-action">
+    <li onclick="confirmarExclusaoPessoa()" class="delete-action" role="button" tabindex="0">
       <span class="material-icons">delete_sweep</span>
       Excluir todas as contas
     </li>
-    <li onclick="executarAcaoConferidoLote()" id="btnMarcarCalculadas" style="display: none">
+    <li onclick="executarAcaoConferidoLote()" id="btnMarcarCalculadas" style="display: none" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--blue)">task_alt</span>
       Marcar todas como já calculadas
     </li>
-    <li onclick="moverLoteUltimas(-1)" id="btnMoverAnterior" style="display: none">
+    <li onclick="moverLoteUltimas(-1)" id="btnMoverAnterior" style="display: none" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--orange)">fast_rewind</span>
       Mover para mês anterior
     </li>
-    <li onclick="moverLoteUltimas(1)" id="btnMoverSeguinte" style="display: none">
+    <li onclick="moverLoteUltimas(1)" id="btnMoverSeguinte" style="display: none" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--blue)">fast_forward</span>
       Mover para próximo mês
     </li>
-    <li onclick="confirmarExclusaoLoteUltimas()" id="btnExcluirSelecionados" style="display: none; color: var(--red)">
+    <li onclick="confirmarExclusaoLoteUltimas()" id="btnExcluirSelecionados" style="display: none; color: var(--red)" role="button" tabindex="0">
       <span class="material-icons">delete_sweep</span>
       <span id="textExcluirSelecionados">Excluir selecionados</span>
     </li>
