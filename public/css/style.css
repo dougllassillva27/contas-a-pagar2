@@ -221,10 +221,14 @@ h2 {
   width: 100%;
   text-align: left;
 }
-.sidebar-btn:hover {
+.sidebar-btn:hover, .sidebar-btn:focus-visible {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
   transform: translateX(4px);
+  outline: none;
+}
+.sidebar-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--blue);
 }
 .sidebar-btn .material-icons {
   font-size: 20px;
@@ -1452,7 +1456,7 @@ input[type='checkbox'] {
     opacity 0.2s ease,
     visibility 0.2s ease,
     transform 0.2s ease;
-  z-index: 9999;
+  z-index: 900; /* Abaixo do modal-overlay (1000) */
   pointer-events: none;
 }
 [data-tooltip]::before {
@@ -1481,12 +1485,7 @@ input[type='checkbox'] {
   border-color: #000000 transparent transparent transparent;
   margin-bottom: -2px;
 }
-[data-tooltip]:hover::before,
-[data-tooltip]:hover::after {
-  visibility: visible;
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
+
 [data-tooltip][data-tooltip-dir='bottom-right']::before {
   bottom: auto;
   top: 100%;
@@ -1504,10 +1503,7 @@ input[type='checkbox'] {
   margin-bottom: 0;
   margin-top: -2px;
 }
-[data-tooltip][data-tooltip-dir='bottom-right']:hover::before,
-[data-tooltip][data-tooltip-dir='bottom-right']:hover::after {
-  transform: translate(0, 0);
-}
+
 [data-tooltip][data-tooltip-dir='left']::before {
   bottom: auto;
   top: 50%;
@@ -1527,10 +1523,7 @@ input[type='checkbox'] {
   margin-bottom: 0;
   margin-right: -2px;
 }
-[data-tooltip][data-tooltip-dir='left']:hover::before,
-[data-tooltip][data-tooltip-dir='left']:hover::after {
-  transform: translate(0, -50%);
-}
+
 [data-tooltip][data-tooltip-dir='right']::before {
   bottom: auto;
   top: 50%;
@@ -1548,7 +1541,58 @@ input[type='checkbox'] {
   margin-bottom: 0;
   margin-left: -2px;
 }
-[data-tooltip][data-tooltip-dir='right']:hover::before,
-[data-tooltip][data-tooltip-dir='right']:hover::after {
+
+/* Mostrar tooltip no hover (desktop) ou no focus (mobile/teclado) */
+[data-tooltip]:hover::before,
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-within::before,
+[data-tooltip]:focus-within::after {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+[data-tooltip][data-tooltip-dir='bottom-right']:hover::before,
+[data-tooltip][data-tooltip-dir='bottom-right']:hover::after,
+[data-tooltip][data-tooltip-dir='bottom-right']:focus-within::before,
+[data-tooltip][data-tooltip-dir='bottom-right']:focus-within::after {
+  transform: translate(0, 0);
+}
+
+[data-tooltip][data-tooltip-dir='left']:hover::before,
+[data-tooltip][data-tooltip-dir='left']:hover::after,
+[data-tooltip][data-tooltip-dir='left']:focus-within::before,
+[data-tooltip][data-tooltip-dir='left']:focus-within::after {
   transform: translate(0, -50%);
 }
+
+[data-tooltip][data-tooltip-dir='right']:hover::before,
+[data-tooltip][data-tooltip-dir='right']:hover::after,
+[data-tooltip][data-tooltip-dir='right']:focus-within::before,
+[data-tooltip][data-tooltip-dir='right']:focus-within::after {
+  transform: translate(0, -50%);
+}
+
+
+
+/* Acessibilidade: Foco visível */
+[tabindex="0"]:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--blue) !important;
+  outline-offset: 2px;
+}
+
+[tabindex="0"]:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+  outline: none;
+}
+
+

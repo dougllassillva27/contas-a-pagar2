@@ -23,8 +23,8 @@
     <% } %>
 
     <section class="dashboard-cards">
-        <div class="card" onclick="abrirModalRendasDetalhes()" style="position: relative;">
-            <span class="material-icons card-icon-eye" id="iconEyeRendas" onclick="toggleRendas(event)">visibility</span>
+        <div class="card" onclick="abrirModalRendasDetalhes()" role="button" tabindex="0" style="position: relative;">
+            <span class="material-icons card-icon-eye" id="iconEyeRendas" role="button" tabindex="0" onclick="toggleRendas(event)">visibility</span>
             <h3>Total de Rendas</h3>
             <p class="valor azul" id="valorRendas">R$ <%= Number(totais.totalrendas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
             <script>
@@ -121,8 +121,8 @@
                                 <td><%= item.descricao %></td>
                                 <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                 <td class="actions">
-                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
+                                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', 'Fixa', null, null, null)" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+<span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                                 </td>
                             </tr>
                             <% }) %>
@@ -159,10 +159,10 @@
                                 </td>
                                 <td class="text-right">R$ <%= Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
                                 <td class="actions">
-                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
-                                    <span class="material-icons" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
+                                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span>
+                                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="moverMes(event, [<%= item.id %>], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span>
+                                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="editarConta(<%= item.id %>, '<%= safeJs(item.descricao) %>', '<%= Number(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) %>', '<%= item.parcelaatual ? 'Parcelada' : 'Única' %>', '<%= item.parcelaatual || '' %>', '<%= item.totalparcelas || '' %>', null)" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+                                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="confirmarExclusao(<%= item.id %>)" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                                 </td>
                             </tr>
                             <% }) %>
@@ -198,8 +198,8 @@
                         <% resumoPessoas.forEach(pessoa => { %>
                         <tr>
                             <td width="30" style="color: var(--text-secondary);">
-                                <span class="material-icons" style="font-size: 16px; cursor: pointer;" 
-                                      onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')" data-tooltip="Visualizar contas" data-tooltip-dir="right">visibility</span>
+                                <span class="material-icons" role="button" tabindex="0" style="font-size: 20px; color: var(--blue); cursor: pointer" 
+                                                                      onclick="abrirModalCartaoPessoa('<%= pessoa.pessoa %>')" data-tooltip="Visualizar contas" data-tooltip-dir="right">visibility</span>
                             </td>
                             <td style="padding:0;">
                                 <span class="trigger-p-nome" 

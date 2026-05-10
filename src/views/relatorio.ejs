@@ -497,15 +497,25 @@
             margin-bottom: 0;
             margin-top: -2px;
         }
-        [data-tooltip]:hover::before,
-        [data-tooltip]:hover::after {
-            visibility: visible;
-            opacity: 1;
-            transform: translate(-50%, 0);
-        }
-        [data-tooltip][data-tooltip-dir="bottom-right"]:hover::before,
-        [data-tooltip][data-tooltip-dir="bottom-right"]:hover::after {
-            transform: translate(0, 0);
+        @media (hover: hover) {
+            [data-tooltip]:hover::before,
+            [data-tooltip]:hover::after {
+                visibility: visible;
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+            [data-tooltip][data-tooltip-dir="bottom-right"]:hover::before,
+            [data-tooltip][data-tooltip-dir="bottom-right"]:hover::after {
+                transform: translate(0, 0);
+            }
+            [data-tooltip][data-tooltip-dir="left"]:hover::before,
+            [data-tooltip][data-tooltip-dir="left"]:hover::after {
+                transform: translate(0, -50%);
+            }
+            [data-tooltip][data-tooltip-dir="right"]:hover::before,
+            [data-tooltip][data-tooltip-dir="right"]:hover::after {
+                transform: translate(0, -50%);
+            }
         }
 
         /* Folha de Estilo para Impressão e Geração de PDF Enxuta */
@@ -628,7 +638,7 @@
                 if (grupo.itens.length > 0) {
             %>
                 <div class="person-card" data-person="<%= pessoa %>">
-                    <div class="person-header" onclick="toggleGroup(this)" style="cursor: pointer; user-select: none;" title="Clique para expandir/recolher">
+                    <div class="person-header" role="button" tabindex="0" onclick="toggleGroup(this)" style="cursor: pointer; user-select: none;" title="Clique para expandir/recolher">
                         <h2 class="person-name">
                             <span class="person-dot" data-index="<%= index %>"></span>
                             <%= pessoa %>
@@ -688,20 +698,20 @@
     <!-- HTML do Menu de Contexto para Ações em Lote -->
     <div id="relatorioContextMenu" class="context-menu no-print">
         <ul>
-            <li onclick="executarAcaoConferenciaLote(true)">
+            <li onclick="executarAcaoConferenciaLote(true)" role="button" tabindex="0">
                 <span class="material-icons" style="color: #66bb6a;">check_circle</span>
                 Marcar todas como Conferidas
             </li>
-            <li onclick="executarAcaoConferenciaLote(false)">
+            <li onclick="executarAcaoConferenciaLote(false)" role="button" tabindex="0">
                 <span class="material-icons" style="color: #ef5350;">cancel</span>
                 Marcar todas como Pendentes
             </li>
             <li class="menu-divider"></li>
-            <li onclick="setAllGroupsState(true)">
+            <li onclick="setAllGroupsState(true)" role="button" tabindex="0">
                 <span class="material-icons" style="color: var(--primary);">unfold_more</span>
                 Expandir todas as contas
             </li>
-            <li onclick="setAllGroupsState(false)">
+            <li onclick="setAllGroupsState(false)" role="button" tabindex="0">
                 <span class="material-icons" style="color: var(--warning);">unfold_less</span>
                 Recolher todas as contas
             </li>
@@ -1076,10 +1086,7 @@
             margin-bottom: 0;
             margin-right: -2px;
         }
-        [data-tooltip][data-tooltip-dir="left"]:hover::before,
-        [data-tooltip][data-tooltip-dir="left"]:hover::after {
-            transform: translate(0, -50%);
-        }
+
         [data-tooltip][data-tooltip-dir="right"]::before {
             bottom: auto;
             top: 50%;
@@ -1096,10 +1103,6 @@
             border-color: transparent #000000 transparent transparent;
             margin-bottom: 0;
             margin-left: -2px;
-        }
-        [data-tooltip][data-tooltip-dir="right"]:hover::before,
-        [data-tooltip][data-tooltip-dir="right"]:hover::after {
-            transform: translate(0, -50%);
         }
     </script>
 </body>

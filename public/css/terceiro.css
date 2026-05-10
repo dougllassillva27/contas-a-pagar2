@@ -457,9 +457,6 @@ body {
 /* ==============================================================================
    TOOLTIP CUSTOMIZADO (100% CSS)
    ============================================================================== */
-[data-tooltip] {
-  position: relative;
-}
 [data-tooltip]::before,
 [data-tooltip]::after {
   position: absolute;
@@ -469,7 +466,7 @@ body {
     opacity 0.2s ease,
     visibility 0.2s ease,
     transform 0.2s ease;
-  z-index: 9999;
+  z-index: 900;
   pointer-events: none;
 }
 [data-tooltip]::before {
@@ -498,12 +495,7 @@ body {
   border-color: #000000 transparent transparent transparent;
   margin-bottom: -2px;
 }
-[data-tooltip]:hover::before,
-[data-tooltip]:hover::after {
-  visibility: visible;
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
+
 [data-tooltip][data-tooltip-dir='bottom-right']::before {
   bottom: auto;
   top: 100%;
@@ -521,10 +513,7 @@ body {
   margin-bottom: 0;
   margin-top: -2px;
 }
-[data-tooltip][data-tooltip-dir='bottom-right']:hover::before,
-[data-tooltip][data-tooltip-dir='bottom-right']:hover::after {
-  transform: translate(0, 0);
-}
+
 [data-tooltip][data-tooltip-dir='left']::before {
   bottom: auto;
   top: 50%;
@@ -544,10 +533,7 @@ body {
   margin-bottom: 0;
   margin-right: -2px;
 }
-[data-tooltip][data-tooltip-dir='left']:hover::before,
-[data-tooltip][data-tooltip-dir='left']:hover::after {
-  transform: translate(0, -50%);
-}
+
 [data-tooltip][data-tooltip-dir='right']::before {
   bottom: auto;
   top: 50%;
@@ -565,7 +551,35 @@ body {
   margin-bottom: 0;
   margin-left: -2px;
 }
-[data-tooltip][data-tooltip-dir='right']:hover::before,
-[data-tooltip][data-tooltip-dir='right']:hover::after {
+
+/* Mostrar tooltip no hover (desktop) ou no focus (mobile/teclado) */
+[data-tooltip]:hover::before,
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-within::before,
+[data-tooltip]:focus-within::after {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+[data-tooltip][data-tooltip-dir='bottom-right']:hover::before,
+[data-tooltip][data-tooltip-dir='bottom-right']:hover::after,
+[data-tooltip][data-tooltip-dir='bottom-right']:focus-within::before,
+[data-tooltip][data-tooltip-dir='bottom-right']:focus-within::after {
+  transform: translate(0, 0);
+}
+
+[data-tooltip][data-tooltip-dir='left']:hover::before,
+[data-tooltip][data-tooltip-dir='left']:hover::after,
+[data-tooltip][data-tooltip-dir='left']:focus-within::before,
+[data-tooltip][data-tooltip-dir='left']:focus-within::after {
   transform: translate(0, -50%);
 }
+
+[data-tooltip][data-tooltip-dir='right']:hover::before,
+[data-tooltip][data-tooltip-dir='right']:hover::after,
+[data-tooltip][data-tooltip-dir='right']:focus-within::before,
+[data-tooltip][data-tooltip-dir='right']:focus-within::after {
+  transform: translate(0, -50%);
+}
+

@@ -3,6 +3,7 @@
 // ==============================================================================
 
 function registerModalOpen() {
+  if (document.activeElement) document.activeElement.blur();
   document.body.classList.add('no-scroll');
   history.pushState({ modal: true }, '', '');
 }
@@ -42,6 +43,13 @@ document.addEventListener('keydown', (e) => {
     }
     fecharMenuContexto();
   }
+  
+  // Acessibilidade: Ativar elementos com role="button" via teclado
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute('role') === 'button') {
+    e.preventDefault();
+    e.target.click();
+  }
+
   if (e.altKey && e.key.toLowerCase() === 'a') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
@@ -365,6 +373,12 @@ function editarConta(id, desc, valor, tipo, pAtual, pTotal, nomeTerceiro) {
   else document.getElementById('contaParcelas').value = '';
   toggleParcelas();
   modal.classList.add('active');
+
+  // Acessibilidade: Foco automático no primeiro campo (Descrição)
+  setTimeout(() => {
+    const inputDesc = document.getElementById('contaDesc');
+    if (inputDesc) inputDesc.focus();
+  }, 100);
 }
 
 function editarRenda(id, descricao, valor, categoria) {
@@ -381,6 +395,12 @@ function editarRenda(id, descricao, valor, categoria) {
   document.getElementById('rendaValor').value = valor;
   document.getElementById('rendaCat').value = categoria || 'Salário';
   modal.classList.add('active');
+
+  // Acessibilidade: Foco automático no primeiro campo (Descrição)
+  setTimeout(() => {
+    const inputDesc = document.getElementById('rendaDesc');
+    if (inputDesc) inputDesc.focus();
+  }, 100);
 }
 
 function toggleRendas(event) {
