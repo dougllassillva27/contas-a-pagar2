@@ -58,6 +58,7 @@ body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 30px;
+  overflow-x: hidden; /* Evita scroll horizontal por elementos absolutos (tooltips) */
 }
 
 /* Correção do scroll (travar fundo) */
@@ -1451,6 +1452,7 @@ input[type='checkbox'] {
 [data-tooltip]::after {
   position: absolute;
   visibility: hidden;
+  display: none; /* Evita que o elemento ocupe espaço antes de ser ativado */
   opacity: 0;
   transition:
     opacity 0.2s ease,
@@ -1547,6 +1549,7 @@ input[type='checkbox'] {
 [data-tooltip]:hover::after,
 [data-tooltip]:focus-within::before,
 [data-tooltip]:focus-within::after {
+  display: block; /* Restaura o display ao ativar */
   visibility: visible;
   opacity: 1;
   transform: translate(-50%, 0);
