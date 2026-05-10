@@ -165,7 +165,7 @@ module.exports = function (repo) {
         dados: agrupado,
         mes: nomeMes,
         ano: year,
-        titulo: `Relatório - ${nomeMes} ${year}`,
+        titulo: `Gestão Financeira - Relatório - ${nomeMes} ${year}`,
         totalGeral: itens.reduce((acc, i) => acc + Number(i.valor), 0),
         nav,
       });
@@ -226,6 +226,7 @@ module.exports = function (repo) {
         safeJs,
         currentPath: req.path,
         configuracoes,
+        titulo: 'Gestão Financeira - Home',
       });
     })
   );
@@ -290,6 +291,7 @@ module.exports = function (repo) {
         query: req.query,
         currentPath: req.path,
         whatsappTemplate,
+        titulo: 'Gestão Financeira - Terceiros',
       });
     })
   );
