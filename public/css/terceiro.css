@@ -461,6 +461,7 @@ body {
 [data-tooltip]::after {
   position: absolute;
   visibility: hidden;
+  display: none;
   opacity: 0;
   transition:
     opacity 0.2s ease,
@@ -557,6 +558,7 @@ body {
 [data-tooltip]:hover::after,
 [data-tooltip]:focus-within::before,
 [data-tooltip]:focus-within::after {
+  display: block;
   visibility: visible;
   opacity: 1;
   transform: translate(-50%, 0);
