@@ -300,7 +300,11 @@ async function abrirModalUltimas() {
         }
       }
 
-      const descHTML = `<div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span>${descText}</span>${badgeCmp}</div>`;
+      // ✅ Nova Tag: Tipo de Conta (Fixa, Única, Parcelada)
+      const tipoConta = item.sub_tipo || (item.parcelaatual ? 'Parcelada' : 'Única');
+      const badgeTipo = `<span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #473720; color: #fff; white-space: nowrap; flex-shrink: 0;" title="Tipo de Conta">${tipoConta}</span>`;
+
+      const descHTML = `<div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span>${descText}</span>${badgeCmp}${badgeTipo}</div>`;
 
       const dt = item.datacriacao ? new Date(item.datacriacao) : null;
       const inseridoEm = dt
