@@ -692,9 +692,10 @@ input[type='checkbox'] {
 .scroll-wrapper {
   max-height: 520px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   padding-right: 5px;
   margin-top: 10px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ==============================================================================
