@@ -1,16 +1,16 @@
-# Graph Report - contas-a-pagar  (2026-05-09)
+# Graph Report - contas-a-pagar  (2026-05-11)
 
 ## Corpus Check
-- 91 files · ~405,317 words
+- 92 files · ~406,529 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 276 nodes · 362 edges · 74 communities (70 shown, 4 thin omitted)
+- 278 nodes · 363 edges · 75 communities (71 shown, 4 thin omitted)
 - Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 66 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8c6c9bc5`
+- Built from commit: `8d81af82`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -52,19 +52,19 @@
 - `softRefresh()` --calls--> `initDragAndDrop()`  [INFERRED]
   public/js/app.js → public/js/dragdrop.js
 
-## Communities (74 total, 4 thin omitted)
+## Communities (75 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.11
-Nodes (40): abrirModalRendasDetalhes(), abrirModalUltimas(), alternarAbaAnotacao(), alternarConferido(), alternarModoAnotacao(), alternarStatus(), atualizarTotais(), atualizarTotalNaoConferido() (+32 more)
+Cohesion: 0.08
+Nodes (26): abrirModalRendasDetalhes(), confirmarExclusao(), abrirConfirmacaoAcao(), abrirLinkCompartilhado(), abrirModalAdicionar(), abrirModalCalcularLuz(), abrirModalConfiguracoes(), atualizarBulkCounter() (+18 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.09
-Nodes (19): addLancamentosBulk(), copyMonth(), deleteLancamentosPorPessoa(), deleteMonth(), findAndUpdateOrCreateContaFixa(), findAndUpdateOrCreateContaFixaComTerceiro(), getDadosTerceiros(), getDashboardDataBatched() (+11 more)
+Cohesion: 0.14
+Nodes (32): abrirModalUltimas(), alternarAbaAnotacao(), alternarConferido(), alternarModoAnotacao(), alternarStatus(), atualizarTotais(), atualizarTotalNaoConferido(), carregarAnotacoes() (+24 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.11
-Nodes (18): abrirLinkCompartilhado(), atualizarBulkCounter(), copiarAoClipboard(), copiarLinkCompartilhado(), editarConta(), fallbackCopiarAoClipboard(), fecharConfirmacao(), fecharConfirmacaoAcao() (+10 more)
+Cohesion: 0.09
+Nodes (19): addLancamentosBulk(), copyMonth(), deleteLancamentosPorPessoa(), deleteMonth(), findAndUpdateOrCreateContaFixa(), findAndUpdateOrCreateContaFixaComTerceiro(), getDadosTerceiros(), getDashboardDataBatched() (+11 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.23
@@ -92,9 +92,9 @@ Nodes (4): authMiddleware(), createApiAuth(), createAuthHybrid(), setupApp()
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `softRefresh()` connect `Community 0` to `Community 2`, `Community 5`?**
+- **Why does `softRefresh()` connect `Community 1` to `Community 0`, `Community 5`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **Why does `registerModalOpen()` connect `Community 0` to `Community 2`, `Community 5`?**
+- **Why does `registerModalOpen()` connect `Community 0` to `Community 1`, `Community 5`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **Why does `processarTexto()` connect `Community 3` to `Community 4`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
