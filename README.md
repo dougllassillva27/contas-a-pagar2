@@ -1,15 +1,15 @@
 <div align="center">
 
-# 💸 Gestão Financeira Pessoal (Cloud Edition)
+# 💸 Gestão Financeira Pessoal (Micro SaaS Edition)
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon.tech-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
 [![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![Jest](https://img.shields.io/badge/Jest-30.x-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
 
-Sistema web robusto, PWA-Ready e focado em altíssima performance para controle de contas a pagar, gestão de cartões de crédito em lote e organização financeira familiar distribuída.
+Sistema web robusto, PWA-Ready e focado em altíssima performance para controle de contas a pagar, gestão de cartões de crédito em lote, organização financeira familiar distribuída e operação em formato **Micro SaaS**.
 
-Migrado para a nuvem utilizando **PostgreSQL**, com deploy em **Render** e banco hospedado no **Neon**, permitindo acesso via celular ou desktop de qualquer lugar, mantendo privacidade e performance.
+Migrado para a nuvem utilizando **PostgreSQL**, com deploy em **Render** e banco hospedado no **Neon**, permitindo acesso via celular ou desktop de qualquer lugar, com isolamento por usuário, onboarding guiado e regras declarativas de sincronização.
 
 </div>
 
@@ -26,12 +26,33 @@ Permite:
 - Organização por prioridade (ordem customizável)
 - Comparação de fatura real vs sistema
 - Sincronização e espelhamento automático entre contas
+- Cadastro autônomo de usuários via `/signup`
+- Onboarding guiado para configuração inicial
+- Regras dinâmicas de sincronização e divisão usando JSONB
 
-Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL e arquitetura cloud.
+Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL, arquitetura cloud e posteriormente consolidado como uma base **Micro SaaS**, com criação autônoma de usuários, isolamento de dados por `UsuarioId` e motor de regras configurável.
 
 ---
 
 ## 🚀 Funcionalidades Principais
+
+### 🧑‍💻 Gestão de Identidade & Acesso
+
+- **Sign Up Autônomo** — rota `/signup` funcional para criação de novos usuários sem intervenção manual no banco de dados.
+- **Login Seguro** — senhas protegidas com `bcrypt` usando 10 rounds.
+- **Sessão Persistente** — autenticação com tokens seguros para manter o usuário conectado com controle de expiração.
+- **Isolamento Multiusuário** — filtro rigoroso por `UsuarioId` em repositories, rotas e consultas para evitar vazamento de dados entre contas.
+
+---
+
+### 🧭 Onboarding & Setup Guiado
+
+- **Wizard de Boas-vindas** — modal multi-step automático para novos usuários.
+- **Setup Inicial Rápido** — configuração de parceiro principal e regras de divisão "Casa" em poucos passos.
+- **Progresso Persistente** — controle do onboarding via flag `onboarding_completed` no banco de dados.
+- **Experiência SaaS** — reduz fricção de entrada e elimina configuração manual para novos usuários.
+
+---
 
 ### 📊 Dashboard & Controle
 
@@ -106,6 +127,12 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 
 ## ⚙️ Ferramentas Avançadas
 
+- **Motor de Sincronização Dinâmico (Core Engine)**
+  - Regras declarativas armazenadas em `configuracoes.regras_sync` usando JSONB.
+  - Processamento em background via `syncService.js`, sem travar o carregamento do dashboard.
+  - Suporte ao tipo `COPIA_TOTAL` para espelhamento de lançamentos entre usuários distintos.
+  - Suporte ao tipo `DIVISAO_CASA` para divisão proporcional de contas compartilhadas.
+  - Compatível com valor mínimo de divisão e parceiro espelho configurável por usuário.
 - **Fechamento de Mês (Month Lock)**
   - Trava de segurança que congela o mês selecionado, impedindo a criação ou exclusão acidental de lançamentos.
   - Ideal para manter a integridade dos dados após a conferência e conciliação bancária.
@@ -138,7 +165,9 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL 
 - **Soft Refresh (DOM Diffing Nativo)**
   - O frontend intercepta requisições CRUD (Adicionar, Editar, Mover, Deletar) e atualiza a interface cirurgicamente em _background_ utilizando `DOMParser`. O tempo de resposta para o usuário cai de ~5s (F5 tradicional) para ~0.5s, criando uma experiência _App-like_.
 - **Sincronização Fire-and-Forget**
-  - Cálculos pesados de divisão de contas e espelhamentos de terceiros rodam em background na _Event Loop_ do Node.js, não bloqueando o carregamento (SSR) do Dashboard.
+  - Cálculos pesados de divisão de contas, espelhamentos de terceiros e regras SaaS rodam em background na _Event Loop_ do Node.js, não bloqueando o carregamento (SSR) do Dashboard.
+- **Regras Declarativas em JSONB**
+  - A coluna `configuracoes.regras_sync` permite configurar comportamentos por usuário sem hardcode, mantendo flexibilidade para novos cenários de sincronização e divisão.
 - **Trava Anti-Corrida (Memory Locks)**
   - O frontend possui um state machine rigoroso (`isSubmitting`) que atua na _thread_ principal do JavaScript, impossibilitando envios duplicados mesmo com _double-clicks_ agressivos (mouse gamer ou tela touch).
 - **Cache-Busting Customizado (`versionador.js`)**
@@ -210,7 +239,7 @@ Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o 
 
 ## ⚡ Automação: Cópia Mensal de Contas
 
-O sistema possui um endpoint de automação que realiza a cópia das contas de todos os usuários de forma automática e gratuita via **Google Apps Script**.
+O sistema possui um endpoint de automação que realiza a cópia das contas e dispara rotinas de sincronização de usuários de forma automática e gratuita via **Google Apps Script**.
 
 ### Como Configurar (Google Apps Script)
 
@@ -272,8 +301,10 @@ O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o
 | **Runtime**       | Node.js v18+                    |
 | **Framework**     | Express 5.x                     |
 | **Database**      | PostgreSQL (Neon.tech)          |
+| **Configuração**  | JSONB para regras por usuário   |
 | **Hospedagem**    | Render.com (Plano Gratuito)     |
 | **Frontend**      | EJS + Vanilla CSS (Grid/Flex)   |
+| **Segurança**     | bcrypt + tokens persistentes    |
 | **Monitoramento** | Google Apps Script (Triggers)   |
 | **Bot Telegram**  | node-telegram-bot-api (webhook) |
 | **Testes**        | Jest 30 + Supertest 7           |
@@ -284,19 +315,21 @@ O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o
 
 O projeto segue uma arquitetura **modular** com separação clara de responsabilidades:
 
-| Camada          | Diretório           | Responsabilidade                                                |
-| :-------------- | :------------------ | :-------------------------------------------------------------- |
-| **Entrada**     | `src/app.js`        | Configuração do Express, sessão e montagem dos módulos          |
-| **Módulos**     | `src/modules/`      | Funcionalidades independentes (Bot Telegram, Estimativa de Luz) |
-| **Rotas**       | `src/routes/`       | Handlers de cada grupo de endpoints                             |
-| **Middlewares** | `src/middlewares/`  | Autenticação web (sessão), API (token) e logger                 |
-| **Helpers**     | `src/helpers/`      | Parsing, async handler e inicialização do banco                 |
-| **Dados**       | `src/repositories/` | Repositories especializados por domínio + facade                |
-| **Constantes**  | `src/constants.js`  | Valores centralizados (status, tipos, limites)                  |
-| **Conexão**     | `src/config/`       | Pool de conexão PostgreSQL                                      |
-| **Views**       | `src/views/`        | Templates EJS com partials reutilizáveis                        |
-| **Frontend**    | `public/`           | CSS, JavaScript do cliente e assets estáticos                   |
-| **Testes**      | `__tests__/`        | Unitários, repositórios (mock), bot e integração                |
+| Camada           | Diretório           | Responsabilidade                                                |
+| :--------------- | :------------------ | :-------------------------------------------------------------- |
+| **Entrada**      | `src/app.js`        | Configuração do Express, sessão e montagem dos módulos          |
+| **Módulos**      | `src/modules/`      | Funcionalidades independentes (Bot Telegram, Estimativa de Luz) |
+| **Rotas**        | `src/routes/`       | Handlers de cada grupo de endpoints                             |
+| **Middlewares**  | `src/middlewares/`  | Autenticação web (sessão), API (token) e logger                 |
+| **Helpers**      | `src/helpers/`      | Parsing, async handler e inicialização do banco                 |
+| **Dados**        | `src/repositories/` | Repositories especializados por domínio + facade                |
+| **Serviços**     | `src/services/`     | Regras de sincronização, divisão e rotinas de background        |
+| **Constantes**   | `src/constants.js`  | Valores centralizados (status, tipos, limites)                  |
+| **Conexão**      | `src/config/`       | Pool de conexão PostgreSQL                                      |
+| **Views**        | `src/views/`        | Templates EJS com partials reutilizáveis                        |
+| **Frontend**     | `public/`           | CSS, JavaScript do cliente e assets estáticos                   |
+| **Testes**       | `__tests__/`        | Unitários, repositórios (mock), bot, SaaS e integração          |
+| **Documentação** | `docs/SaaS/`        | Guia de inicialização de novas instâncias Micro SaaS            |
 
 ---
 
@@ -305,6 +338,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 ```txt
 /
 ├── docs/
+│   ├── SaaS/
+│   │   └── Inicialização.md               # Guia para novas instâncias Neon + Render
 │   └── history/
 │       └── database/                      # Scripts e SQL de migrações históricas
 ├── public/
@@ -339,6 +374,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   │   ├── OrdemCardsRepository.js        # Ordem dos cards do dashboard
 │   │   ├── MesFechadoRepository.js        # Controle de congelamento de meses
 │   │   └── BackupRepository.js            # Exportação JSON completa
+│   ├── services/
+│   │   └── syncService.js                 # Motor de regras SaaS em background
 │   ├── routes/
 │   │   ├── publicRoutes.js                # Login / Logout / Portal de Terceiros
 │   │   ├── integrationRoutes.js           # API Android
@@ -346,6 +383,7 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   └── views/
 │       ├── index.ejs                      # Dashboard principal
 │       ├── login.ejs                      # Tela de login
+│       ├── signup.ejs                     # Cadastro autônomo de usuários
 │       ├── terceiro.ejs                   # Portal público de terceiros
 │       ├── relatorio.ejs                  # Extrato para impressão
 │       └── partials/
@@ -388,7 +426,8 @@ CREATE TABLE IF NOT EXISTS Usuarios (
     Id SERIAL PRIMARY KEY,
     Nome VARCHAR(50) NOT NULL,
     Login VARCHAR(50) NOT NULL UNIQUE,
-    SenhaHash VARCHAR(255) NOT NULL
+    SenhaHash VARCHAR(255) NOT NULL,
+    onboarding_completed BOOLEAN DEFAULT FALSE
 );
 
 -- Insere usuários padrão se não existirem
@@ -503,7 +542,8 @@ CREATE TABLE IF NOT EXISTS configuracoes (
     usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
     whatsapp_template TEXT,
     privacidade_global BOOLEAN DEFAULT FALSE,
-    divisao_casa_minimo NUMERIC(10, 2) DEFAULT 750.00
+    divisao_casa_minimo NUMERIC(10, 2) DEFAULT 750.00,
+    regras_sync JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 ```
 
@@ -538,11 +578,11 @@ Acesse: `http://localhost:3000`
 
 ## 🧪 Testes Automatizados (Jest & Supertest)
 
-A aplicação possui uma suíte de testes robusta contendo **190 testes automatizados** com execução ultrarrápida (~2.5s totais).
+A aplicação possui uma suíte de testes robusta contendo **192 testes automatizados** com execução ultrarrápida (~2.5s totais).
 
-- **Unitários**: Regras de negócio, _parseHelpers_, formatadores e cálculo de datas (fuso UTC-3 blindado).
+- **Unitários**: Regras de negócio, _parseHelpers_, formatadores, cálculo de datas (fuso UTC-3 blindado) e motor de regras SaaS.
 - **Repositórios**: Mock da biblioteca `pg`. Validação de transações (`BEGIN/COMMIT/ROLLBACK`), `UPSERTs` e lógicas de paginação sem tocar no banco de dados físico.
-- **Middlewares**: Validação de injeção de tokens persistentes, `x-api-key` e falhas de sessão.
+- **Middlewares**: Validação de injeção de tokens persistentes, `x-api-key`, falhas de sessão e isolamento por `UsuarioId`.
 - **Integração M2M**: Testes fim-a-ponta na API Android e endpoints de _webhook_ do Telegram.
 - **UI & DOM**: Validações anti-duplo-clique e injeção do `DOMParser` testadas em ambiente `jsdom`.
 - **Memory Leaks**: Mocks dedicados de _Fetch API_ e instâncias assíncronas de Rede (Telegram) para garantir encerramento gracioso (sem _Open Handles_).
@@ -562,6 +602,7 @@ npm test
 
 - Criar projeto e copiar connection string.
 - Executar o script SQL acima.
+- Configurar colunas JSONB necessárias para regras SaaS, especialmente `configuracoes.regras_sync`.
 
 ### Render
 
@@ -569,18 +610,21 @@ npm test
 - **Build Command**: `npm install`
 - **Start Command**: `node src/app.js`
 - **Environment Variables**: Adicionar todas as variáveis definidas no seu `.env`.
+- Para novas instâncias isoladas, seguir o guia `docs/SaaS/Inicialização.md`.
 
 ---
 
 ## 🔒 Segurança
 
-- **Senhas hashadas** com `bcryptjs` (nunca armazenadas em texto puro).
+- **Senhas hashadas** com `bcrypt` usando 10 rounds (nunca armazenadas em texto puro).
 - **Proteção contra brute-force** — delay configurável em tentativas de login.
 - **Autenticação de sessão** para rotas web (`express-session`).
+- **Cadastro controlado** via `/signup`, com persistência segura de credenciais.
 - **Autenticação por token** para API Android (`API_TOKEN`).
 - **Bot restrito por Chat ID** — Telegram aceita apenas mensagens do dono.
 - **Webhook com secret** — URL protegida contra payloads falsos.
 - **Async error handling** — wrapper `asyncHandler` captura exceções em rotas.
+- **Isolamento de tenant lógico** — filtros por `UsuarioId` em rotas e repositories para evitar cruzamento de dados.
 
 ---
 
@@ -591,6 +635,8 @@ npm test
 - **Relatórios**: Utilize o botão "Imprimir" para gerar PDF de cobrança.
 - **Monitoramento**: Monitore a saúde da aplicação via endpoint `/health`.
 - **Portal de Terceiros**: Compartilhe links contextuais para que terceiros acompanhem suas contas diretamente.
+- **Onboarding**: Novos usuários devem concluir o wizard inicial para configurar parceiro principal e regras de divisão.
+- **Regras SaaS**: Use o setup guiado para evitar regras hardcoded e manter configurações por usuário.
 
 ---
 
@@ -598,8 +644,10 @@ npm test
 
 - Simplicidade operacional e performance.
 - Organização visual e independência geográfica.
+- Operação multiusuário com isolamento lógico de dados.
 - Código limpo e manutenível (Clean Code).
 - Cobertura de testes automatizados e boa observabilidade.
+- Base reutilizável para novas instâncias Micro SaaS em Neon + Render.
 
 ---
 

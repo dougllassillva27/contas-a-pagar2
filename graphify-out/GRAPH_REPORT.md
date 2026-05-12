@@ -1,16 +1,16 @@
-# Graph Report - contas-a-pagar  (2026-05-11)
+# Graph Report - contas-a-pagar  (2026-05-12)
 
 ## Corpus Check
-- 92 files · ~406,529 words
+- 94 files · ~233,883 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 278 nodes · 363 edges · 75 communities (71 shown, 4 thin omitted)
-- Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 66 edges (avg confidence: 0.8)
+- 303 nodes · 425 edges · 76 communities (72 shown, 4 thin omitted)
+- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 81 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8d81af82`
+- Built from commit: `b3e49692`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -25,20 +25,21 @@
 - [[_COMMUNITY_Community 7|Community 7]]
 - [[_COMMUNITY_Community 8|Community 8]]
 - [[_COMMUNITY_Community 9|Community 9]]
-- [[_COMMUNITY_Community 12|Community 12]]
-- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 18|Community 18]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getMesRange()` - 16 edges
-2. `softRefresh()` - 14 edges
-3. `mostrarAviso()` - 14 edges
-4. `registerModalOpen()` - 13 edges
-5. `processarTexto()` - 10 edges
-6. `ocultarLoading()` - 9 edges
-7. `tratarComando()` - 9 edges
-8. `finalizarEInserir()` - 9 edges
-9. `handleModalClose()` - 8 edges
-10. `checkBloqueioMesFechado()` - 8 edges
+1. `mostrarAviso()` - 18 edges
+2. `getMesRange()` - 16 edges
+3. `softRefresh()` - 15 edges
+4. `registerModalOpen()` - 15 edges
+5. `ocultarLoading()` - 12 edges
+6. `mostrarLoading()` - 11 edges
+7. `handleModalClose()` - 10 edges
+8. `processarTexto()` - 10 edges
+9. `tratarComando()` - 9 edges
+10. `finalizarEInserir()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `softRefresh()` --calls--> `initCardDragAndDrop()`  [INFERRED]
@@ -52,15 +53,15 @@
 - `softRefresh()` --calls--> `initDragAndDrop()`  [INFERRED]
   public/js/app.js → public/js/dragdrop.js
 
-## Communities (75 total, 4 thin omitted)
+## Communities (76 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.08
-Nodes (26): abrirModalRendasDetalhes(), confirmarExclusao(), abrirConfirmacaoAcao(), abrirLinkCompartilhado(), abrirModalAdicionar(), abrirModalCalcularLuz(), abrirModalConfiguracoes(), atualizarBulkCounter() (+18 more)
+Cohesion: 0.07
+Nodes (37): abrirFormNovaRegra(), abrirModalRendasDetalhes(), confirmarExclusao(), abrirConfirmacaoAcao(), abrirLinkCompartilhado(), abrirModalAdicionar(), abrirModalCalcularLuz(), abrirModalConfiguracoes() (+29 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.14
-Nodes (32): abrirModalUltimas(), alternarAbaAnotacao(), alternarConferido(), alternarModoAnotacao(), alternarStatus(), atualizarTotais(), atualizarTotalNaoConferido(), carregarAnotacoes() (+24 more)
+Cohesion: 0.12
+Nodes (41): abrirModalUltimas(), alternarAbaAnotacao(), alternarConferido(), alternarModoAnotacao(), alternarStatus(), atualizarTotais(), atualizarTotalNaoConferido(), carregarAnotacoes() (+33 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.09
@@ -83,6 +84,10 @@ Cohesion: 0.43
 Nodes (6): criarToken(), gerarToken(), hashToken(), renovarToken(), revogarToken(), validarToken()
 
 ### Community 7 - "Community 7"
+Cohesion: 0.47
+Nodes (3): executarSincronizacaoDinamica(), processarCopiaTotal(), processarDivisaoCasa()
+
+### Community 8 - "Community 8"
 Cohesion: 0.4
 Nodes (4): authMiddleware(), createApiAuth(), createAuthHybrid(), setupApp()
 
@@ -96,13 +101,13 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Why does `registerModalOpen()` connect `Community 0` to `Community 1`, `Community 5`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **Why does `processarTexto()` connect `Community 3` to `Community 4`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
+- **Why does `mostrarAviso()` connect `Community 1` to `Community 0`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Are the 12 inferred relationships involving `mostrarAviso()` (e.g. with `executarAcaoEmLotePessoa()` and `moverMes()`) actually correct?**
+  _`mostrarAviso()` has 12 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 5 inferred relationships involving `softRefresh()` (e.g. with `initDragAndDrop()` and `initCardDragAndDrop()`) actually correct?**
   _`softRefresh()` has 5 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 9 inferred relationships involving `mostrarAviso()` (e.g. with `executarAcaoEmLotePessoa()` and `moverMes()`) actually correct?**
-  _`mostrarAviso()` has 9 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `registerModalOpen()` (e.g. with `confirmarExclusaoPessoa()` and `abrirModalUltimas()`) actually correct?**
   _`registerModalOpen()` has 6 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 4 inferred relationships involving `processarTexto()` (e.g. with `obterConversa()` and `parseValor()`) actually correct?**
-  _`processarTexto()` has 4 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 10 inferred relationships involving `ocultarLoading()` (e.g. with `moverMes()` and `executarAcaoConferidoLote()`) actually correct?**
+  _`ocultarLoading()` has 10 INFERRED edges - model-reasoned connections that need verification._

@@ -10,6 +10,8 @@
     data-userid="<%= user.id %>" 
     data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>"
     data-config-divisao-minimo="<%= configuracoes.divisao_casa_minimo || '750.00' %>"
+    data-regras-sync='<%- JSON.stringify(configuracoes.regras_sync || []) %>'
+    data-onboarding-completed="<%= configuracoes.onboarding_completed ? 'true' : 'false' %>"
 >
 
     <%- include('partials/header') %>

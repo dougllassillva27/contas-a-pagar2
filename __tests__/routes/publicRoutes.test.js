@@ -7,7 +7,8 @@ const express = require('express');
 const session = require('express-session');
 
 const repo = {
-  buscarUsuarioPorLogin: jest.fn(),
+  obterUsuarioPorLogin: jest.fn(),
+  criarUsuario: jest.fn(),
   revogarToken: jest.fn(),
   getLancamentosCartaoPorPessoa: jest.fn().mockResolvedValue([]),
   getLancamentosPorTipo: jest.fn().mockResolvedValue([]),
@@ -17,6 +18,7 @@ const repo = {
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(),
+  hash: jest.fn().mockResolvedValue('hashed_password'),
 }));
 const bcrypt = require('bcrypt');
 
@@ -65,6 +67,34 @@ describe('Rotas Públicas (publicRoutes)', () => {
     const res = await request(app).get('/login');
     expect(res.status).toBe(200);
     expect(app.response.render).toHaveBeenCalledWith('login', expect.any(Object));
+  });
+
+  test('GET /signup - deve renderizar view de cadastro', async () => {
+    const res = await request(app).get('/signup');
+    expect(res.status).toBe(200);
+    expect(app.response.render).toHaveBeenCalledWith('signup', expect.any(Object));
+  });
+
+  test('POST /signup - deve criar usuário e redirecionar para home', async () => {
+    repo.obterUsuarioPorLogin.mockResolvedValue(null);
+    repo.criarUsuario.mockResolvedValue({ id: 3, nome: 'Novo', login: 'novo' });
+    
+    const res = await request(app)
+      .post('/signup')
+      .send({ nome: 'Novo', login: 'novo', password: 'password123' });
+
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/');
+    expect(repo.criarUsuario).toHaveBeenCalled();
+  });
+
+  test('POST /signup - deve falhar se campos estiverem vazios', async () => {
+    const res = await request(app)
+      .post('/signup')
+      .send({ nome: '', login: '', password: '' });
+
+    expect(res.status).toBe(200); // Renderiza erro na mesma página
+    expect(app.response.render).toHaveBeenCalledWith('signup', expect.objectContaining({ error: expect.any(String) }));
   });
 
   test('GET /logout - deve redirecionar para login', async () => {

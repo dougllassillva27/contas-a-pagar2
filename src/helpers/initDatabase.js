@@ -1,8 +1,8 @@
 // ==============================================================================
 // initDatabase — Inicializações de schema executadas no startup
 //
-// Move as migrações que antes ficavam no construtor do FinanceiroRepository
-// para uma função explícita, chamada apenas uma vez no app.js ao iniciar.
+// Move as migrações que antes ficavam no construtor do FinanceiroRepository   
+// para uma função explícita, chamada apenas uma vez no app.js ao iniciar.    
 // Isso elimina o side-effect escondido no construtor (Clean Code).
 // ==============================================================================
 
@@ -21,21 +21,22 @@ const db = require('../config/db');
 async function initDatabase() {
   try {
     // Índices de Performance (B-Tree) para queries pesadas de Lancamentos
-    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuarioid ON Lancamentos(UsuarioId)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuarioid ON Lancamentos(UsuarioId)');     
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_datavencimento ON Lancamentos(DataVencimento)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_tipo ON Lancamentos(Tipo)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_status ON Lancamentos(Status)');
-    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_datacriacao ON Lancamentos(DataCriacao)');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_datacriacao ON Lancamentos(DataCriacao)'); 
 
     // Novos índices compostos para otimização de dashboard e inserções
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_data ON Lancamentos(UsuarioId, DataVencimento)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_ordem ON Lancamentos(UsuarioId, Ordem)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_datacriacao ON Lancamentos(UsuarioId, DataCriacao DESC)');
-    
+
     // Índice funcional para otimizar o date_trunc na consulta de Últimos Lançamentos
     await db.query("CREATE INDEX IF NOT EXISTS idx_lancamentos_trunc_data ON Lancamentos (UsuarioId, date_trunc('second', DataCriacao) DESC)");
+    
     // 1. Tabela OrdemCards
-    await db.query(` 
+    await db.query(`
       CREATE TABLE IF NOT EXISTS OrdemCards (
           Id SERIAL PRIMARY KEY,
           Nome VARCHAR(255) NOT NULL,
@@ -45,14 +46,14 @@ async function initDatabase() {
      `);
 
     // 4. Constraints UNIQUE para UPSERTs
-    await db.query(` 
+    await db.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS uq_faturamanual_usuario_mes_ano
       ON FaturaManual (UsuarioId, Mes, Ano)
      `);
 
     // Remove o índice antigo que não considerava Mês e Ano, caso exista
     // Habilita a nova constraint UNIQUE por Usuario, Mês e Ano
-    await db.query(` 
+    await db.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS uq_anotacoes_usuario_mes_ano
       ON Anotacoes (UsuarioId, Mes, Ano)
      `);
@@ -70,12 +71,12 @@ async function initDatabase() {
 
     // Índices para performance
     await db.query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token 
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_tokens_token
       ON TokensPersistentes(Token)
     `);
 
     await db.query(`
-      CREATE INDEX IF NOT EXISTS idx_tokens_expires 
+      CREATE INDEX IF NOT EXISTS idx_tokens_expires
       ON TokensPersistentes(DataExpiracao)
     `);
 
@@ -137,20 +138,23 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS configuracoes (
           usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
           whatsapp_template TEXT,
-          privacidade_global BOOLEAN DEFAULT FALSE
+          privacidade_global BOOLEAN DEFAULT FALSE,
+          regras_sync JSONB DEFAULT '[]'::jsonb
       )
     `);
 
     await db.query(`ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS privacidade_global BOOLEAN DEFAULT FALSE`);
+    await db.query(`ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS regras_sync JSONB DEFAULT '[]'::jsonb`);
 
     // Adiciona a nova coluna para o valor mínimo da divisão da casa
     await db.query(`
       ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS divisao_casa_minimo NUMERIC(10, 2) DEFAULT 750.00
     `);
 
-    // Garante que o usuário 1 tenha um registro inicial
-    await db.query(`INSERT INTO configuracoes (usuario_id) VALUES (1) ON CONFLICT (usuario_id) DO NOTHING`);
-    await db.query(`INSERT INTO configuracoes (usuario_id) VALUES (2) ON CONFLICT (usuario_id) DO NOTHING`);
+    // Flag para controle de onboarding (Wave 4 SaaS)
+    await db.query(`
+      ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE
+    `);
 
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {

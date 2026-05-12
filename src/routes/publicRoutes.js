@@ -24,6 +24,48 @@ module.exports = function (repo) {
   });
 
   // ============================================================================
+  // GET /signup — Renderiza página de cadastro
+  // ============================================================================
+  router.get('/signup', (req, res) => {
+    if (req.session.user) {
+      return res.redirect('/');
+    }
+    res.render('signup', { error: null, titulo: 'Gestão Financeira - Cadastro' });
+  });
+
+  // ============================================================================
+  // POST /signup — Processa criação de nova conta
+  // ============================================================================
+  router.post('/signup', loginLimiter, async (req, res) => {
+    const nome = (req.body.nome || '').trim();
+    const login = (req.body.login || '').trim().toLowerCase();
+    const password = (req.body.password || '').trim();
+
+    if (!nome || !login || !password) {
+      return res.render('signup', { error: 'Todos os campos são obrigatórios!', titulo: 'Gestão Financeira - Cadastro' });
+    }
+
+    try {
+      const usuarioExistente = await repo.obterUsuarioPorLogin(login);
+      if (usuarioExistente) {
+        return res.render('signup', { error: 'Este login já está em uso.', titulo: 'Gestão Financeira - Cadastro' });
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      const novoUsuario = await repo.criarUsuario(nome, login, hash);
+
+      console.log(`[SIGNUP] ✅ Novo usuário criado: ${novoUsuario.nome} (${novoUsuario.login})`);
+
+      // Auto-login após cadastro
+      req.session.user = { id: novoUsuario.id, nome: novoUsuario.nome, login: novoUsuario.login };
+      return res.redirect('/');
+    } catch (err) {
+      console.error(`[SIGNUP] ❌ Erro ao criar usuário: ${err.message}`);
+      return res.render('signup', { error: 'Erro interno ao criar conta.', titulo: 'Gestão Financeira - Cadastro' });
+    }
+  });
+
+  // ============================================================================
   // POST /login — Processa autenticação
   // ============================================================================
   // Aplica o rate limiter antes de processar qualquer lógica de banco/bcrypt

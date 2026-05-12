@@ -154,7 +154,112 @@ function abrirModalConfiguracoes() {
   const valorMinimo = document.body.dataset.configDivisaoMinimo || '750.00';
   const valorFormatado = parseFloat(valorMinimo).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   document.getElementById('configDivisaoMinimo').value = 'R$ ' + valorFormatado;
+  
+  // Reseta para a primeira aba
+  const firstTabBtn = document.querySelector('.modal-tab');
+  if (firstTabBtn) switchTab('tab-geral', firstTabBtn);
+
   document.getElementById('modalConfiguracoes').classList.add('active');
+  
+  // Carrega regras de sincronização
+  if (typeof renderizarRegrasSync === 'function') renderizarRegrasSync();
+}
+
+function switchTab(tabId, btn) {
+  // Remove active de todos os botões e conteúdos desta modal
+  const container = btn.closest('.modal-box');
+  container.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  // Adiciona active no botão e conteúdo selecionado
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+function abrirModalRegraSync(index = -1, regra = null) {
+  registerModalOpen();
+  const form = document.getElementById('formRegraSync');
+  form.reset();
+  
+  document.getElementById('syncRuleIndex').value = index;
+  document.getElementById('tituloModalRegraSync').textContent = index === -1 ? 'Nova Regra' : 'Editar Regra';
+
+  if (regra) {
+    document.getElementById('syncType').value = regra.tipo;
+    document.getElementById('syncTerceiroOrigem').value = regra.terceiroOrigem || '';
+    document.getElementById('syncUsuarioDestino').value = regra.usuarioDestino || '';
+    document.getElementById('syncAtivo').checked = regra.ativo !== false;
+
+    if (regra.tipo === 'COPIA_TOTAL') {
+      document.getElementById('syncContaDestino').value = regra.contaDestino || '';
+    } else if (regra.tipo === 'DIVISAO_CASA') {
+      document.getElementById('syncValorMinimo').value = regra.valorMinimo || '';
+      document.getElementById('syncTerceiroEspelho').value = regra.terceiroEspelhoNoOrigem || '';
+    }
+  }
+
+  toggleSyncFields();
+  document.getElementById('modalRegraSync').classList.add('active');
+}
+
+function fecharModalRegraSync() {
+  handleModalClose();
+  document.getElementById('modalRegraSync').classList.remove('active');
+}
+
+function toggleSyncFields() {
+  const type = document.getElementById('syncType').value;
+  document.getElementById('fieldsCopiaTotal').style.display = type === 'COPIA_TOTAL' ? 'block' : 'none';
+  document.getElementById('fieldsDivisaoCasa').style.display = type === 'DIVISAO_CASA' ? 'block' : 'none';
+}
+
+// ==============================================================================
+// ✅ WIZARD DE ONBOARDING (WAVE 4)
+// ==============================================================================
+let currentWizardStep = 1;
+
+function abrirModalWizard() {
+  registerModalOpen();
+  currentWizardStep = 1;
+  showWizardStep(1);
+  document.getElementById('modalWizard').classList.add('active');
+  
+  // Foco inicial
+  setTimeout(() => {
+    const input = document.getElementById('wizardPartnerName');
+    if (input) input.focus();
+  }, 200);
+}
+
+function fecharModalWizard() {
+  handleModalClose();
+  document.getElementById('modalWizard').classList.remove('active');
+}
+
+function showWizardStep(step) {
+  document.querySelectorAll('.wizard-step').forEach(el => {
+    el.style.display = parseInt(el.dataset.step) === step ? 'block' : 'none';
+  });
+}
+
+function wizardNextStep() {
+  if (currentWizardStep === 1) {
+    const name = document.getElementById('wizardPartnerName').value.trim();
+    if (!name) {
+      if (typeof mostrarAviso === 'function') mostrarAviso('Campo Obrigatório', 'Por favor, informe o nome do seu parceiro(a).');
+      return;
+    }
+  }
+  
+  currentWizardStep++;
+  showWizardStep(currentWizardStep);
+}
+
+function wizardPrevStep() {
+  if (currentWizardStep > 1) {
+    currentWizardStep--;
+    showWizardStep(currentWizardStep);
+  }
 }
 
 function fecharModalConfiguracoes() {
@@ -602,85 +707,4 @@ function fallbackCopiarAoClipboard(text) {
     document.getSelection().addRange(selected);
   }
 }
-// ==============================================================================
-// ✅ CONTROLE DO FORMULÁRIO DE LANÇAMENTO (Parcelas e Lote)
-// ==============================================================================
 
-function toggleParcelas() {
-  const tipo = document.getElementById('contaTipo').value;
-  const div = document.getElementById('grupoParcelas');
-  const input = div.querySelector('input');
-  if (tipo === 'Parcelada') {
-    div.style.display = 'flex';
-    input.required = true;
-  } else {
-    div.style.display = 'none';
-    input.required = false;
-  }
-}
-
-function toggleBulkMode() {
-  const btnSim = document.getElementById('bulkBtnSim');
-  const btnNao = document.getElementById('bulkBtnNao');
-  const singleTerceiroGroup = document.getElementById('grupoTerceiroSingle');
-  const bulkTerceirosGroup = document.getElementById('grupoTerceirosBulk');
-  const bulkCounter = document.getElementById('bulkCounter');
-
-  if (!btnSim || !btnNao || !singleTerceiroGroup || !bulkTerceirosGroup) return;
-
-  const isBulk = btnSim.classList.contains('active');
-
-  if (isBulk) {
-    singleTerceiroGroup.style.display = 'none';
-    bulkTerceirosGroup.style.display = 'flex';
-    atualizarBulkCounter();
-  } else {
-    singleTerceiroGroup.style.display = 'flex';
-    bulkTerceirosGroup.style.display = 'none';
-    if (bulkCounter) bulkCounter.textContent = '';
-  }
-}
-
-window.setBulkMode = function (isBulk) {
-  const btnSim = document.getElementById('bulkBtnSim');
-  const btnNao = document.getElementById('bulkBtnNao');
-
-  if (!btnSim || !btnNao) return;
-
-  btnSim.classList.remove('active');
-  btnNao.classList.remove('active');
-
-  if (isBulk) {
-    btnSim.classList.add('active');
-  } else {
-    btnNao.classList.add('active');
-  }
-
-  toggleBulkMode();
-};
-
-function atualizarBulkCounter() {
-  const bulkInput = document.getElementById('contaTerceirosBulk');
-  const bulkCounter = document.getElementById('bulkCounter');
-  if (!bulkInput || !bulkCounter) return;
-
-  const nomes = bulkInput.value
-    .split(',')
-    .map((n) => n.trim())
-    .filter((n) => n.length > 0);
-
-  if (nomes.length > 0) {
-    bulkCounter.textContent = `${nomes.length} lançamento(s) será(ão) criado(s)`;
-    bulkCounter.style.color = 'var(--blue)';
-  } else {
-    bulkCounter.textContent = 'Adicione pelo menos 1 terceiro';
-    bulkCounter.style.color = 'var(--red)';
-  }
-}
-
-function mascaraParcela(input) {
-  let v = input.value.replace(/\D/g, '');
-  if (v.length > 4) v = v.substring(0, 4);
-  if (v.length > 2) v = v.replace(/^(\d{2})(\d)/, '$1/$2');
-  input.value = v;
-}
