@@ -240,9 +240,10 @@ module.exports = function (repo) {
       const userId = req.session.user.id;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      const [dadosTerceirosRaw, mesFechado] = await Promise.all([
+      const [dadosTerceirosRaw, mesFechado, configuracoes] = await Promise.all([
         repo.getDadosTerceiros(userId, month, year),
         repo.isMesFechado(userId, month, year),
+        repo.getConfiguracoes(userId)
       ]);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
@@ -270,11 +271,7 @@ module.exports = function (repo) {
       const infoMap = {};
       terceirosQuery.rows.forEach((t) => (infoMap[t.nome] = t));
 
-      const configQuery = await db.query('SELECT whatsapp_template FROM configuracoes WHERE usuario_id = $1', [userId]);
-      const whatsappTemplate =
-        configQuery.rows.length > 0 && configQuery.rows[0].whatsapp_template
-          ? configQuery.rows[0].whatsapp_template
-          : 'Olá {nome_terceiro}! O link das suas contas do mês {mes}/{ano} já está disponível:\n{link}';
+      const whatsappTemplate = configuracoes?.whatsapp_template || 'Olá {nome_terceiro}! O link das suas contas do mês {mes}/{ano} já está disponível:\n{link}';
 
       todosTerceiros = todosTerceiros.map((t) => ({
         ...t,
@@ -285,6 +282,13 @@ module.exports = function (repo) {
       // Ordena alfabeticamente
       todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
 
+      // ✅ FIX: Fallback defensivo para configurações
+      const configuracoesValidas = configuracoes || {
+        divisao_casa_minimo: '750.00',
+        regras_sync: [],
+        onboarding_completed: false
+      };
+
       res.render('terceiros-dashboard', {
         nav,
         terceiros: todosTerceiros,
@@ -293,6 +297,7 @@ module.exports = function (repo) {
         query: req.query,
         currentPath: req.path,
         whatsappTemplate,
+        configuracoes: configuracoesValidas,
         titulo: 'Gestão Financeira - Terceiros',
       });
     })
