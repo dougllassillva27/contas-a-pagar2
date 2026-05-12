@@ -74,7 +74,16 @@
         }
     </style>
 </head>
-<body data-month="<%= nav.atual.month %>" data-year="<%= nav.atual.year %>" data-username="<%= user.nome %>" data-userid="<%= user.id %>" data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>">
+<body 
+    data-month="<%= nav.atual.month %>" 
+    data-year="<%= nav.atual.year %>" 
+    data-username="<%= user.nome %>" 
+    data-userid="<%= user.id %>" 
+    data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>"
+    data-config-divisao-minimo="<%= configuracoes.divisao_casa_minimo || '750.00' %>"
+    data-regras-sync='<%- JSON.stringify(configuracoes.regras_sync || []) %>'
+    data-onboarding-completed="<%= configuracoes.onboarding_completed ? 'true' : 'false' %>"
+>
     <%- include('partials/header') %>
 
     <div class="panel" style="margin-top: 20px; background: var(--surface); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
