@@ -12,10 +12,11 @@ async function getConfiguracoes(userId) {
 
 async function saveConfiguracao(userId, chave, valor) {
   // Validação para evitar SQL Injection, permitindo apenas colunas conhecidas
-  const colunasPermitidas = ['whatsapp_template', 'privacidade_global', 'divisao_casa_minimo'];
+  const colunasPermitidas = ['whatsapp_template', 'privacidade_global', 'divisao_casa_minimo', 'regras_sync', 'onboarding_completed'];
   if (!colunasPermitidas.includes(chave)) {
     throw new Error('Chave de configuração inválida.');
   }
+
 
   // Usamos a sintaxe de placeholder do pg para o nome da coluna de forma segura
   const query = `

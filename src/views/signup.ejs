@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title><%= typeof titulo !== 'undefined' ? titulo : 'Gestão Financeira - Cadastro' %></title>
+
+    <!-- PWA Setup -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#121212" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/social-media.webp" />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"/> 
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="login-body">
+
+    <div class="login-container">
+        <div class="login-card">
+            
+            <div class="login-icon" style="background: var(--success-bg); color: var(--success);">
+                <span class="material-icons">person_add</span>
+            </div>
+
+            <h2>Criar nova conta</h2>
+            <span class="login-subtitle">Comece a gerenciar suas finanças hoje</span>
+
+            <% if (error) { %>
+            <div class="error-msg">
+                <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">error</span>
+                <%= error %>
+            </div>
+            <% } %>
+
+            <form action="/signup" method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="nome">Nome Completo ou Apelido</label>
+                    <input 
+                        type="text" 
+                        name="nome" 
+                        id="nome" 
+                        class="login-input" 
+                        placeholder="Ex: Douglas Silva" 
+                        required 
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="login">Login (Usuário)</label>
+                    <input 
+                        type="text" 
+                        name="login" 
+                        id="login" 
+                        class="login-input" 
+                        placeholder="Ex: douglas" 
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="password">Senha de Acesso</label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="password" 
+                        class="login-input" 
+                        placeholder="••••••••" 
+                        required
+                        autocomplete="new-password"
+                    >
+                </div>
+
+                <button type="submit" class="login-btn" style="background: var(--primary); margin-top: 25px;">
+                    <span class="material-icons" style="font-size: 18px; margin-right: 8px;">how_to_reg</span>
+                    Criar Minha Conta
+                </button>
+            </form>
+
+            <div style="margin-top: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+                Já tem uma conta? <a href="/login" style="color: var(--primary); font-weight: 600; text-decoration: none;">Faça Login</a>
+            </div>
+
+            <div class="login-footer">
+                &copy; <%= new Date().getFullYear() %> Gestão Financeira • 100% Privado
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

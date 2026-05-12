@@ -180,17 +180,6 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      // Sincronização automática da fatura 'Morr' e divisão 'Casa' para a Vitória
-      if (userId === 2) {
-        syncService.sincronizarFaturaMorr(repo, 1, 2, month, year).catch(console.error);
-        syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year).catch(console.error);
-      }
-
-      // Sincronização automática da divisão do terceiro 'Casa'
-      if (userId === 1) {
-        syncService.sincronizarDivisaoCasa(repo, 1, 2, month, year).catch(console.error);
-      }
-
       const {
         totais,
         fixas,
@@ -205,9 +194,22 @@ module.exports = function (repo) {
         configuracoes,
       } = await repo.getDashboardDataBatched(userId, Number(month), Number(year), userName);
 
+      // Sincronização Dinâmica (SaaS Ready)
+      // Processa regras declarativas do usuário (ex: espelhamento de faturas e divisões)
+      if (configuracoes && configuracoes.regras_sync) {
+        syncService.executarSincronizacaoDinamica(repo, userId, month, year, configuracoes.regras_sync).catch(console.error);
+      }
+
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
+
+      // ✅ FIX: Garante que configuracoes nunca seja nulo para evitar Erro 500 em novos usuários
+      const configuracoesValidas = configuracoes || {
+        divisao_casa_minimo: '750.00',
+        regras_sync: [],
+        onboarding_completed: false
+      };
 
       res.render('index', {
         totais,
@@ -225,7 +227,7 @@ module.exports = function (repo) {
         mesFechado,
         safeJs,
         currentPath: req.path,
-        configuracoes,
+        configuracoes: configuracoesValidas,
         titulo: 'Gestão Financeira - Home',
       });
     })

@@ -1094,4 +1094,224 @@ document.addEventListener('DOMContentLoaded', () => {
       salvarConfiguracoes();
     });
   }
+
+  // Novo Listener para Regras de Sync
+  const formRegraSync = document.getElementById('formRegraSync');
+  if (formRegraSync) {
+    formRegraSync.addEventListener('submit', (e) => {
+      e.preventDefault();
+      salvarRegraSync();
+    });
+  }
+
+  // AUTO-TRIGGER WIZARD (Wave 4)
+  const onboardingCompleted = document.body.dataset.onboardingCompleted === 'true';
+  if (!onboardingCompleted && typeof abrirModalWizard === 'function') {
+    // Delay curto para garantir que tudo carregou
+    setTimeout(abrirModalWizard, 800);
+  }
 });
+
+// ==============================================================================
+// ✅ FINALIZAÇÃO DO WIZARD (Wave 4)
+// ==============================================================================
+
+async function finalizarWizard() {
+  const partnerName = document.getElementById('wizardPartnerName').value.trim();
+  const partnerID = parseInt(document.getElementById('wizardPartnerID').value) || null;
+  const enableCasa = document.getElementById('wizardEnableCasa').checked;
+
+  if (!partnerName) {
+    mostrarAviso('Erro', 'O nome do parceiro é obrigatório para configurar a sincronização.');
+    return;
+  }
+
+  mostrarLoading();
+  try {
+    const novasRegras = [];
+
+    if (enableCasa) {
+      novasRegras.push({
+        tipo: 'DIVISAO_CASA',
+        terceiroOrigem: 'Casa',
+        usuarioDestino: partnerID || 2, // Fallback p/ 2 se vazio (comum em testes)
+        valorMinimo: 750,
+        terceiroEspelhoNoOrigem: partnerName,
+        ativo: true
+      });
+    }
+
+    // 1. Salva as regras (se houver)
+    if (novasRegras.length > 0) {
+      await fetch('/api/configuracoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chave: 'regras_sync', valor: novasRegras }),
+      });
+    }
+
+    await concluirOnboarding();
+    document.body.dataset.regrasSync = JSON.stringify(novasRegras);
+
+    if (typeof fecharModalWizard === 'function') fecharModalWizard();
+    ocultarLoading();
+
+    mostrarAviso('Tudo Pronto!', `Configuração concluída. Bem-vindo, ${document.body.dataset.username}!`);
+    if (typeof softRefresh === 'function') await softRefresh();
+
+  } catch (err) {
+    ocultarLoading();
+    mostrarAviso('Erro', 'Houve um problema ao salvar sua configuração inicial.');
+  }
+}
+
+async function finalizarWizardSozinho() {
+  mostrarLoading();
+  try {
+    await concluirOnboarding();
+    if (typeof fecharModalWizard === 'function') fecharModalWizard();
+    ocultarLoading();
+    mostrarAviso('Bem-vindo!', `Configuração concluída. Você pode gerenciar sincronizações mais tarde nas configurações.`);
+  } catch (err) {
+    ocultarLoading();
+    mostrarAviso('Erro', 'Falha ao finalizar configuração.');
+  }
+}
+
+async function concluirOnboarding() {
+  // Marca onboarding como concluído no banco
+  await fetch('/api/configuracoes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chave: 'onboarding_completed', valor: true }),
+  });
+  document.body.dataset.onboardingCompleted = 'true';
+}
+
+// ==============================================================================
+// ✅ GERENCIAMENTO DE REGRAS DE SINCRONIZAÇÃO (SaaS)
+// ==============================================================================
+
+function getRegrasSync() {
+  try {
+    return JSON.parse(document.body.dataset.regrasSync || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function renderizarRegrasSync() {
+  const lista = document.getElementById('listaRegrasSync');
+  if (!lista) return;
+
+  const regras = getRegrasSync();
+
+  if (regras.length === 0) {
+    lista.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                        Nenhuma regra configurada. Comece criando uma nova!
+                       </div>`;
+    return;
+  }
+
+  let html = '';
+  regras.forEach((regra, index) => {
+    const statusClass = regra.ativo !== false ? 'badge-sync-active' : 'badge-sync-inactive';
+    const statusText = regra.ativo !== false ? 'Ativa' : 'Inativa';
+    const desc = regra.tipo === 'COPIA_TOTAL' 
+      ? `Copia <b>${regra.terceiroOrigem}</b> p/ Usuário <b>${regra.usuarioDestino}</b>`
+      : `Divide <b>${regra.terceiroOrigem}</b> p/ Usuário <b>${regra.usuarioDestino}</b> (Min: R$ ${regra.valorMinimo || 0})`;
+
+    html += `
+      <div class="sync-rule-item">
+        <div class="sync-rule-info">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="badge-sync ${statusClass}">${statusText}</span>
+            <span style="font-size: 0.7rem; color: var(--primary); font-weight: bold;">${regra.tipo}</span>
+          </div>
+          <h4>${desc}</h4>
+        </div>
+        <div class="sync-rule-actions">
+          <button class="btn-icon-small" onclick="editarRegraSync(${index})" title="Editar"><span class="material-icons" style="font-size: 18px;">edit</span></button>
+          <button class="btn-icon-small danger" onclick="confirmarDeletarRegraSync(${index})" title="Excluir"><span class="material-icons" style="font-size: 18px;">delete</span></button>
+        </div>
+      </div>
+    `;
+  });
+
+  lista.innerHTML = html;
+}
+
+function abrirFormNovaRegra() {
+  if (typeof abrirModalRegraSync === 'function') abrirModalRegraSync(-1);
+}
+
+function editarRegraSync(index) {
+  const regras = getRegrasSync();
+  if (regras[index]) {
+    if (typeof abrirModalRegraSync === 'function') abrirModalRegraSync(index, regras[index]);
+  }
+}
+
+async function salvarRegraSync() {
+  const index = parseInt(document.getElementById('syncRuleIndex').value);
+  const tipo = document.getElementById('syncType').value;
+  const regras = getRegrasSync();
+
+  const novaRegra = {
+    tipo: tipo,
+    terceiroOrigem: document.getElementById('syncTerceiroOrigem').value,
+    usuarioDestino: parseInt(document.getElementById('syncUsuarioDestino').value),
+    ativo: document.getElementById('syncAtivo').checked
+  };
+
+  if (tipo === 'COPIA_TOTAL') {
+    novaRegra.contaDestino = document.getElementById('syncContaDestino').value;
+  } else if (tipo === 'DIVISAO_CASA') {
+    novaRegra.valorMinimo = parseFloat(document.getElementById('syncValorMinimo').value) || 0;
+    novaRegra.terceiroEspelhoNoOrigem = document.getElementById('syncTerceiroEspelho').value;
+  }
+
+  if (index === -1) {
+    regras.push(novaRegra);
+  } else {
+    regras[index] = novaRegra;
+  }
+
+  await persistirRegrasSync(regras);
+}
+
+function confirmarDeletarRegraSync(index) {
+  if (confirm('Deseja realmente excluir esta regra de sincronização?')) {
+    deletarRegraSync(index);
+  }
+}
+
+async function deletarRegraSync(index) {
+  const regras = getRegrasSync();
+  regras.splice(index, 1);
+  await persistirRegrasSync(regras);
+}
+
+async function persistirRegrasSync(regras) {
+  mostrarLoading();
+  try {
+    const res = await fetch('/api/configuracoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chave: 'regras_sync', valor: regras }),
+    });
+
+    if (res.ok) {
+      document.body.dataset.regrasSync = JSON.stringify(regras);
+      renderizarRegrasSync();
+      if (typeof fecharModalRegraSync === 'function') fecharModalRegraSync();
+      ocultarLoading();
+      mostrarAviso('Sucesso', 'Regras de sincronização atualizadas!');
+    } else {
+      throw new Error('Erro ao salvar');
+    }
+  } catch (err) {
+    ocultarLoading();
+    mostrarAviso('Erro', 'Falha ao salvar as regras no banco.');
+  }
+}

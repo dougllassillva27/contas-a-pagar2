@@ -15,6 +15,11 @@
   --orange: #ffa726;
   --radius: 16px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  
+  /* Variáveis de Estado */
+  --primary: var(--blue);
+  --success: var(--green);
+  --success-bg: rgba(102, 187, 106, 0.15);
 }
 
 /* ==============================================================================
@@ -1598,5 +1603,119 @@ textarea:focus,
 a:focus {
   outline: none;
 }
+
+/* --- SISTEMA DE ABAS EM MODAIS --- */
+.modal-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.modal-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+}
+
+.modal-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.modal-tab.active {
+  background: var(--primary);
+  color: white;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* --- ESTILOS ADICIONAIS PARA REGRAS DE SYNC --- */
+.sync-rule-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sync-rule-info h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.sync-rule-info p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.sync-rule-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon-small {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.btn-icon-small:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.btn-icon-small.danger:hover {
+  background: var(--red);
+  color: white;
+}
+
+.badge-sync {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-sync-active { background: rgba(102, 187, 106, 0.15); color: #66bb6a; }
+.badge-sync-inactive { background: rgba(239, 83, 80, 0.15); color: #ef5350; }
+
+/* --- WIZARD DE ONBOARDING --- */
+.wizard-step {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 
 

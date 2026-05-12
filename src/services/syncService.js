@@ -1,60 +1,82 @@
 // src/services/syncService.js
 
 /**
- * Sincroniza o total de gastos do terceiro 'Morr' do usuário Dodo (ID 1)
- * para a conta fixa 'Cartão Douglas' do usuário Vitória (ID 2).
+ * Motor de Sincronização Dinâmico (SaaS Ready)
+ * Processa regras declarativas armazenadas no JSONB do usuário.
  *
- * @param {object} repo - A instância do repositório de lançamentos.
- * @param {number} sourceUserId - ID do usuário de origem (Dodo).
- * @param {number} targetUserId - ID do usuário de destino (Vitória).
- * @param {number} month - Mês da competência.
- * @param {number} year - Ano da competência.
+ * @param {object} repo - Repositório Financeiro
+ * @param {number} userId - ID do usuário dono das regras
+ * @param {number} month - Mês competência
+ * @param {number} year - Ano competência
+ * @param {Array} regras - Array de objetos de regra (vindo de configuracoes.regras_sync)
  */
-async function sincronizarFaturaMorr(repo, sourceUserId, targetUserId, month, year) {
-  try {
-    const totalMorr = await repo.getTotalTerceiroCartao('Morr', sourceUserId, month, year);
-    await repo.findAndUpdateOrCreateContaFixa(targetUserId, 'Cartão Douglas', totalMorr, month, year);
-    console.log(
-      `[SYNC] Fatura 'Morr' (R$ ${totalMorr}) sincronizada para 'Cartão Douglas' (Usuário: ${targetUserId}).`
-    );
-  } catch (error) {
-    console.error('[SYNC] Erro ao sincronizar fatura Morr:', error.message);
+async function executarSincronizacaoDinamica(repo, userId, month, year, regras) {
+  if (!Array.isArray(regras) || regras.length === 0) return;
+
+  for (const regra of regras) {
+    try {
+      const { tipo, ativo = true } = regra;
+      if (!ativo) continue;
+
+      switch (tipo) {
+        case 'COPIA_TOTAL':
+          // Ex: Copia total do cartão 'Morr' do Dodo para conta fixa 'Cartão Douglas' da Vitória
+          await processarCopiaTotal(repo, userId, month, year, regra);
+          break;
+
+        case 'DIVISAO_CASA':
+          // Ex: Divide gastos de 'Casa', garantindo mínimo e espelhando para parceiro
+          await processarDivisaoCasa(repo, userId, month, year, regra);
+          break;
+
+        default:
+          console.warn(`[SYNC] Tipo de regra desconhecido: ${tipo}`);
+      }
+    } catch (err) {
+      console.error(`[SYNC] Erro ao processar regra ${regra.tipo}:`, err.message);
+    }
   }
 }
 
 /**
- * Busca o total de gastos do terceiro 'Casa', divide por 2, e lança as metades
- * para o usuário Dodo (conta própria), Morr (terceiro) e Vitória (conta própria).
+ * Regra: COPIA_TOTAL
+ * Pega o total de um terceiro no cartão e injeta como valor de uma conta fixa em outro usuário.
  */
-async function sincronizarDivisaoCasa(repo, sourceUserId, targetUserId, mes, ano) {
-  try {
-    // Busca as configurações e o total da casa em paralelo (N+1 Optimization)
-    const [config, totalCasa] = await Promise.all([
-      repo.getConfiguracoes(sourceUserId),
-      repo.getTotalTerceiroCartao('Casa', sourceUserId, mes, ano)
-    ]);
+async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
+  const { terceiroOrigem, usuarioDestino, contaDestino } = config;
+  if (!terceiroOrigem || !usuarioDestino || !contaDestino) return;
 
-    const valorMinimo = config.divisao_casa_minimo || 750;
-    const valorOriginal = totalCasa || 0;
-
-    // Regra de negócio: mínimo configurável para cada. Acima disso, divide real.
-    let metade = valorOriginal / 2;
-    if (metade < valorMinimo) metade = valorMinimo;
-    metade = Math.round(metade * 100) / 100; // Evita dízima na conciliação futura
-
-    // Executa as operações de gravação atômica concorrentemente
-    await Promise.all([
-      repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, null), // Dodo (conta própria)
-      repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, 'Casa', metade, mes, ano, 'Morr'), // Morr no dashboard do Dodo
-      repo.findAndUpdateOrCreateContaFixaComTerceiro(targetUserId, 'Casa', metade, mes, ano, null) // Vitória (conta própria espelhada)
-    ]);
-
-    console.log(
-      `[SYNC] Divisão Casa sincronizada. Source: ${sourceUserId}, Target: ${targetUserId}. Total: ${valorOriginal} -> ${metade}`
-    );
-  } catch (error) {
-    console.error('[SYNC] Erro ao sincronizar divisão Casa:', error.message);
-  }
+  const total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, total, month, year);
+  
+  console.log(`[SYNC-DYNAMIC] Copiado R$ ${total} de '${terceiroOrigem}' (U:${sourceUserId}) -> '${contaDestino}' (U:${usuarioDestino})`);
 }
 
-module.exports = { sincronizarFaturaMorr, sincronizarDivisaoCasa };
+/**
+ * Regra: DIVISAO_CASA
+ * Lógica específica de divisão de despesas fixas da residência.
+ */
+async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
+  const { terceiroOrigem, usuarioDestino, valorMinimo = 0, terceiroEspelhoNoOrigem } = config;
+  if (!terceiroOrigem || !usuarioDestino) return;
+
+  const totalRaw = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  
+  let metade = (totalRaw || 0) / 2;
+  if (metade < valorMinimo) metade = valorMinimo;
+  metade = Math.round(metade * 100) / 100;
+
+  // Executa o espelhamento triplo
+  await Promise.all([
+    // 1. Minha parte (Conta Própria)
+    repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, terceiroOrigem, metade, month, year, null),
+    // 2. Parte do parceiro no meu dashboard (para eu saber que ele me deve isso)
+    repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, terceiroOrigem, metade, month, year, terceiroEspelhoNoOrigem),
+    // 3. Parte do parceiro no dashboard dele (Conta Própria dele)
+    repo.findAndUpdateOrCreateContaFixaComTerceiro(usuarioDestino, terceiroOrigem, metade, month, year, null)
+  ]);
+
+  console.log(`[SYNC-DYNAMIC] Divisão '${terceiroOrigem}' processada. Total: ${totalRaw} -> Metade: ${metade}`);
+}
+
+module.exports = { executarSincronizacaoDinamica };

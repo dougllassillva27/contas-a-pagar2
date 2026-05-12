@@ -64,18 +64,105 @@
       <button class="modal-close" onclick="fecharModalConfiguracoes()">&times;</button>
     </div>
     <div class="modal-scroll">
-      <form id="formConfig">
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('tab-geral', this)">Geral</button>
+        <button class="modal-tab" onclick="switchTab('tab-sync', this)">Sincronização</button>
+      </div>
+
+      <!-- ABA GERAL -->
+      <div id="tab-geral" class="tab-content active">
+        <form id="formConfig">
+          <div class="form-group">
+            <label for="configDivisaoMinimo">Valor Mínimo da Divisão "Casa"</label>
+            <input type="text" id="configDivisaoMinimo" class="form-input" placeholder="R$ 750,00" />
+            <small style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 5px;">
+              Define o valor base para a divisão da conta "Casa". Se a fatura for menor, este valor será usado.
+            </small>
+          </div>
+          <div style="text-align: right; margin-top: 20px;">
+            <button type="submit" class="btn-primary" style="width: auto; padding: 10px 25px;">Salvar Configurações</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ABA SINCRONIZAÇÃO -->
+      <div id="tab-sync" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0; font-size: 1rem;">Regras Ativas</h3>
+          <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="abrirFormNovaRegra()">+ Nova Regra</button>
+        </div>
+        <div id="listaRegrasSync">
+          <!-- Injetado via JS -->
+          <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+            Carregando regras...
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- Footer removido para as abas terem botões próprios se necessário ou simplificar -->
+  </div>
+</div>
+
+<%# ================= MODAL: REGRA DE SINCRONIZAÇÃO ================= %>
+<div class="modal-overlay" id="modalRegraSync">
+  <div class="modal-box" style="max-width: 450px">
+    <div class="modal-header">
+      <h2 id="tituloModalRegraSync">Nova Regra</h2>
+      <button class="modal-close" onclick="fecharModalRegraSync()">&times;</button>
+    </div>
+    <div class="modal-scroll">
+      <form id="formRegraSync">
+        <input type="hidden" id="syncRuleIndex" value="-1" />
+        
         <div class="form-group">
-          <label for="configDivisaoMinimo">Valor Mínimo da Divisão "Casa"</label>
-          <input type="text" id="configDivisaoMinimo" class="form-input" placeholder="R$ 750,00" />
-          <small style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 5px;">
-            Define o valor base para a divisão da conta "Casa". Se a fatura for menor, este valor será usado.
-          </small>
+          <label>Tipo de Sincronização</label>
+          <select id="syncType" class="form-select" onchange="toggleSyncFields()" required>
+            <option value="COPIA_TOTAL">Cópia Total (Espelhamento)</option>
+            <option value="DIVISAO_CASA">Divisão Casa (Proporcional)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Terceiro de Origem (Nesta Conta)</label>
+          <input type="text" id="syncTerceiroOrigem" class="form-input" placeholder="Ex: Casa" required />
+          <small style="color: var(--text-secondary); font-size: 0.75rem;">O nome do terceiro que dispara a regra.</small>
+        </div>
+
+        <div class="form-group">
+          <label>ID do Usuário de Destino</label>
+          <input type="number" id="syncUsuarioDestino" class="form-input" placeholder="Ex: 2" required />
+          <small style="color: var(--text-secondary); font-size: 0.75rem;">ID do usuário que receberá o lançamento.</small>
+        </div>
+
+        <!-- Campos para COPIA_TOTAL -->
+        <div id="fieldsCopiaTotal" class="sync-type-fields">
+          <div class="form-group">
+            <label>Conta de Destino (No outro usuário)</label>
+            <input type="text" id="syncContaDestino" class="form-input" placeholder="Ex: Cartão Douglas" />
+          </div>
+        </div>
+
+        <!-- Campos para DIVISAO_CASA -->
+        <div id="fieldsDivisaoCasa" class="sync-type-fields" style="display: none;">
+          <div class="form-group">
+            <label>Valor Mínimo (R$)</label>
+            <input type="number" step="0.01" id="syncValorMinimo" class="form-input" placeholder="750.00" />
+          </div>
+          <div class="form-group">
+            <label>Terceiro Espelho no Origem (Opcional)</label>
+            <input type="text" id="syncTerceiroEspelho" class="form-input" placeholder="Ex: Morr" />
+            <small style="color: var(--text-secondary); font-size: 0.75rem;">Cria uma cópia do valor dividido para outro terceiro nesta conta.</small>
+          </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+          <input type="checkbox" id="syncAtivo" checked style="width: 18px; height: 18px;" />
+          <label for="syncAtivo" style="margin-bottom: 0; cursor: pointer;">Regra Ativa</label>
         </div>
       </form>
     </div>
-    <div class="modal-footer" style="text-align: right; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-      <button type="submit" form="formConfig" class="btn-primary" style="width: auto; padding: 10px 25px;">Salvar Configurações</button>
+    <div class="modal-footer" style="text-align: right; margin-top: 20px;">
+      <button type="submit" form="formRegraSync" class="btn-primary" style="width: auto; padding: 10px 25px;">Salvar Regra</button>
     </div>
   </div>
 </div>
@@ -162,7 +249,77 @@
   </div>
 </div>
 
-<%# ================= MODAL: ADICIONAR / EDITAR LANÇAMENTO ================= %>
+<%# ================= MODAL: WIZARD DE ONBOARDING ================= %>
+<div class="modal-overlay" id="modalWizard">
+  <div class="modal-box" style="max-width: 500px">
+    <div class="modal-header">
+      <h2>Configuração Inicial</h2>
+      <button class="modal-close" onclick="fecharModalWizard()">&times;</button>
+    </div>
+    <div class="modal-scroll" id="wizardContent">
+      
+      <!-- Passo 1: Bem-vindo -->
+      <div class="wizard-step active" data-step="1">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <span class="material-icons" style="font-size: 48px; color: var(--primary);">auto_awesome</span>
+          <h3 style="margin-top: 10px;">Bem-vindo à sua Gestão Financeira!</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Vamos configurar o básico para você começar.</p>
+        </div>
+        <div class="form-group">
+          <label>Qual o nome do seu parceiro(a) principal?</label>
+          <input type="text" id="wizardPartnerName" class="form-input" placeholder="Ex: Vitória, João..." />
+          <small style="color: var(--text-secondary); font-size: 0.75rem;">Usaremos este nome para identificar as contas divididas.</small>
+        </div>
+        <div style="text-align: right; margin-top: 30px; display: flex; justify-content: space-between; align-items: center;">
+          <button class="modal-tab" style="padding: 0; font-size: 0.8rem;" onclick="finalizarWizardSozinho()">Vou usar sozinho</button>
+          <button class="btn-primary" style="width: auto; padding: 10px 25px;" onclick="wizardNextStep()">Próximo Passo</button>
+        </div>
+      </div>
+
+      <!-- Passo 2: Sincronização -->
+      <div class="wizard-step" data-step="2" style="display: none;">
+        <h3 style="margin-bottom: 15px;">Sincronização Automática</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+          Seu parceiro(a) também usa o sistema? Insira o ID dele(a) para espelhar as contas automaticamente.
+        </p>
+        <div class="form-group">
+          <label>ID do Usuário do Parceiro (Opcional)</label>
+          <input type="number" id="wizardPartnerID" class="form-input" placeholder="Ex: 2" />
+          <small style="color: var(--text-secondary); font-size: 0.75rem;">Deixe vazio se não quiser sincronizar agora.</small>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: center;">
+          <button class="modal-tab" style="padding: 0; font-size: 0.8rem;" onclick="wizardPrevStep()">Voltar</button>
+          <button class="modal-tab" style="padding: 0; font-size: 0.8rem;" onclick="finalizarWizardSozinho()">Pular tudo</button>
+          <button class="btn-primary" style="width: auto; padding: 10px 25px;" onclick="wizardNextStep()">Próximo Passo</button>
+        </div>
+      </div>
+
+      <!-- Passo 3: Divisão Casa -->
+      <div class="wizard-step" data-step="3" style="display: none;">
+        <h3 style="margin-bottom: 15px;">Regra de Divisão "Casa"</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+          Vocês dividem as contas da casa ao meio (50/50)?
+        </p>
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+          <input type="checkbox" id="wizardEnableCasa" checked style="width: 20px; height: 20px;" />
+          <label for="wizardEnableCasa" style="margin-bottom: 0; cursor: pointer; font-weight: 500;">
+            Sim, criar regra automática para "Casa"
+          </label>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 10px;">
+          Ao marcar, qualquer lançamento com o terceiro "Casa" será automaticamente dividido com seu parceiro.
+        </p>
+        <div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: center;">
+          <button class="modal-tab" style="padding: 0; font-size: 0.8rem;" onclick="wizardPrevStep()">Voltar</button>
+          <button class="modal-tab" style="padding: 0; font-size: 0.8rem;" onclick="finalizarWizardSozinho()">Pular tudo</button>
+          <button class="btn-primary" style="width: auto; padding: 10px 25px;" onclick="finalizarWizard()">Finalizar Configuração</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalAdicionar">
   <div class="modal-box">
     <div class="modal-header">

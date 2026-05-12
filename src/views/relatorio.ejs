@@ -658,7 +658,7 @@
                 
                 <div class="total-badge-container">
                     <div class="total-label">Gasto Total Projetado</div>
-                    <div class="total-value">R$ <%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
+                    <div class="total-value">R$ <%= Number(totalGeral || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></div>
                 </div>
             </div>
 
@@ -757,11 +757,14 @@
         </ul>
     </div>
 
+    <!-- Dados provindos em tempo de compilação renderizados para JSON Seguro -->
+    <script id="dados-raw" type="application/json"><%- JSON.stringify(dados || {}) %></script>
+
     <!-- Scripts de Interatividade e Funcionalidade -->
     <script>
-        // Dados provindos em tempo de compilação renderizados para JS Limpo
-        const dadosRaw = <%- JSON.stringify(dados) %>;
-        const totalFaturaStr = "<%= Number(totalGeral).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>";
+        // Recuperação segura dos dados para evitar SyntaxError em payloads grandes
+        const dadosRaw = JSON.parse(document.getElementById('dados-raw').textContent);
+        const totalFaturaStr = "<%= Number(totalGeral || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>";
 
         // Paleta Dark Mode vibrante ajustada ao contexto
         const colorPalette = [

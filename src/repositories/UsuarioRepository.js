@@ -34,8 +34,17 @@ async function getTodosUsuarios() {
   }
 }
 
+async function criarUsuario(nome, login, senhaHash) {
+  const result = await db.query(
+    'INSERT INTO Usuarios (Nome, Login, SenhaHash) VALUES ($1, $2, $3) RETURNING *',
+    [nome, login, senhaHash]
+  );
+  return result.rows[0];
+}
+
 module.exports = {
   obterUsuarioPorLogin,
   getUsuarioById,
   getTodosUsuarios,
+  criarUsuario,
 };
