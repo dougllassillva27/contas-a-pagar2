@@ -9,7 +9,7 @@ types.setTypeParser(1700, (val) => {
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString && process.env.NODE_ENV !== 'test') {
-  console.error('❌ DATABASE_URL não encontrada no .env ou nas variáveis de ambiente!');
+  console.error('❌ ERRO: DATABASE_URL não definida no arquivo .env');
   process.exit(1);
 }
 
@@ -19,15 +19,10 @@ const pool = new Pool({
   client_encoding: 'UTF8',
 });
 
-// Helper centralizado para verificar se logs de performance estão ativos
-const isPerfEnabled = () => {
-  const debug = String(process.env.DEBUG_PERF || '').toLowerCase().trim();
-  return debug === 'true' || debug === '1' || (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test');
-};
-
 module.exports = {
   query: async (text, params) => {
-    if (isPerfEnabled()) {
+    const isPerfEnabled = process.env.DEBUG_PERF === 'true';
+    if (isPerfEnabled || (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test')) {
       const start = Date.now();
       const result = await pool.query(text, params);
       const duration = Date.now() - start;
@@ -38,7 +33,8 @@ module.exports = {
   },
   getClient: async () => {
     const client = await pool.connect();
-    if (isPerfEnabled()) {
+    const isPerfEnabled = process.env.DEBUG_PERF === 'true';
+    if (isPerfEnabled || (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test')) {
       const originalQuery = client.query.bind(client);
       client.query = async (text, params) => {
         const start = Date.now();
