@@ -13,28 +13,37 @@
 async function executarSincronizacaoDinamica(repo, userId, month, year, regras) {
   if (!Array.isArray(regras) || regras.length === 0) return;
 
+  const startTotal = Date.now();
   for (const regra of regras) {
     try {
       const { tipo, ativo = true } = regra;
       if (!ativo) continue;
 
+      const startRegra = Date.now();
       switch (tipo) {
         case 'COPIA_TOTAL':
-          // Ex: Copia total do cartão 'Morr' do Dodo para conta fixa 'Cartão Douglas' da Vitória
           await processarCopiaTotal(repo, userId, month, year, regra);
           break;
 
         case 'DIVISAO_CASA':
-          // Ex: Divide gastos de 'Casa', garantindo mínimo e espelhando para parceiro
           await processarDivisaoCasa(repo, userId, month, year, regra);
           break;
 
         default:
           console.warn(`[SYNC] Tipo de regra desconhecido: ${tipo}`);
       }
+      const durationRegra = Date.now() - startRegra;
+      if (process.env.DEBUG_PERF === 'true' || process.env.DEBUG_PERF === '1') {
+        console.log(`[SYNC-PERF] Regra ${tipo} processada em ${durationRegra}ms`);
+      }
     } catch (err) {
       console.error(`[SYNC] Erro ao processar regra ${regra.tipo}:`, err.message);
     }
+  }
+  
+  const durationTotal = Date.now() - startTotal;
+  if (process.env.DEBUG_PERF === 'true' || process.env.DEBUG_PERF === '1') {
+    console.log(`[SYNC-PERF] Ciclo total de sincronização: ${durationTotal}ms`);
   }
 }
 
@@ -48,7 +57,7 @@ async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
 
   const total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
   await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, total, month, year);
-  
+
   console.log(`[SYNC-DYNAMIC] Copiado R$ ${total} de '${terceiroOrigem}' (U:${sourceUserId}) -> '${contaDestino}' (U:${usuarioDestino})`);
 }
 
@@ -61,7 +70,7 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
   if (!terceiroOrigem || !usuarioDestino) return;
 
   const totalRaw = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
-  
+
   let metade = (totalRaw || 0) / 2;
   if (metade < valorMinimo) metade = valorMinimo;
   metade = Math.round(metade * 100) / 100;
