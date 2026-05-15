@@ -146,7 +146,10 @@ async function getDashboardDataBatched(userId, month, year, userName) {
       
       (SELECT COALESCE(json_agg(t.NomeTerceiro), '[]') FROM (
         SELECT DISTINCT NomeTerceiro FROM Lancamentos 
-        WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL AND NomeTerceiro != '' ORDER BY NomeTerceiro
+        WHERE UsuarioId = $1 
+          AND NomeTerceiro IS NOT NULL AND NomeTerceiro != '' 
+          AND DataVencimento >= (CURRENT_DATE - INTERVAL '12 months')
+        ORDER BY NomeTerceiro
       ) t) AS distintos_terceiros,
       
       (SELECT row_to_json(t) FROM (SELECT * FROM configuracoes WHERE usuario_id = $1) t) AS configuracoes

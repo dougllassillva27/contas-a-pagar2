@@ -1744,7 +1744,7 @@
       "label": "getLancamentosPorTipo()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L173",
+      "source_location": "L176",
       "id": "repositories_lancamentorepository_getlancamentosportipo",
       "community": 2,
       "norm_label": "getlancamentosportipo()"
@@ -1753,7 +1753,7 @@
       "label": "getDadosTerceiros()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L187",
+      "source_location": "L190",
       "id": "repositories_lancamentorepository_getdadosterceiros",
       "community": 2,
       "norm_label": "getdadosterceiros()"
@@ -1762,7 +1762,7 @@
       "label": "getLancamentosCartaoPorPessoa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L200",
+      "source_location": "L203",
       "id": "repositories_lancamentorepository_getlancamentoscartaoporpessoa",
       "community": 2,
       "norm_label": "getlancamentoscartaoporpessoa()"
@@ -1771,7 +1771,7 @@
       "label": "getResumoPessoas()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L220",
+      "source_location": "L223",
       "id": "repositories_lancamentorepository_getresumopessoas",
       "community": 2,
       "norm_label": "getresumopessoas()"
@@ -1780,7 +1780,7 @@
       "label": "getDetalhesRendas()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L238",
+      "source_location": "L241",
       "id": "repositories_lancamentorepository_getdetalhesrendas",
       "community": 2,
       "norm_label": "getdetalhesrendas()"
@@ -1789,7 +1789,7 @@
       "label": "getDistinctTerceiros()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L242",
+      "source_location": "L245",
       "id": "repositories_lancamentorepository_getdistinctterceiros",
       "community": 2,
       "norm_label": "getdistinctterceiros()"
@@ -1798,7 +1798,7 @@
       "label": "addLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L254",
+      "source_location": "L257",
       "id": "repositories_lancamentorepository_addlancamento",
       "community": 2,
       "norm_label": "addlancamento()"
@@ -1807,7 +1807,7 @@
       "label": "addLancamentosBulk()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L280",
+      "source_location": "L283",
       "id": "repositories_lancamentorepository_addlancamentosbulk",
       "community": 2,
       "norm_label": "addlancamentosbulk()"
@@ -1816,7 +1816,7 @@
       "label": "updateLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L326",
+      "source_location": "L329",
       "id": "repositories_lancamentorepository_updatelancamento",
       "community": 2,
       "norm_label": "updatelancamento()"
@@ -1825,7 +1825,7 @@
       "label": "updateStatus()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L346",
+      "source_location": "L349",
       "id": "repositories_lancamentorepository_updatestatus",
       "community": 2,
       "norm_label": "updatestatus()"
@@ -1834,7 +1834,7 @@
       "label": "updateConferido()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L350",
+      "source_location": "L353",
       "id": "repositories_lancamentorepository_updateconferido",
       "community": 2,
       "norm_label": "updateconferido()"
@@ -1843,7 +1843,7 @@
       "label": "updateConferidoExtrato()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L354",
+      "source_location": "L357",
       "id": "repositories_lancamentorepository_updateconferidoextrato",
       "community": 2,
       "norm_label": "updateconferidoextrato()"
@@ -1852,7 +1852,7 @@
       "label": "updateConferidoExtratoLote()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L359",
+      "source_location": "L362",
       "id": "repositories_lancamentorepository_updateconferidoextratolote",
       "community": 2,
       "norm_label": "updateconferidoextratolote()"
@@ -1861,7 +1861,7 @@
       "label": "updateStatusBatchPessoa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L372",
+      "source_location": "L375",
       "id": "repositories_lancamentorepository_updatestatusbatchpessoa",
       "community": 2,
       "norm_label": "updatestatusbatchpessoa()"
@@ -1870,7 +1870,7 @@
       "label": "updateConferidoBatchRecent()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L390",
+      "source_location": "L393",
       "id": "repositories_lancamentorepository_updateconferidobatchrecent",
       "community": 2,
       "norm_label": "updateconferidobatchrecent()"
@@ -1879,7 +1879,7 @@
       "label": "reorderLancamentos()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L409",
+      "source_location": "L412",
       "id": "repositories_lancamentorepository_reorderlancamentos",
       "community": 2,
       "norm_label": "reorderlancamentos()"
@@ -1888,7 +1888,7 @@
       "label": "getLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L431",
+      "source_location": "L434",
       "id": "repositories_lancamentorepository_getlancamento",
       "community": 2,
       "norm_label": "getlancamento()"
@@ -1897,7 +1897,7 @@
       "label": "getMesesAnosPorIds()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L436",
+      "source_location": "L439",
       "id": "repositories_lancamentorepository_getmesesanosporids",
       "community": 2,
       "norm_label": "getmesesanosporids()"
@@ -1906,7 +1906,7 @@
       "label": "deleteLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L445",
+      "source_location": "L448",
       "id": "repositories_lancamentorepository_deletelancamento",
       "community": 2,
       "norm_label": "deletelancamento()"
@@ -1915,7 +1915,7 @@
       "label": "deleteLancamentosPorPessoa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L449",
+      "source_location": "L452",
       "id": "repositories_lancamentorepository_deletelancamentosporpessoa",
       "community": 2,
       "norm_label": "deletelancamentosporpessoa()"
@@ -1924,7 +1924,7 @@
       "label": "deleteMonth()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L462",
+      "source_location": "L465",
       "id": "repositories_lancamentorepository_deletemonth",
       "community": 2,
       "norm_label": "deletemonth()"
@@ -1933,7 +1933,7 @@
       "label": "deleteLancamentosEmLote()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L474",
+      "source_location": "L477",
       "id": "repositories_lancamentorepository_deletelancamentosemlote",
       "community": 2,
       "norm_label": "deletelancamentosemlote()"
@@ -1942,7 +1942,7 @@
       "label": "moverLancamentosMes()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L486",
+      "source_location": "L489",
       "id": "repositories_lancamentorepository_moverlancamentosmes",
       "community": 2,
       "norm_label": "moverlancamentosmes()"
@@ -1951,7 +1951,7 @@
       "label": "copyMonth()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L502",
+      "source_location": "L505",
       "id": "repositories_lancamentorepository_copymonth",
       "community": 2,
       "norm_label": "copymonth()"
@@ -1960,7 +1960,7 @@
       "label": "getLancamentosTerceiro()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L573",
+      "source_location": "L576",
       "id": "repositories_lancamentorepository_getlancamentosterceiro",
       "community": 2,
       "norm_label": "getlancamentosterceiro()"
@@ -1969,7 +1969,7 @@
       "label": "getTotalTerceiroCartao()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L591",
+      "source_location": "L594",
       "id": "repositories_lancamentorepository_gettotalterceirocartao",
       "community": 2,
       "norm_label": "gettotalterceirocartao()"
@@ -1978,7 +1978,7 @@
       "label": "findAndUpdateOrCreateContaFixa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L605",
+      "source_location": "L608",
       "id": "repositories_lancamentorepository_findandupdateorcreatecontafixa",
       "community": 2,
       "norm_label": "findandupdateorcreatecontafixa()"
@@ -1987,7 +1987,7 @@
       "label": "findAndUpdateOrCreateContaFixaComTerceiro()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L629",
+      "source_location": "L632",
       "id": "repositories_lancamentorepository_findandupdateorcreatecontafixacomterceiro",
       "community": 2,
       "norm_label": "findandupdateorcreatecontafixacomterceiro()"
@@ -3048,9 +3048,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1119",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_finalizarwizard",
-      "confidence_score": 1.0
+      "target": "js_app_finalizarwizard"
     },
     {
       "relation": "contains",
@@ -3058,9 +3058,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1168",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_finalizarwizardsozinho",
-      "confidence_score": 1.0
+      "target": "js_app_finalizarwizardsozinho"
     },
     {
       "relation": "contains",
@@ -3068,9 +3068,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1181",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_concluironboarding",
-      "confidence_score": 1.0
+      "target": "js_app_concluironboarding"
     },
     {
       "relation": "contains",
@@ -3078,9 +3078,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1195",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_getregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_getregrassync"
     },
     {
       "relation": "contains",
@@ -3088,9 +3088,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1203",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_renderizarregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_renderizarregrassync"
     },
     {
       "relation": "contains",
@@ -3098,9 +3098,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1244",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_abrirformnovaregra",
-      "confidence_score": 1.0
+      "target": "js_app_abrirformnovaregra"
     },
     {
       "relation": "contains",
@@ -3108,9 +3108,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1248",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_editarregrasync",
-      "confidence_score": 1.0
+      "target": "js_app_editarregrasync"
     },
     {
       "relation": "contains",
@@ -3118,9 +3118,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1255",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_salvarregrasync",
-      "confidence_score": 1.0
+      "target": "js_app_salvarregrasync"
     },
     {
       "relation": "contains",
@@ -3128,9 +3128,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1283",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_confirmardeletarregrasync",
-      "confidence_score": 1.0
+      "target": "js_app_confirmardeletarregrasync"
     },
     {
       "relation": "contains",
@@ -3138,9 +3138,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1289",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_deletarregrasync",
-      "confidence_score": 1.0
+      "target": "js_app_deletarregrasync"
     },
     {
       "relation": "contains",
@@ -3148,9 +3148,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1295",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_app_js",
-      "target": "js_app_persistirregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_persistirregrassync"
     },
     {
       "relation": "calls",
@@ -3247,9 +3247,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1160",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_finalizarwizard",
-      "target": "js_app_softrefresh",
-      "confidence_score": 1.0
+      "target": "js_app_softrefresh"
     },
     {
       "relation": "calls",
@@ -3885,9 +3885,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1153",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_finalizarwizard",
-      "target": "js_app_concluironboarding",
-      "confidence_score": 1.0
+      "target": "js_app_concluironboarding"
     },
     {
       "relation": "calls",
@@ -3940,9 +3940,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1171",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_finalizarwizardsozinho",
-      "target": "js_app_concluironboarding",
-      "confidence_score": 1.0
+      "target": "js_app_concluironboarding"
     },
     {
       "relation": "calls",
@@ -3995,9 +3995,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_renderizarregrassync",
-      "target": "js_app_getregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_getregrassync"
     },
     {
       "relation": "calls",
@@ -4006,9 +4006,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1249",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_editarregrasync",
-      "target": "js_app_getregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_getregrassync"
     },
     {
       "relation": "calls",
@@ -4017,9 +4017,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1258",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_salvarregrasync",
-      "target": "js_app_getregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_getregrassync"
     },
     {
       "relation": "calls",
@@ -4028,9 +4028,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1290",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_deletarregrasync",
-      "target": "js_app_getregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_getregrassync"
     },
     {
       "relation": "calls",
@@ -4039,9 +4039,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1306",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_persistirregrassync",
-      "target": "js_app_renderizarregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_renderizarregrassync"
     },
     {
       "relation": "calls",
@@ -4083,9 +4083,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1280",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_salvarregrasync",
-      "target": "js_app_persistirregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_persistirregrassync"
     },
     {
       "relation": "calls",
@@ -4094,9 +4094,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1285",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_confirmardeletarregrasync",
-      "target": "js_app_deletarregrasync",
-      "confidence_score": 1.0
+      "target": "js_app_deletarregrasync"
     },
     {
       "relation": "calls",
@@ -4105,9 +4105,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L1292",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_deletarregrasync",
-      "target": "js_app_persistirregrassync",
-      "confidence_score": 1.0
+      "target": "js_app_persistirregrassync"
     },
     {
       "relation": "calls",
@@ -4359,9 +4359,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L168",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_switchtab",
-      "confidence_score": 1.0
+      "target": "js_ui_switchtab"
     },
     {
       "relation": "contains",
@@ -4369,9 +4369,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L179",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_abrirmodalregrasync",
-      "confidence_score": 1.0
+      "target": "js_ui_abrirmodalregrasync"
     },
     {
       "relation": "contains",
@@ -4379,9 +4379,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L205",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_fecharmodalregrasync",
-      "confidence_score": 1.0
+      "target": "js_ui_fecharmodalregrasync"
     },
     {
       "relation": "contains",
@@ -4389,9 +4389,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_togglesyncfields",
-      "confidence_score": 1.0
+      "target": "js_ui_togglesyncfields"
     },
     {
       "relation": "contains",
@@ -4399,9 +4399,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L221",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_abrirmodalwizard",
-      "confidence_score": 1.0
+      "target": "js_ui_abrirmodalwizard"
     },
     {
       "relation": "contains",
@@ -4409,9 +4409,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L234",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_fecharmodalwizard",
-      "confidence_score": 1.0
+      "target": "js_ui_fecharmodalwizard"
     },
     {
       "relation": "contains",
@@ -4419,9 +4419,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L239",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_showwizardstep",
-      "confidence_score": 1.0
+      "target": "js_ui_showwizardstep"
     },
     {
       "relation": "contains",
@@ -4429,9 +4429,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L245",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_wizardnextstep",
-      "confidence_score": 1.0
+      "target": "js_ui_wizardnextstep"
     },
     {
       "relation": "contains",
@@ -4439,9 +4439,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L258",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "public_js_ui_js",
-      "target": "js_ui_wizardprevstep",
-      "confidence_score": 1.0
+      "target": "js_ui_wizardprevstep"
     },
     {
       "relation": "contains",
@@ -4752,9 +4752,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L180",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_abrirmodalregrasync",
-      "target": "js_ui_registermodalopen",
-      "confidence_score": 1.0
+      "target": "js_ui_registermodalopen"
     },
     {
       "relation": "calls",
@@ -4763,9 +4763,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L222",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_abrirmodalwizard",
-      "target": "js_ui_registermodalopen",
-      "confidence_score": 1.0
+      "target": "js_ui_registermodalopen"
     },
     {
       "relation": "calls",
@@ -4829,9 +4829,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L206",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_fecharmodalregrasync",
-      "target": "js_ui_handlemodalclose",
-      "confidence_score": 1.0
+      "target": "js_ui_handlemodalclose"
     },
     {
       "relation": "calls",
@@ -4840,9 +4840,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L235",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_fecharmodalwizard",
-      "target": "js_ui_handlemodalclose",
-      "confidence_score": 1.0
+      "target": "js_ui_handlemodalclose"
     },
     {
       "relation": "calls",
@@ -4983,9 +4983,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L160",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_abrirmodalconfiguracoes",
-      "target": "js_ui_switchtab",
-      "confidence_score": 1.0
+      "target": "js_ui_switchtab"
     },
     {
       "relation": "calls",
@@ -4994,9 +4994,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L201",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_abrirmodalregrasync",
-      "target": "js_ui_togglesyncfields",
-      "confidence_score": 1.0
+      "target": "js_ui_togglesyncfields"
     },
     {
       "relation": "calls",
@@ -5005,9 +5005,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_abrirmodalwizard",
-      "target": "js_ui_showwizardstep",
-      "confidence_score": 1.0
+      "target": "js_ui_showwizardstep"
     },
     {
       "relation": "calls",
@@ -5016,9 +5016,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L255",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_wizardnextstep",
-      "target": "js_ui_showwizardstep",
-      "confidence_score": 1.0
+      "target": "js_ui_showwizardstep"
     },
     {
       "relation": "calls",
@@ -5027,9 +5027,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L261",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_wizardprevstep",
-      "target": "js_ui_showwizardstep",
-      "confidence_score": 1.0
+      "target": "js_ui_showwizardstep"
     },
     {
       "relation": "calls",
@@ -5038,9 +5038,9 @@
       "source_file": "public/js/ui.js",
       "source_location": "L249",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_ui_wizardnextstep",
-      "target": "js_ui_mostraraviso",
-      "confidence_score": 1.0
+      "target": "js_ui_mostraraviso"
     },
     {
       "relation": "calls",
@@ -6897,9 +6897,9 @@
       "source_file": "src/repositories/UsuarioRepository.js",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_repositories_usuariorepository_js",
-      "target": "repositories_usuariorepository_criarusuario",
-      "confidence_score": 1.0
+      "target": "repositories_usuariorepository_criarusuario"
     },
     {
       "relation": "contains",
@@ -7187,5 +7187,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b3e49692c46ff6cf5561664657c6419a9170ab03"
+  "built_at_commit": "7e679de808af4d84532cf394c7defefe22e19563"
 }
