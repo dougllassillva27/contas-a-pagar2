@@ -1,7 +1,7 @@
-# Graph Report - contas-a-pagar  (2026-05-12)
+# Graph Report - contas-a-pagar  (2026-05-15)
 
 ## Corpus Check
-- 94 files · ~233,883 words
+- 94 files · ~412,680 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b3e49692`
+- Built from commit: `7e679de8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
