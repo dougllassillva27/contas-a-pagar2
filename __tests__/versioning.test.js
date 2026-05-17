@@ -46,8 +46,18 @@ describe('Script de Versionamento (versionador.js)', () => {
 
   // Depois de todos os testes, remove os arquivos dummy
   afterAll(() => {
-    Object.values(testFiles).forEach((filePath) => fs.unlinkSync(filePath));
-    if (fs.existsSync(testDir)) fs.rmdirSync(testDir);
+    Object.values(testFiles).forEach((filePath) => {
+      try {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (err) {
+        console.warn(`[WARN] NÃ£o foi possÃ­vel remover arquivo temporÃ¡rio: ${filePath}`, err.message);
+      }
+    });
+    try {
+      if (fs.existsSync(testDir)) fs.rmdirSync(testDir);
+    } catch (err) {
+      console.warn(`[WARN] NÃ£o foi possÃ­vel remover diretÃ³rio temporÃ¡rio: ${testDir}`, err.message);
+    }
   });
 
   it('deve injetar hashes de versão em referências de CSS, JS e Service Worker', () => {

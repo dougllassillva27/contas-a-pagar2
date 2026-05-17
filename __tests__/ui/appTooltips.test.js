@@ -13,8 +13,14 @@ describe('Tooltips Dinâmicos no app.js (Modais Client-Side)', () => {
   let appCode;
 
   beforeAll(() => {
-    // Lê o código original do app.js
+    // Lê os utilitários e o app.js
+    const utilsCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/utils.js'), 'utf8');
     appCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/app.js'), 'utf8');
+    
+    // Injeta utilitários primeiro para garantir disponibilidade
+    const scriptUtils = document.createElement('script');
+    scriptUtils.textContent = utilsCode;
+    document.head.appendChild(scriptUtils);
   });
 
   beforeEach(() => {

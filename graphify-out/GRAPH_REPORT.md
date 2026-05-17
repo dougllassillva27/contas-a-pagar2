@@ -1,16 +1,16 @@
-# Graph Report - contas-a-pagar  (2026-05-15)
+# Graph Report - contas-a-pagar  (2026-05-17)
 
 ## Corpus Check
-- 94 files · ~412,680 words
+- 96 files · ~413,134 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 303 nodes · 425 edges · 76 communities (72 shown, 4 thin omitted)
+- 306 nodes · 426 edges · 78 communities (74 shown, 4 thin omitted)
 - Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 81 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7e679de8`
+- Built from commit: `48fdfbf1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -53,7 +53,7 @@
 - `softRefresh()` --calls--> `initDragAndDrop()`  [INFERRED]
   public/js/app.js → public/js/dragdrop.js
 
-## Communities (76 total, 4 thin omitted)
+## Communities (78 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.07
@@ -102,7 +102,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `registerModalOpen()` connect `Community 0` to `Community 1`, `Community 5`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **Why does `mostrarAviso()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+  _High betweenness centrality (0.009) - this node is a cross-community bridge._
 - **Are the 12 inferred relationships involving `mostrarAviso()` (e.g. with `executarAcaoEmLotePessoa()` and `moverMes()`) actually correct?**
   _`mostrarAviso()` has 12 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 5 inferred relationships involving `softRefresh()` (e.g. with `initDragAndDrop()` and `initCardDragAndDrop()`) actually correct?**

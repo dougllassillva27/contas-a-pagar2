@@ -1,4 +1,8 @@
 {
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\db_dump.js": {
+    "mtime": 1778883132.1572638,
+    "hash": "1f810e7612872a47dcca8097d0e912d5"
+  },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\history\\database\\migrate.js": {
     "mtime": 1770848333.0,
     "hash": "24491d8d53ee828946cf6625d41ee99c"
@@ -52,8 +56,12 @@
     "hash": "e3bb2eab977e09af079e2a2803244c33"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\config\\db.js": {
-    "mtime": 1778880108.4570312,
-    "hash": "c13b17b3fa06e6d1baf532a2ad58805c"
+    "mtime": 1778883659.9385002,
+    "hash": "096e210db42953918b7b0b701466336d"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\config\\db_dump.js": {
+    "mtime": 1778883119.872015,
+    "hash": "1f810e7612872a47dcca8097d0e912d5"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\config\\defaultLajeado.js": {
     "mtime": 1776744202.355198,
@@ -200,8 +208,8 @@
     "hash": "b9a42f4ffee72e27d3f95974c02484bc"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\services\\syncService.js": {
-    "mtime": 1778603005.261271,
-    "hash": "0abcfd93a93d2541c8300778394be914"
+    "mtime": 1778883659.9385002,
+    "hash": "6ee373e6ed39b6b7f14d3ca76e860204"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\index.ejs": {
     "mtime": 1778611337.2420726,
@@ -375,17 +383,13 @@
     "mtime": 1777997810.0014977,
     "hash": "4039bfadc8fe8c8a14ecbebb16c21602"
   },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\Geral.txt": {
-    "mtime": 1778880605.0947344,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
-  },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\README.md": {
     "mtime": 1778617847.872507,
     "hash": "8bcc22da493f4eb6f0c0b324ce1ba12b"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\resumo-de-trabalho.md": {
-    "mtime": 1778880609.4805875,
-    "hash": "bddcb9423fd109b3fbff9ff324e8c81e"
+    "mtime": 1778884373.5768943,
+    "hash": "e8af294e206ef1e1f847abeabd8fca4e"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\docs\\Lajeado.md": {
     "mtime": 1774909657.7250233,
@@ -426,6 +430,10 @@
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\calcularLuz\\public\\index.html": {
     "mtime": 1777739775.957736,
     "hash": "9d91559b084926c1d5b2882292191165"
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\_contexto-ia\\Geral.md": {
+    "mtime": 1779048312.241132,
+    "hash": "147f24df35f078395b52eb14c20bd6b5"
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\README.md": {
     "mtime": 1776486716.0719576,
