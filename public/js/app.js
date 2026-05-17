@@ -301,7 +301,7 @@ async function abrirModalUltimas() {
       }
 
       // ✅ Nova Tag: Tipo de Conta (Fixa, Única, Parcelada)
-      const tipoConta = item.sub_tipo || (item.parcelaatual ? 'Parcelada' : 'Única');
+      const tipoConta = getTipoExibicao(item);
       const badgeTipo = `<span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #473720; color: #fff; white-space: nowrap; flex-shrink: 0;" title="Tipo de Conta">${tipoConta}</span>`;
 
       const descHTML = `<div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span>${descText}</span>${badgeCmp}${badgeTipo}</div>`;
@@ -315,7 +315,7 @@ async function abrirModalUltimas() {
       const safeDesc = escapeHTML(item.descricao || '').replace(/'/g, "\\'");
       const safePessoa = escapeHTML(item.nometerceiro || '').replace(/'/g, "\\'");
 
-      const tipo = item.parcelaatual ? 'Parcelada' : 'Única';
+      const tipo = getTipoExibicao(item);
       const pAtual = item.parcelaatual || '';
       const pTotal = item.totalparcelas || '';
 
@@ -340,7 +340,7 @@ async function abrirModalUltimas() {
                 <td class="actions" style="text-align:center;">
                     <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span>
                     <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="moverMes(event, [${item.id}], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span>
-                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${tipo}', '${pAtual}', '${pTotal}', '${safePessoa}')" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
+                    <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="editarConta(${item.id}, '${safeDesc}', '${valorSemMoeda}', '${getTipoExibicao(item)}', '${pAtual}', '${pTotal}', '${safePessoa}')" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span>
                     <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${item.id})" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span>
                 </td>
             </tr>`;

@@ -20,3 +20,14 @@ function debounce(func, delay = 500) {
     }, delay);
   };
 }
+
+/**
+ * Define o nome exibível do tipo de conta baseando-se no tipo e parcelamento.
+ * @param {Object} item Objeto contendo propriedades 'tipo' e 'parcelaatual'
+ * @returns {string} 'Fixa', 'Parcelada' ou 'Única'
+ */
+function getTipoExibicao(item) {
+  if (item.tipo === 'FIXA') return 'Fixa';
+  if (item.parcelaatual) return 'Parcelada';
+  return 'Única';
+}
