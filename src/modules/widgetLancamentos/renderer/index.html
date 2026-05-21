@@ -24,12 +24,12 @@
       </fieldset>
       <div class="form-group">
         <label for="descricao">Descrição *</label>
-        <input type="text" id="descricao" name="descricao" required maxlength="255" placeholder="Ex: Internet, Mercado...">
+        <input type="text" id="descricao" name="descricao" required maxlength="255" placeholder="Ex: Netflix">
         <span class="error-msg" id="error-descricao"></span>
       </div>
       <div class="form-group">
         <label for="valor">Valor *</label>
-        <input type="text" id="valor" name="valor" required placeholder="Ex: R$ 100,00">
+        <input type="text" id="valor" name="valor" required placeholder="R$ 0,00">
         <span class="error-msg" id="error-valor"></span>
       </div>
       <div class="form-group">
@@ -37,14 +37,14 @@
         <select id="tipo" name="tipo" required>
           <option value="">Selecione...</option>
           <option value="fixa">Fixa</option>
-          <option value="unica">Única</option>
+          <option value="unica" selected>Única</option>
           <option value="parcelada">Parcelada</option>
         </select>
         <span class="error-msg" id="error-tipo"></span>
       </div>
       <div class="form-group">
         <label for="terceiro">Terceiro (opcional)</label>
-        <input type="text" id="terceiro" name="terceiro" maxlength="100" placeholder="Ex: Mãe, Pai...">
+        <input type="text" id="terceiro" name="terceiro" maxlength="100" placeholder="Ex: Eu, Morr, Casa (use vírgulas para lote)">
       </div>
       <div class="form-group hidden" id="parcelasGroup">
         <label for="parcelas">Parcelas</label>
