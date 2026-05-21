@@ -3,10 +3,10 @@
   
   const form = document.getElementById('lancamentoForm');
   const btnClose = document.getElementById('btnClose');
-  const btnCancel = document.getElementById('btnCancel');
   const btnSubmit = document.getElementById('btnSubmit');
   const loading = document.getElementById('loading');
   const statusMessage = document.getElementById('statusMessage');
+  const statusMessageText = document.getElementById('statusMessageText');
   
   const usuarioInput = document.getElementById('usuario_id');
   const btnDodo = document.getElementById('btnDodo');
@@ -73,7 +73,6 @@
   }
 
   btnClose.addEventListener('click', closeModal);
-  btnCancel.addEventListener('click', closeModal);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -94,7 +93,7 @@
     if (tipoSelect.value === 'parcelada') {
       parcelasGroup.classList.remove('hidden');
       parcelasInput.required = true;
-      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(800);
+      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(810);
     } else {
       parcelasGroup.classList.add('hidden');
       parcelasInput.required = false;
@@ -160,8 +159,8 @@
   });
 
   function showStatus(msg, type) {
-    statusMessage.textContent = msg;
-    statusMessage.className = `status-message ${type}`;
+    statusMessageText.textContent = msg;
+    statusMessage.className = `status-overlay ${type}`;
     statusMessage.classList.remove('hidden');
     if (type === 'success') {
       setTimeout(() => statusMessage.classList.add('hidden'), 3000);
