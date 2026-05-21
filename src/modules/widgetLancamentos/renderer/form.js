@@ -69,7 +69,12 @@
     statusMessage.classList.add('hidden');
     parcelasGroup.classList.add('hidden');
     parcelasInput.required = false;
+    
+    document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
+    document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+    
     if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(700);
+    if (window.widgetAPI?.hideWindow) window.widgetAPI.hideWindow();
   }
 
   btnClose.addEventListener('click', closeModal);

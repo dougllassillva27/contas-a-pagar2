@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('widgetAPI', {
   submitLancamento: (data) => ipcRenderer.invoke('submit-lancamento', data),
   onFocusForm: (callback) => { ipcRenderer.on('focus-form', () => callback()); },
   removeFocusListener: () => { ipcRenderer.removeAllListeners('focus-form'); },
-  resizeWindow: (height) => ipcRenderer.send('resize-window', height)
+  resizeWindow: (height) => ipcRenderer.send('resize-window', height),
+  hideWindow: () => ipcRenderer.send('hide-window')
 });

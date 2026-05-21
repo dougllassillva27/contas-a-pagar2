@@ -61,6 +61,10 @@ if (!gotTheLock) {
         mainWindow.setSize(500, height);
       }
     });
+
+    ipcMain.on('hide-window', () => {
+      if (mainWindow) mainWindow.hide();
+    });
   });
 
   // Finalização Segura
