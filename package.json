@@ -10,7 +10,8 @@
     "test": "jest --verbose",
     "test:unit": "jest __tests__/helpers __tests__/middlewares --verbose",
     "test:integration": "jest __tests__/integration --verbose",
-    "telegram:setup": "node src/modules/botTelegram/setupWebhook.js"
+    "telegram:setup": "node src/modules/botTelegram/setupWebhook.js",
+    "build:widget": "cd src/modules/widgetLancamentos && npm install && npm run build"
   },
   "keywords": [
     "financas",
