@@ -52,12 +52,13 @@
         <input type="text" id="terceiro" name="terceiro" maxlength="100" placeholder="Ex: Eu, Morr, Casa (use vírgulas para lote)">
       </div>
       <div class="form-actions">
-        <button type="submit" class="btn-primary" id="btnSubmit">💾 Salvar</button>
-        <button type="button" class="btn-secondary" id="btnCancel">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btnSubmit">Salvar</button>
       </div>
       <div class="loading-overlay hidden" id="loading"><div class="spinner"></div><span>Enviando...</span></div>
     </form>
-    <div class="status-message hidden" id="statusMessage"></div>
+    <div class="status-overlay hidden" id="statusMessage">
+      <div class="status-message-content" id="statusMessageText"></div>
+    </div>
   </div>
   <script src="form.js"></script>
 </body>

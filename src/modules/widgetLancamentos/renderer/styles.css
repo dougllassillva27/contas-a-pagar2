@@ -302,39 +302,49 @@ small {
 /* ==============================================================================
    NOTIFICAÇÕES DE STATUS
    ============================================================================== */
-.status-message {
+/* --- STATUS MODAL (OVERLAY) --- */
+.status-overlay {
   position: absolute;
-  bottom: 30px;
-  left: 30px;
-  right: 30px;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  text-align: center;
-  z-index: 15;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  animation: fadeInUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease;
 }
 
-.status-message.success {
-  background: rgba(102, 187, 106, 0.15);
+.status-message-content {
+  padding: 25px 35px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  min-width: 250px;
+  transform: translateY(10px);
+  animation: slideUpFade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUpFade {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.status-overlay.success .status-message-content {
+  background: var(--bg-card);
   border: 1px solid var(--success);
   color: var(--success);
+  box-shadow: 0 0 30px rgba(102, 187, 106, 0.15);
 }
 
-.status-message.error {
-  background: rgba(239, 83, 80, 0.15);
+.status-overlay.error .status-message-content {
+  background: var(--bg-card);
   border: 1px solid var(--error);
   color: var(--error);
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  box-shadow: 0 0 30px rgba(239, 83, 80, 0.15);
 }
