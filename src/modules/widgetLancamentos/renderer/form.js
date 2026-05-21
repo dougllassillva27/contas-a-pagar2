@@ -69,6 +69,7 @@
     statusMessage.classList.add('hidden');
     parcelasGroup.classList.add('hidden');
     parcelasInput.required = false;
+    if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(620);
   }
 
   btnClose.addEventListener('click', closeModal);
@@ -93,10 +94,12 @@
     if (tipoSelect.value === 'parcelada') {
       parcelasGroup.classList.remove('hidden');
       parcelasInput.required = true;
+      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(720);
     } else {
       parcelasGroup.classList.add('hidden');
       parcelasInput.required = false;
       parcelasInput.value = '';
+      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(620);
     }
   });
 

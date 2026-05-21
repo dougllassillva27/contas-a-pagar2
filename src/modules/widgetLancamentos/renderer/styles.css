@@ -72,6 +72,7 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 15px;
   flex-shrink: 0;
+  -webkit-app-region: drag;
 }
 
 .modal-header h1 {
@@ -89,6 +90,7 @@ body {
   padding: 5px;
   line-height: 1;
   transition: color 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .btn-close:hover {
