@@ -55,6 +55,12 @@ if (!gotTheLock) {
         return { success: false, error: err.message };
       }
     });
+
+    ipcMain.on('resize-window', (event, height) => {
+      if (mainWindow) {
+        mainWindow.setSize(500, height);
+      }
+    });
   });
 
   // Finalização Segura
@@ -72,9 +78,10 @@ if (!gotTheLock) {
 function criarJanela() {
   mainWindow = new BrowserWindow({
     width: 500,
-    height: 740,
+    height: 620,
     show: false, // Inicia oculta para controle do atalho/tray
     frame: false, // Estilo modal/widget sem barra de título padrão do SO
+    transparent: true, // Fix for white edges
     resizable: false,
     skipTaskbar: true, // Comportamento de widget de bandeja
     webPreferences: {
