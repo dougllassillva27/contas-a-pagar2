@@ -107,6 +107,13 @@
     }
   });
 
+  parcelasInput.addEventListener('blur', (e) => {
+    let val = e.target.value.trim();
+    if (val && !val.includes('/')) {
+      e.target.value = `1/${val}`;
+    }
+  });
+
   descricaoInput.addEventListener('blur', () => validarObrigatorio(descricaoInput, document.getElementById('error-descricao')));
   valorInput.addEventListener('blur', () => validarValor(valorInput, document.getElementById('error-valor')));
   tipoSelect.addEventListener('blur', () => validarObrigatorio(tipoSelect, document.getElementById('error-tipo')));
@@ -136,7 +143,7 @@
     const payload = {
       usuario_id: parseInt(usuarioInput.value, 10),
       descricao: descricaoInput.value.trim(),
-      valor: parseValorParaApi(valorInput.value),
+      valor: valorInput.value.trim(),
       tipo: tipoSelect.value,
       terceiro: document.getElementById('terceiro').value.trim() || null,
       parcelas: tipoSelect.value === 'parcelada' ? parcelasInput.value.trim() : ''
