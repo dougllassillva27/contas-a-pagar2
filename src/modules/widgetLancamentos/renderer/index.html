@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widget Lancamentos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="modal-container">
+    <header class="modal-header">
+      <h1>Novo Lançamento</h1>
+      <button type="button" class="btn-close" id="btnClose" title="Fechar (Esc)">&times;</button>
+    </header>
+    <form id="lancamentoForm" class="lancamento-form" novalidate>
+      <fieldset class="user-selector">
+        <legend>Usuário</legend>
+        <div class="user-buttons">
+          <button type="button" class="user-btn active" data-user-id="1" id="btnDodo">Dodo</button>
+          <button type="button" class="user-btn" data-user-id="2" id="btnVitoria">Vitória</button>
+        </div>
+        <input type="hidden" id="usuario_id" name="usuario_id" value="1">
+      </fieldset>
+      <div class="form-group">
+        <label for="descricao">Descrição *</label>
+        <input type="text" id="descricao" name="descricao" required maxlength="255" placeholder="Ex: Internet, Mercado...">
+        <span class="error-msg" id="error-descricao"></span>
+      </div>
+      <div class="form-group">
+        <label for="valor">Valor *</label>
+        <input type="text" id="valor" name="valor" required placeholder="Ex: R$ 100,00">
+        <span class="error-msg" id="error-valor"></span>
+      </div>
+      <div class="form-group">
+        <label for="tipo">Tipo de Conta *</label>
+        <select id="tipo" name="tipo" required>
+          <option value="">Selecione...</option>
+          <option value="fixa">Fixa</option>
+          <option value="unica">Única</option>
+          <option value="parcelada">Parcelada</option>
+        </select>
+        <span class="error-msg" id="error-tipo"></span>
+      </div>
+      <div class="form-group">
+        <label for="terceiro">Terceiro (opcional)</label>
+        <input type="text" id="terceiro" name="terceiro" maxlength="100" placeholder="Ex: Mãe, Pai...">
+      </div>
+      <div class="form-group hidden" id="parcelasGroup">
+        <label for="parcelas">Parcelas</label>
+        <input type="text" id="parcelas" name="parcelas" placeholder="Ex: 10 ou 1/10">
+        <small>Deixe em branco para à vista</small>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="btnSubmit">💾 Salvar</button>
+        <button type="button" class="btn-secondary" id="btnCancel">Cancelar</button>
+      </div>
+      <div class="loading-overlay hidden" id="loading"><div class="spinner"></div><span>Enviando...</span></div>
+    </form>
+    <div class="status-message hidden" id="statusMessage"></div>
+  </div>
+  <script src="form.js"></script>
+</body>
+</html>

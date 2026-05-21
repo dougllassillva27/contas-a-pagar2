@@ -1,0 +1,27 @@
+appId: com.dodo.widget-lancamentos
+productName: Widget Lancamentos
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - "**/*"
+  - "!dist/**"
+  - "!node_modules/*/{CHANGELOG.md,README.md,readme.md,test/**,*.md}"
+win:
+  target:
+    - target: nsis
+      arch: [x64, ia32]
+  icon: renderer/favicon.ico
+  requestedExecutionLevel: asInvoker
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "Widget Lancamentos"
+  uninstallDisplayName: "Widget Lancamentos"
+  runAfterFinish: true
+publish:
+  provider: generic
+  url: "https://releases.dodo.dev/widget-lancamentos"
