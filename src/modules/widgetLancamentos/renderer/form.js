@@ -83,7 +83,7 @@
     document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
     document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
     
-    if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(710);
+    if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(740);
     if (window.widgetAPI?.hideWindow) window.widgetAPI.hideWindow();
 
     setTimeout(() => { isClosing = false; }, 200);
@@ -114,12 +114,12 @@
     if (tipoStr === 'parcelada') {
       parcelasGroup.classList.remove('hidden');
       parcelasInput.required = true;
-      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(810);
+      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(840);
     } else {
       parcelasGroup.classList.add('hidden');
       parcelasInput.required = false;
       parcelasInput.value = '';
-      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(710);
+      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(740);
     }
   }
 
@@ -202,6 +202,10 @@
       document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
       document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
       setTimeout(() => { isClosing = false; }, 100);
+
+      if (window.widgetAPI?.resizeWindow) {
+        window.widgetAPI.resizeWindow(tipoInput.value === 'parcelada' ? 840 : 740);
+      }
 
       descricaoInput.focus();
       descricaoInput.select();
