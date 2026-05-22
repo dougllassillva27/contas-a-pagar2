@@ -105,6 +105,20 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
 
 ---
 
+### ⚡ Widget Lançamentos (Desktop)
+
+- **Atalho Global Configurável** — pressione `Ctrl+Alt+N` (ou qualquer combinação personalizada) para abrir o formulário instantaneamente, sem abrir o navegador.
+- **Lançamento Rápido** — campos Descrição, Valor, Tipo (Fixa / Única / Parcelada), Parcelas e Terceiro com validação inline e feedback visual imediato.
+- **Tray Icon Persistente** — widget vive na bandeja do Windows com menu: Abrir, Configurações e Sair.
+- **Tela de Configurações Premium** — capturador dinâmico de atalhos e toggle nativo de inicialização automática com o Windows (autostart via Registry).
+- **Persistência Segura** — configurações gravadas no `AppData` do usuário (`userData`), sem erros de permissão em `Program Files`.
+- **Motor de Logs Fatais** — captura de `uncaughtException` e `unhandledRejection` com gravação em `Log_erros.txt` e notificação nativa via dialog do sistema operacional.
+- **Segurança Electron** — `contextIsolation`, `sandbox`, `nodeIntegration: false` e `contextBridge` restrito em todas as janelas.
+- **Arquitetura Anti-Flicker** — técnica de opacidade zero na abertura e Auto-Sizing Absoluto via IPC para eliminar tremidas visuais no DWM do Windows.
+- Documentação completa em `widgetLancamentos/README.md`
+
+---
+
 ### 💡 Módulo de Estimativa de Luz
 
 - **Microsserviço Integrado** — calcula e acompanha o consumo mensal de energia elétrica.
@@ -307,6 +321,7 @@ O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o
 | **Segurança**     | bcrypt + tokens persistentes    |
 | **Monitoramento** | Google Apps Script (Triggers)   |
 | **Bot Telegram**  | node-telegram-bot-api (webhook) |
+| **Widget Desktop**| Electron 30 + axios             |
 | **Testes**        | Jest 30 + Supertest 7           |
 
 ---
@@ -318,7 +333,7 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 | Camada           | Diretório           | Responsabilidade                                                |
 | :--------------- | :------------------ | :-------------------------------------------------------------- |
 | **Entrada**      | `src/app.js`        | Configuração do Express, sessão e montagem dos módulos          |
-| **Módulos**      | `src/modules/`      | Funcionalidades independentes (Bot Telegram, Estimativa de Luz) |
+| **Módulos**      | `src/modules/`      | Funcionalidades independentes (Bot Telegram, Estimativa de Luz, Widget Desktop) |
 | **Rotas**        | `src/routes/`       | Handlers de cada grupo de endpoints                             |
 | **Middlewares**  | `src/middlewares/`  | Autenticação web (sessão), API (token) e logger                 |
 | **Helpers**      | `src/helpers/`      | Parsing, async handler e inicialização do banco                 |
@@ -357,7 +372,8 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   ├── modules/
 │   │   ├── botTelegram/                   # Bot Telegram (webhook)
 │   │   ├── calcularLuz/                   # App de estimativa de conta de luz
-│   │   └── dataHora/                      # Microsserviço de horário de Brasília
+│   │   ├── dataHora/                      # Microsserviço de horário de Brasília
+│   │   └── widgetLancamentos/             # Widget desktop Electron (atalho global)
 │   ├── helpers/
 │   │   ├── asyncHandler.js                # Wrapper try/catch para rotas async
 │   │   ├── initDatabase.js                # Criação automática de tabelas
@@ -578,7 +594,7 @@ Acesse: `http://localhost:3000`
 
 ## 🧪 Testes Automatizados (Jest & Supertest)
 
-A aplicação possui uma suíte de testes robusta contendo **192 testes automatizados** com execução ultrarrápida (~2.5s totais).
+A aplicação possui uma suíte de testes robusta contendo **211 testes automatizados** com execução ultrarrápida (~2.5s totais).
 
 - **Unitários**: Regras de negócio, _parseHelpers_, formatadores, cálculo de datas (fuso UTC-3 blindado) e motor de regras SaaS.
 - **Repositórios**: Mock da biblioteca `pg`. Validação de transações (`BEGIN/COMMIT/ROLLBACK`), `UPSERTs` e lógicas de paginação sem tocar no banco de dados físico.
@@ -586,12 +602,19 @@ A aplicação possui uma suíte de testes robusta contendo **192 testes automati
 - **Integração M2M**: Testes fim-a-ponta na API Android e endpoints de _webhook_ do Telegram.
 - **UI & DOM**: Validações anti-duplo-clique e injeção do `DOMParser` testadas em ambiente `jsdom`.
 - **Memory Leaks**: Mocks dedicados de _Fetch API_ e instâncias assíncronas de Rede (Telegram) para garantir encerramento gracioso (sem _Open Handles_).
+- **Widget Desktop**: Cliente HTTP do widget com mock completo do axios — validação de payload, erros de rede, autenticação e healthcheck (9 testes, 100% passando).
 
 **Para executar a suíte localmente:**
 
 ```bash
-# Todos os testes
+# Todos os testes (sistema principal + widget)
 npm test
+
+# Apenas os testes do Widget Lançamentos
+npm test -- src/modules/widgetLancamentos/__tests__/api.test.js
+
+# Build do instalador Windows do Widget
+npm run build:widget
 ```
 
 ---

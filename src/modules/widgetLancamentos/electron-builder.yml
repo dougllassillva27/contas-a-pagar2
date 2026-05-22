@@ -6,6 +6,11 @@ directories:
 files:
   - "**/*"
   - "!dist/**"
+  - "!__tests__/**"
+  - "!PLAN.md"
+  - "!task.md"
+  - "!implementation_plan.md"
+  - "!walkthrough.md"
   - "!node_modules/*/{CHANGELOG.md,README.md,readme.md,test/**,*.md}"
 win:
   target:

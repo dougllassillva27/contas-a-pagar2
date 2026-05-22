@@ -1,12 +1,14 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, Tray, Menu, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 // Integrações de Negócio Existentes
 const { enviarLancamento } = require('./api/client');
-const { loadConfig } = require('./config/loader');
+const { loadConfig, saveConfig } = require('./config/loader');
+const { logErrorToFile } = require('./config/logger');
 
 let mainWindow = null;
+let configWindow = null;
 let tray = null;
 
 // Garante Instância Única (Single Instance Lock)
@@ -21,16 +23,14 @@ if (!gotTheLock) {
   // Inicialização do App
   app.whenReady().then(() => {
     criarJanela();
+    criarJanelaConfig();
     
     const config = loadConfig();
 
-    // CORREÇÃO: Atalho Global Funcional
-    globalShortcut.register(config.hotkey || 'Ctrl+Alt+N', () => {
-      if (mainWindow && mainWindow.isVisible()) {
-        mainWindow.hide();
-      } else {
-        exibirJanela();
-      }
+    // Registra o atalho global configurado e inicialização do SO
+    registrarAtalhoGlobal(config.hotkey);
+    app.setLoginItemSettings({
+      openAtLogin: config.autoStart || false
     });
 
     // CORREÇÃO: Ícone de Bandeja (Tray) e Menu
@@ -39,6 +39,7 @@ if (!gotTheLock) {
     
     const contextMenu = Menu.buildFromTemplate([
       { label: 'Abrir Widget', click: exibirJanela },
+      { label: 'Configurações', click: exibirJanelaConfig },
       { type: 'separator' },
       { label: 'Sair', click: () => app.quit() }
     ]);
@@ -57,16 +58,55 @@ if (!gotTheLock) {
     });
 
     ipcMain.on('resize-window', (event, height) => {
-      if (mainWindow) {
-        const currentHeight = mainWindow.getSize()[1];
-        if (currentHeight !== height) {
-          mainWindow.setSize(500, height);
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win) {
+        const currentSize = win.getSize();
+        const currentWidth = currentSize[0];
+        const currentHeight = currentSize[1];
+        // Tolerância de 3px para evitar tremores redundantes de sub-pixel/DPI no Windows
+        if (Math.abs(currentHeight - height) > 3) {
+          win.setSize(currentWidth, height);
+        }
+        // Restaura a opacidade total após o redimensionamento/inicialização da janela
+        if (win.getOpacity() < 1) {
+          setTimeout(() => {
+            if (win && !win.isDestroyed()) win.setOpacity(1);
+          }, 30);
         }
       }
     });
 
     ipcMain.on('hide-window', () => {
-      if (mainWindow) mainWindow.hide();
+      if (mainWindow) {
+        mainWindow.hide();
+        mainWindow.setOpacity(1); // Garante opacidade cheia ao ocultar por precaução
+      }
+    });
+
+    ipcMain.handle('get-config', () => {
+      return loadConfig();
+    });
+
+    ipcMain.handle('save-config', (event, updates) => {
+      const configSalva = saveConfig(updates);
+      if (configSalva) {
+        if (updates.hotkey) {
+          registrarAtalhoGlobal(updates.hotkey);
+        }
+        if (typeof updates.autoStart !== 'undefined') {
+          app.setLoginItemSettings({
+            openAtLogin: updates.autoStart
+          });
+        }
+        return { success: true };
+      }
+      return { success: false, error: 'Erro ao gravar as configurações em disco' };
+    });
+
+    ipcMain.on('close-config', () => {
+      if (configWindow) {
+        configWindow.hide();
+      }
     });
   });
 
@@ -115,9 +155,118 @@ function criarJanela() {
 
 function exibirJanela() {
   if (!mainWindow) criarJanela();
+  
+  // Técnica anti-flicker: abre em opacidade zero, ajusta tamanho e DOM no background, então revela
+  mainWindow.setOpacity(0);
   mainWindow.show();
   mainWindow.focus();
   
   // CORREÇÃO: Foca o campo 'descricao' no front-end via evento IPC
   mainWindow.webContents.send('focus-form');
+
+  // Salvaguarda: se em 200ms a janela ainda estiver invisível (ex: falha do renderer), força opacidade total
+  setTimeout(() => {
+    if (mainWindow && mainWindow.getOpacity() < 1) {
+      mainWindow.setOpacity(1);
+    }
+  }, 200);
 }
+
+function registrarAtalhoGlobal(atalhoStr) {
+  try {
+    globalShortcut.unregisterAll();
+    const atalho = atalhoStr || 'Ctrl+Alt+N';
+    const registrado = globalShortcut.register(atalho, () => {
+      if (mainWindow && mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else {
+        exibirJanela();
+      }
+    });
+    if (!registrado) {
+      console.error(`[Main] Erro ao registrar atalho: ${atalho}`);
+    }
+  } catch (err) {
+    console.error('[Main] Falha fatal de atalho global:', err.message);
+  }
+}
+
+function criarJanelaConfig() {
+  configWindow = new BrowserWindow({
+    width: 420,
+    height: 480,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    resizable: false,
+    skipTaskbar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  configWindow.loadFile(path.join(__dirname, 'renderer', 'config.html'));
+
+  configWindow.on('blur', () => {
+    configWindow.hide();
+  });
+
+  configWindow.on('closed', () => {
+    configWindow = null;
+  });
+}
+
+function exibirJanelaConfig() {
+  if (!configWindow) criarJanelaConfig();
+  configWindow.setOpacity(0);
+  configWindow.show();
+  configWindow.focus();
+  
+  // Envia foco/atualização para recarregar configurações no renderer
+  configWindow.webContents.send('focus-config');
+  
+  setTimeout(() => {
+    if (configWindow) configWindow.setOpacity(1);
+  }, 40);
+}
+
+// ==================================================
+// CAPTURA GLOBAL DE EXCEÇÕES E ERROS FATAIS
+// ==================================================
+
+process.on('uncaughtException', (err) => {
+  console.error('[Fatal] Uncaught Exception:', err);
+  const logPath = logErrorToFile(err, 'UNCAUGHT_EXCEPTION');
+  
+  const msgLog = logPath 
+    ? `\n\nDetalhes gravados em:\n${logPath}` 
+    : '\n\nNão foi possível gravar o arquivo Log_erros.txt devido a restrições de permissão.';
+
+  dialog.showErrorBox(
+    'Erro Fatal no Sistema',
+    `Ocorreu um erro fatal inesperado no Widget:\n${err.message}${msgLog}`
+  );
+  
+  app.quit();
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[Fatal] Unhandled Rejection:', reason);
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  const logPath = logErrorToFile(err, 'UNHANDLED_REJECTION');
+  
+  const msgLog = logPath 
+    ? `\n\nDetalhes gravados em:\n${logPath}` 
+    : '\n\nNão foi possível gravar o arquivo Log_erros.txt devido a restrições de permissão.';
+
+  dialog.showErrorBox(
+    'Rejeição Fatal não Tratada',
+    `Ocorreu uma rejeição assíncrona não tratada no Widget:\n${err.message}${msgLog}`
+  );
+  
+  app.quit();
+});

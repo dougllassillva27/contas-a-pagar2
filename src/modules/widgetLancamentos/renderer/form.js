@@ -211,7 +211,8 @@
 
       adjustWindowHeight();
 
-      descricaoInput.focus();
+      // Foco preventivo contra scroll involuntário de layout
+      descricaoInput.focus({ preventScroll: true });
       descricaoInput.select();
     });
   }

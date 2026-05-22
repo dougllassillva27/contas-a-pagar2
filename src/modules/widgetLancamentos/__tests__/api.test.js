@@ -1,1 +1,160 @@
-jest.mock('axios');const axios=require('axios');const{enviarLancamento,testarConexao}=require('../api/client');jest.mock('../config/loader',()=>({loadConfig:jest.fn(()=>({apiUrl:'http://localhost:3000',apiToken:'test-token-123',defaultUserId:1,timeout:5000}))}));describe('API Client - enviarLancamento',()=>{beforeEach(()=>jest.clearAllMocks());test('deve rejeitar payload incompleto',async()=>{const result=await enviarLancamento({descricao:'Teste'});expect(result.success).toBe(false);expect(result.error).toContain('obrigatórios');expect(axios.post).not.toHaveBeenCalled();});test('deve rejeitar sem token configurado',async()=>{const{loadConfig}=require('../config/loader');loadConfig.mockReturnValueOnce({apiUrl:'http://localhost:3000',apiToken:'SEU_API_TOKEN_AQUI',defaultUserId:1});const result=await enviarLancamento({descricao:'Internet',valor:'R$ 100,00',tipo:'fixa'});expect(result.success).toBe(false);expect(result.error).toContain('token');});test('deve normalizar valor monetário',async()=>{axios.post.mockResolvedValueOnce({data:{success:true,message:'OK'}});await enviarLancamento({usuario_id:2,descricao:'Mercado',valor:'R$ 250,50',tipo:'unica'});expect(axios.post).toHaveBeenCalledWith('http://localhost:3000/api/v1/integracao/lancamentos',expect.objectContaining({usuario_id:2,descricao:'Mercado',valor:250.50,tipo:'unica'}),expect.objectContaining({headers:{'x-api-key':'test-token-123'}}));});test('deve retornar sucesso com resposta 201',async()=>{const mockResponse={success:true,message:'Lançamento Confirmado',data:{id:123,descricao:'Teste'}};axios.post.mockResolvedValueOnce({data:mockResponse});const result=await enviarLancamento({descricao:'Teste',valor:50,tipo:'fixa'});expect(result.success).toBe(true);expect(result.data).toEqual(mockResponse);});test('deve tratar erro de conexão',async()=>{axios.post.mockRejectedValueOnce({code:'ECONNREFUSED',message:'connect ECONNREFUSED 127.0.0.1:3000'});const result=await enviarLancamento({descricao:'Teste',valor:50,tipo:'fixa'});expect(result.success).toBe(false);expect(result.error).toContain('indisponível');});test('deve tratar erro 401',async()=>{axios.post.mockRejectedValueOnce({response:{status:401,data:{error:'Unauthorized'}}});const result=await enviarLancamento({descricao:'Teste',valor:50,tipo:'fixa'});expect(result.success).toBe(false);expect(result.error).toContain('Token inválido');});test('deve tratar erro 400',async()=>{axios.post.mockRejectedValueOnce({response:{status:400,data:{error:'Valor deve ser numérico'}}});const result=await enviarLancamento({descricao:'Teste',valor:'abc',tipo:'fixa'});expect(result.success).toBe(false);expect(result.error).toBe('Valor deve ser numérico');});});describe('API Client - testarConexao',()=>{test('deve retornar ok em health check',async()=>{axios.get.mockResolvedValueOnce({data:{status:'ok'}});const result=await testarConexao();expect(result.ok).toBe(true);});test('deve retornar erro em conexão recusada',async()=>{axios.get.mockRejectedValueOnce({code:'ECONNREFUSED'});const result=await testarConexao();expect(result.ok).toBe(false);expect(result.message).toBe('Servidor não responde');});});
+const axios = require('axios');
+const { enviarLancamento, testarConexao } = require('../api/client');
+
+jest.mock('axios', () => {
+  const mockAxios = {
+    create: jest.fn(() => mockAxios),
+    get: jest.fn(),
+    post: jest.fn()
+  };
+  return mockAxios;
+});
+
+jest.mock('../config/loader', () => ({
+  loadConfig: jest.fn(() => ({
+    apiUrl: 'http://localhost:3000',
+    apiToken: 'test-token-123',
+    defaultUserId: 1,
+    timeout: 5000
+  }))
+}));
+
+describe('API Client - enviarLancamento', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('deve rejeitar payload incompleto', async () => {
+    const result = await enviarLancamento({ descricao: 'Teste' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('obrigatórios');
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
+  test('deve rejeitar sem token configurado', async () => {
+    const { loadConfig } = require('../config/loader');
+    loadConfig.mockReturnValueOnce({
+      apiUrl: 'http://localhost:3000',
+      apiToken: 'SEU_API_TOKEN_AQUI',
+      defaultUserId: 1
+    });
+
+    const result = await enviarLancamento({
+      descricao: 'Internet',
+      valor: 'R$ 100,00',
+      tipo: 'fixa'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('token');
+  });
+
+  test('deve repassar valor monetário formatado como string', async () => {
+    axios.post.mockResolvedValueOnce({ data: { success: true, message: 'OK' } });
+
+    await enviarLancamento({
+      usuario_id: 2,
+      descricao: 'Mercado',
+      valor: 'R$ 250,50',
+      tipo: 'unica'
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/integracao/lancamentos',
+      expect.objectContaining({
+        usuario_id: 2,
+        descricao: 'Mercado',
+        valor: 'R$ 250,50',
+        tipo: 'unica'
+      }),
+      expect.objectContaining({
+        headers: { 'x-api-key': 'test-token-123' }
+      })
+    );
+  });
+
+  test('deve retornar sucesso com resposta 201', async () => {
+    const mockResponse = {
+      success: true,
+      message: 'Lançamento Confirmado',
+      data: { id: 123, descricao: 'Teste' }
+    };
+    axios.post.mockResolvedValueOnce({ data: mockResponse });
+
+    const result = await enviarLancamento({
+      descricao: 'Teste',
+      valor: 50,
+      tipo: 'fixa'
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(mockResponse);
+  });
+
+  test('deve tratar erro de conexão', async () => {
+    axios.post.mockRejectedValueOnce({
+      code: 'ECONNREFUSED',
+      message: 'connect ECONNREFUSED 127.0.0.1:3000'
+    });
+
+    const result = await enviarLancamento({
+      descricao: 'Teste',
+      valor: 50,
+      tipo: 'fixa'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('indisponível');
+  });
+
+  test('deve tratar erro 401', async () => {
+    axios.post.mockRejectedValueOnce({
+      response: { status: 401, data: { error: 'Unauthorized' } }
+    });
+
+    const result = await enviarLancamento({
+      descricao: 'Teste',
+      valor: 50,
+      tipo: 'fixa'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Token inválido');
+  });
+
+  test('deve tratar erro 400', async () => {
+    axios.post.mockRejectedValueOnce({
+      response: { status: 400, data: { error: 'Valor deve ser numérico' } }
+    });
+
+    const result = await enviarLancamento({
+      descricao: 'Teste',
+      valor: 'abc',
+      tipo: 'fixa'
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Valor deve ser numérico');
+  });
+});
+
+describe('API Client - testarConexao', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('deve retornar ok em health check', async () => {
+    axios.get.mockResolvedValueOnce({ data: { status: 'ok' } });
+
+    const result = await testarConexao();
+    expect(result.ok).toBe(true);
+  });
+
+  test('deve retornar erro em conexão recusada', async () => {
+    axios.get.mockRejectedValueOnce({ code: 'ECONNREFUSED' });
+
+    const result = await testarConexao();
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe('Servidor não responde');
+  });
+});
