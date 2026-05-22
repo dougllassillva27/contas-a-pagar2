@@ -1,0 +1,7 @@
+{
+  "apiUrl": "https://seu-sistema.com.br",
+  "apiToken": "SEU_API_TOKEN_AQUI",
+  "hotkey": "Ctrl+Alt+N",
+  "defaultUserId": 1,
+  "autoStart": false
+}

@@ -9,5 +9,9 @@ contextBridge.exposeInMainWorld('widgetAPI', {
   onFocusForm: (callback) => { ipcRenderer.on('focus-form', () => callback()); },
   removeFocusListener: () => { ipcRenderer.removeAllListeners('focus-form'); },
   resizeWindow: (height) => ipcRenderer.send('resize-window', height),
-  hideWindow: () => ipcRenderer.send('hide-window')
+  hideWindow: () => ipcRenderer.send('hide-window'),
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  saveConfig: (updates) => ipcRenderer.invoke('save-config', updates),
+  closeConfig: () => ipcRenderer.send('close-config'),
+  onFocusConfig: (callback) => { ipcRenderer.on('focus-config', () => callback()); }
 });

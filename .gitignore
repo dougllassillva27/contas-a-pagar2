@@ -224,6 +224,14 @@ resumo-de-trabalho.md
 node_modules/
 dist/
 
+# widgetLancamentos — arquivos que não devem ser commitados
+src/modules/widgetLancamentos/config/default.json
+!src/modules/widgetLancamentos/config/default.example.json
+src/modules/widgetLancamentos/task.md
+src/modules/widgetLancamentos/PLAN.md
+src/modules/widgetLancamentos/Log_erros.txt
+
+
 # logs
 *.log
 npm-debug.log*
