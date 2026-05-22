@@ -32,16 +32,16 @@
         <input type="text" id="valor" name="valor" required placeholder="R$ 0,00">
         <span class="error-msg" id="error-valor"></span>
       </div>
-      <div class="form-group">
-        <label for="tipo">Tipo de Conta *</label>
-        <select id="tipo" name="tipo" required>
-          <option value="">Selecione...</option>
-          <option value="fixa">Fixa</option>
-          <option value="unica" selected>Única</option>
-          <option value="parcelada">Parcelada</option>
-        </select>
+      <fieldset class="user-selector form-group">
+        <legend>Tipo de Conta *</legend>
+        <div class="user-buttons">
+          <button type="button" class="user-btn" id="btnFixa">Fixa</button>
+          <button type="button" class="user-btn active" id="btnUnica">Única</button>
+          <button type="button" class="user-btn" id="btnParcelada">Parcelada</button>
+        </div>
+        <input type="hidden" id="tipo" name="tipo" value="unica">
         <span class="error-msg" id="error-tipo"></span>
-      </div>
+      </fieldset>
       <div class="form-group hidden" id="parcelasGroup">
         <label for="parcelas">Parcelas</label>
         <input type="text" id="parcelas" name="parcelas" placeholder="Ex: 10 ou 1/10">
