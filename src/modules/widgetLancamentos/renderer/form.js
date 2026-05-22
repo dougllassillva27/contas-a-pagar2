@@ -191,9 +191,7 @@
     statusMessageText.textContent = msg;
     statusMessage.className = `status-overlay ${type}`;
     statusMessage.classList.remove('hidden');
-    if (type === 'success') {
-      setTimeout(() => statusMessage.classList.add('hidden'), 3000);
-    }
+    setTimeout(() => statusMessage.classList.add('hidden'), 3000);
   }
 
   if (window.widgetAPI?.onFocusForm) {
