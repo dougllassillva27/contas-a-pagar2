@@ -58,7 +58,10 @@ if (!gotTheLock) {
 
     ipcMain.on('resize-window', (event, height) => {
       if (mainWindow) {
-        mainWindow.setSize(500, height);
+        const currentHeight = mainWindow.getSize()[1];
+        if (currentHeight !== height) {
+          mainWindow.setSize(500, height);
+        }
       }
     });
 
