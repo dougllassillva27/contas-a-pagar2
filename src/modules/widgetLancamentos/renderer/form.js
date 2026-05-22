@@ -147,6 +147,12 @@
     if (!validarValor(valorInput, document.getElementById('error-valor'))) errors.push('valor');
     if (!validarObrigatorio(tipoInput, document.getElementById('error-tipo'))) errors.push('tipo');
     
+    if (tipoInput.value === 'parcelada') {
+      if (!validarObrigatorio(parcelasInput, document.getElementById('error-parcelas'))) {
+        errors.push('parcelas');
+      }
+    }
+    
     if (errors.length > 0) {
       showStatus(`Corrija: ${errors.join(', ')}`, 'error');
       isSubmitting = false;
