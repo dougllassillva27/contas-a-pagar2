@@ -12,7 +12,11 @@
   const btnDodo = document.getElementById('btnDodo');
   const btnVitoria = document.getElementById('btnVitoria');
   
-  const tipoSelect = document.getElementById('tipo');
+  const tipoInput = document.getElementById('tipo');
+  const btnFixa = document.getElementById('btnFixa');
+  const btnUnica = document.getElementById('btnUnica');
+  const btnParcelada = document.getElementById('btnParcelada');
+  
   const parcelasGroup = document.getElementById('parcelasGroup');
   const parcelasInput = document.getElementById('parcelas');
   const descricaoInput = document.getElementById('descricao');
@@ -102,8 +106,12 @@
   btnDodo.addEventListener('click', () => selecionarUsuario(1, btnDodo));
   btnVitoria.addEventListener('click', () => selecionarUsuario(2, btnVitoria));
 
-  tipoSelect.addEventListener('change', () => {
-    if (tipoSelect.value === 'parcelada') {
+  function selecionarTipo(tipoStr, btn) {
+    tipoInput.value = tipoStr;
+    [btnFixa, btnUnica, btnParcelada].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    if (tipoStr === 'parcelada') {
       parcelasGroup.classList.remove('hidden');
       parcelasInput.required = true;
       if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(810);
@@ -113,18 +121,22 @@
       parcelasInput.value = '';
       if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(700);
     }
-  });
+  }
 
-  parcelasInput.addEventListener('blur', (e) => {
-    let val = e.target.value.trim();
-    if (val && !val.includes('/')) {
-      e.target.value = `1/${val}`;
+  btnFixa.addEventListener('click', () => selecionarTipo('fixa', btnFixa));
+  btnUnica.addEventListener('click', () => selecionarTipo('unica', btnUnica));
+  btnParcelada.addEventListener('click', () => selecionarTipo('parcelada', btnParcelada));
+
+  parcelasInput.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/[^\d/]/g, '');
+    if (!v.includes('/') && v.length > 2) {
+        v = v.slice(0, 2) + '/' + v.slice(2);
     }
+    e.target.value = v;
   });
 
   descricaoInput.addEventListener('blur', () => validarObrigatorio(descricaoInput, document.getElementById('error-descricao')));
   valorInput.addEventListener('blur', () => validarValor(valorInput, document.getElementById('error-valor')));
-  tipoSelect.addEventListener('blur', () => validarObrigatorio(tipoSelect, document.getElementById('error-tipo')));
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -136,7 +148,7 @@
     
     if (!validarObrigatorio(descricaoInput, document.getElementById('error-descricao'))) errors.push('descrição');
     if (!validarValor(valorInput, document.getElementById('error-valor'))) errors.push('valor');
-    if (!validarObrigatorio(tipoSelect, document.getElementById('error-tipo'))) errors.push('tipo');
+    if (!validarObrigatorio(tipoInput, document.getElementById('error-tipo'))) errors.push('tipo');
     
     if (errors.length > 0) {
       showStatus(`Corrija: ${errors.join(', ')}`, 'error');
@@ -152,9 +164,9 @@
       usuario_id: parseInt(usuarioInput.value, 10),
       descricao: descricaoInput.value.trim(),
       valor: valorInput.value.trim(),
-      tipo: tipoSelect.value,
+      tipo: tipoInput.value,
       terceiro: document.getElementById('terceiro').value.trim() || null,
-      parcelas: tipoSelect.value === 'parcelada' ? parcelasInput.value.trim() : ''
+      parcelas: tipoInput.value === 'parcelada' ? parcelasInput.value.trim() : ''
     };
 
     try {
