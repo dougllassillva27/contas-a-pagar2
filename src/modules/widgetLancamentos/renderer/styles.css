@@ -312,7 +312,7 @@ small {
 .status-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(10, 10, 12, 0.85);
+  background: rgba(30, 30, 30, 0.85); /* Cinza escuro transparente */
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -328,7 +328,7 @@ small {
   font-size: 1.1rem;
   font-weight: 600;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
   min-width: 250px;
   transform: translateY(10px);
   animation: slideUpFade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -342,15 +342,15 @@ small {
 }
 
 .status-overlay.success .status-message-content {
-  background: var(--bg-card);
-  border: 1px solid var(--success);
-  color: var(--success);
-  box-shadow: 0 0 30px rgba(102, 187, 106, 0.15);
+  background: var(--bg-input); /* Cinza do input */
+  border: 1px solid var(--blue); /* Azulzinho */
+  color: var(--text-primary);
+  box-shadow: 0 0 30px rgba(56, 120, 225, 0.25);
 }
 
 .status-overlay.error .status-message-content {
-  background: var(--bg-card);
-  border: 1px solid var(--error);
-  color: var(--error);
-  box-shadow: 0 0 30px rgba(239, 83, 80, 0.15);
+  background: var(--bg-input); /* Cinza do input */
+  border: 1px solid var(--red); /* Mantém vermelho pra erro mas bg cinza */
+  color: var(--text-primary);
+  box-shadow: 0 0 30px rgba(239, 83, 80, 0.25);
 }
