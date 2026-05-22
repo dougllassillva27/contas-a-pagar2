@@ -214,6 +214,17 @@
     });
   }
 
+  [descricaoInput, valorInput, parcelasInput].forEach(input => {
+    input.addEventListener('input', (e) => {
+      if (e.target.classList.contains('error')) {
+        e.target.classList.remove('error');
+        const errSpan = document.getElementById(`error-${e.target.id}`);
+        if (errSpan) errSpan.textContent = '';
+        adjustWindowHeight();
+      }
+    });
+  });
+
   function adjustWindowHeight() {
     if (!window.widgetAPI?.resizeWindow) return;
     // Pede ao DOM para recalcular via setImmediate/setTimeout para garantir renderização da hidden class
