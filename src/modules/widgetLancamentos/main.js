@@ -86,6 +86,7 @@ function criarJanela() {
     show: false, // Inicia oculta para controle do atalho/tray
     frame: false, // Estilo modal/widget sem barra de título padrão do SO
     transparent: true, // Fix for white edges
+    backgroundColor: '#00000000', // Previne quadrados pretos no Windows DWM
     resizable: false,
     skipTaskbar: true, // Comportamento de widget de bandeja
     webPreferences: {

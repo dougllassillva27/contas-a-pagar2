@@ -83,7 +83,7 @@
     document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
     document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
     
-    if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(800);
+    adjustWindowHeight();
     if (window.widgetAPI?.hideWindow) window.widgetAPI.hideWindow();
 
     setTimeout(() => { isClosing = false; }, 200);
@@ -114,12 +114,12 @@
     if (tipoStr === 'parcelada') {
       parcelasGroup.classList.remove('hidden');
       parcelasInput.required = true;
-      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(900);
+      adjustWindowHeight();
     } else {
       parcelasGroup.classList.add('hidden');
       parcelasInput.required = false;
       parcelasInput.value = '';
-      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(800);
+      adjustWindowHeight();
     }
   }
 
@@ -203,15 +203,30 @@
       document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
       setTimeout(() => { isClosing = false; }, 100);
 
-      if (window.widgetAPI?.resizeWindow) {
-        window.widgetAPI.resizeWindow(tipoInput.value === 'parcelada' ? 900 : 800);
-      }
+      adjustWindowHeight();
 
       descricaoInput.focus();
       descricaoInput.select();
     });
   }
 
-  setTimeout(() => descricaoInput.focus(), 100);
+  function adjustWindowHeight() {
+    if (!window.widgetAPI?.resizeWindow) return;
+    // Pede ao DOM para recalcular via setImmediate/setTimeout para garantir renderização da hidden class
+    setTimeout(() => {
+      const modal = document.querySelector('.modal-container');
+      if (modal) {
+        // Altura do modal + padding do body (16px top + 16px bottom = 32px)
+        const totalHeight = modal.offsetHeight + 32;
+        window.widgetAPI.resizeWindow(totalHeight);
+      }
+    }, 10);
+  }
+
+  setTimeout(() => {
+    adjustWindowHeight();
+    descricaoInput.focus();
+  }, 100);
+  
   console.log('[Widget Form] Inicializado');
 })();
