@@ -11,7 +11,7 @@ win:
   target:
     - target: nsis
       arch: [x64, ia32]
-  icon: renderer/favicon.ico
+  icon: renderer/icon.ico
   requestedExecutionLevel: asInvoker
 nsis:
   oneClick: false
