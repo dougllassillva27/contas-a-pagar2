@@ -83,7 +83,7 @@
     document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
     document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
     
-    if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(700);
+    if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(710);
     if (window.widgetAPI?.hideWindow) window.widgetAPI.hideWindow();
 
     setTimeout(() => { isClosing = false; }, 200);
@@ -119,7 +119,7 @@
       parcelasGroup.classList.add('hidden');
       parcelasInput.required = false;
       parcelasInput.value = '';
-      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(700);
+      if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(710);
     }
   }
 
@@ -134,9 +134,6 @@
     }
     e.target.value = v;
   });
-
-  descricaoInput.addEventListener('blur', () => validarObrigatorio(descricaoInput, document.getElementById('error-descricao')));
-  valorInput.addEventListener('blur', () => validarValor(valorInput, document.getElementById('error-valor')));
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
