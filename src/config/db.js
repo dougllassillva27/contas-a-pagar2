@@ -17,6 +17,13 @@ const pool = new Pool({
   connectionString,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   client_encoding: 'UTF8',
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+pool.on('error', (err) => {
+  console.error('❌ Erro inesperado no pool de conexões:', err.message);
 });
 
 // Helper centralizado para verificar se logs de performance estão ativos
