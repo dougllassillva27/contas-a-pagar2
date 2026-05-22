@@ -19,6 +19,7 @@
   const valorInput = document.getElementById('valor');
   
   let isSubmitting = false;
+  let isClosing = false;
 
   // Converte valor digitado ("100", "100,50", "R$ 1.000,00") para float
   function parseValorParaApi(v) {
@@ -30,6 +31,7 @@
   }
 
   function validarObrigatorio(input, errEl) {
+    if (isClosing) return true;
     if (!input.value.trim()) {
       errEl.textContent = 'Campo obrigatório';
       input.classList.add('error');
@@ -41,6 +43,7 @@
   }
 
   function validarValor(input, errEl) {
+    if (isClosing) return true;
     const v = input.value.trim();
     if (!v) return validarObrigatorio(input, errEl);
     
@@ -65,6 +68,9 @@
   }
 
   function closeModal() {
+    isClosing = true;
+    if (document.activeElement) document.activeElement.blur();
+
     form.reset();
     statusMessage.classList.add('hidden');
     parcelasGroup.classList.add('hidden');
@@ -75,6 +81,8 @@
     
     if (window.widgetAPI?.resizeWindow) window.widgetAPI.resizeWindow(700);
     if (window.widgetAPI?.hideWindow) window.widgetAPI.hideWindow();
+
+    setTimeout(() => { isClosing = false; }, 200);
   }
 
   btnClose.addEventListener('click', closeModal);
@@ -181,6 +189,11 @@
 
   if (window.widgetAPI?.onFocusForm) {
     window.widgetAPI.onFocusForm(() => {
+      isClosing = true;
+      document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      setTimeout(() => { isClosing = false; }, 100);
+
       descricaoInput.focus();
       descricaoInput.select();
     });
