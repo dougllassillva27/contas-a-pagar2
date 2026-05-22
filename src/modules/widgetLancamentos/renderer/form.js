@@ -154,9 +154,9 @@
     }
     
     if (errors.length > 0) {
-      showStatus(`Corrija: ${errors.join(', ')}`, 'error');
       isSubmitting = false;
       btnSubmit.disabled = false;
+      adjustWindowHeight();
       return;
     }
     
