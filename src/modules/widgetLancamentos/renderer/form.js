@@ -76,14 +76,16 @@
     if (document.activeElement) document.activeElement.blur();
 
     form.reset();
+    
+    // Reset visual state of buttons to match the form.reset()
+    selecionarUsuario(1, btnDodo);
+    selecionarTipo('unica', btnUnica);
+
     statusMessage.classList.add('hidden');
-    parcelasGroup.classList.add('hidden');
-    parcelasInput.required = false;
     
     document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
     document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
     
-    adjustWindowHeight();
     if (window.widgetAPI?.hideWindow) window.widgetAPI.hideWindow();
 
     setTimeout(() => { isClosing = false; }, 200);
