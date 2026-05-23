@@ -398,6 +398,30 @@ function fecharModais() {
       document.getElementById('modalTitulo').innerText = 'Adicionar Lançamento';
     if (typeof toggleParcelas === 'function') toggleParcelas();
     if (typeof toggleBulkMode === 'function') toggleBulkMode();
+    
+    // CORREÇÃO: Resetar e ocultar o contador de lote nativo
+    const bulkCounterNative = document.getElementById('bulkCounterNative');
+    if (bulkCounterNative) {
+      bulkCounterNative.style.display = 'none';
+      bulkCounterNative.textContent = '';
+    }
+
+    // CORREÇÃO: Garantir reativação preventiva dos botões de submit no fechamento
+    const btnSalvarConta = document.getElementById('btnSalvarConta');
+    if (btnSalvarConta) {
+      btnSalvarConta.disabled = false;
+      btnSalvarConta.style.opacity = '1';
+    }
+    const btnSalvarRenda = document.getElementById('btnSalvarRenda');
+    if (btnSalvarRenda) {
+      btnSalvarRenda.disabled = false;
+      btnSalvarRenda.style.opacity = '1';
+    }
+
+    // CORREÇÃO: Resetar a variável de submissão global
+    if (typeof window.resetSubmitting === 'function') {
+      window.resetSubmitting();
+    }
   }, 300);
 }
 
