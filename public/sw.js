@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dodo-finance-v7';
+const CACHE_NAME = 'dodo-finance-v9';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Força atualização imediata, ignorando ciclo de vida padrão do PWA
@@ -23,6 +23,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const reqUrl = new URL(event.request.url);
+
+  // CORREÇÃO: Bypass total do Service Worker para o Soft Refresh para evitar travamento da Promise pendente
+  if (reqUrl.searchParams.has('_t')) {
+    return; // NÃO chama event.respondWith. O navegador busca diretamente da rede real!
+  }
 
   // Bypass de cache absoluto para ambiente de desenvolvimento local
   if (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1') {
