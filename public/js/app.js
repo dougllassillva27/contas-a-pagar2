@@ -17,6 +17,9 @@ let pessoaSelecionadaContexto = null;
 let acaoConfirmadaCallback = null;
 let idExcluir = null;
 let isSubmitting = false;
+window.resetSubmitting = () => {
+  isSubmitting = false;
+};
 
 // ==============================================================================
 // ✅ HELPERS DE SEGURANÇA
@@ -783,50 +786,50 @@ async function enviarLancamento(e, tipoTransacao) {
     submitBtn.style.opacity = '0.5';
   }
 
-  const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
-    .value;
+  try {
+    const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
+      .value;
 
-  if (!id && checkBloqueioMesFechado()) {
-    isSubmitting = false;
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.style.opacity = '1';
+    if (!id && checkBloqueioMesFechado()) {
+      isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+      }
+      return; // Apenas bloqueia POST (inserir), edição permite passar
     }
-    return; // Apenas bloqueia POST (inserir), edição permite passar
-  }
 
-  const dados = {
-    descricao: form.descricao.value,
-    valor: form.valor.value,
-    sub_tipo: form.sub_tipo ? form.sub_tipo.value : '',
-    tipo_transacao: tipoTransacao,
-    context_month: currentMonth,
-    context_year: currentYear,
-  };
+    const dados = {
+      descricao: form.descricao.value,
+      valor: form.valor.value,
+      sub_tipo: form.sub_tipo ? form.sub_tipo.value : '',
+      tipo_transacao: tipoTransacao,
+      context_month: currentMonth,
+      context_year: currentYear,
+    };
 
-  if (tipoTransacao !== 'RENDA') {
-    if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
+    if (tipoTransacao !== 'RENDA') {
+      if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
 
-    const rawTerceiro = form.nome_terceiro ? form.nome_terceiro.value : '';
+      const rawTerceiro = form.nome_terceiro ? form.nome_terceiro.value : '';
 
-    // Auto-upgrade para bulk se digitado com vírgula no input padrão (novo lançamento)
-    if (!id && rawTerceiro.includes(',')) {
-      const terceirosArr = rawTerceiro
-        .split(',')
-        .map((n) => n.trim())
-        .filter((n) => n.length > 0);
-      if (terceirosArr.length > 1) {
-        dados.terceiros = terceirosArr;
-        dados.bulk_mode = true;
+      // Auto-upgrade para bulk se digitado com vírgula no input padrão (novo lançamento)
+      if (!id && rawTerceiro.includes(',')) {
+        const terceirosArr = rawTerceiro
+          .split(',')
+          .map((n) => n.trim())
+          .filter((n) => n.length > 0);
+        if (terceirosArr.length > 1) {
+          dados.terceiros = terceirosArr;
+          dados.bulk_mode = true;
+        } else {
+          dados.nome_terceiro = rawTerceiro;
+        }
       } else {
         dados.nome_terceiro = rawTerceiro;
       }
-    } else {
-      dados.nome_terceiro = rawTerceiro;
     }
-  }
 
-  try {
     let url = '/api/lancamentos';
     let method = 'POST';
     if (id) {
@@ -845,9 +848,9 @@ async function enviarLancamento(e, tipoTransacao) {
       const responseData = await res.json().catch(() => ({}));
       if (responseData.criados) {
         mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
-        await softRefresh();
+        softRefresh();
       } else {
-        await softRefresh();
+        softRefresh();
         fecharModais();
         ocultarLoading();
         mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!');

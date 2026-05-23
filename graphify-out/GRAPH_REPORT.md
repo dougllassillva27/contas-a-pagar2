@@ -1,16 +1,16 @@
-# Graph Report - contas-a-pagar  (2026-05-17)
+# Graph Report - contas-a-pagar  (2026-05-23)
 
 ## Corpus Check
-- 96 files · ~413,134 words
+- 104 files · ~618,571 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 306 nodes · 426 edges · 78 communities (74 shown, 4 thin omitted)
-- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 81 edges (avg confidence: 0.8)
+- 338 nodes · 463 edges · 85 communities (81 shown, 4 thin omitted)
+- Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 85 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `48fdfbf1`
+- Built from commit: `6dd21ba5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -25,9 +25,13 @@
 - [[_COMMUNITY_Community 7|Community 7]]
 - [[_COMMUNITY_Community 8|Community 8]]
 - [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
 - [[_COMMUNITY_Community 13|Community 13]]
-- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 23|Community 23]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `mostrarAviso()` - 18 edges
@@ -53,7 +57,7 @@
 - `softRefresh()` --calls--> `initDragAndDrop()`  [INFERRED]
   public/js/app.js → public/js/dragdrop.js
 
-## Communities (78 total, 4 thin omitted)
+## Communities (85 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.07
@@ -80,16 +84,32 @@ Cohesion: 0.25
 Nodes (5): abrirModalCartaoPessoa(), initCardDragAndDrop(), initDragAndDrop(), initTouchCardDragAndDrop(), initTouchDragAndDrop()
 
 ### Community 6 - "Community 6"
+Cohesion: 0.36
+Nodes (7): adjustWindowHeight(), closeModal(), parseValorParaApi(), selecionarTipo(), selecionarUsuario(), validarObrigatorio(), validarValor()
+
+### Community 7 - "Community 7"
+Cohesion: 0.36
+Nodes (5): enviarLancamento(), testarConexao(), loadConfig(), saveConfig(), logErrorToFile()
+
+### Community 8 - "Community 8"
 Cohesion: 0.43
 Nodes (6): criarToken(), gerarToken(), hashToken(), renovarToken(), revogarToken(), validarToken()
 
-### Community 7 - "Community 7"
+### Community 9 - "Community 9"
+Cohesion: 0.47
+Nodes (4): criarJanela(), criarJanelaConfig(), exibirJanela(), exibirJanelaConfig()
+
+### Community 10 - "Community 10"
 Cohesion: 0.47
 Nodes (3): executarSincronizacaoDinamica(), processarCopiaTotal(), processarDivisaoCasa()
 
-### Community 8 - "Community 8"
+### Community 11 - "Community 11"
 Cohesion: 0.4
 Nodes (4): authMiddleware(), createApiAuth(), createAuthHybrid(), setupApp()
+
+### Community 13 - "Community 13"
+Cohesion: 0.6
+Nodes (3): adjustWindowHeight(), loadCurrentConfig(), showStatus()
 
 ## Knowledge Gaps
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
@@ -98,11 +118,11 @@ Nodes (4): authMiddleware(), createApiAuth(), createAuthHybrid(), setupApp()
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `softRefresh()` connect `Community 1` to `Community 0`, `Community 5`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **Why does `registerModalOpen()` connect `Community 0` to `Community 1`, `Community 5`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **Why does `mostrarAviso()` connect `Community 1` to `Community 0`?**
+- **Why does `registerModalOpen()` connect `Community 0` to `Community 1`, `Community 5`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
+- **Why does `mostrarAviso()` connect `Community 1` to `Community 0`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Are the 12 inferred relationships involving `mostrarAviso()` (e.g. with `executarAcaoEmLotePessoa()` and `moverMes()`) actually correct?**
   _`mostrarAviso()` has 12 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 5 inferred relationships involving `softRefresh()` (e.g. with `initDragAndDrop()` and `initCardDragAndDrop()`) actually correct?**
