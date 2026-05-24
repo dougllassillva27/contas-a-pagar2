@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dodo-finance-v9';
+const CACHE_NAME = 'dodo-finance-v10';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Força atualização imediata, ignorando ciclo de vida padrão do PWA
@@ -29,10 +29,9 @@ self.addEventListener('fetch', (event) => {
     return; // NÃO chama event.respondWith. O navegador busca diretamente da rede real!
   }
 
-  // Bypass de cache absoluto para ambiente de desenvolvimento local
+  // Bypass de cache absoluto para ambiente de desenvolvimento local (ignora totalmente o SW)
   if (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1') {
-    event.respondWith(fetch(event.request));
-    return;
+    return; // NÃO chama event.respondWith. O navegador busca nativamente diretamente da rede real!
   }
 
   // 1. Network First: Navegação HTML (Dashboard/Relatório) e API. NUNCA armazena sessão cruzada.

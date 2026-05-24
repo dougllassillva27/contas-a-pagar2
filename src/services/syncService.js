@@ -75,15 +75,17 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
   if (metade < valorMinimo) metade = valorMinimo;
   metade = Math.round(metade * 100) / 100;
 
-  // Executa o espelhamento triplo
-  await Promise.all([
-    // 1. Minha parte (Conta Própria)
-    repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, terceiroOrigem, metade, month, year, null),
-    // 2. Parte do parceiro no meu dashboard (para eu saber que ele me deve isso)
-    repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, terceiroOrigem, metade, month, year, terceiroEspelhoNoOrigem),
-    // 3. Parte do parceiro no dashboard dele (Conta Própria dele)
-    repo.findAndUpdateOrCreateContaFixaComTerceiro(usuarioDestino, terceiroOrigem, metade, month, year, null)
-  ]);
+  // Executa o espelhamento triplo de forma SEQUENCIAL para evitar Lock Contention
+  // no Neon Postgres. O Promise.all concorrente causava deadlock físico (~1000ms/op)
+  // ao disputar Shared/Exclusive Locks na mesma tabela Lancamentos para o mesmo UsuarioId.
+  // A execução sequencial garante que cada transação libere seus locks antes da próxima.
+
+  // 1. Minha parte (Conta Própria)
+  await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, terceiroOrigem, metade, month, year, null);
+  // 2. Parte do parceiro no meu dashboard (para eu saber que ele me deve isso)
+  await repo.findAndUpdateOrCreateContaFixaComTerceiro(sourceUserId, terceiroOrigem, metade, month, year, terceiroEspelhoNoOrigem);
+  // 3. Parte do parceiro no dashboard dele (Conta Própria dele)
+  await repo.findAndUpdateOrCreateContaFixaComTerceiro(usuarioDestino, terceiroOrigem, metade, month, year, null);
 
   console.log(`[SYNC-DYNAMIC] Divisão '${terceiroOrigem}' processada. Total: ${totalRaw} -> Metade: ${metade}`);
 }

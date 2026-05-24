@@ -35,13 +35,20 @@ function normalizarTerceiro(nome) {
 // --- LISTAGENS E DASHBOARD ---
 
 async function getUltimosLancamentos(userId) {
-  // ✅ CORREÇÃO: Adicionado NomeTerceiro no DISTINCT para não filtrar lançamentos em massa
+  // Otimização: Restringe a busca aos últimos 100 registros (usando o índice idx_lancamentos_usuario_criacao)
+  // antes de aplicar o DISTINCT ON pesado em memória, erradicando o Full Table Scan.
   const query = `
-      WITH Unicos AS (
-          SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, '')) 
-            * 
+      WITH UltimosCem AS (
+          SELECT * 
           FROM Lancamentos 
           WHERE UsuarioId = $1 
+          ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
+          LIMIT 100
+      ),
+      Unicos AS (
+          SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, '')) 
+            * 
+          FROM UltimosCem 
           ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, COALESCE(NomeTerceiro, '') ASC, Id ASC
       )
       SELECT * FROM Unicos 
