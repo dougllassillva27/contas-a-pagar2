@@ -180,6 +180,19 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
+      // 1. Lê as configurações preventivamente (para montar a view — sincronização foi movida para o POST)
+      let configuracoes = null;
+      if (typeof repo.getConfiguracoes === 'function') {
+        try {
+          configuracoes = await repo.getConfiguracoes(userId);
+        } catch (err) {
+          console.error('[Dashboard] Falha ao ler configuracoes do banco:', err);
+        }
+      }
+      // ℹ️ Sincronização Dinâmica agora é executada no POST /api/lancamentos, garantindo
+      // que o GET / seja read-only puro (< 300ms) e nunca bloqueie o softRefresh.
+
+      // 3. Busca em lote os dados consolidados e 100% consistentes do dashboard
       const {
         totais,
         fixas,
@@ -191,14 +204,7 @@ module.exports = function (repo) {
         faturaManualVal,
         mesFechado,
         terceirosDistinct,
-        configuracoes,
       } = await repo.getDashboardDataBatched(userId, Number(month), Number(year), userName);
-
-      // Sincronização Dinâmica (SaaS Ready)
-      // Processa regras declarativas do usuário (ex: espelhamento de faturas e divisões)
-      if (configuracoes && configuracoes.regras_sync) {
-        syncService.executarSincronizacaoDinamica(repo, userId, month, year, configuracoes.regras_sync).catch(console.error);
-      }
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
@@ -668,6 +674,27 @@ module.exports = function (repo) {
         }
 
         const resultado = await repo.addLancamentosBulk(req.session.user.id, dadosBase, terceirosUnicos);
+
+        // ✅ Sincronização Dinâmica fire-and-forget via setImmediate.
+        // O res.json retorna imediatamente. A sincronização roda após o event loop liberar,
+        // garantindo consistência quando o softRefresh (com delay de 1s) chamar o GET /.
+        setImmediate(async () => {
+          try {
+            const configBulk = typeof repo.getConfiguracoes === 'function'
+              ? await repo.getConfiguracoes(req.session.user.id)
+              : null;
+            if (configBulk && configBulk.regras_sync && configBulk.regras_sync.length > 0) {
+              await syncService.executarSincronizacaoDinamica(
+                repo, req.session.user.id,
+                Number(context_month), Number(context_year),
+                configBulk.regras_sync
+              );
+            }
+          } catch (syncErr) {
+            console.error('[POST Bulk] Erro na sincronização dinâmica pós-gravação:', syncErr.message);
+          }
+        });
+
         return res.json({ success: true, ...resultado });
       }
 
@@ -698,6 +725,23 @@ module.exports = function (repo) {
           };
           const terceirosUnicos = [...new Set(terceirosArr)];
           const resultado = await repo.addLancamentosBulk(req.session.user.id, dadosBase, terceirosUnicos);
+          // ✅ Sincronização dinâmica fire-and-forget (fallback vírgulas)
+          setImmediate(async () => {
+            try {
+              const configFallback = typeof repo.getConfiguracoes === 'function'
+                ? await repo.getConfiguracoes(req.session.user.id)
+                : null;
+              if (configFallback && configFallback.regras_sync && configFallback.regras_sync.length > 0) {
+                await syncService.executarSincronizacaoDinamica(
+                  repo, req.session.user.id,
+                  Number(context_month), Number(context_year),
+                  configFallback.regras_sync
+                );
+              }
+            } catch (syncErr) {
+              console.error('[POST Fallback] Erro na sincronização dinâmica:', syncErr.message);
+            }
+          });
           return res.json({ success: true, ...resultado });
         }
       }
@@ -712,6 +756,24 @@ module.exports = function (repo) {
         totalParcelas: classificacao.pTotal,
         nomeTerceiro: nome_terceiro || null,
         dataBase,
+      });
+
+      // ✅ Sincronização dinâmica fire-and-forget (modo normal)
+      setImmediate(async () => {
+        try {
+          const configNormal = typeof repo.getConfiguracoes === 'function'
+            ? await repo.getConfiguracoes(req.session.user.id)
+            : null;
+          if (configNormal && configNormal.regras_sync && configNormal.regras_sync.length > 0) {
+            await syncService.executarSincronizacaoDinamica(
+              repo, req.session.user.id,
+              Number(context_month), Number(context_year),
+              configNormal.regras_sync
+            );
+          }
+        } catch (syncErr) {
+          console.error('[POST Normal] Erro na sincronização dinâmica:', syncErr.message);
+        }
       });
 
       res.json({ success: true });

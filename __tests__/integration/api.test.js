@@ -150,6 +150,7 @@ describe('Integração API (Mocked DB)', () => {
       });
       repo.getDadosTerceiros.mockResolvedValue([]);
       repo.isMesFechado.mockResolvedValue(false);
+      repo.getConfiguracoes.mockResolvedValue({ divisao_casa_minimo: '750.00', regras_sync: [] });
     });
 
     test('GET / - carrega dashboard agrupado', async () => {

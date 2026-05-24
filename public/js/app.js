@@ -22,6 +22,23 @@ window.resetSubmitting = () => {
 };
 
 // ==============================================================================
+// 🛡️ LIMPEZA ATIVA DE SERVICE WORKER EM DESENVOLVIMENTO LOCAL (Previne deadlocks)
+// ==============================================================================
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister().then((unregistered) => {
+          if (unregistered) {
+            console.warn('%c[PWA] 🗑️ Service Worker antigo desregistrado ativamente para evitar deadlocks de rede local.', 'color: #ef4444; font-weight: bold;');
+          }
+        });
+      }
+    });
+  }
+}
+
+// ==============================================================================
 // ✅ HELPERS DE SEGURANÇA
 // ==============================================================================
 function escapeHTML(str) {
@@ -37,23 +54,23 @@ function escapeHTML(str) {
 // ==============================================================================
 // ✅ ATUALIZAÇÃO DOM SEM RELOAD (Soft Refresh)
 // ==============================================================================
-async function softRefresh() {
-  console.log('%c[SoftRefresh] ⏳ Iniciando atualização do DOM sem reload...', 'color: #3b82f6; font-weight: bold;');
+async function softRefresh(delayOverride) {
   const startTime = Date.now();
-  // Delay inteligente para permitir persistência Neon Postgres e Sincronização Dinâmica no backend
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  // Delay inteligente para permitir que a sincronização dinâmica fire-and-forget
+  // do POST complete antes do GET / ler os dados.
+  const delayMs = delayOverride !== undefined ? delayOverride : 150;
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
 
-  // Criando controle de AbortController para timeout de 8.0 segundos (failsafe contra deadlock do Service Worker)
+  // Criando controle de AbortController para timeout de 30.0 segundos (failsafe contra latência física de rede com Neon Postgres na nuvem)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
-    console.warn('%c[SoftRefresh] ⚠️ Timeout de 8.0s atingido! Abortando requisição para forçar auto-recovery...', 'color: #f59e0b; font-weight: bold;');
+    console.warn('%c[SoftRefresh] ⚠️ Timeout de 30.0s atingido! Abortando requisição para forçar auto-recovery...', 'color: #f59e0b; font-weight: bold;');
     controller.abort();
-  }, 8000);
+  }, 30000);
 
   try {
     const url = new URL(window.location.href);
     url.searchParams.set('_t', Date.now());
-    console.log(`%c[SoftRefresh] 🌐 Buscando URL: ${url.toString()}`, 'color: #3b82f6;');
     const res = await fetch(url.toString(), { signal: controller.signal });
     clearTimeout(timeoutId); // Limpa o timeout assim que a requisição responder
 
@@ -65,10 +82,8 @@ async function softRefresh() {
     const replaceHTML = (selector) => {
       const current = document.querySelector(selector);
       const updated = doc.querySelector(selector);
-      console.log(`%c[SoftRefresh] 🔍 Seletor "${selector}": current=${!!current}, updated=${!!updated}`, 'color: #8b5cf6;');
       if (current && updated) {
         current.innerHTML = updated.innerHTML;
-        console.log(`%c[SoftRefresh] ✅ Seletor "${selector}" atualizado com sucesso.`, 'color: #10b981;');
       }
     };
 
@@ -79,14 +94,11 @@ async function softRefresh() {
 
     const currentTerceiros = document.querySelector('.terceiros-grid');
     const newTerceiros = doc.querySelector('.terceiros-grid');
-    console.log(`%c[SoftRefresh] 🔍 Grid de Terceiros (.terceiros-grid): current=${!!currentTerceiros}, new=${!!newTerceiros}`, 'color: #f59e0b;');
 
     if (currentTerceiros && newTerceiros) {
       currentTerceiros.innerHTML = newTerceiros.innerHTML;
-      console.log('%c[SoftRefresh] ✅ Grid de Terceiros atualizada (current.innerHTML = new.innerHTML).', 'color: #10b981;');
     } else if (!currentTerceiros && newTerceiros) {
       const mainGrid = document.querySelector('.main-grid');
-      console.log(`%c[SoftRefresh] ➕ Criando nova Grid de Terceiros. mainGrid=${!!mainGrid}`, 'color: #10b981;');
       if (mainGrid) {
         mainGrid.insertAdjacentHTML(
           'afterend',
@@ -94,10 +106,8 @@ async function softRefresh() {
             newTerceiros.innerHTML +
             '</div>'
         );
-        console.log('%c[SoftRefresh] ✅ Grid de Terceiros inserida com insertAdjacentHTML.', 'color: #10b981;');
       }
     } else if (currentTerceiros && !newTerceiros) {
-      console.log('%c[SoftRefresh] ➖ Removendo Grid de Terceiros (sem lançamentos de terceiros).', 'color: #ef4444;');
       const header = currentTerceiros.previousElementSibling;
       if (header && header.tagName === 'DIV') header.remove();
       currentTerceiros.remove();
@@ -106,10 +116,8 @@ async function softRefresh() {
     // Atualização da Grid de Terceiros na aba específica de Links Públicos (/terceiros)
     const currentTerceirosDash = document.querySelector('.terceiros-dash-grid');
     const newTerceirosDash = doc.querySelector('.terceiros-dash-grid');
-    console.log(`%c[SoftRefresh] 🔍 Grid de Links (/terceiros): current=${!!currentTerceirosDash}, new=${!!newTerceirosDash}`, 'color: #f59e0b;');
     if (currentTerceirosDash && newTerceirosDash) {
       currentTerceirosDash.innerHTML = newTerceirosDash.innerHTML;
-      console.log('%c[SoftRefresh] ✅ Grid de Links (/terceiros) atualizada com sucesso.', 'color: #10b981;');
     }
 
     document.body.dataset.mesFechado = doc.body.dataset.mesFechado;
@@ -130,11 +138,18 @@ async function softRefresh() {
       currentAnotacaoText = document.getElementById('anotacoesArea').value;
       if (typeof renderAnotacoesPreview === 'function') renderAnotacoesPreview();
     }
-    console.log(`%c[SoftRefresh] 🎉 Atualização concluída com sucesso em ${Date.now() - startTime}ms!`, 'color: #10b981; font-weight: bold;');
   } catch (err) {
     clearTimeout(timeoutId); // Garante a limpeza do timeout em caso de erro
     console.error('%c[SoftRefresh] ❌ Falha catastrófica no Soft Refresh:', 'color: #ef4444; font-weight: bold;', err);
-    window.location.reload();
+    localStorage.setItem('last_soft_refresh_error', err.stack || err.toString());
+    
+    if (err.name === 'AbortError') {
+      console.warn('[SoftRefresh] Recarregando página devido a Timeout/Abort de rede.');
+      window.location.reload();
+    } else {
+      console.error('[SoftRefresh] Mantendo a página sem reload para diagnóstico de erro de execução.');
+      alert('Erro no SoftRefresh: ' + err.message + '\nPor favor, copie o erro do console F12!');
+    }
   }
 }
 
@@ -812,9 +827,7 @@ function fazerBackup() {
 
 async function enviarLancamento(e, tipoTransacao) {
   e.preventDefault();
-  console.log(`%c[EnviarLancamento] 🚀 Iniciando submissão. Tipo: ${tipoTransacao}`, 'color: #3b82f6; font-weight: bold;');
   if (isSubmitting) {
-    console.log('%c[EnviarLancamento] ⚠️ Submissão ignorada (isSubmitting=true).', 'color: #f59e0b;');
     return;
   }
   isSubmitting = true;
@@ -823,7 +836,6 @@ async function enviarLancamento(e, tipoTransacao) {
   const submitBtn = form.querySelector('button[type="submit"]');
 
   if (submitBtn) {
-    console.log('%c[EnviarLancamento] 🔒 Desabilitando botão de submit.', 'color: #f59e0b;');
     submitBtn.disabled = true;
     submitBtn.style.opacity = '0.5';
   }
@@ -831,10 +843,8 @@ async function enviarLancamento(e, tipoTransacao) {
   try {
     const id = (tipoTransacao === 'RENDA' ? document.getElementById('rendaId') : document.getElementById('contaId'))
       .value;
-    console.log(`%c[EnviarLancamento] 🆔 Lançamento ID: "${id}" (Vazio = Novo Lançamento)`, 'color: #8b5cf6;');
 
     if (!id && checkBloqueioMesFechado()) {
-      console.log('%c[EnviarLancamento] 🛑 Bloqueado: Mês Fechado.', 'color: #ef4444;');
       isSubmitting = false;
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -851,7 +861,6 @@ async function enviarLancamento(e, tipoTransacao) {
       context_month: currentMonth,
       context_year: currentYear,
     };
-    console.log('%c[EnviarLancamento] 📄 Dados para envio:', 'color: #8b5cf6;', dados);
 
     if (tipoTransacao !== 'RENDA') {
       if (dados.sub_tipo === 'Parcelada') dados.parcelas = form.parcelas.value;
@@ -881,22 +890,21 @@ async function enviarLancamento(e, tipoTransacao) {
       url = `/api/lancamentos/${id}`;
       method = 'PUT';
     }
-    console.log(`%c[EnviarLancamento] 📡 Enviando requisição HTTP ${method} para: ${url}`, 'color: #3b82f6;');
     const res = await fetch(url, {
       method: method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dados),
     });
-    console.log(`%c[EnviarLancamento] 📥 Resposta recebida. Status: ${res.status}`, 'color: #3b82f6;');
     if (res.status === 403) {
       const err = await res.json();
       mostrarAviso('Acesso Negado', err.error);
     } else if (res.ok) {
       const responseData = await res.json().catch(() => ({}));
-      console.log('%c[EnviarLancamento] ✅ Sucesso no salvamento. Response data:', 'color: #10b981;', responseData);
       if (responseData.criados) {
+        await softRefresh(1200); // 1.2s de delay no lote para garantir término da sync fire-and-forget
+        fecharModais();
+        ocultarLoading();
         mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
-        await softRefresh();
       } else {
         await softRefresh();
         fecharModais();
@@ -909,7 +917,6 @@ async function enviarLancamento(e, tipoTransacao) {
   } catch (err) {
     console.error('%c[EnviarLancamento] ❌ Exceção na submissão:', 'color: #ef4444;', err);
   } finally {
-    console.log('%c[EnviarLancamento] 🔓 Reabilitando botão no finally.', 'color: #10b981;');
     isSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;

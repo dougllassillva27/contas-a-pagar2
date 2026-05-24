@@ -30,7 +30,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="apple-touch-icon" href="/social-media.webp" />
 <script>
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
     });
@@ -38,7 +38,7 @@
 </script>
 
 <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-<link rel="stylesheet" href="/css/style.css?v=9" />
+<link rel="stylesheet" href="/css/style.css?v=10" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
