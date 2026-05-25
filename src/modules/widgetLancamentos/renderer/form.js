@@ -181,7 +181,14 @@
         form.reset();
         parcelasGroup.classList.add('hidden');
         parcelasInput.required = false;
-        setTimeout(() => closeModal(), 1500);
+
+        // Verifica config autoCloseOnSuccess (default: true)
+        const config = window.widgetAPI?.getConfig ? await window.widgetAPI.getConfig() : {};
+        const shouldAutoClose = config.autoCloseOnSuccess !== false;
+
+        if (shouldAutoClose) {
+          setTimeout(() => closeModal(), 1500);
+        }
       } else {
         showStatus(`❌ ${result.error}`, 'error');
       }
