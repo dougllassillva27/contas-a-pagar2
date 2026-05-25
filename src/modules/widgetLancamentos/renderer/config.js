@@ -4,6 +4,7 @@
   const hotkeyInput = document.getElementById('hotkey');
   const configForm = document.getElementById('configForm');
   const autoStartInput = document.getElementById('autoStart');
+  const autoCloseOnSuccessInput = document.getElementById('autoCloseOnSuccess');
   const btnClose = document.getElementById('btnClose');
   const loading = document.getElementById('loading');
   const statusMessage = document.getElementById('statusMessage');
@@ -31,6 +32,7 @@
       const config = await window.widgetAPI.getConfig();
       hotkeyInput.value = config.hotkey || 'Ctrl+Alt+N';
       autoStartInput.checked = config.autoStart || false;
+      autoCloseOnSuccessInput.checked = config.autoCloseOnSuccess !== false;
       adjustWindowHeight();
     } catch (err) {
       console.error('[Config JS] Erro ao buscar configs:', err);
@@ -109,7 +111,8 @@
 
     const updates = {
       hotkey: hotkeyInput.value.trim(),
-      autoStart: autoStartInput.checked
+      autoStart: autoStartInput.checked,
+      autoCloseOnSuccess: autoCloseOnSuccessInput.checked
     };
 
     try {

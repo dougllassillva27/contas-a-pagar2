@@ -10,6 +10,7 @@ const DEFAULTS = {
   hotkey: 'Ctrl+Alt+N',
   defaultUserId: 1,
   autoStart: false,
+  autoCloseOnSuccess: true,
   timeout: 10000
 };
 
