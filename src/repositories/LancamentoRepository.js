@@ -545,17 +545,42 @@ async function copyMonth(userId, currentMonth, currentYear) {
 
     const { startDate, endDate } = getMesRange(currentMonth, currentYear);
     const res = await client.query(
-      `SELECT * FROM Lancamentos 
-       WHERE UsuarioId = $1 
-         AND DataVencimento >= $2 AND DataVencimento < $3 
-         AND (Tipo IN ('${TIPO.FIXA}', '${TIPO.RENDA}') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))`,
+      `SELECT * FROM Lancamentos
+       WHERE UsuarioId = $1
+         AND DataVencimento >= $2 AND DataVencimento < $3
+         AND (Tipo IN ('${TIPO.FIXA}', '${TIPO.RENDA}', '${TIPO.TERCEIRO}') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))`,
       [userId, startDate, endDate]
     );
 
     const itemsToCopy = res.rows;
-    if (itemsToCopy.length === 0) return;
+    if (itemsToCopy.length === 0) {
+      console.log('[copyMonth] ⚠️ Nenhum item encontrado para copiar');
+      return;
+    }
+
+    console.log(`[copyMonth] �� Iniciando cópia: ${itemsToCopy.length} itens encontrados`);
+    console.log(`[copyMonth] �� Origem: ${currentMonth}/${currentYear} → Destino: ${nextMonth}/${nextYear}`);
+
+    // ✅ FIX: Busca configuração do valor mínimo da divisão da casa
+    let valorMinimoCasa = 750.0;
+    try {
+      const configResult = await client.query(
+        'SELECT divisao_casa_minimo FROM configuracoes WHERE usuario_id = $1',
+        [userId]
+      );
+      if (configResult.rows.length > 0 && configResult.rows[0].divisao_casa_minimo) {
+        valorMinimoCasa = parseFloat(configResult.rows[0].divisao_casa_minimo);
+        console.log(`[copyMonth] �� Valor mínimo Casa carregado: R$ ${valorMinimoCasa.toFixed(2)}`);
+      }
+    } catch (err) {
+      console.error('[copyMonth] Erro ao ler divisao_casa_minimo:', err.message);
+    }
 
     await client.query('BEGIN');
+
+    let contagemResetados = 0;
+    let contagemNormais = 0;
+
     for (const item of itemsToCopy) {
       let novoParcelaAtual = item.parcelaatual;
       let totalParcelas = item.totalparcelas;
@@ -568,18 +593,41 @@ async function copyMonth(userId, currentMonth, currentYear) {
       const newDate = new Date(nextYear, nextMonth - 1, day);
       const novoStatus = item.tipo === TIPO.RENDA ? STATUS.PAGO : STATUS.PENDENTE;
 
+      // ✅ FIX: Resetar valor de contas "Casa" para o mínimo configurado
+      // Detecta tanto contas Fixas quanto Terceiros com descrição "Casa"
+      let novoValor = item.valor;
+      const descricaoOriginal = item.descricao || '';
+      const descricaoBase = descricaoOriginal.split(' - ')[0].trim();
+
+      // Verifica se é uma conta Casa (tanto Fixa quanto Terceiro)
+      const categoriaEhCasa = (item.categoria || '').toLowerCase() === 'casa';
+      const descricaoEhCasa = descricaoBase.toLowerCase() === 'casa';
+      const ehContaCasa = categoriaEhCasa || descricaoEhCasa;
+
+      if (ehContaCasa) {
+        console.log(`[copyMonth] �� RESETANDO conta Casa:`);
+        console.log(`   ├─ Descrição: "${descricaoOriginal}"`);
+        console.log(`   ├─ Tipo: ${item.tipo} | Categoria: ${item.categoria}`);
+        console.log(`   ├─ Valor original: R$ ${parseFloat(item.valor).toFixed(2)}`);
+        console.log(`   └─ Novo valor: R$ ${valorMinimoCasa.toFixed(2)}`);
+        novoValor = valorMinimoCasa;
+        contagemResetados++;
+      } else {
+        contagemNormais++;
+      }
+
       // Garante que a cópia herde a data de criação original
       const dataCriacaoOriginal = item.datacriacao ? new Date(item.datacriacao) : new Date();
 
       await client.query(
-        `INSERT INTO Lancamentos 
-           (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, 
-            ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao) 
+        `INSERT INTO Lancamentos
+           (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
+            ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           userId,
           item.descricao,
-          item.valor,
+          novoValor,
           item.tipo,
           item.categoria,
           novoStatus,
@@ -592,9 +640,17 @@ async function copyMonth(userId, currentMonth, currentYear) {
         ]
       );
     }
+
     await client.query('COMMIT');
+
+    console.log(`[copyMonth] ✅ Cópia concluída:`);
+    console.log(`   ├─ Total processado: ${itemsToCopy.length} itens`);
+    console.log(`   ├─ Contas Casa resetadas: ${contagemResetados}`);
+    console.log(`   └─ Contas normais copiadas: ${contagemNormais}`);
+
   } catch (err) {
     await client.query('ROLLBACK');
+    console.error('[copyMonth] ❌ Erro durante cópia:', err.message);
     throw err;
   } finally {
     client.release();
