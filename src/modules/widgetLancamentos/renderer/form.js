@@ -108,6 +108,19 @@
   btnDodo.addEventListener('click', () => selecionarUsuario(1, btnDodo));
   btnVitoria.addEventListener('click', () => selecionarUsuario(2, btnVitoria));
 
+  // Navegação por teclado: setas trocam usuário, Tab segue para descrição
+  [btnDodo, btnVitoria].forEach(btn => {
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const target = e.key === 'ArrowRight' ? btnVitoria : btnDodo;
+        const uid = target === btnDodo ? 1 : 2;
+        selecionarUsuario(uid, target);
+        target.focus();
+      }
+    });
+  });
+
   function selecionarTipo(tipoStr, btn) {
     tipoInput.value = tipoStr;
     [btnFixa, btnUnica, btnParcelada].forEach(b => b.classList.remove('active'));
@@ -179,8 +192,14 @@
       if (result.success) {
         showStatus('✅ Lançamento confirmado!', 'success');
         form.reset();
+        // Restaura estado visual dos botões customizados após reset nativo
+        selecionarUsuario(1, btnDodo);
+        selecionarTipo('unica', btnUnica);
         parcelasGroup.classList.add('hidden');
         parcelasInput.required = false;
+        // Retorna foco ao primeiro campo editável
+        descricaoInput.focus({ preventScroll: true });
+        descricaoInput.select();
 
         // Verifica config autoCloseOnSuccess (default: true)
         const config = window.widgetAPI?.getConfig ? await window.widgetAPI.getConfig() : {};
