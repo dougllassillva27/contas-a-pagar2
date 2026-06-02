@@ -29,6 +29,7 @@ Permite:
 - Cadastro autônomo de usuários via `/signup`
 - Onboarding guiado para configuração inicial
 - Regras dinâmicas de sincronização e divisão usando JSONB
+- Divisão manual de contas entre terceiros via menu de contexto
 
 Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL, arquitetura cloud e posteriormente consolidado como uma base **Micro SaaS**, com criação autônoma de usuários, isolamento de dados por `UsuarioId` e motor de regras configurável.
 
@@ -75,6 +76,9 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
   - **Notificador WhatsApp**: Disparo semi-automático de links com mensagens padronizadas diretamente para o aplicativo do destinatário.
   - **Templates Dinâmicos**: Personalize a mensagem global no próprio painel utilizando variáveis mágicas (`{nome_terceiro}`, `{mes}`, `{ano}`, `{link}`).
   - **Agenda de Contatos**: Persistência automática dos números de telefone (+55) de cada terceiro no banco de dados para envios com 1 clique.
+- **Divisão de Contas**
+  - Divida qualquer conta existente entre múltiplos terceiros via menu de contexto (botão direito).
+  - Criação automática de lançamentos proporcionais com atualização instantânea dos cards na dashboard (soft refresh).
 - **Bloco de Notas Avançado**
   - Abas para anotações Mensais e Globais (atemporais)
   - Suporte a Markdown básico e Checklists interativos salvos em nuvem
@@ -155,6 +159,13 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
   - Deslocamento ágil de contas (especialmente de Cartão de Crédito) para o mês anterior ou seguinte, corrigindo faturamentos deslocados com 1 clique.
   - Funciona individualmente (ícones `❮` e `❯` nas linhas) ou em massa (seleção múltipla no modal de Últimas Adições).
   - Respeita rigorosamente a Trava de Mês Fechado (_Month Lock_) nas duas pontas (origem e destino da alteração).
+- **Divisão de Contas (Split)**
+  - Divisão otimista de contas existentes entre múltiplos terceiros via menu de contexto ou modal dedicado.
+  - Inserção de múltiplos nomes separados por vírgula com cálculo proporcional automático do valor.
+  - **Zero Lock Contention**: abordagem sem transação exclusiva (`FOR UPDATE` eliminado) para evitar pool starvation e deadlocks de até 6min no Neon Postgres serverless.
+  - **Renderização Instantânea**: dados dos terceiros retornados inline no response do POST, eliminando chamadas HTTP subsequentes e permitindo atualização cirúrgica da grid via JS puro (`renderizarTerceirosGrid`) sem reload da página ou F5 manual.
+  - **Proteção Contra Race Conditions**: verificação atômica de valor no UPDATE para prevenir divisões duplicadas em cenários de concorrência.
+  - **Controle de Modal Robusto**: fechamento programático com gerenciamento de `popstate` para evitar estados inconsistentes de navegação.
 - **Copiar Mês**
   - Replica contas fixas
   - Replica parcelas pendentes

@@ -2,6 +2,11 @@
 // ✅ public/js/ui.js — Gerenciamento de Modais, Interações e Eventos DOM
 // ==============================================================================
 
+// ✅ OBS-20260531-13: Flag para suprimir popstate durante fechamento programático.
+// Evita que history.back() assíncrono dispare fecharModais() reentrante que
+// destruiria o modalAviso criado logo após o softRefresh no fluxo de dividir conta.
+let _suppressPopstate = false;
+
 function registerModalOpen() {
   if (document.activeElement) document.activeElement.blur();
   document.body.classList.add('no-scroll');
@@ -16,6 +21,11 @@ function handleModalClose() {
 }
 
 window.addEventListener('popstate', () => {
+  // ✅ OBS-20260531-13: Se estamos em fechamento programático, apenas limpe
+  // o estado de histórico sem tocar nos modais — o fluxo já está cuidando deles.
+  if (_suppressPopstate) {
+    return;
+  }
   const activeModal = document.querySelector('.modal-overlay.active');
   if (activeModal) {
     isBackNavigation = true;
@@ -333,6 +343,24 @@ function abrirMenuContexto(e, pessoa) {
 
   if (btnMoverAnterior) btnMoverAnterior.style.display = isUltimas && selectedCount > 0 ? 'flex' : 'none';
   if (btnMoverSeguinte) btnMoverSeguinte.style.display = isUltimas && selectedCount > 0 ? 'flex' : 'none';
+
+  // ✅ Botão Dividir Conta: visível apenas com 1 seleção; disabled+tooltip com múltiplas
+  const btnDividirConta = document.getElementById('btnDividirConta');
+  if (btnDividirConta) {
+    if (isUltimas && selectedCount === 1) {
+      btnDividirConta.style.display = 'flex';
+      btnDividirConta.classList.remove('disabled');
+      btnDividirConta.removeAttribute('data-tooltip');
+      btnDividirConta.onclick = () => abrirModalDividirConta();
+    } else if (isUltimas && selectedCount > 1) {
+      btnDividirConta.style.display = 'flex';
+      btnDividirConta.classList.add('disabled');
+      btnDividirConta.setAttribute('data-tooltip', 'Selecione apenas uma conta para dividir');
+      btnDividirConta.onclick = null;
+    } else {
+      btnDividirConta.style.display = 'none';
+    }
+  }
 
   const divUltimas = document.getElementById('menuDividerUltimas');
   if (divUltimas) divUltimas.style.display = isUltimas ? 'flex' : 'none';

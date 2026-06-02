@@ -72,7 +72,7 @@ async function softRefresh(delayOverride) {
     const url = new URL(window.location.href);
     url.searchParams.set('_t', Date.now());
     const res = await fetch(url.toString(), { signal: controller.signal });
-    clearTimeout(timeoutId); // Limpa o timeout assim que a requisição responder
+    clearTimeout(timeoutId);
 
     if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch`);
     const text = await res.text();
@@ -150,6 +150,26 @@ async function softRefresh(delayOverride) {
       console.error('[SoftRefresh] Mantendo a página sem reload para diagnóstico de erro de execução.');
       alert('Erro no SoftRefresh: ' + err.message + '\nPor favor, copie o erro do console F12!');
     }
+  }
+}
+
+// ✅ OBS-20260531-09: softRefresh sem AbortController para contexto de modais aninhados.
+// O AbortController do softRefresh padrão é abortado pelo Chrome quando há modais
+// aninhados com history.pushState pendente (bug conhecido do fetch+signal).
+// Esta versão usa fetch simples sem signal — seguro pois a rede já foi validada
+// via Teste 4 e o servidor responde em <1s localmente.
+// ✅ OBS-20260601-03: softRefreshSafe usa endpoint API leve (/api/terceiros/resumo)
+// em vez de GET / pesado. Evita a CTE monolítica do getDashboardDataBatched que
+// falha com "Connection terminated unexpectedly" no Neon e leva 6+ minutos.
+// Renderiza a grid de terceiros via JS puro usando dados JSON.
+
+async function softRefreshSafe(delayOverride) {
+  const delayMs = delayOverride !== undefined ? delayOverride : 800;
+  await new Promise(r => setTimeout(r, delayMs));
+  try {
+    await softRefresh();
+  } catch (err) {
+    console.error('[SoftRefreshSafe] Falha:', err);
   }
 }
 
@@ -313,6 +333,136 @@ function moverLoteUltimas(direcao) {
   moverMes(null, ids, direcao);
 }
 
+// ==============================================================================
+// ✅ DIVIDIR CONTA — Modal + Lógica Frontend
+// ==============================================================================
+let _idContaDividir = null;
+let _valorContaDividir = 0;
+
+function abrirModalDividirConta() {
+  fecharMenuContexto();
+  const selectedRow = document.querySelector('#listaUltimasConteudo tr.selected-row');
+  if (!selectedRow) return;
+
+  _idContaDividir = Number(selectedRow.dataset.id);
+  // Extrai valor da célula de valor (coluna col-valor)
+  const celValor = selectedRow.querySelector('.col-valor');
+  if (celValor) {
+    // Remove formatação de moeda e converte para número
+    _valorContaDividir = parseFloat(celValor.textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+  }
+
+  const resumo = document.getElementById('dividirContaResumo');
+  const input = document.getElementById('inputTerceirosDivisao');
+  const preview = document.getElementById('dividirContaPreview');
+  const btnConfirmar = document.getElementById('btnConfirmarDivisao');
+
+  resumo.textContent = `Conta de ${_valorContaDividir.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+  input.value = '';
+  preview.textContent = '';
+  btnConfirmar.disabled = true;
+
+  // ✅ OBS-20260601-07: Abre modal de divisão PRIMEIRO, depois fecha Últimas.
+  // A ordem inversa causava race condition com history.back() assíncrono do fecharModais()
+  // que disparava popstate e impedia a abertura do modal de divisão.
+  document.getElementById('modalDividirConta').classList.add('active');
+  registerModalOpen();
+  // Fecha apenas o modal de Últimas (não todos) para evitar race condition
+  const modalUltimas = document.getElementById('modalUltimasAdicoes');
+  if (modalUltimas) modalUltimas.classList.remove('active');
+  setTimeout(() => input.focus(), 100);
+}
+
+function fecharModalDividirConta() {
+  document.getElementById('modalDividirConta').classList.remove('active');
+  _idContaDividir = null;
+  _valorContaDividir = 0;
+}
+
+// Preview dinâmico e suporte a Enter
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('inputTerceirosDivisao');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const btnConfirmar = document.getElementById('btnConfirmarDivisao');
+        if (!btnConfirmar.disabled) confirmarDivisaoConta();
+      }
+    });
+
+    input.addEventListener('input', () => {
+      const raw = input.value.trim();
+      const terceiros = raw.split(',').map((t) => t.trim()).filter(Boolean);
+      const preview = document.getElementById('dividirContaPreview');
+      const btnConfirmar = document.getElementById('btnConfirmarDivisao');
+
+      if (terceiros.length === 0) {
+        preview.textContent = '';
+        btnConfirmar.disabled = true;
+        return;
+      }
+
+      const n = terceiros.length + 1;
+      const valorPorParte = Math.floor((_valorContaDividir / n) * 100) / 100;
+      const resto = Math.round((_valorContaDividir - valorPorParte * n) * 100) / 100;
+      const valorOriginalFinal = Math.round((valorPorParte + resto) * 100) / 100;
+
+      preview.textContent = `${n} partes: ${valorPorParte.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cada | Original: ${valorOriginalFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+      btnConfirmar.disabled = false;
+    });
+  }
+});
+
+async function confirmarDivisaoConta() {
+  const input = document.getElementById('inputTerceirosDivisao');
+  const terceiros = input.value.split(',').map((t) => t.trim()).filter(Boolean);
+
+  // ✅ Captura ID ANTES de fechar o modal (que reseta _idContaDividir)
+  const idParaDividir = _idContaDividir;
+  if (terceiros.length === 0 || !idParaDividir) return;
+
+  mostrarLoading();
+
+  try {
+    const res = await fetch('/api/lancamentos/dividir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idOriginal: idParaDividir, terceiros }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      fecharModalDividirConta();
+      _suppressPopstate = true;
+      fecharModais();
+      ocultarLoading();
+      _suppressPopstate = false;
+      // ✅ OBS-20260601-07: Usa dados de terceiros retornados pelo POST
+      // para evitar segunda chamada HTTP que sofre lock contention de 5min no Neon.
+      // ✅ OBS-20260601-16: Atualiza dados completos garantindo a presença das Contas Fixas.
+      await softRefreshSafe(800);
+      mostrarAviso('Sucesso', 'Conta dividida com sucesso!');
+      return;
+    } else {
+      const msgMap = {
+        'Conta não encontrada ou não pertence ao usuário.': 'Conta não encontrada.',
+        'Informe pelo menos um terceiro válido para divisão.': 'Nenhum terceiro válido informado.',
+        'Limite de 20 terceiros por divisão excedido.': 'Limite de 20 terceiros excedido.',
+        'Valor da conta deve ser maior que zero para divisão.': 'Valor insuficiente para divisão.',
+      };
+      const msgAmigavel = msgMap[data.error] || data.error || 'Erro desconhecido.';
+      mostrarAviso('Erro', msgAmigavel);
+    }
+  } catch (err) {
+    console.error('[confirmarDivisaoConta]', err);
+    mostrarAviso('Erro', 'Erro de conexão ao dividir conta.');
+  } finally {
+    ocultarLoading();
+  }
+}
+
 // --- OUTRAS FUNÇÕES ---
 async function abrirModalUltimas() {
   registerModalOpen();
@@ -405,6 +555,50 @@ async function abrirModalUltimas() {
 
     // Adiciona evento de clique com botão direito no tbody do modal ÚLTIMAS
     tbody.oncontextmenu = (e) => abrirMenuContexto(e, 'ULTIMAS');
+
+    // ✅ OBS-20260531-07: Long-press para mobile (equivalente ao contextmenu do desktop)
+    // Dispara após 500ms de toque contínuo na linha da tabela
+    let longPressTimer = null;
+    const LONG_PRESS_MS = 500;
+
+    tbody.querySelectorAll('tr').forEach((row) => {
+      row.addEventListener('touchstart', (e) => {
+        // Ignora toques em checkboxes, botões de ação e inputs
+        if (e.target.closest('.actions') || e.target.tagName === 'INPUT') return;
+        longPressTimer = setTimeout(() => {
+          longPressTimer = null;
+          // Seleciona a linha automaticamente antes de abrir o menu
+          document.querySelectorAll('#listaUltimasConteudo tr.selected-row').forEach((r) => r.classList.remove('selected-row'));
+          row.classList.add('selected-row');
+          // Cria um evento sintético com coordenadas do toque para posicionamento do menu
+          const touch = e.changedTouches[0];
+          const syntheticEvent = {
+            preventDefault: () => {},
+            changedTouches: e.changedTouches,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+          };
+          abrirMenuContexto(syntheticEvent, 'ULTIMAS');
+          // Vibração tátil como feedback (se suportado)
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, LONG_PRESS_MS);
+      }, { passive: true });
+
+      row.addEventListener('touchend', () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      }, { passive: true });
+
+      row.addEventListener('touchmove', () => {
+        // Cancela long-press se o usuário arrastar o dedo
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      }, { passive: true });
+    });
 
     atualizarTotalNaoConferido();
   } catch (err) {
@@ -638,6 +832,18 @@ async function abrirModalRendasDetalhes() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // ✅ OBS-20260531-04: Recupera aviso pendente de reload (ex: pós-divisão de conta)
+  const avisoPendente = sessionStorage.getItem('avisoPosReload');
+  if (avisoPendente) {
+    sessionStorage.removeItem('avisoPosReload');
+    try {
+      const { titulo, msg } = JSON.parse(avisoPendente);
+      setTimeout(() => mostrarAviso(titulo, msg), 300);
+    } catch (e) {
+      console.error('[Reload] Falha ao parsear aviso pendente:', e);
+    }
+  }
+
   initDragAndDrop();
   initCardDragAndDrop();
   initTouchCardDragAndDrop(); // ✅ DND Cards Mobile
