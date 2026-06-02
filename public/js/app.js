@@ -883,27 +883,41 @@ async function salvarFaturaManual(input) {
 async function executarCopia() {
   // Se o mês alvo for fechado, a API retorna 403.
   mostrarLoading();
+  console.log('[COPIAR-MÊS] �� Iniciando cópia de mês...');
+  console.log(`[COPIAR-MÊS] �� Origem: ${currentMonth}/${currentYear}`);
+
+  const proximoMes = currentMonth === 12 ? 1 : currentMonth + 1;
+  const proximoAno = currentMonth === 12 ? currentYear + 1 : currentYear;
+  console.log(`[COPIAR-MÊS] �� Destino: ${proximoMes}/${proximoAno}`);
+
   try {
     const res = await fetch('/api/lancamentos/copiar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ month: currentMonth, year: currentYear }),
     });
+
+    console.log(`[COPIAR-MÊS] �� Resposta da API: status=${res.status}`);
     ocultarLoading();
 
     if (res.status === 403) {
       const err = await res.json();
+      console.warn('[COPIAR-MÊS] ⛔ Mês destino fechado:', err.error);
       mostrarAviso('Acesso Negado', err.error);
       return;
     } else if (res.ok) {
+      const result = await res.json();
+      console.log('[COPIAR-MÊS] ✅ Cópia realizada com sucesso!', result);
       mostrarAviso('Sucesso', 'Contas copiadas!');
       await softRefresh();
     } else {
+      const errText = await res.text();
+      console.error('[COPIAR-MÊS] ❌ Erro na resposta da API:', errText);
       mostrarAviso('Erro', 'Falha ao copiar.');
     }
   } catch (err) {
+    console.error('[COPIAR-MÊS] �� Erro de conexão:', err);
     ocultarLoading();
-    console.error(err);
     mostrarAviso('Erro', 'Erro de conexão.');
   }
 }
