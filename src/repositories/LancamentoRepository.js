@@ -251,12 +251,36 @@ async function getDetalhesRendas(userId, month, year) {
 
 async function getDistinctTerceiros(userId) {
   const result = await db.query(
-    `SELECT DISTINCT NomeTerceiro FROM Lancamentos 
-     WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL AND NomeTerceiro != '' 
+    `SELECT DISTINCT NomeTerceiro FROM Lancamentos
+     WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
      ORDER BY NomeTerceiro`,
     [userId]
   );
   return result.rows.map((r) => r.nometerceiro);
+}
+
+// ✅ OBS-20260601-03: Query leve para resumo de terceiros (grid do dashboard)
+// Evita a CTE pesada do getDashboardDataBatched — usada apenas para atualização pós-divisão
+async function getResumoTerceirosGrid(userId, month, year) {
+  const { startDate, endDate } = getMesRange(month, year);
+  const query = `
+    SELECT
+      NomeTerceiro AS nome,
+      SUM(CASE WHEN Tipo = '${TIPO.CARTAO}' THEN Valor ELSE 0 END)::float AS totalCartao,
+      SUM(Valor)::float AS totalGeral,
+      COUNT(*) FILTER (WHERE Status = '${STATUS.PENDENTE}') AS contasPendentes,
+      COUNT(*) FILTER (WHERE Status = '${STATUS.PAGO}') AS contasPagas
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND NomeTerceiro IS NOT NULL
+      AND NomeTerceiro != ''
+      AND DataVencimento >= $2
+      AND DataVencimento < $3
+    GROUP BY NomeTerceiro
+    ORDER BY NomeTerceiro
+  `;
+  const result = await db.query(query, [userId, startDate, endDate]);
+  return result.rows;
 }
 
 // --- CRUD ---
@@ -664,6 +688,112 @@ async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valo
   await db.query(query, [userId, nomeConta, startDate, endDate, valor, dataVencimento, terceiro]);
 }
 
+// ==============================================================================
+// ✅ Divisão de Conta — Transação ACID
+// ==============================================================================
+// ✅ OBS-20260601-16: Divisão sem retenção de conexão (GSD 4-D final)
+// Usamos db.query direto em cada instrução para evitar starvation do pool.
+async function dividirConta(userId, idOriginal, terceiros) {
+  // Buscar conta original SEM FOR UPDATE (leitura simples, sem lock)
+  const res = await db.query(
+    'SELECT * FROM Lancamentos WHERE Id = $1 AND UsuarioId = $2',
+    [idOriginal, userId]
+  );
+  const original = res.rows[0];
+  if (!original) {
+    throw new Error('CONTA_NAO_ENCONTRADA');
+  }
+
+  // Dedup e normalização dos terceiros
+  const terceirosUnicos = [...new Set(terceiros.map((t) => t.trim()).filter(Boolean))];
+  if (terceirosUnicos.length === 0) {
+    throw new Error('NENHUM_TERCEIRO_VALIDO');
+  }
+  if (terceirosUnicos.length > 20) {
+    throw new Error('LIMITE_TERCEIROS_EXCEDIDO');
+  }
+
+  // Cálculo da divisão com ajuste na origem
+  const n = terceirosUnicos.length + 1; // original + novos
+  const valorOriginal = Number(original.valor);
+  if (valorOriginal <= 0) {
+    throw new Error('VALOR_INVALIDO');
+  }
+  const valorPorParte = Math.floor((valorOriginal / n) * 100) / 100;
+  const resto = Math.round((valorOriginal - valorPorParte * n) * 100) / 100;
+  const valorOriginalAtualizado = Math.round((valorPorParte + resto) * 100) / 100;
+
+  // Atualizar conta original com verificação otimista (sem FOR UPDATE)
+  const updateRes = await db.query(
+    'UPDATE Lancamentos SET Valor = $1 WHERE Id = $2 AND UsuarioId = $3 AND Valor = $4',
+    [valorOriginalAtualizado, idOriginal, userId, valorOriginal]
+  );
+  if (updateRes.rowCount === 0) {
+    throw new Error('CONTA_MODIFICADA_CONCORRENTE');
+  }
+
+  // Isolar a subquery MAX(Ordem) do INSERT (evita lock implícito de tabela)
+  const maxOrdemRes = await db.query('SELECT COALESCE(MAX(Ordem), 0) AS max_ordem FROM Lancamentos WHERE UsuarioId = $1', [userId]);
+  let currentOrdem = Number(maxOrdemRes.rows[0].max_ordem);
+
+  // Inserir novas contas sequencialmente sem subqueries aninhadas
+  for (const terceiro of terceirosUnicos) {
+    currentOrdem++;
+    const terceiroNormalizado = normalizarTerceiro(terceiro);
+    await db.query(
+      `INSERT INTO Lancamentos
+        (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
+         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [
+        userId,
+        original.descricao,
+        valorPorParte,
+        original.tipo,
+        original.categoria,
+        original.status || STATUS.PENDENTE,
+        original.datavencimento,
+        original.parcelaatual || null,
+        original.totalparcelas || null,
+        terceiroNormalizado,
+        currentOrdem
+      ]
+    );
+  }
+
+  // Buscar resumo de terceiros
+  const dataVenc = new Date(original.datavencimento);
+  const { startDate, endDate } = getMesRange(
+    dataVenc.getMonth() + 1,
+    dataVenc.getFullYear()
+  );
+  const resumoResult = await db.query(
+    `SELECT
+      NomeTerceiro AS nome,
+      SUM(CASE WHEN Tipo = '${TIPO.CARTAO}' THEN Valor ELSE 0 END)::float AS "totalCartao",
+      SUM(Valor)::float AS "totalGeral",
+      COUNT(*) FILTER (WHERE Status = '${STATUS.PENDENTE}') AS "contasPendentes",
+      COUNT(*) FILTER (WHERE Status = '${STATUS.PAGO}') AS "contasPagas"
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND NomeTerceiro IS NOT NULL
+      AND NomeTerceiro != ''
+      AND DataVencimento >= $2
+      AND DataVencimento < $3
+    GROUP BY NomeTerceiro
+    ORDER BY NomeTerceiro`,
+    [userId, startDate, endDate]
+  );
+
+  return {
+    success: true,
+    partes: n,
+    valorPorParte,
+    valorOriginalAtualizado,
+    terceiros: resumoResult.rows,
+  };
+}
+
 module.exports = {
   getUltimosLancamentos,
   getRelatorioMensal,
@@ -690,6 +820,8 @@ module.exports = {
   reorderLancamentos,
   deleteLancamentosEmLote, // ✅ Novo método exportado
   moverLancamentosMes, // ✅ Novo método exportado
+  dividirConta, // ✅ Novo método exportado
+  getResumoTerceirosGrid, // ✅ OBS-20260601-03: Endpoint leve para atualização pós-divisão
   deleteLancamento,
   deleteLancamentosPorPessoa,
   deleteMonth,

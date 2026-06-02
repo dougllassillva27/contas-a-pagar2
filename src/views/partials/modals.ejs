@@ -31,6 +31,10 @@
       <span class="material-icons" style="color: var(--blue)">fast_forward</span>
       Mover para próximo mês
     </li>
+    <li onclick="abrirModalDividirConta()" id="btnDividirConta" style="display: none" role="button" tabindex="0" data-tooltip="" data-tooltip-dir="right">
+      <span class="material-icons" style="color: var(--primary)">call_split</span>
+      Dividir Conta
+    </li>
     <li onclick="confirmarExclusaoLoteUltimas()" id="btnExcluirSelecionados" style="display: none; color: var(--red)" role="button" tabindex="0">
       <span class="material-icons">delete_sweep</span>
       <span id="textExcluirSelecionados">Excluir selecionados</span>
@@ -220,6 +224,24 @@
         </thead>
         <tbody id="listaUltimasConteudo"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<%# ================= MODAL: DIVIDIR CONTA ================= %>
+<div class="modal-overlay confirm-overlay" id="modalDividirConta">
+  <div class="modal-box" style="max-width: 450px; text-align: center">
+    <span class="material-icons" style="font-size: 48px; color: var(--primary); margin-bottom: 15px">call_split</span>
+    <h2>Dividir Conta</h2>
+    <p id="dividirContaResumo" style="color: var(--text-secondary); margin: 10px 0 15px"></p>
+    <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+      <label for="inputTerceirosDivisao" style="font-size: 0.85rem;">Com quem dividir? (separe por vírgula)</label>
+      <input type="text" id="inputTerceirosDivisao" class="form-input" placeholder="Ex: Pedrinho, Maria" autocomplete="off" />
+    </div>
+    <p id="dividirContaPreview" style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; min-height: 1.2em;"></p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="fecharModalDividirConta()">Cancelar</button>
+      <button class="btn-primary" id="btnConfirmarDivisao" onclick="confirmarDivisaoConta()" disabled>Confirmar Divisão</button>
     </div>
   </div>
 </div>

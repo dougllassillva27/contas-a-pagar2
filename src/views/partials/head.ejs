@@ -38,7 +38,7 @@
 </script>
 
 <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-<link rel="stylesheet" href="/css/style.css?v=10" />
+<link rel="stylesheet" href="/css/style.css" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
@@ -168,6 +168,14 @@
   }
   .context-menu li:hover {
     background: #333; /* levemente mais escuro que anterior */
+  }
+  .context-menu li.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: auto;
+  }
+  .context-menu li.disabled:hover {
+    background: transparent;
   }
   .context-menu li .material-icons {
     font-size: 20px;

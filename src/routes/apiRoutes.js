@@ -352,6 +352,18 @@ module.exports = function (repo) {
     })
   );
 
+  // ✅ OBS-20260601-03: Endpoint leve para atualização da grid de terceiros pós-divisão.
+  // Evita o GET / pesado (getDashboardDataBatched + CTE monolítica) que falha com
+  // "Connection terminated unexpectedly" no Neon e leva 6+ minutos.
+  router.get(
+    '/api/terceiros/resumo',
+    asyncHandler(async (req, res) => {
+      const { month, year } = calcularContextoNavegacao(req.query);
+      const terceiros = await repo.getResumoTerceirosGrid(req.session.user.id, month, year);
+      res.json({ success: true, terceiros });
+    })
+  );
+
   router.post(
     '/api/meses-fechados/toggle',
     asyncHandler(async (req, res) => {
@@ -863,6 +875,42 @@ module.exports = function (repo) {
 
       const updatedCount = await repo.moverLancamentosMes(userId, ids, offset);
       res.json({ success: true, updated: updatedCount });
+    })
+  );
+
+  // ✅ NOVA ROTA: Divisão de Conta
+  router.post(
+    '/api/lancamentos/dividir',
+    asyncHandler(async (req, res) => {
+      const { idOriginal, terceiros } = req.body;
+      const userId = req.session.user.id;
+
+      if (!idOriginal || !Array.isArray(terceiros)) {
+        return res.status(400).json({ error: 'Payload inválido. Informe idOriginal e array de terceiros.' });
+      }
+
+      try {
+        const resultado = await repo.dividirConta(userId, idOriginal, terceiros);
+        res.json(resultado);
+      } catch (err) {
+        const msg = err.message;
+        if (msg === 'CONTA_NAO_ENCONTRADA') {
+          return res.status(404).json({ error: 'Conta não encontrada ou não pertence ao usuário.' });
+        }
+        if (msg === 'NENHUM_TERCEIRO_VALIDO') {
+          return res.status(400).json({ error: 'Informe pelo menos um terceiro válido para divisão.' });
+        }
+        if (msg === 'LIMITE_TERCEIROS_EXCEDIDO') {
+          return res.status(400).json({ error: 'Limite de 20 terceiros por divisão excedido.' });
+        }
+        if (msg === 'VALOR_INVALIDO') {
+          return res.status(400).json({ error: 'Valor da conta deve ser maior que zero para divisão.' });
+        }
+        if (msg === 'CONTA_MODIFICADA_CONCORRENTE') {
+          return res.status(409).json({ error: 'Conta foi modificada por outro processo. Tente novamente.' });
+        }
+        throw err;
+      }
     })
   );
 
