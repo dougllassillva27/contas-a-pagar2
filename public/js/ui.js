@@ -21,8 +21,6 @@ function handleModalClose() {
 }
 
 window.addEventListener('popstate', () => {
-  // ✅ OBS-20260531-13: Se estamos em fechamento programático, apenas limpe
-  // o estado de histórico sem tocar nos modais — o fluxo já está cuidando deles.
   if (_suppressPopstate) {
     return;
   }
@@ -694,18 +692,11 @@ async function compartilharLinkTerceiro() {
     ocultarLoading();
 
     urlCompartilhamentoContexto = `${window.location.origin}/contas/${data.token}?month=${currentMonth}&year=${currentYear}`;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const nomeEl = document.getElementById('nomePessoaShare');
+    if (nomeEl) nomeEl.innerText = nome;
 
-    if (isMobile) {
-      copiarAoClipboard(urlCompartilhamentoContexto);
-      mostrarAviso('Link copiado!', urlCompartilhamentoContexto);
-    } else {
-      const nomeEl = document.getElementById('nomePessoaShare');
-      if (nomeEl) nomeEl.innerText = nome;
-
-      registerModalOpen();
-      document.getElementById('modalCompartilhar').classList.add('active');
-    }
+    registerModalOpen();
+    document.getElementById('modalCompartilhar').classList.add('active');
   } catch (err) {
     ocultarLoading();
     mostrarAviso('Erro', 'Não foi possível gerar o link de compartilhamento.');
@@ -726,20 +717,35 @@ function abrirLinkCompartilhado() {
 
 function copiarLinkCompartilhado() {
   if (urlCompartilhamentoContexto) {
-    copiarAoClipboard(urlCompartilhamentoContexto);
+    const nomeEl = document.getElementById('nomePessoaShare');
+    const nome = nomeEl ? nomeEl.innerText : '';
+
+    copiarAoClipboard(urlCompartilhamentoContexto).catch(console.error);
+
+    _suppressPopstate = true;
     fecharModalCompartilhar();
-    mostrarAviso('Sucesso', 'Link copiado para a área de transferência!');
+
+    // Aguarda o history.back() completar antes de mostrar o próximo modal
+    setTimeout(() => {
+      mostrarAviso('Sucesso', `Link de ${nome} copiado para a área de transferência!`);
+
+      setTimeout(() => {
+        _suppressPopstate = false;
+      }, 100);
+    }, 150);
   }
 }
 
 function copiarAoClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).catch((err) => {
-      console.error('Erro ao copiar: ', err);
+    return navigator.clipboard.writeText(text).catch((err) => {
+      console.error('Erro ao copiar:', err);
       fallbackCopiarAoClipboard(text);
+      throw err;
     });
   } else {
     fallbackCopiarAoClipboard(text);
+    return Promise.resolve();
   }
 }
 
