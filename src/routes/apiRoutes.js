@@ -438,16 +438,6 @@ module.exports = function (repo) {
     })
   );
 
-  router.get(
-    '/api/backup',
-    asyncHandler(async (req, res) => {
-      const data = await repo.getAllDataForBackup(req.session.user.id);
-      const fileName = `backup_${req.session.user.login}_${new Date().toISOString().split('T')[0]}.json`;
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-      res.send(JSON.stringify(data, null, 2));
-    })
-  );
 
   router.post(
     '/api/fatura-manual',
