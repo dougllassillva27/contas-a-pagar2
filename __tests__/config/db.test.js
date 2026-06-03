@@ -31,8 +31,8 @@ describe('Configuração de Banco de Dados (db.js)', () => {
     const config = Pool.mock.calls[0][0];
     expect(config).toHaveProperty('client_encoding', 'UTF8');
     expect(config).toHaveProperty('max', 10);
-    expect(config).toHaveProperty('idleTimeoutMillis', 30000);
-    expect(config).toHaveProperty('connectionTimeoutMillis', 5000);
+    expect(config).toHaveProperty('idleTimeoutMillis', 60000);
+    expect(config).toHaveProperty('connectionTimeoutMillis', 10000);
   });
 
   test('deve registrar um manipulador de erro no pool', () => {
