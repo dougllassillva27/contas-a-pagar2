@@ -287,11 +287,15 @@ async function getResumoTerceirosGrid(userId, month, year) {
 
 async function addLancamento(userId, dados) {
   const dataVencimento = dados.dataBase ? new Date(dados.dataBase) : new Date();
+
+  // ✅ FIX: Normaliza terceiro "Eu", "Dodo" ou vazio para NULL (mesma lógica de addLancamentosBulk)
+  const terceiroNormalizado = normalizarTerceiro(dados.nomeTerceiro);
+
   const query = `
-      INSERT INTO Lancamentos 
-        (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento, 
-         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem)  
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
+      INSERT INTO Lancamentos
+        (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
+         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
    `;
   await db.query(query, [
@@ -304,7 +308,7 @@ async function addLancamento(userId, dados) {
     dataVencimento,
     dados.parcelaAtual || null,
     dados.totalParcelas || null,
-    dados.nomeTerceiro || null,
+    terceiroNormalizado, // ✅ Usa valor normalizado
   ]);
 }
 

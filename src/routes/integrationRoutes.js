@@ -50,6 +50,16 @@ module.exports = function (repo, apiAuth) {
         return res.status(400).json({ success: false, error: parcelasNorm.erro });
       }
 
+      // ✅ FIX: Normaliza terceiro "Eu", "Dodo" ou vazio para NULL
+      // Mesma lógica do sistema principal (LancamentoRepository.js:26)
+      const terceiroNormalizado = (() => {
+        const nomeNormalizado = (terceiro || '').trim().toLowerCase();
+        if (['eu', 'dodo', ''].includes(nomeNormalizado)) {
+          return null;
+        }
+        return (terceiro || '').trim();
+      })();
+
       const dados = {
         descricao,
         valor: valorFinal,
@@ -57,7 +67,7 @@ module.exports = function (repo, apiAuth) {
         status: STATUS.PENDENTE,
         parcelaAtual: parcelasNorm.parcelaAtual,
         totalParcelas: parcelasNorm.totalParcelas,
-        nomeTerceiro: terceiro || null,
+        nomeTerceiro: terceiroNormalizado, // ✅ Usa valor normalizado
         dataBase: new Date(),
       };
 
