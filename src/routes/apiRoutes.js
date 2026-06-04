@@ -180,7 +180,7 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      // 1. Lê as configurações preventivamente (para montar a view — sincronização foi movida para o POST)
+      // 1. Lê as configurações e executa sincronização dinâmica (se houver regras)
       let configuracoes = null;
       if (typeof repo.getConfiguracoes === 'function') {
         try {
@@ -189,8 +189,21 @@ module.exports = function (repo) {
           console.error('[Dashboard] Falha ao ler configuracoes do banco:', err);
         }
       }
-      // ℹ️ Sincronização Dinâmica agora é executada no POST /api/lancamentos, garantindo
-      // que o GET / seja read-only puro (< 300ms) e nunca bloqueie o softRefresh.
+
+      // ✅ EXECUTA SINCRONIZAÇÃO ANTES DE RENDERIZAR (F5 automático)
+      // Garante que os dados estejam atualizados ao carregar o dashboard
+      if (configuracoes && configuracoes.regras_sync && configuracoes.regras_sync.length > 0) {
+        try {
+          const syncService = require('../services/syncService.js');
+          await syncService.executarSincronizacaoDinamica(
+            repo, userId, Number(month), Number(year), configuracoes.regras_sync
+          );
+          console.log(`[Dashboard GET] Sincronização dinâmica executada para usuário ${userId}`);
+        } catch (syncErr) {
+          console.error('[Dashboard GET] Erro na sincronização dinâmica:', syncErr.message);
+          // Não bloqueia renderização se sync falhar
+        }
+      }
 
       // 3. Busca em lote os dados consolidados e 100% consistentes do dashboard
       const {
