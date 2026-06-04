@@ -83,3 +83,28 @@
   3. Se o agente for interrompido, NAO tente reinvoca-lo imediatamente. Faca o registro manual via terminal e siga em frente.
   4. O gate pos-mutacao exige que o historico esteja atualizado, nao QUE seja via agente. A ferramenta e meio, nao fim.
 - **Contexto**: Atualizacao do README.md (secao Split) foi concluida com sucesso, mas o gsdrecorder foi rejeitado pelo usuario, exigindo registro manual via Add-Content (OBS-20260602-01).
+
+---
+
+## Frontend / UX
+
+### [LESSON-20260603-01] Race Condition entre Modais no Mobile
+
+- **Padrao do Erro**: Ao copiar link na home mobile, o modal de sucesso nao aparecia porque `history.back()` (chamado por `handleModalClose()`) dispara o evento `popstate` assincronamente. Se um novo modal e aberto antes do popstate completar, o handler fecha o modal recem-aberto.
+- **Regra Preventiva**: Sempre adicione um `setTimeout` de 150ms entre fechar um modal que chama `handleModalClose()` e abrir o proximo modal. Isso garante que o ciclo do `popstate` complete sem interferir na nova abertura. A flag `_suppressPopstate` tambem deve ser usada para suprimir o handler durante o fluxo programatico.
+- **Contexto**: Fix aplicado em `copiarLinkCompartilhado()` — modal de sucesso "Link de XXX copiado" agora aparece corretamente apos copiar link na home mobile.
+
+### [LESSON-20260603-02] Normalizacao de Terceiro "Eu"/"Dodo" em APIs de Integracao
+
+- **Padrao do Erro**: O widget enviava "Eu" ou "Dodo" no campo terceiro, e o endpoint da API de integracao (`/api/v1/integracao/lancamentos`) passava esse valor direto para o banco, criando novos terceiros em vez de associar a conta ao proprio usuario. O sistema principal usa a funcao `normalizarTerceiro()` (em `LancamentoRepository.js:26`) que converte "Eu", "Dodo" ou vazio para `NULL`, mas o endpoint de integracao nao estava usando essa funcao.
+- **Regra Preventiva**: Centralize a logica de normalizacao de terceiros em uma unica funcao (`normalizarTerceiro()`) e use-a em TODOS os pontos de entrada de dados (APIs, widgets, imports). Aplique a normalizacao tanto no handler da rota quanto no repositorio para garantir defesa em profundidade. Nunca confie que o valor recebido ja esta normalizado.
+- **Contexto**: Fix aplicado em dois niveis:
+  1. `src/routes/integrationRoutes.js` — normalizacao no handler da API
+  2. `src/repositories/LancamentoRepository.js` — normalizacao na funcao `addLancamento()`
+  Agora contas com "Eu" ou "Dodo" vao para o proprio usuario (terceiro NULL) em vez de criar novo registro na tabela de terceiros.
+
+### [LESSON-20260603-03] Backend Precisa Ser Reiniciado Apos Mudancas no Codigo
+
+- **Padrao do Erro**: Apos aplicar fixes nos arquivos `integrationRoutes.js` e `LancamentoRepository.js`, o widget continuou criando terceiros "Eu"/"Dodo" porque o servidor backend ainda estava rodando a versao antiga do codigo (cache de modulo Node.js). O fix so funciona apos reiniciar o processo Node.js.
+- **Regra Preventiva**: SEMPRE reinicie o servidor Node.js apos modificar arquivos de rota, repositorio ou qualquer modulo backend. Nao confie apenas no nodemon — em caso de duvida, mate todos os processos Node (`taskkill /F /IM node.exe`) e reinicie manualmente. Verifique nos logs de startup que o novo codigo foi carregado (timestamp ou versao).
+- **Contexto**: Usuario testou o widget apos o fix e continuou com erro porque o backend nao foi reiniciado. So apos restart do processo Node o fix foi aplicado corretamente.
