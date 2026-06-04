@@ -11,15 +11,29 @@
  * @param {Array} regras - Array de objetos de regra (vindo de configuracoes.regras_sync)
  */
 async function executarSincronizacaoDinamica(repo, userId, month, year, regras) {
-  if (!Array.isArray(regras) || regras.length === 0) return;
+  if (!Array.isArray(regras) || regras.length === 0) {
+    console.warn(`[SYNC] ⚠️ Nenhuma regra configurada para usuário ${userId}`);
+    return;
+  }
+
+  console.log(`[SYNC] �� Iniciando sincronização dinâmica para usuário ${userId}, mês ${month}/${year}`);
+  console.log(`[SYNC] �� ${regras.length} regra(s) encontrada(s)`);
 
   const startTotal = Date.now();
+  let regrasProcessadas = 0;
+  let regrasComErro = 0;
+
   for (const regra of regras) {
     try {
       const { tipo, ativo = true } = regra;
-      if (!ativo) continue;
+      if (!ativo) {
+        console.log(`[SYNC] ⏭️ Regra ${tipo} inativa, pulando`);
+        continue;
+      }
 
+      console.log(`[SYNC] ▶️ Processando regra: ${JSON.stringify(regra)}`);
       const startRegra = Date.now();
+
       switch (tipo) {
         case 'COPIA_TOTAL':
           await processarCopiaTotal(repo, userId, month, year, regra);
@@ -30,21 +44,23 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
           break;
 
         default:
-          console.warn(`[SYNC] Tipo de regra desconhecido: ${tipo}`);
+          console.warn(`[SYNC] ❓ Tipo de regra desconhecido: ${tipo}`);
+          continue;
       }
+
       const durationRegra = Date.now() - startRegra;
-      if (process.env.DEBUG_PERF === 'true' || process.env.DEBUG_PERF === '1') {
-        console.log(`[SYNC-PERF] Regra ${tipo} processada em ${durationRegra}ms`);
-      }
+      regrasProcessadas++;
+      console.log(`[SYNC] ✅ Regra ${tipo} processada em ${durationRegra}ms`);
     } catch (err) {
-      console.error(`[SYNC] Erro ao processar regra ${regra.tipo}:`, err.message);
+      regrasComErro++;
+      console.error(`[SYNC] ❌ Erro ao processar regra ${regra.tipo}:`, err.message);
+      console.error(`[SYNC] Stack:`, err.stack);
     }
   }
-  
+
   const durationTotal = Date.now() - startTotal;
-  if (process.env.DEBUG_PERF === 'true' || process.env.DEBUG_PERF === '1') {
-    console.log(`[SYNC-PERF] Ciclo total de sincronização: ${durationTotal}ms`);
-  }
+  console.log(`[SYNC] �� Sincronização concluída: ${regrasProcessadas} regra(s) processadas, ${regrasComErro} erro(s)`);
+  console.log(`[SYNC] ⏱️ Tempo total: ${durationTotal}ms`);
 }
 
 /**
@@ -53,12 +69,19 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
  */
 async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
   const { terceiroOrigem, usuarioDestino, contaDestino } = config;
-  if (!terceiroOrigem || !usuarioDestino || !contaDestino) return;
+  if (!terceiroOrigem || !usuarioDestino || !contaDestino) {
+    console.warn(`[SYNC] ⚠️ Configuração incompleta para COPIA_TOTAL:`, config);
+    return;
+  }
 
+  console.log(`[SYNC] �� COPIA_TOTAL: Buscando total de '${terceiroOrigem}' (U:${sourceUserId}) para mês ${month}/${year}`);
   const total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  console.log(`[SYNC] �� Total encontrado: R$ ${total}`);
+
+  console.log(`[SYNC] �� Atualizando/criando '${contaDestino}' para usuário destino (U:${usuarioDestino})`);
   await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, total, month, year);
 
-  console.log(`[SYNC-DYNAMIC] Copiado R$ ${total} de '${terceiroOrigem}' (U:${sourceUserId}) -> '${contaDestino}' (U:${usuarioDestino})`);
+  console.log(`[SYNC] ✅ Copiado R$ ${total} de '${terceiroOrigem}' (U:${sourceUserId}) -> '${contaDestino}' (U:${usuarioDestino})`);
 }
 
 /**
