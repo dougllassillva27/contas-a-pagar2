@@ -1,16 +1,16 @@
-# Graph Report - contas-a-pagar  (2026-06-01)
+# Graph Report - contas-a-pagar  (2026-06-08)
 
 ## Corpus Check
-- 121 files · ~222,686 words
+- 114 files · ~222,591 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 830 nodes · 1112 edges · 72 communities (62 shown, 10 thin omitted)
+- 828 nodes · 1115 edges · 69 communities (60 shown, 9 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 93 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `165bbdb8`
+- Built from commit: `74c72253`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -75,14 +75,12 @@
 - [[_COMMUNITY_Community 65|Community 65]]
 - [[_COMMUNITY_Community 66|Community 66]]
 - [[_COMMUNITY_Community 67|Community 67]]
-- [[_COMMUNITY_Community 68|Community 68]]
-- [[_COMMUNITY_Community 69|Community 69]]
 - [[_COMMUNITY_Community 81|Community 81]]
 - [[_COMMUNITY_Community 82|Community 82]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `mostrarAviso()` - 19 edges
-2. `💸 Gestão Financeira Pessoal (Micro SaaS Edition)` - 19 edges
+1. `💸 Gestão Financeira Pessoal (Micro SaaS Edition)` - 20 edges
+2. `mostrarAviso()` - 19 edges
 3. `⚡ Widget Lançamentos` - 19 edges
 4. `getMesRange()` - 18 edges
 5. `softRefresh()` - 16 edges
@@ -104,7 +102,7 @@
 - `moverMes()` --calls--> `checkBloqueioMesFechado()`  [INFERRED]
   public/js/app.js → public/js/ui.js
 
-## Communities (72 total, 10 thin omitted)
+## Communities (69 total, 9 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.09
@@ -115,8 +113,8 @@ Cohesion: 0.11
 Nodes (25): abrirFormNovaRegra(), abrirModalUltimas(), alternarAbaAnotacao(), alternarConferido(), alternarModoAnotacao(), alternarStatus(), atualizarTotais(), atualizarTotalNaoConferido() (+17 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (26): repo, addLancamentosBulk(), copyMonth(), db, deleteLancamentosPorPessoa(), deleteMonth(), dividirConta(), findAndUpdateOrCreateContaFixa() (+18 more)
+Cohesion: 0.07
+Nodes (26): addLancamento(), addLancamentosBulk(), copyMonth(), db, deleteLancamentosPorPessoa(), deleteMonth(), dividirConta(), findAndUpdateOrCreateContaFixa() (+18 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.11
@@ -156,7 +154,7 @@ Nodes (7): createApiAuth(), { createApiAuth }, express, integrationRoutes, repo,
 
 ### Community 12 - "Community 12"
 Cohesion: 0.05
-Nodes (38): 1️⃣ Clonar, 2️⃣ Instalar Dependências, 3️⃣ Criar Banco de Dados, 4️⃣ Variáveis de Ambiente, 5️⃣ Rodar, 🏗️ Arquitetura, ⚡ Arquitetura e Alta Performance, ⌨️ Atalhos de Teclado (Power Users) (+30 more)
+Nodes (39): 1️⃣ Clonar, 2️⃣ Instalar Dependências, 3️⃣ Criar Banco de Dados, 4️⃣ Variáveis de Ambiente, 5️⃣ Rodar, 🏗️ Arquitetura, ⚡ Arquitetura e Alta Performance, ⌨️ Atalhos de Teclado (Power Users) (+31 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.60
@@ -227,8 +225,8 @@ Cohesion: 0.22
 Nodes (6): app, dataHoraRoutes, express, request, express, router
 
 ### Community 34 - "Community 34"
-Cohesion: 0.33
-Nodes (3): db, db, repo
+Cohesion: 0.25
+Nodes (7): Exemplo de Saída, Fluxo de Trabalho, Formato da Mensagem, Função, GSD Commit Agent, Regras Absolutas, Tipos Válidos
 
 ### Community 35 - "Community 35"
 Cohesion: 0.12
@@ -283,8 +281,8 @@ Cohesion: 0.18
 Nodes (10): AnotacaoRepository, BackupRepository, ConfiguracaoRepository, FaturaManualRepository, LajeadoRepository, LancamentoRepository, MesFechadoRepository, OrdemCardsRepository (+2 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.33
-Nodes (5): 🚀 Comandos Essenciais, 📁 Estrutura de Domínio Recomendada, 🔒 Regras Inegociáveis (Anti-Vibe Coding), �� Setup Obrigatório (Primeira Execução), 🛠️ Stack do Projeto
+Cohesion: 0.18
+Nodes (12): Comandos Essenciais, Dodo Starter Pack - Manifesto Anti-Vibe Coding, Estrutura de Dominio Recomendada, 📁 Estrutura de Domínio Recomendada, Modularização Obrigatória (Anti-Monolito), Referencia Cruzada, Regras Globais, Regras Inegociaveis (Anti-Vibe Coding) (+4 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.20
@@ -314,33 +312,29 @@ Nodes (8): bcrypt, db, express, publicRoutes, repo, request, session, setupApp()
 Cohesion: 0.40
 Nodes (4): app, bcrypt, repo, request
 
-### Community 68 - "Community 68"
-Cohesion: 0.40
-Nodes (4): id, name, projectResources, resources
-
 ### Community 82 - "Community 82"
 Cohesion: 0.50
 Nodes (3): ejs, fs, path
 
 ## Knowledge Gaps
-- **415 isolated node(s):** `browser`, `es2021`, `node`, `extends`, `ecmaVersion` (+410 more)
+- **418 isolated node(s):** `browser`, `es2021`, `node`, `extends`, `ecmaVersion` (+413 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `TIPO` connect `Community 4` to `Community 2`, `Community 3`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `STATUS` connect `Community 4` to `Community 2`, `Community 3`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `LIMITES` connect `Community 4` to `Community 2`, `Community 37`?**
+- **Why does `normalizarParcelasPorTipo()` connect `Community 4` to `Community 3`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Are the 13 inferred relationships involving `mostrarAviso()` (e.g. with `confirmarDivisaoConta()` and `enviarLancamento()`) actually correct?**
   _`mostrarAviso()` has 13 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 5 inferred relationships involving `softRefresh()` (e.g. with `initCardDragAndDrop()` and `initDragAndDrop()`) actually correct?**
   _`softRefresh()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `browser`, `es2021`, `node` to the rest of the system?**
-  _415 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _418 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.0946969696969697 - nodes in this community are weakly interconnected._

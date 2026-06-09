@@ -148,33 +148,6 @@
       "norm_label": "prefer-const"
     },
     {
-      "label": "check_db.js",
-      "file_type": "code",
-      "source_file": "check_db.js",
-      "source_location": "L1",
-      "id": "check_db_js",
-      "community": 69,
-      "norm_label": "check_db.js"
-    },
-    {
-      "label": "db",
-      "file_type": "code",
-      "source_file": "check_db.js",
-      "source_location": "L2",
-      "id": "contas_a_pagar_check_db_db",
-      "community": 69,
-      "norm_label": "db"
-    },
-    {
-      "label": "run()",
-      "file_type": "code",
-      "source_file": "check_db.js",
-      "source_location": "L4",
-      "id": "contas_a_pagar_check_db_run",
-      "community": 69,
-      "norm_label": "run()"
-    },
-    {
       "label": "package.json",
       "file_type": "code",
       "source_file": "package.json",
@@ -588,87 +561,6 @@
       "norm_label": "setup.sh script"
     },
     {
-      "label": "test_pool.js",
-      "file_type": "code",
-      "source_file": "test_pool.js",
-      "source_location": "L1",
-      "id": "test_pool_js",
-      "community": 2,
-      "norm_label": "test_pool.js"
-    },
-    {
-      "label": "repo",
-      "file_type": "code",
-      "source_file": "test_pool.js",
-      "source_location": "L2",
-      "id": "contas_a_pagar_test_pool_repo",
-      "community": 2,
-      "norm_label": "repo"
-    },
-    {
-      "label": "run()",
-      "file_type": "code",
-      "source_file": "test_pool.js",
-      "source_location": "L4",
-      "id": "contas_a_pagar_test_pool_run",
-      "community": 2,
-      "norm_label": "run()"
-    },
-    {
-      "label": "_fix_softrefresh.ps1",
-      "file_type": "code",
-      "source_file": "_fix_softrefresh.ps1",
-      "source_location": "L1",
-      "id": "fix_softrefresh_ps1",
-      "community": 61,
-      "norm_label": "_fix_softrefresh.ps1"
-    },
-    {
-      "label": "f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "file_type": "code",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L1",
-      "id": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_json",
-      "community": 68,
-      "norm_label": "f5b2da58-549a-495d-89be-730e72033b6b.json"
-    },
-    {
-      "label": "id",
-      "file_type": "code",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L2",
-      "id": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_id",
-      "community": 68,
-      "norm_label": "id"
-    },
-    {
-      "label": "name",
-      "file_type": "code",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L3",
-      "id": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_name",
-      "community": 68,
-      "norm_label": "name"
-    },
-    {
-      "label": "projectResources",
-      "file_type": "code",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L4",
-      "id": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_projectresources",
-      "community": 68,
-      "norm_label": "projectresources"
-    },
-    {
-      "label": "resources",
-      "file_type": "code",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L5",
-      "id": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_projectresources_resources",
-      "community": 68,
-      "norm_label": "resources"
-    },
-    {
       "label": "settings.local.json",
       "file_type": "code",
       "source_file": ".claude/settings.local.json",
@@ -1005,7 +897,7 @@
       "label": "executarDeleteMes()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L911",
+      "source_location": "L925",
       "id": "js_app_executardeletemes",
       "community": 28,
       "norm_label": "executardeletemes()"
@@ -1014,7 +906,7 @@
       "label": "alternarStatus()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L938",
+      "source_location": "L952",
       "id": "js_app_alternarstatus",
       "community": 1,
       "norm_label": "alternarstatus()"
@@ -1023,7 +915,7 @@
       "label": "atualizarTotais()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L972",
+      "source_location": "L986",
       "id": "js_app_atualizartotais",
       "community": 1,
       "norm_label": "atualizartotais()"
@@ -1032,7 +924,7 @@
       "label": "fazerBackup()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1030",
+      "source_location": "L1044",
       "id": "js_app_fazerbackup",
       "community": 1,
       "norm_label": "fazerbackup()"
@@ -1041,7 +933,7 @@
       "label": "enviarLancamento()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1034",
+      "source_location": "L1048",
       "id": "js_app_enviarlancamento",
       "community": 28,
       "norm_label": "enviarlancamento()"
@@ -1050,7 +942,7 @@
       "label": "carregarAnotacoes()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1142",
+      "source_location": "L1156",
       "id": "js_app_carregaranotacoes",
       "community": 1,
       "norm_label": "carregaranotacoes()"
@@ -1059,7 +951,7 @@
       "label": "alternarAbaAnotacao()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1158",
+      "source_location": "L1172",
       "id": "js_app_alternarabaanotacao",
       "community": 1,
       "norm_label": "alternarabaanotacao()"
@@ -1068,7 +960,7 @@
       "label": "alternarModoAnotacao()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1165",
+      "source_location": "L1179",
       "id": "js_app_alternarmodoanotacao",
       "community": 1,
       "norm_label": "alternarmodoanotacao()"
@@ -1077,7 +969,7 @@
       "label": "renderAnotacoesPreview()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1189",
+      "source_location": "L1203",
       "id": "js_app_renderanotacoespreview",
       "community": 1,
       "norm_label": "renderanotacoespreview()"
@@ -1086,7 +978,7 @@
       "label": "toggleChecklist()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1229",
+      "source_location": "L1243",
       "id": "js_app_togglechecklist",
       "community": 1,
       "norm_label": "togglechecklist()"
@@ -1095,7 +987,7 @@
       "label": "inserirFormatacao()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1242",
+      "source_location": "L1256",
       "id": "js_app_inserirformatacao",
       "community": 1,
       "norm_label": "inserirformatacao()"
@@ -1104,7 +996,7 @@
       "label": "salvarAnotacao()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1259",
+      "source_location": "L1273",
       "id": "js_app_salvaranotacao",
       "community": 1,
       "norm_label": "salvaranotacao()"
@@ -1113,7 +1005,7 @@
       "label": "confirmarExclusao()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1299",
+      "source_location": "L1313",
       "id": "js_app_confirmarexclusao",
       "community": 42,
       "norm_label": "confirmarexclusao()"
@@ -1122,7 +1014,7 @@
       "label": "salvarConfiguracoes()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1325",
+      "source_location": "L1339",
       "id": "js_app_salvarconfiguracoes",
       "community": 28,
       "norm_label": "salvarconfiguracoes()"
@@ -1131,7 +1023,7 @@
       "label": "finalizarWizard()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1386",
+      "source_location": "L1400",
       "id": "js_app_finalizarwizard",
       "community": 28,
       "norm_label": "finalizarwizard()"
@@ -1140,7 +1032,7 @@
       "label": "finalizarWizardSozinho()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1435",
+      "source_location": "L1449",
       "id": "js_app_finalizarwizardsozinho",
       "community": 28,
       "norm_label": "finalizarwizardsozinho()"
@@ -1149,7 +1041,7 @@
       "label": "concluirOnboarding()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1448",
+      "source_location": "L1462",
       "id": "js_app_concluironboarding",
       "community": 28,
       "norm_label": "concluironboarding()"
@@ -1158,7 +1050,7 @@
       "label": "getRegrasSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1462",
+      "source_location": "L1476",
       "id": "js_app_getregrassync",
       "community": 1,
       "norm_label": "getregrassync()"
@@ -1167,7 +1059,7 @@
       "label": "renderizarRegrasSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1470",
+      "source_location": "L1484",
       "id": "js_app_renderizarregrassync",
       "community": 42,
       "norm_label": "renderizarregrassync()"
@@ -1176,7 +1068,7 @@
       "label": "abrirFormNovaRegra()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1511",
+      "source_location": "L1525",
       "id": "js_app_abrirformnovaregra",
       "community": 1,
       "norm_label": "abrirformnovaregra()"
@@ -1185,7 +1077,7 @@
       "label": "editarRegraSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1515",
+      "source_location": "L1529",
       "id": "js_app_editarregrasync",
       "community": 1,
       "norm_label": "editarregrasync()"
@@ -1194,7 +1086,7 @@
       "label": "salvarRegraSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1522",
+      "source_location": "L1536",
       "id": "js_app_salvarregrasync",
       "community": 1,
       "norm_label": "salvarregrasync()"
@@ -1203,7 +1095,7 @@
       "label": "confirmarDeletarRegraSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1550",
+      "source_location": "L1564",
       "id": "js_app_confirmardeletarregrasync",
       "community": 1,
       "norm_label": "confirmardeletarregrasync()"
@@ -1212,7 +1104,7 @@
       "label": "deletarRegraSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1556",
+      "source_location": "L1570",
       "id": "js_app_deletarregrasync",
       "community": 1,
       "norm_label": "deletarregrasync()"
@@ -1221,7 +1113,7 @@
       "label": "persistirRegrasSync()",
       "file_type": "code",
       "source_file": "public/js/app.js",
-      "source_location": "L1562",
+      "source_location": "L1576",
       "id": "js_app_persistirregrassync",
       "community": 28,
       "norm_label": "persistirregrassync()"
@@ -1473,7 +1365,7 @@
       "label": "isMesFechado()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L102",
+      "source_location": "L100",
       "id": "js_ui_ismesfechado",
       "community": 42,
       "norm_label": "ismesfechado()"
@@ -1482,7 +1374,7 @@
       "label": "checkBloqueioMesFechado()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L106",
+      "source_location": "L104",
       "id": "js_ui_checkbloqueiomesfechado",
       "community": 42,
       "norm_label": "checkbloqueiomesfechado()"
@@ -1491,7 +1383,7 @@
       "label": "mostrarLoading()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L114",
+      "source_location": "L112",
       "id": "js_ui_mostrarloading",
       "community": 28,
       "norm_label": "mostrarloading()"
@@ -1500,7 +1392,7 @@
       "label": "ocultarLoading()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L117",
+      "source_location": "L115",
       "id": "js_ui_ocultarloading",
       "community": 28,
       "norm_label": "ocultarloading()"
@@ -1509,7 +1401,7 @@
       "label": "abrirSidebar()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L121",
+      "source_location": "L119",
       "id": "js_ui_abrirsidebar",
       "community": 0,
       "norm_label": "abrirsidebar()"
@@ -1518,7 +1410,7 @@
       "label": "fecharSidebar()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L130",
+      "source_location": "L128",
       "id": "js_ui_fecharsidebar",
       "community": 0,
       "norm_label": "fecharsidebar()"
@@ -1527,7 +1419,7 @@
       "label": "fecharSidebarE()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L139",
+      "source_location": "L137",
       "id": "js_ui_fecharsidebare",
       "community": 0,
       "norm_label": "fecharsidebare()"
@@ -1536,7 +1428,7 @@
       "label": "abrirModalCalcularLuz()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L146",
+      "source_location": "L144",
       "id": "js_ui_abrirmodalcalcularluz",
       "community": 42,
       "norm_label": "abrirmodalcalcularluz()"
@@ -1545,7 +1437,7 @@
       "label": "fecharModalCalcularLuz()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L156",
+      "source_location": "L154",
       "id": "js_ui_fecharmodalcalcularluz",
       "community": 0,
       "norm_label": "fecharmodalcalcularluz()"
@@ -1554,7 +1446,7 @@
       "label": "abrirModalConfiguracoes()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L162",
+      "source_location": "L160",
       "id": "js_ui_abrirmodalconfiguracoes",
       "community": 42,
       "norm_label": "abrirmodalconfiguracoes()"
@@ -1563,7 +1455,7 @@
       "label": "switchTab()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L178",
+      "source_location": "L176",
       "id": "js_ui_switchtab",
       "community": 42,
       "norm_label": "switchtab()"
@@ -1572,7 +1464,7 @@
       "label": "abrirModalRegraSync()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L189",
+      "source_location": "L187",
       "id": "js_ui_abrirmodalregrasync",
       "community": 1,
       "norm_label": "abrirmodalregrasync()"
@@ -1581,7 +1473,7 @@
       "label": "fecharModalRegraSync()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L215",
+      "source_location": "L213",
       "id": "js_ui_fecharmodalregrasync",
       "community": 0,
       "norm_label": "fecharmodalregrasync()"
@@ -1590,7 +1482,7 @@
       "label": "toggleSyncFields()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L220",
+      "source_location": "L218",
       "id": "js_ui_togglesyncfields",
       "community": 1,
       "norm_label": "togglesyncfields()"
@@ -1599,7 +1491,7 @@
       "label": "abrirModalWizard()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L231",
+      "source_location": "L229",
       "id": "js_ui_abrirmodalwizard",
       "community": 0,
       "norm_label": "abrirmodalwizard()"
@@ -1608,7 +1500,7 @@
       "label": "fecharModalWizard()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L244",
+      "source_location": "L242",
       "id": "js_ui_fecharmodalwizard",
       "community": 0,
       "norm_label": "fecharmodalwizard()"
@@ -1617,7 +1509,7 @@
       "label": "showWizardStep()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L249",
+      "source_location": "L247",
       "id": "js_ui_showwizardstep",
       "community": 0,
       "norm_label": "showwizardstep()"
@@ -1626,7 +1518,7 @@
       "label": "wizardNextStep()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L255",
+      "source_location": "L253",
       "id": "js_ui_wizardnextstep",
       "community": 0,
       "norm_label": "wizardnextstep()"
@@ -1635,7 +1527,7 @@
       "label": "wizardPrevStep()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L268",
+      "source_location": "L266",
       "id": "js_ui_wizardprevstep",
       "community": 0,
       "norm_label": "wizardprevstep()"
@@ -1644,7 +1536,7 @@
       "label": "fecharModalConfiguracoes()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L275",
+      "source_location": "L273",
       "id": "js_ui_fecharmodalconfiguracoes",
       "community": 0,
       "norm_label": "fecharmodalconfiguracoes()"
@@ -1653,7 +1545,7 @@
       "label": "initDoubleTapMobile()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L287",
+      "source_location": "L285",
       "id": "js_ui_initdoubletapmobile",
       "community": 5,
       "norm_label": "initdoubletapmobile()"
@@ -1662,7 +1554,7 @@
       "label": "abrirMenuContexto()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L308",
+      "source_location": "L306",
       "id": "js_ui_abrirmenucontexto",
       "community": 0,
       "norm_label": "abrirmenucontexto()"
@@ -1671,7 +1563,7 @@
       "label": "fecharMenuContexto()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L387",
+      "source_location": "L385",
       "id": "js_ui_fecharmenucontexto",
       "community": 42,
       "norm_label": "fecharmenucontexto()"
@@ -1680,7 +1572,7 @@
       "label": "toggleAllConferido()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L395",
+      "source_location": "L393",
       "id": "js_ui_toggleallconferido",
       "community": 0,
       "norm_label": "toggleallconferido()"
@@ -1689,7 +1581,7 @@
       "label": "fecharModais()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L409",
+      "source_location": "L407",
       "id": "js_ui_fecharmodais",
       "community": 28,
       "norm_label": "fecharmodais()"
@@ -1698,7 +1590,7 @@
       "label": "fecharModalAviso()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L456",
+      "source_location": "L454",
       "id": "js_ui_fecharmodalaviso",
       "community": 0,
       "norm_label": "fecharmodalaviso()"
@@ -1707,7 +1599,7 @@
       "label": "abrirConfirmacaoAcao()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L461",
+      "source_location": "L459",
       "id": "js_ui_abrirconfirmacaoacao",
       "community": 42,
       "norm_label": "abrirconfirmacaoacao()"
@@ -1716,7 +1608,7 @@
       "label": "fecharConfirmacaoAcao()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L487",
+      "source_location": "L485",
       "id": "js_ui_fecharconfirmacaoacao",
       "community": 0,
       "norm_label": "fecharconfirmacaoacao()"
@@ -1725,7 +1617,7 @@
       "label": "fecharConfirmacao()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L492",
+      "source_location": "L490",
       "id": "js_ui_fecharconfirmacao",
       "community": 0,
       "norm_label": "fecharconfirmacao()"
@@ -1734,7 +1626,7 @@
       "label": "mostrarAviso()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L496",
+      "source_location": "L494",
       "id": "js_ui_mostraraviso",
       "community": 28,
       "norm_label": "mostraraviso()"
@@ -1743,7 +1635,7 @@
       "label": "abrirModalAdicionar()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L502",
+      "source_location": "L500",
       "id": "js_ui_abrirmodaladicionar",
       "community": 42,
       "norm_label": "abrirmodaladicionar()"
@@ -1752,7 +1644,7 @@
       "label": "editarConta()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L512",
+      "source_location": "L510",
       "id": "js_ui_editarconta",
       "community": 0,
       "norm_label": "editarconta()"
@@ -1761,7 +1653,7 @@
       "label": "editarRenda()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L541",
+      "source_location": "L539",
       "id": "js_ui_editarrenda",
       "community": 0,
       "norm_label": "editarrenda()"
@@ -1770,7 +1662,7 @@
       "label": "toggleRendas()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L563",
+      "source_location": "L561",
       "id": "js_ui_togglerendas",
       "community": 0,
       "norm_label": "togglerendas()"
@@ -1779,7 +1671,7 @@
       "label": "limparMascara()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L578",
+      "source_location": "L576",
       "id": "js_ui_limparmascara",
       "community": 0,
       "norm_label": "limparmascara()"
@@ -1788,7 +1680,7 @@
       "label": "handleEnterFatura()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L581",
+      "source_location": "L579",
       "id": "js_ui_handleenterfatura",
       "community": 0,
       "norm_label": "handleenterfatura()"
@@ -1797,7 +1689,7 @@
       "label": "togglePrivacidadeGlobal()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L585",
+      "source_location": "L583",
       "id": "js_ui_toggleprivacidadeglobal",
       "community": 0,
       "norm_label": "toggleprivacidadeglobal()"
@@ -1806,7 +1698,7 @@
       "label": "toggleParcelas()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L600",
+      "source_location": "L598",
       "id": "js_ui_toggleparcelas",
       "community": 0,
       "norm_label": "toggleparcelas()"
@@ -1815,7 +1707,7 @@
       "label": "toggleBulkMode()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L613",
+      "source_location": "L611",
       "id": "js_ui_togglebulkmode",
       "community": 0,
       "norm_label": "togglebulkmode()"
@@ -1824,7 +1716,7 @@
       "label": "atualizarBulkCounter()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L653",
+      "source_location": "L651",
       "id": "js_ui_atualizarbulkcounter",
       "community": 0,
       "norm_label": "atualizarbulkcounter()"
@@ -1833,7 +1725,7 @@
       "label": "mascaraParcela()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L672",
+      "source_location": "L670",
       "id": "js_ui_mascaraparcela",
       "community": 0,
       "norm_label": "mascaraparcela()"
@@ -1842,7 +1734,7 @@
       "label": "compartilharLinkTerceiro()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L685",
+      "source_location": "L683",
       "id": "js_ui_compartilharlinkterceiro",
       "community": 28,
       "norm_label": "compartilharlinkterceiro()"
@@ -1851,7 +1743,7 @@
       "label": "fecharModalCompartilhar()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L715",
+      "source_location": "L706",
       "id": "js_ui_fecharmodalcompartilhar",
       "community": 0,
       "norm_label": "fecharmodalcompartilhar()"
@@ -1860,7 +1752,7 @@
       "label": "abrirLinkCompartilhado()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L720",
+      "source_location": "L711",
       "id": "js_ui_abrirlinkcompartilhado",
       "community": 0,
       "norm_label": "abrirlinkcompartilhado()"
@@ -1869,7 +1761,7 @@
       "label": "copiarLinkCompartilhado()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L727",
+      "source_location": "L718",
       "id": "js_ui_copiarlinkcompartilhado",
       "community": 0,
       "norm_label": "copiarlinkcompartilhado()"
@@ -1878,7 +1770,7 @@
       "label": "copiarAoClipboard()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L735",
+      "source_location": "L739",
       "id": "js_ui_copiaraoclipboard",
       "community": 0,
       "norm_label": "copiaraoclipboard()"
@@ -1887,7 +1779,7 @@
       "label": "fallbackCopiarAoClipboard()",
       "file_type": "code",
       "source_file": "public/js/ui.js",
-      "source_location": "L746",
+      "source_location": "L752",
       "id": "js_ui_fallbackcopiaraoclipboard",
       "community": 0,
       "norm_label": "fallbackcopiaraoclipboard()"
@@ -3579,7 +3471,7 @@
       "label": "selecionarTipo()",
       "file_type": "code",
       "source_file": "src/modules/widgetLancamentos/renderer/form.js",
-      "source_location": "L111",
+      "source_location": "L124",
       "id": "renderer_form_selecionartipo",
       "community": 6,
       "norm_label": "selecionartipo()"
@@ -3588,7 +3480,7 @@
       "label": "showStatus()",
       "file_type": "code",
       "source_file": "src/modules/widgetLancamentos/renderer/form.js",
-      "source_location": "L205",
+      "source_location": "L224",
       "id": "renderer_form_showstatus",
       "community": 6,
       "norm_label": "showstatus()"
@@ -3597,7 +3489,7 @@
       "label": "adjustWindowHeight()",
       "file_type": "code",
       "source_file": "src/modules/widgetLancamentos/renderer/form.js",
-      "source_location": "L238",
+      "source_location": "L257",
       "id": "renderer_form_adjustwindowheight",
       "community": 6,
       "norm_label": "adjustwindowheight()"
@@ -3664,33 +3556,6 @@
       "id": "repositories_anotacaorepository_updateanotacoes",
       "community": 20,
       "norm_label": "updateanotacoes()"
-    },
-    {
-      "label": "BackupRepository.js",
-      "file_type": "code",
-      "source_file": "src/repositories/BackupRepository.js",
-      "source_location": "L1",
-      "id": "src_repositories_backuprepository_js",
-      "community": 34,
-      "norm_label": "backuprepository.js"
-    },
-    {
-      "label": "db",
-      "file_type": "code",
-      "source_file": "src/repositories/BackupRepository.js",
-      "source_location": "L5",
-      "id": "repositories_backuprepository_db",
-      "community": 34,
-      "norm_label": "db"
-    },
-    {
-      "label": "getAllDataForBackup()",
-      "file_type": "code",
-      "source_file": "src/repositories/BackupRepository.js",
-      "source_location": "L7",
-      "id": "repositories_backuprepository_getalldataforbackup",
-      "community": 34,
-      "norm_label": "getalldataforbackup()"
     },
     {
       "label": "ConfiguracaoRepository.js",
@@ -3819,19 +3684,10 @@
       "norm_label": "ordemcardsrepository"
     },
     {
-      "label": "BackupRepository",
-      "file_type": "code",
-      "source_file": "src/repositories/FinanceiroRepository.js",
-      "source_location": "L17",
-      "id": "repositories_financeirorepository_backuprepository",
-      "community": 52,
-      "norm_label": "backuprepository"
-    },
-    {
       "label": "MesFechadoRepository",
       "file_type": "code",
       "source_file": "src/repositories/FinanceiroRepository.js",
-      "source_location": "L18",
+      "source_location": "L17",
       "id": "repositories_financeirorepository_mesfechadorepository",
       "community": 52,
       "norm_label": "mesfechadorepository"
@@ -3840,7 +3696,7 @@
       "label": "LajeadoRepository",
       "file_type": "code",
       "source_file": "src/repositories/FinanceiroRepository.js",
-      "source_location": "L19",
+      "source_location": "L18",
       "id": "repositories_financeirorepository_lajeadorepository",
       "community": 52,
       "norm_label": "lajeadorepository"
@@ -3849,7 +3705,7 @@
       "label": "TokenRepository",
       "file_type": "code",
       "source_file": "src/repositories/FinanceiroRepository.js",
-      "source_location": "L20",
+      "source_location": "L19",
       "id": "repositories_financeirorepository_tokenrepository",
       "community": 52,
       "norm_label": "tokenrepository"
@@ -3858,7 +3714,7 @@
       "label": "ConfiguracaoRepository",
       "file_type": "code",
       "source_file": "src/repositories/FinanceiroRepository.js",
-      "source_location": "L21",
+      "source_location": "L20",
       "id": "repositories_financeirorepository_configuracaorepository",
       "community": 52,
       "norm_label": "configuracaorepository"
@@ -4065,7 +3921,7 @@
       "label": "addLancamentosBulk()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L314",
+      "source_location": "L318",
       "id": "repositories_lancamentorepository_addlancamentosbulk",
       "community": 2,
       "norm_label": "addlancamentosbulk()"
@@ -4074,7 +3930,7 @@
       "label": "updateLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L360",
+      "source_location": "L364",
       "id": "repositories_lancamentorepository_updatelancamento",
       "community": 2,
       "norm_label": "updatelancamento()"
@@ -4083,7 +3939,7 @@
       "label": "updateStatus()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L380",
+      "source_location": "L384",
       "id": "repositories_lancamentorepository_updatestatus",
       "community": 2,
       "norm_label": "updatestatus()"
@@ -4092,7 +3948,7 @@
       "label": "updateConferido()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L384",
+      "source_location": "L388",
       "id": "repositories_lancamentorepository_updateconferido",
       "community": 2,
       "norm_label": "updateconferido()"
@@ -4101,7 +3957,7 @@
       "label": "updateConferidoExtrato()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L388",
+      "source_location": "L392",
       "id": "repositories_lancamentorepository_updateconferidoextrato",
       "community": 2,
       "norm_label": "updateconferidoextrato()"
@@ -4110,7 +3966,7 @@
       "label": "updateConferidoExtratoLote()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L393",
+      "source_location": "L397",
       "id": "repositories_lancamentorepository_updateconferidoextratolote",
       "community": 2,
       "norm_label": "updateconferidoextratolote()"
@@ -4119,7 +3975,7 @@
       "label": "updateStatusBatchPessoa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L406",
+      "source_location": "L410",
       "id": "repositories_lancamentorepository_updatestatusbatchpessoa",
       "community": 2,
       "norm_label": "updatestatusbatchpessoa()"
@@ -4128,7 +3984,7 @@
       "label": "updateConferidoBatchRecent()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L424",
+      "source_location": "L428",
       "id": "repositories_lancamentorepository_updateconferidobatchrecent",
       "community": 2,
       "norm_label": "updateconferidobatchrecent()"
@@ -4137,7 +3993,7 @@
       "label": "reorderLancamentos()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L443",
+      "source_location": "L447",
       "id": "repositories_lancamentorepository_reorderlancamentos",
       "community": 2,
       "norm_label": "reorderlancamentos()"
@@ -4146,7 +4002,7 @@
       "label": "getLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L465",
+      "source_location": "L469",
       "id": "repositories_lancamentorepository_getlancamento",
       "community": 2,
       "norm_label": "getlancamento()"
@@ -4155,7 +4011,7 @@
       "label": "getMesesAnosPorIds()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L470",
+      "source_location": "L474",
       "id": "repositories_lancamentorepository_getmesesanosporids",
       "community": 2,
       "norm_label": "getmesesanosporids()"
@@ -4164,7 +4020,7 @@
       "label": "deleteLancamento()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L479",
+      "source_location": "L483",
       "id": "repositories_lancamentorepository_deletelancamento",
       "community": 2,
       "norm_label": "deletelancamento()"
@@ -4173,7 +4029,7 @@
       "label": "deleteLancamentosPorPessoa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L483",
+      "source_location": "L487",
       "id": "repositories_lancamentorepository_deletelancamentosporpessoa",
       "community": 2,
       "norm_label": "deletelancamentosporpessoa()"
@@ -4182,7 +4038,7 @@
       "label": "deleteMonth()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L496",
+      "source_location": "L500",
       "id": "repositories_lancamentorepository_deletemonth",
       "community": 2,
       "norm_label": "deletemonth()"
@@ -4191,7 +4047,7 @@
       "label": "deleteLancamentosEmLote()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L508",
+      "source_location": "L512",
       "id": "repositories_lancamentorepository_deletelancamentosemlote",
       "community": 2,
       "norm_label": "deletelancamentosemlote()"
@@ -4200,7 +4056,7 @@
       "label": "moverLancamentosMes()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L520",
+      "source_location": "L524",
       "id": "repositories_lancamentorepository_moverlancamentosmes",
       "community": 2,
       "norm_label": "moverlancamentosmes()"
@@ -4209,7 +4065,7 @@
       "label": "copyMonth()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L536",
+      "source_location": "L540",
       "id": "repositories_lancamentorepository_copymonth",
       "community": 2,
       "norm_label": "copymonth()"
@@ -4218,7 +4074,7 @@
       "label": "getLancamentosTerceiro()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L607",
+      "source_location": "L667",
       "id": "repositories_lancamentorepository_getlancamentosterceiro",
       "community": 2,
       "norm_label": "getlancamentosterceiro()"
@@ -4227,7 +4083,7 @@
       "label": "getTotalTerceiroCartao()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L625",
+      "source_location": "L685",
       "id": "repositories_lancamentorepository_gettotalterceirocartao",
       "community": 2,
       "norm_label": "gettotalterceirocartao()"
@@ -4236,7 +4092,7 @@
       "label": "findAndUpdateOrCreateContaFixa()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L639",
+      "source_location": "L699",
       "id": "repositories_lancamentorepository_findandupdateorcreatecontafixa",
       "community": 2,
       "norm_label": "findandupdateorcreatecontafixa()"
@@ -4245,7 +4101,7 @@
       "label": "findAndUpdateOrCreateContaFixaComTerceiro()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L663",
+      "source_location": "L723",
       "id": "repositories_lancamentorepository_findandupdateorcreatecontafixacomterceiro",
       "community": 2,
       "norm_label": "findandupdateorcreatecontafixacomterceiro()"
@@ -4254,7 +4110,7 @@
       "label": "dividirConta()",
       "file_type": "code",
       "source_file": "src/repositories/LancamentoRepository.js",
-      "source_location": "L696",
+      "source_location": "L756",
       "id": "repositories_lancamentorepository_dividirconta",
       "community": 2,
       "norm_label": "dividirconta()"
@@ -4848,7 +4704,7 @@
       "label": "processarCopiaTotal()",
       "file_type": "code",
       "source_file": "src/services/syncService.js",
-      "source_location": "L54",
+      "source_location": "L70",
       "id": "services_syncservice_processarcopiatotal",
       "community": 10,
       "norm_label": "processarcopiatotal()"
@@ -4857,7 +4713,7 @@
       "label": "processarDivisaoCasa()",
       "file_type": "code",
       "source_file": "src/services/syncService.js",
-      "source_location": "L68",
+      "source_location": "L91",
       "id": "services_syncservice_processardivisaocasa",
       "community": 10,
       "norm_label": "processardivisaocasa()"
@@ -5364,33 +5220,6 @@
       "source_location": "L17",
       "id": "repositories_anotacaorepository_test_repo",
       "community": 20,
-      "norm_label": "repo"
-    },
-    {
-      "label": "BackupRepository.test.js",
-      "file_type": "code",
-      "source_file": "__tests__/repositories/BackupRepository.test.js",
-      "source_location": "L1",
-      "id": "tests_repositories_backuprepository_test_js",
-      "community": 34,
-      "norm_label": "backuprepository.test.js"
-    },
-    {
-      "label": "db",
-      "file_type": "code",
-      "source_file": "__tests__/repositories/BackupRepository.test.js",
-      "source_location": "L15",
-      "id": "repositories_backuprepository_test_db",
-      "community": 34,
-      "norm_label": "db"
-    },
-    {
-      "label": "repo",
-      "file_type": "code",
-      "source_file": "__tests__/repositories/BackupRepository.test.js",
-      "source_location": "L16",
-      "id": "repositories_backuprepository_test_repo",
-      "community": 34,
       "norm_label": "repo"
     },
     {
@@ -5979,49 +5808,85 @@
       "norm_label": "claude.md"
     },
     {
-      "label": "\ud83d\udee0\ufe0f Stack do Projeto",
+      "label": "Dodo Starter Pack - Manifesto Anti-Vibe Coding",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "id": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "community": 53,
+      "norm_label": "dodo starter pack - manifesto anti-vibe coding"
+    },
+    {
+      "label": "Regras Globais",
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L7",
+      "id": "contas_a_pagar_claude_regras_globais",
+      "community": 53,
+      "norm_label": "regras globais"
+    },
+    {
+      "label": "Stack do Projeto",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L20",
       "id": "contas_a_pagar_claude_stack_do_projeto",
       "community": 53,
-      "norm_label": "\ud83d\udee0\ufe0f stack do projeto"
+      "norm_label": "stack do projeto"
     },
     {
-      "label": "\ud83d\ude80 Comandos Essenciais",
+      "label": "Comandos Essenciais",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L14",
+      "source_location": "L27",
       "id": "contas_a_pagar_claude_comandos_essenciais",
       "community": 53,
-      "norm_label": "\ud83d\ude80 comandos essenciais"
+      "norm_label": "comandos essenciais"
     },
     {
-      "label": "\ud83d\udd12 Regras Inegoci\u00e1veis (Anti-Vibe Coding)",
+      "label": "Regras Inegociaveis (Anti-Vibe Coding)",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L32",
-      "id": "contas_a_pagar_claude_regras_inegoci\u00e1veis_anti_vibe_coding",
+      "source_location": "L42",
+      "id": "contas_a_pagar_claude_regras_inegociaveis_anti_vibe_coding",
       "community": 53,
-      "norm_label": "\ud83d\udd12 regras inegociaveis (anti-vibe coding)"
+      "norm_label": "regras inegociaveis (anti-vibe coding)"
     },
     {
-      "label": "\ud83d\udcc1 Estrutura de Dom\u00ednio Recomendada",
+      "label": "Modulariza\u00e7\u00e3o Obrigat\u00f3ria (Anti-Monolito)",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L39",
-      "id": "contas_a_pagar_claude_estrutura_de_dom\u00ednio_recomendada",
+      "source_location": "L49",
+      "id": "contas_a_pagar_claude_modulariza\u00e7\u00e3o_obrigat\u00f3ria_anti_monolito",
       "community": 53,
-      "norm_label": "\ud83d\udcc1 estrutura de dominio recomendada"
+      "norm_label": "modularizacao obrigatoria (anti-monolito)"
     },
     {
-      "label": "\ufffd\ufffd Setup Obrigat\u00f3rio (Primeira Execu\u00e7\u00e3o)",
+      "label": "Estrutura de Dominio Recomendada",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L53",
-      "id": "contas_a_pagar_claude_setup_obrigat\u00f3rio_primeira_execu\u00e7\u00e3o",
+      "source_location": "L75",
+      "id": "contas_a_pagar_claude_estrutura_de_dominio_recomendada",
       "community": 53,
-      "norm_label": "\ufffd\ufffd setup obrigatorio (primeira execucao)"
+      "norm_label": "estrutura de dominio recomendada"
+    },
+    {
+      "label": "Referencia Cruzada",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L89",
+      "id": "contas_a_pagar_claude_referencia_cruzada",
+      "community": 53,
+      "norm_label": "referencia cruzada"
+    },
+    {
+      "label": "Setup Obrigatorio (Primeira Execucao)",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L93",
+      "id": "contas_a_pagar_claude_setup_obrigatorio_primeira_execucao",
+      "community": 53,
+      "norm_label": "setup obrigatorio (primeira execucao)"
     },
     {
       "label": "GEMINI.md",
@@ -6153,7 +6018,7 @@
       "label": "\u26a1 Arquitetura e Alta Performance",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L187",
+      "source_location": "L188",
       "id": "contas_a_pagar_readme_arquitetura_e_alta_performance",
       "community": 12,
       "norm_label": "\u26a1 arquitetura e alta performance"
@@ -6162,7 +6027,7 @@
       "label": "\ud83e\ude7a Monitoramento e Keep Alive",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L203",
+      "source_location": "L204",
       "id": "contas_a_pagar_readme_monitoramento_e_keep_alive",
       "community": 12,
       "norm_label": "\ud83e\ude7a monitoramento e keep alive"
@@ -6171,7 +6036,7 @@
       "label": "Estrat\u00e9gia Adotada (Passo a Passo)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L207",
+      "source_location": "L208",
       "id": "contas_a_pagar_readme_estrat\u00e9gia_adotada_passo_a_passo",
       "community": 12,
       "norm_label": "estrategia adotada (passo a passo)"
@@ -6180,7 +6045,7 @@
       "label": "\ud83d\udd0d Endpoint `/health`",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L226",
+      "source_location": "L227",
       "id": "contas_a_pagar_readme_endpoint_health",
       "community": 12,
       "norm_label": "\ud83d\udd0d endpoint `/health`"
@@ -6189,7 +6054,7 @@
       "label": "\u2328\ufe0f Atalhos de Teclado (Power Users)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L250",
+      "source_location": "L251",
       "id": "contas_a_pagar_readme_atalhos_de_teclado_power_users",
       "community": 12,
       "norm_label": "\u2328\ufe0f atalhos de teclado (power users)"
@@ -6198,7 +6063,7 @@
       "label": "\u26a1 Automa\u00e7\u00e3o: C\u00f3pia Mensal de Contas",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L264",
+      "source_location": "L265",
       "id": "contas_a_pagar_readme_automa\u00e7\u00e3o_c\u00f3pia_mensal_de_contas",
       "community": 12,
       "norm_label": "\u26a1 automacao: copia mensal de contas"
@@ -6207,7 +6072,7 @@
       "label": "Como Configurar (Google Apps Script)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L268",
+      "source_location": "L269",
       "id": "contas_a_pagar_readme_como_configurar_google_apps_script",
       "community": 12,
       "norm_label": "como configurar (google apps script)"
@@ -6216,7 +6081,7 @@
       "label": "Seguran\u00e7a",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L315",
+      "source_location": "L316",
       "id": "contas_a_pagar_readme_seguran\u00e7a",
       "community": 12,
       "norm_label": "seguranca"
@@ -6225,7 +6090,7 @@
       "label": "\ud83d\udee0\ufe0f Tecnologias Utilizadas",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L321",
+      "source_location": "L322",
       "id": "contas_a_pagar_readme_tecnologias_utilizadas",
       "community": 12,
       "norm_label": "\ud83d\udee0\ufe0f tecnologias utilizadas"
@@ -6234,7 +6099,7 @@
       "label": "\ud83c\udfd7\ufe0f Arquitetura",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L339",
+      "source_location": "L340",
       "id": "contas_a_pagar_readme_arquitetura",
       "community": 12,
       "norm_label": "\ud83c\udfd7\ufe0f arquitetura"
@@ -6243,7 +6108,7 @@
       "label": "\ud83d\udcc2 Estrutura do Projeto",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L361",
+      "source_location": "L362",
       "id": "contas_a_pagar_readme_estrutura_do_projeto",
       "community": 12,
       "norm_label": "\ud83d\udcc2 estrutura do projeto"
@@ -6252,7 +6117,7 @@
       "label": "\ud83d\ude80 Instala\u00e7\u00e3o e Configura\u00e7\u00e3o Local",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L430",
+      "source_location": "L431",
       "id": "contas_a_pagar_readme_instala\u00e7\u00e3o_e_configura\u00e7\u00e3o_local",
       "community": 12,
       "norm_label": "\ud83d\ude80 instalacao e configuracao local"
@@ -6261,7 +6126,7 @@
       "label": "1\ufe0f\u20e3 Clonar",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L432",
+      "source_location": "L433",
       "id": "contas_a_pagar_readme_1_clonar",
       "community": 12,
       "norm_label": "1\ufe0f\u20e3 clonar"
@@ -6270,7 +6135,7 @@
       "label": "2\ufe0f\u20e3 Instalar Depend\u00eancias",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L439",
+      "source_location": "L440",
       "id": "contas_a_pagar_readme_2_instalar_depend\u00eancias",
       "community": 12,
       "norm_label": "2\ufe0f\u20e3 instalar dependencias"
@@ -6279,7 +6144,7 @@
       "label": "3\ufe0f\u20e3 Criar Banco de Dados",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L445",
+      "source_location": "L446",
       "id": "contas_a_pagar_readme_3_criar_banco_de_dados",
       "community": 12,
       "norm_label": "3\ufe0f\u20e3 criar banco de dados"
@@ -6288,7 +6153,7 @@
       "label": "4\ufe0f\u20e3 Vari\u00e1veis de Ambiente",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L576",
+      "source_location": "L577",
       "id": "contas_a_pagar_readme_4_vari\u00e1veis_de_ambiente",
       "community": 12,
       "norm_label": "4\ufe0f\u20e3 variaveis de ambiente"
@@ -6297,7 +6162,7 @@
       "label": "5\ufe0f\u20e3 Rodar",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L595",
+      "source_location": "L596",
       "id": "contas_a_pagar_readme_5_rodar",
       "community": 12,
       "norm_label": "5\ufe0f\u20e3 rodar"
@@ -6306,7 +6171,7 @@
       "label": "\ud83e\uddea Testes Automatizados (Jest & Supertest)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L605",
+      "source_location": "L606",
       "id": "contas_a_pagar_readme_testes_automatizados_jest_supertest",
       "community": 12,
       "norm_label": "\ud83e\uddea testes automatizados (jest & supertest)"
@@ -6315,7 +6180,7 @@
       "label": "\u2601\ufe0f Deploy (Render + Neon)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L632",
+      "source_location": "L633",
       "id": "contas_a_pagar_readme_deploy_render_neon",
       "community": 12,
       "norm_label": "\u2601\ufe0f deploy (render + neon)"
@@ -6324,7 +6189,7 @@
       "label": "Neon",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L634",
+      "source_location": "L635",
       "id": "contas_a_pagar_readme_neon",
       "community": 12,
       "norm_label": "neon"
@@ -6333,7 +6198,7 @@
       "label": "Render",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L640",
+      "source_location": "L641",
       "id": "contas_a_pagar_readme_render",
       "community": 12,
       "norm_label": "render"
@@ -6342,8 +6207,8 @@
       "label": "\ud83d\udd12 Seguran\u00e7a",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L650",
-      "id": "contas_a_pagar_readme_seguran\u00e7a_650",
+      "source_location": "L651",
+      "id": "contas_a_pagar_readme_seguran\u00e7a_651",
       "community": 12,
       "norm_label": "\ud83d\udd12 seguranca"
     },
@@ -6351,7 +6216,7 @@
       "label": "\ud83d\udca1 Dicas de Uso",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L664",
+      "source_location": "L665",
       "id": "contas_a_pagar_readme_dicas_de_uso",
       "community": 12,
       "norm_label": "\ud83d\udca1 dicas de uso"
@@ -6360,7 +6225,7 @@
       "label": "\ud83c\udfaf Objetivos do Projeto",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L676",
+      "source_location": "L677",
       "id": "contas_a_pagar_readme_objetivos_do_projeto",
       "community": 12,
       "norm_label": "\ud83c\udfaf objetivos do projeto"
@@ -6369,7 +6234,7 @@
       "label": "\ud83d\udcc4 Licen\u00e7a",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L687",
+      "source_location": "L688",
       "id": "contas_a_pagar_readme_licen\u00e7a",
       "community": 12,
       "norm_label": "\ud83d\udcc4 licenca"
@@ -6418,6 +6283,78 @@
       "id": "rules_antigravity_rtk_rules_why",
       "community": 56,
       "norm_label": "why"
+    },
+    {
+      "label": "gsdcommit.md",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L1",
+      "id": "claude_agents_gsdcommit_md",
+      "community": 34,
+      "norm_label": "gsdcommit.md"
+    },
+    {
+      "label": "GSD Commit Agent",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L7",
+      "id": "agents_gsdcommit_gsd_commit_agent",
+      "community": 34,
+      "norm_label": "gsd commit agent"
+    },
+    {
+      "label": "Fun\u00e7\u00e3o",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L9",
+      "id": "agents_gsdcommit_fun\u00e7\u00e3o",
+      "community": 34,
+      "norm_label": "funcao"
+    },
+    {
+      "label": "Regras Absolutas",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L15",
+      "id": "agents_gsdcommit_regras_absolutas",
+      "community": 34,
+      "norm_label": "regras absolutas"
+    },
+    {
+      "label": "Formato da Mensagem",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L25",
+      "id": "agents_gsdcommit_formato_da_mensagem",
+      "community": 34,
+      "norm_label": "formato da mensagem"
+    },
+    {
+      "label": "Tipos V\u00e1lidos",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L44",
+      "id": "agents_gsdcommit_tipos_v\u00e1lidos",
+      "community": 34,
+      "norm_label": "tipos validos"
+    },
+    {
+      "label": "Exemplo de Sa\u00edda",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L55",
+      "id": "agents_gsdcommit_exemplo_de_sa\u00edda",
+      "community": 34,
+      "norm_label": "exemplo de saida"
+    },
+    {
+      "label": "Fluxo de Trabalho",
+      "file_type": "document",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L76",
+      "id": "agents_gsdcommit_fluxo_de_trabalho",
+      "community": 34,
+      "norm_label": "fluxo de trabalho"
     },
     {
       "label": "GSD_FLOW.md",
@@ -7203,105 +7140,6 @@
       "norm_label": "\ud83d\udcc4 licenca"
     },
     {
-      "label": "lessons.md",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L1",
-      "id": "tasks_lessons_md",
-      "community": 65,
-      "norm_label": "lessons.md"
-    },
-    {
-      "label": "Lessons Learned \u2014 Registro de Padr\u00f5es de Erro e Regras Preventivas",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L1",
-      "id": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
-      "community": 65,
-      "norm_label": "lessons learned \u2014 registro de padroes de erro e regras preventivas"
-    },
-    {
-      "label": "Neon Postgres / Serverless DB",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L8",
-      "id": "tasks_lessons_neon_postgres_serverless_db",
-      "community": 65,
-      "norm_label": "neon postgres / serverless db"
-    },
-    {
-      "label": "[LESSON-20260601-01] Lock Contention em DB Serverless (Neon)",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L10",
-      "id": "tasks_lessons_lesson_20260601_01_lock_contention_em_db_serverless_neon",
-      "community": 65,
-      "norm_label": "[lesson-20260601-01] lock contention em db serverless (neon)"
-    },
-    {
-      "label": "[LESSON-20260601-02] Pool Connection Contamination p\u00f3s-Transa\u00e7\u00e3o",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L20",
-      "id": "tasks_lessons_lesson_20260601_02_pool_connection_contamination_p\u00f3s_transa\u00e7\u00e3o",
-      "community": 65,
-      "norm_label": "[lesson-20260601-02] pool connection contamination pos-transacao"
-    },
-    {
-      "label": "Frontend / UX",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L31",
-      "id": "tasks_lessons_frontend_ux",
-      "community": 65,
-      "norm_label": "frontend / ux"
-    },
-    {
-      "label": "[LESSON-20260601-03] Race Condition entre history.back() e Modais",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L33",
-      "id": "tasks_lessons_lesson_20260601_03_race_condition_entre_history_back_e_modais",
-      "community": 65,
-      "norm_label": "[lesson-20260601-03] race condition entre history.back() e modais"
-    },
-    {
-      "label": "[LESSON-20260601-04] window.location.reload() em SPAs com Sess\u00e3o",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L39",
-      "id": "tasks_lessons_lesson_20260601_04_window_location_reload_em_spas_com_sess\u00e3o",
-      "community": 65,
-      "norm_label": "[lesson-20260601-04] window.location.reload() em spas com sessao"
-    },
-    {
-      "label": "Debug / Metodologia",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L50",
-      "id": "tasks_lessons_debug_metodologia",
-      "community": 65,
-      "norm_label": "debug / metodologia"
-    },
-    {
-      "label": "[LESSON-20260601-05] Logs de Ping com Timestamp Relativo para Identificar Gargalos",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L52",
-      "id": "tasks_lessons_lesson_20260601_05_logs_de_ping_com_timestamp_relativo_para_identificar_gargalos",
-      "community": 65,
-      "norm_label": "[lesson-20260601-05] logs de ping com timestamp relativo para identificar gargalos"
-    },
-    {
-      "label": "[LESSON-20260601-06] Servidor Precisa Ser Reiniciado Ap\u00f3s Edi\u00e7\u00f5es Backend",
-      "file_type": "document",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L63",
-      "id": "tasks_lessons_lesson_20260601_06_servidor_precisa_ser_reiniciado_ap\u00f3s_edi\u00e7\u00f5es_backend",
-      "community": 65,
-      "norm_label": "[lesson-20260601-06] servidor precisa ser reiniciado apos edicoes backend"
-    },
-    {
       "label": "README.md",
       "file_type": "document",
       "source_file": "__tests__/README.md",
@@ -7444,6 +7282,150 @@
       "id": "tests_readme_dicas",
       "community": 38,
       "norm_label": "dicas"
+    },
+    {
+      "label": "BackupRepository",
+      "file_type": "code",
+      "source_file": "src/repositories/FinanceiroRepository.js",
+      "source_location": "L17",
+      "community": 52,
+      "norm_label": "backuprepository",
+      "id": "repositories_financeirorepository_backuprepository"
+    },
+    {
+      "label": "\ud83d\udd12 Regras Inegoci\u00e1veis (Anti-Vibe Coding)",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L32",
+      "community": 53,
+      "norm_label": "\ud83d\udd12 regras inegociaveis (anti-vibe coding)",
+      "id": "contas_a_pagar_claude_regras_inegoci\u00e1veis_anti_vibe_coding"
+    },
+    {
+      "label": "\ud83d\udcc1 Estrutura de Dom\u00ednio Recomendada",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L39",
+      "community": 53,
+      "norm_label": "\ud83d\udcc1 estrutura de dominio recomendada",
+      "id": "contas_a_pagar_claude_estrutura_de_dom\u00ednio_recomendada"
+    },
+    {
+      "label": "\ufffd\ufffd Setup Obrigat\u00f3rio (Primeira Execu\u00e7\u00e3o)",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L53",
+      "community": 53,
+      "norm_label": "\ufffd\ufffd setup obrigatorio (primeira execucao)",
+      "id": "contas_a_pagar_claude_setup_obrigat\u00f3rio_primeira_execu\u00e7\u00e3o"
+    },
+    {
+      "label": "\ud83d\udd12 Seguran\u00e7a",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L650",
+      "community": 12,
+      "norm_label": "\ud83d\udd12 seguranca",
+      "id": "contas_a_pagar_readme_seguran\u00e7a_650"
+    },
+    {
+      "label": "lessons.md",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L1",
+      "community": 65,
+      "norm_label": "lessons.md",
+      "id": "tasks_lessons_md"
+    },
+    {
+      "label": "Lessons Learned \u2014 Registro de Padr\u00f5es de Erro e Regras Preventivas",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L1",
+      "community": 65,
+      "norm_label": "lessons learned \u2014 registro de padroes de erro e regras preventivas",
+      "id": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas"
+    },
+    {
+      "label": "Neon Postgres / Serverless DB",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L8",
+      "community": 65,
+      "norm_label": "neon postgres / serverless db",
+      "id": "tasks_lessons_neon_postgres_serverless_db"
+    },
+    {
+      "label": "[LESSON-20260601-01] Lock Contention em DB Serverless (Neon)",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L10",
+      "community": 65,
+      "norm_label": "[lesson-20260601-01] lock contention em db serverless (neon)",
+      "id": "tasks_lessons_lesson_20260601_01_lock_contention_em_db_serverless_neon"
+    },
+    {
+      "label": "[LESSON-20260601-02] Pool Connection Contamination p\u00f3s-Transa\u00e7\u00e3o",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L20",
+      "community": 65,
+      "norm_label": "[lesson-20260601-02] pool connection contamination pos-transacao",
+      "id": "tasks_lessons_lesson_20260601_02_pool_connection_contamination_p\u00f3s_transa\u00e7\u00e3o"
+    },
+    {
+      "label": "Frontend / UX",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L31",
+      "community": 65,
+      "norm_label": "frontend / ux",
+      "id": "tasks_lessons_frontend_ux"
+    },
+    {
+      "label": "[LESSON-20260601-03] Race Condition entre history.back() e Modais",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L33",
+      "community": 65,
+      "norm_label": "[lesson-20260601-03] race condition entre history.back() e modais",
+      "id": "tasks_lessons_lesson_20260601_03_race_condition_entre_history_back_e_modais"
+    },
+    {
+      "label": "[LESSON-20260601-04] window.location.reload() em SPAs com Sess\u00e3o",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L39",
+      "community": 65,
+      "norm_label": "[lesson-20260601-04] window.location.reload() em spas com sessao",
+      "id": "tasks_lessons_lesson_20260601_04_window_location_reload_em_spas_com_sess\u00e3o"
+    },
+    {
+      "label": "Debug / Metodologia",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L50",
+      "community": 65,
+      "norm_label": "debug / metodologia",
+      "id": "tasks_lessons_debug_metodologia"
+    },
+    {
+      "label": "[LESSON-20260601-05] Logs de Ping com Timestamp Relativo para Identificar Gargalos",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L52",
+      "community": 65,
+      "norm_label": "[lesson-20260601-05] logs de ping com timestamp relativo para identificar gargalos",
+      "id": "tasks_lessons_lesson_20260601_05_logs_de_ping_com_timestamp_relativo_para_identificar_gargalos"
+    },
+    {
+      "label": "[LESSON-20260601-06] Servidor Precisa Ser Reiniciado Ap\u00f3s Edi\u00e7\u00f5es Backend",
+      "file_type": "document",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L63",
+      "community": 65,
+      "norm_label": "[lesson-20260601-06] servidor precisa ser reiniciado apos edicoes backend",
+      "id": "tasks_lessons_lesson_20260601_06_servidor_precisa_ser_reiniciado_ap\u00f3s_edi\u00e7\u00f5es_backend"
     },
     {
       "label": "\ud83d\udd12 Seguran\u00e7a",
@@ -7632,26 +7614,6 @@
       "confidence_score": 1.0,
       "source": "contas_a_pagar_eslintrc_rules",
       "target": "contas_a_pagar_eslintrc_rules_prefer_const"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "check_db.js",
-      "source_location": "L2",
-      "weight": 1.0,
-      "source": "check_db_js",
-      "target": "contas_a_pagar_check_db_db",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "check_db.js",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "check_db_js",
-      "target": "contas_a_pagar_check_db_run",
-      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8072,77 +8034,6 @@
       "confidence_score": 1.0,
       "source": "setup_sh",
       "target": "d_onedrive_douglas_onedrive_pessoal_dodo_programacao_git_contas_a_pagar_setup_sh__entry"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "test_pool.js",
-      "source_location": "L2",
-      "weight": 1.0,
-      "source": "test_pool_js",
-      "target": "contas_a_pagar_test_pool_repo",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "test_pool.js",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "test_pool_js",
-      "target": "contas_a_pagar_test_pool_run",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "test_pool.js",
-      "source_location": "L2",
-      "weight": 1.0,
-      "source": "test_pool_js",
-      "target": "src_repositories_lancamentorepository_js",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L2",
-      "weight": 1.0,
-      "source": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_json",
-      "target": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_id",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L3",
-      "weight": 1.0,
-      "source": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_json",
-      "target": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_name",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L4",
-      "weight": 1.0,
-      "source": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_json",
-      "target": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_projectresources",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".antigravitycli/f5b2da58-549a-495d-89be-730e72033b6b.json",
-      "source_location": "L5",
-      "weight": 1.0,
-      "source": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_projectresources",
-      "target": "antigravitycli_f5b2da58_549a_495d_89be_730e72033b6b_projectresources_resources",
-      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8896,9 +8787,9 @@
       "source_file": "public/js/app.js",
       "source_location": "L445",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "js_app_confirmardivisaoconta",
-      "target": "js_app_softrefreshsafe",
-      "confidence_score": 1.0
+      "target": "js_app_softrefreshsafe"
     },
     {
       "relation": "calls",
@@ -14586,48 +14477,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/repositories/BackupRepository.js",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_repositories_backuprepository_js",
-      "target": "repositories_backuprepository_db"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/repositories/BackupRepository.js",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_repositories_backuprepository_js",
-      "target": "repositories_backuprepository_getalldataforbackup"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/repositories/FinanceiroRepository.js",
-      "source_location": "L17",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_repositories_financeirorepository_js",
-      "target": "src_repositories_backuprepository_js"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "__tests__/repositories/BackupRepository.test.js",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_repositories_backuprepository_test_js",
-      "target": "src_repositories_backuprepository_js"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "src/repositories/ConfiguracaoRepository.js",
       "source_location": "L5",
       "weight": 1.0,
@@ -15388,9 +15237,9 @@
       "source_file": "src/repositories/LancamentoRepository.js",
       "source_location": "L766",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "repositories_lancamentorepository_dividirconta",
-      "target": "repositories_lancamentorepository_getmesrange",
-      "confidence_score": 1.0
+      "target": "repositories_lancamentorepository_getmesrange"
     },
     {
       "relation": "calls",
@@ -15534,6 +15383,17 @@
       "confidence_score": 1.0,
       "source": "repositories_lancamentorepository_updatestatusbatchpessoa",
       "target": "repositories_lancamentorepository_getmesrange"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/repositories/LancamentoRepository.js",
+      "source_location": "L292",
+      "weight": 1.0,
+      "source": "repositories_lancamentorepository_addlancamento",
+      "target": "repositories_lancamentorepository_normalizarterceiro",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16869,26 +16729,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "__tests__/repositories/BackupRepository.test.js",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_repositories_backuprepository_test_js",
-      "target": "repositories_backuprepository_test_db"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "__tests__/repositories/BackupRepository.test.js",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_repositories_backuprepository_test_js",
-      "target": "repositories_backuprepository_test_repo"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "__tests__/repositories/ConfiguracaoRepository.test.js",
       "source_location": "L9",
       "weight": 1.0,
@@ -17468,6 +17308,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "claude_md",
+      "target": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
       "source_location": "L39",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -17503,6 +17353,86 @@
       "confidence_score": 1.0,
       "source": "claude_md",
       "target": "contas_a_pagar_claude_stack_do_projeto"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_comandos_essenciais",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_estrutura_de_dominio_recomendada",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_modulariza\u00e7\u00e3o_obrigat\u00f3ria_anti_monolito",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_referencia_cruzada",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_regras_globais",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_regras_inegociaveis_anti_vibe_coding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_setup_obrigatorio_primeira_execucao",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "contas_a_pagar_claude_dodo_starter_pack_manifesto_anti_vibe_coding",
+      "target": "contas_a_pagar_claude_stack_do_projeto",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -17660,8 +17590,18 @@
       "source_file": "README.md",
       "source_location": "L650",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "contas_a_pagar_readme_gest\u00e3o_financeira_pessoal_micro_saas_edition",
-      "target": "contas_a_pagar_readme_seguran\u00e7a_650",
+      "target": "contas_a_pagar_readme_seguran\u00e7a_650"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L651",
+      "weight": 1.0,
+      "source": "contas_a_pagar_readme_gest\u00e3o_financeira_pessoal_micro_saas_edition",
+      "target": "contas_a_pagar_readme_seguran\u00e7a_651",
       "confidence_score": 1.0
     },
     {
@@ -17923,6 +17863,76 @@
       "confidence_score": 1.0,
       "source": "rules_antigravity_rtk_rules_rtk_rust_token_killer_google_antigravity",
       "target": "rules_antigravity_rtk_rules_why"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "claude_agents_gsdcommit_md",
+      "target": "agents_gsdcommit_gsd_commit_agent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "agents_gsdcommit_gsd_commit_agent",
+      "target": "agents_gsdcommit_exemplo_de_sa\u00edda",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "agents_gsdcommit_gsd_commit_agent",
+      "target": "agents_gsdcommit_fluxo_de_trabalho",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "agents_gsdcommit_gsd_commit_agent",
+      "target": "agents_gsdcommit_formato_da_mensagem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "agents_gsdcommit_gsd_commit_agent",
+      "target": "agents_gsdcommit_fun\u00e7\u00e3o",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "agents_gsdcommit_gsd_commit_agent",
+      "target": "agents_gsdcommit_regras_absolutas",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/agents/gsdcommit.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "agents_gsdcommit_gsd_commit_agent",
+      "target": "agents_gsdcommit_tipos_v\u00e1lidos",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -18747,106 +18757,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "tasks_lessons_md",
-      "target": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L50",
-      "weight": 1.0,
-      "source": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
-      "target": "tasks_lessons_debug_metodologia",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L31",
-      "weight": 1.0,
-      "source": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
-      "target": "tasks_lessons_frontend_ux",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L8",
-      "weight": 1.0,
-      "source": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
-      "target": "tasks_lessons_neon_postgres_serverless_db",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L10",
-      "weight": 1.0,
-      "source": "tasks_lessons_neon_postgres_serverless_db",
-      "target": "tasks_lessons_lesson_20260601_01_lock_contention_em_db_serverless_neon",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L20",
-      "weight": 1.0,
-      "source": "tasks_lessons_neon_postgres_serverless_db",
-      "target": "tasks_lessons_lesson_20260601_02_pool_connection_contamination_p\u00f3s_transa\u00e7\u00e3o",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L33",
-      "weight": 1.0,
-      "source": "tasks_lessons_frontend_ux",
-      "target": "tasks_lessons_lesson_20260601_03_race_condition_entre_history_back_e_modais",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L39",
-      "weight": 1.0,
-      "source": "tasks_lessons_frontend_ux",
-      "target": "tasks_lessons_lesson_20260601_04_window_location_reload_em_spas_com_sess\u00e3o",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L52",
-      "weight": 1.0,
-      "source": "tasks_lessons_debug_metodologia",
-      "target": "tasks_lessons_lesson_20260601_05_logs_de_ping_com_timestamp_relativo_para_identificar_gargalos",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tasks/lessons.md",
-      "source_location": "L63",
-      "weight": 1.0,
-      "source": "tasks_lessons_debug_metodologia",
-      "target": "tasks_lessons_lesson_20260601_06_servidor_precisa_ser_reiniciado_ap\u00f3s_edi\u00e7\u00f5es_backend",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "__tests__/README.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -18993,8 +18903,108 @@
       "confidence_score": 1.0,
       "source": "tests_readme_como_ler_o_resultado",
       "target": "tests_readme_tudo_certo"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_md",
+      "target": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
+      "target": "tasks_lessons_debug_metodologia"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
+      "target": "tasks_lessons_frontend_ux"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_lessons_learned_registro_de_padr\u00f5es_de_erro_e_regras_preventivas",
+      "target": "tasks_lessons_neon_postgres_serverless_db"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_neon_postgres_serverless_db",
+      "target": "tasks_lessons_lesson_20260601_01_lock_contention_em_db_serverless_neon"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_neon_postgres_serverless_db",
+      "target": "tasks_lessons_lesson_20260601_02_pool_connection_contamination_p\u00f3s_transa\u00e7\u00e3o"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_frontend_ux",
+      "target": "tasks_lessons_lesson_20260601_03_race_condition_entre_history_back_e_modais"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_frontend_ux",
+      "target": "tasks_lessons_lesson_20260601_04_window_location_reload_em_spas_com_sess\u00e3o"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_debug_metodologia",
+      "target": "tasks_lessons_lesson_20260601_05_logs_de_ping_com_timestamp_relativo_para_identificar_gargalos"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tasks/lessons.md",
+      "source_location": "L63",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tasks_lessons_debug_metodologia",
+      "target": "tasks_lessons_lesson_20260601_06_servidor_precisa_ser_reiniciado_ap\u00f3s_edi\u00e7\u00f5es_backend"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "165bbdb8439020004f96b78336faff4d157efd99"
+  "built_at_commit": "74c72253e9587754e6e91c20ec228733b090f74f"
 }

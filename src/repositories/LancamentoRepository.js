@@ -43,7 +43,7 @@ async function getUltimosLancamentos(userId) {
           FROM Lancamentos 
           WHERE UsuarioId = $1 
           ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
-          LIMIT 100
+          LIMIT 20
       ),
       Unicos AS (
           SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, '')) 
