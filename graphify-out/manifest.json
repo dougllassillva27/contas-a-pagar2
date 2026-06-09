@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\app.js": {
-    "mtime": 1780354160.6192331,
-    "ast_hash": "3bae9f1527e036d465609d94b9e25879",
+    "mtime": 1780432210.60513,
+    "ast_hash": "3343ef6c1284cc45f4a631bb5b33d427",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\app.test.js": {
@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\ui.js": {
-    "mtime": 1780259365.0625587,
-    "ast_hash": "857f4900690fb120406374b553ba43d1",
+    "mtime": 1780495221.1004617,
+    "ast_hash": "5fccaa055df4dc7488393c0aa9078f66",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\js\\utils.js": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\widgetLancamentos\\renderer\\form.js": {
-    "mtime": 1779669884.367381,
-    "ast_hash": "0ffa138856b647048a8c1975c667799e",
+    "mtime": 1780401855.2204647,
+    "ast_hash": "54e090d3cb035c5f35d14831aa54a802",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\modules\\widgetLancamentos\\__tests__\\api.test.js": {
@@ -212,11 +212,6 @@
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\AnotacaoRepository.js": {
     "mtime": 1772538946.0,
     "ast_hash": "30cbab5803e47ac8b2ccd0d11e7c7b2d",
-    "semantic_hash": ""
-  },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\BackupRepository.js": {
-    "mtime": 1771848247.0,
-    "ast_hash": "0c2613338beace5121b82e5e2246d5ab",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\ConfiguracaoRepository.js": {
@@ -230,8 +225,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\FinanceiroRepository.js": {
-    "mtime": 1777604339.587835,
-    "ast_hash": "8572d7847d2c7d9d1a0716d6f3de6138",
+    "mtime": 1780495221.1034527,
+    "ast_hash": "798320891527c39f682cb1bf53569f6a",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\LajeadoRepository.js": {
@@ -240,8 +235,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\LancamentoRepository.js": {
-    "mtime": 1780352240.894389,
-    "ast_hash": "a4b7d01a1034280d12e44bef71586712",
+    "mtime": 1780495221.105447,
+    "ast_hash": "5da8d2d75a41fd01f342584d86bad16e",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\repositories\\MesFechadoRepository.js": {
@@ -265,8 +260,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\apiRoutes.js": {
-    "mtime": 1780350861.277748,
-    "ast_hash": "88616e135634d2eaeefe2dfe9b35d995",
+    "mtime": 1780606507.38922,
+    "ast_hash": "bd06739832613330e9b590270dd19c31",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\authRoutes.js": {
@@ -280,8 +275,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\integrationRoutes.js": {
-    "mtime": 1774957004.162421,
-    "ast_hash": "d475f81095c5c5b37e325475389c223e",
+    "mtime": 1780495221.108435,
+    "ast_hash": "1c58955f2abad3374359a4c7642ab9de",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\routes\\publicRoutes.js": {
@@ -295,8 +290,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\services\\syncService.js": {
-    "mtime": 1779580456.4993033,
-    "ast_hash": "3ab878a77b71bc217aea391c3afe74ee",
+    "mtime": 1780602283.820463,
+    "ast_hash": "d6579ec9bb3aec49dcfca568bdac4343",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\src\\views\\index.ejs": {
@@ -385,8 +380,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\config\\db.test.js": {
-    "mtime": 1779472014.7524977,
-    "ast_hash": "a57b61cac44fa430dd737f0497163c61",
+    "mtime": 1780495221.0984702,
+    "ast_hash": "449df4fc04c12be384a7cb4216bb07b1",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\dataHora\\dataHora.test.js": {
@@ -432,11 +427,6 @@
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\AnotacaoRepository.test.js": {
     "mtime": 1776469650.582499,
     "ast_hash": "17f64fda661bd1eb53964bd62e3be8d6",
-    "semantic_hash": ""
-  },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\BackupRepository.test.js": {
-    "mtime": 1776470917.7831037,
-    "ast_hash": "2becee4462a9796b7d55cb5b0ab65938",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\repositories\\ConfiguracaoRepository.test.js": {
@@ -515,8 +505,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\README.md": {
-    "mtime": 1780358346.601767,
-    "ast_hash": "53a50c46c366364eb427eeb4dacbf503",
+    "mtime": 1780365125.450107,
+    "ast_hash": "bc6185aa82988b2f638b185b84785bba",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\resumo-de-trabalho.md": {
@@ -604,11 +594,6 @@
     "ast_hash": "a98b11296b2d15cb73e10e08abc1d238",
     "semantic_hash": ""
   },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\_contexto-ia\\Geral.md": {
-    "mtime": 1779585069.9930334,
-    "ast_hash": "4c74e68a8455565d067b6a7d821765c7",
-    "semantic_hash": ""
-  },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\__tests__\\README.md": {
     "mtime": 1776486716.0719576,
     "ast_hash": "9187ab217897c95ad2dc99ef1f4aff02",
@@ -664,21 +649,6 @@
     "ast_hash": "6bd00ada6e05aa78260466c3a617e2ce",
     "semantic_hash": ""
   },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\_contexto-ia\\Prints\\bordas.png": {
-    "mtime": 1779398820.4445283,
-    "ast_hash": "3a0834ddfe901d201fa93e33ab33b269",
-    "semantic_hash": ""
-  },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\_contexto-ia\\Prints\\sistema.png": {
-    "mtime": 1779397437.4859123,
-    "ast_hash": "2b4bcb979e18bb8dad2ac1fb2a4a4924",
-    "semantic_hash": ""
-  },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\_contexto-ia\\Prints\\widget.png": {
-    "mtime": 1779397379.112217,
-    "ast_hash": "4eb04bf55576eac71f18a6aac3d7ff27",
-    "semantic_hash": ""
-  },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\.eslintrc.json": {
     "mtime": 1779729107.9002295,
     "ast_hash": "d3d804ef7d8d4ed60d67d36326f53fcc",
@@ -699,14 +669,9 @@
     "ast_hash": "ef35e0202201195fdd67c5430268f5ad",
     "semantic_hash": ""
   },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\_fix_softrefresh.ps1": {
-    "mtime": 1780263567.390214,
-    "ast_hash": "9681696e3faebf3954bc974d8f4114e8",
-    "semantic_hash": ""
-  },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\.claude\\settings.local.json": {
-    "mtime": 1780264159.5702076,
-    "ast_hash": "fe066fbbb80c1dc6c2e8c393710ae9b9",
+    "mtime": 1780399385.897784,
+    "ast_hash": "9537593e5a8867e91f451d5d3e4cf8b6",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\public\\manifest.json": {
@@ -735,8 +700,8 @@
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\CLAUDE.md": {
-    "mtime": 1779991539.9349017,
-    "ast_hash": "2202f65b234108c46857b356fd8f459d",
+    "mtime": 1780797856.426531,
+    "ast_hash": "a80caca1a3a4128465c67efb3bac2152",
     "semantic_hash": ""
   },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\GEMINI.md": {
@@ -764,16 +729,6 @@
     "ast_hash": "1b762a900ec3060119ec451955ce0fdf",
     "semantic_hash": ""
   },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\check_db.js": {
-    "mtime": 1780352014.6918144,
-    "ast_hash": "892d71af92467f6aefabcd8cd91280e7",
-    "semantic_hash": ""
-  },
-  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\test_pool.js": {
-    "mtime": 1780352073.3467743,
-    "ast_hash": "df7140ff95124a706914dcd71c6688a6",
-    "semantic_hash": ""
-  },
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\.antigravitycli\\f5b2da58-549a-495d-89be-730e72033b6b.json": {
     "mtime": 1780351403.5667856,
     "ast_hash": "42fd3f27f52ae8321b5b881b5bb44ca1",
@@ -782,6 +737,11 @@
   "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\tasks\\lessons.md": {
     "mtime": 1780355247.5409112,
     "ast_hash": "b8d6aa72978eccb450f6424ee7e134a4",
+    "semantic_hash": ""
+  },
+  "D:\\Onedrive - Douglas\\OneDrive\\Pessoal\\Dodo\\Programacao\\Git\\contas-a-pagar\\.claude\\agents\\gsdcommit.md": {
+    "mtime": 1780605376.4992883,
+    "ast_hash": "c983924b09118055f20eb2fb9149a7c9",
     "semantic_hash": ""
   }
 }

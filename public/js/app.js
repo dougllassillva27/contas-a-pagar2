@@ -465,15 +465,18 @@ async function confirmarDivisaoConta() {
 
 // --- OUTRAS FUNÇÕES ---
 async function abrirModalUltimas() {
-  registerModalOpen();
-  document.getElementById('modalUltimasContas').classList.add('active');
-
-  const tbody = document.getElementById('listaUltimasConteudo');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+  // Carrega dados ANTES de abrir o modal para evitar percepção de lentidão
+  const loadingHtml = '<tr><td colspan="6" style="text-align:center; padding:20px;">Carregando...</td></tr>';
 
   try {
     const res = await fetch('/api/lancamentos/recentes');
     const data = await res.json();
+
+    // Só abre o modal DEPOIS que os dados chegam
+    registerModalOpen();
+    document.getElementById('modalUltimasContas').classList.add('active');
+
+    const tbody = document.getElementById('listaUltimasConteudo');
 
     if (!Array.isArray(data) || data.length === 0) {
       tbody.innerHTML =
@@ -601,10 +604,13 @@ async function abrirModalUltimas() {
     });
 
     atualizarTotalNaoConferido();
+    ocultarLoading();
   } catch (err) {
     console.error(err);
+    const tbody = document.getElementById('listaUltimasConteudo');
     tbody.innerHTML =
       '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--red);">Erro ao carregar.</td></tr>';
+    ocultarLoading();
   }
 }
 
