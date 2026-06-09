@@ -435,14 +435,8 @@ async function confirmarDivisaoConta() {
 
     if (res.ok && data.success) {
       fecharModalDividirConta();
-      _suppressPopstate = true;
-      fecharModais();
-      ocultarLoading();
-      _suppressPopstate = false;
-      // ✅ OBS-20260601-07: Usa dados de terceiros retornados pelo POST
-      // para evitar segunda chamada HTTP que sofre lock contention de 5min no Neon.
-      // ✅ OBS-20260601-16: Atualiza dados completos garantindo a presença das Contas Fixas.
       await softRefreshSafe(800);
+      ocultarLoading();
       mostrarAviso('Sucesso', 'Conta dividida com sucesso!');
       return;
     } else {
