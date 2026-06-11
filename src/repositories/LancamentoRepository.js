@@ -4,6 +4,7 @@
 
 const db = require('../config/db');
 const { STATUS, TIPO, LIMITES, SQL_SEM_TERCEIRO } = require('../constants');
+const cache = require('../helpers/cacheHelpers');
 
 // ==============================================================================
 // ✅ NOVO: Helper para normalizar palavras-chave "Eu" ou "Dodo" para NULL
@@ -75,90 +76,138 @@ async function getRelatorioMensal(userId, month, year) {
   return result.rows;
 }
 
-async function getDashboardTotals(userId, month, year) {
+async function getDashboardTotais(userId, month, year) {
+  const cacheKey = `dashboard:totais:${userId}:${month}:${year}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
   const tiposContas = `'${TIPO.FIXA}', '${TIPO.CARTAO}'`;
+  const { startDate, endDate } = getMesRange(month, year);
   const query = `
-      SELECT 
+      SELECT
           COALESCE(SUM(CASE WHEN Tipo = '${TIPO.RENDA}' THEN Valor ELSE 0 END), 0)::float AS totalrendas,
           COALESCE(SUM(CASE WHEN Tipo IN (${tiposContas}) AND ${SQL_SEM_TERCEIRO} THEN Valor ELSE 0 END), 0)::float AS totalcontas,
           COALESCE(SUM(CASE WHEN Tipo IN (${tiposContas}) AND ${SQL_SEM_TERCEIRO} AND Status = '${STATUS.PENDENTE}' THEN Valor ELSE 0 END), 0)::float AS faltapagar,
-          COALESCE(SUM(CASE WHEN Tipo = '${TIPO.RENDA}' THEN Valor ELSE 0 END) - 
+          COALESCE(SUM(CASE WHEN Tipo = '${TIPO.RENDA}' THEN Valor ELSE 0 END) -
                  SUM(CASE WHEN Tipo IN (${tiposContas}) AND ${SQL_SEM_TERCEIRO} THEN Valor ELSE 0 END), 0)::float AS saldoprevisto
       FROM Lancamentos
-      WHERE UsuarioId = $1 
+      WHERE UsuarioId = $1
         AND DataVencimento >= $2 AND DataVencimento < $3
    `;
-  const { startDate, endDate } = getMesRange(month, year);
   const result = await db.query(query, [userId, startDate, endDate]);
-  return result.rows[0];
+  const totais = result.rows[0];
+  cache.set(cacheKey, totais, 5 * 60 * 1000);
+  return totais;
 }
 
+async function getDashboardDataModular(userId, month, year, userName) {
+  const startTime = Date.now();
+  console.log(`[getDashboardDataModular] Iniciando busca para userId=${userId}, month=${month}, year=${year}`);
+
+  try {
+    // Executa queries independentes em paralelo
+    const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw, anotacoes, ordemCardsRaw, faturaManualVal, mesFechado, terceirosDistinct] = await Promise.all([
+      getDashboardTotais(userId, month, year),
+      getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
+      getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
+      getResumoPessoas(userId, month, year, userName),
+      getDadosTerceiros(userId, month, year),
+      getAnotacoes(userId, month, year).then(r => r ? (r.conteudo || r) : ''),
+      getOrdemCards(userId),
+      getFaturaManual(userId, month, year).then(r => r || 0),
+      isMesFechado(userId, month, year),
+      getDistinctTerceiros(userId),
+    ]);
+
+    const elapsed = Date.now() - startTime;
+    console.log(`[getDashboardDataModular] Concluído em ${elapsed}ms`);
+
+    return {
+      totais,
+      fixas,
+      cartao,
+      anotacoes,
+      resumoPessoas,
+      dadosTerceirosRaw,
+      ordemCardsRaw,
+      faturaManualVal,
+      mesFechado,
+      terceirosDistinct,
+    };
+  } catch (err) {
+    console.error('[getDashboardDataModular] Erro:', err.message);
+    throw err;
+  }
+}
+
+// Fallback: função original mantida como comentário
+/*
 async function getDashboardDataBatched(userId, month, year, userName) {
   const { startDate, endDate } = getMesRange(month, year);
   const tiposContas = `'${TIPO.FIXA}', '${TIPO.CARTAO}'`;
 
   const query = `
     WITH lancamentos_mes AS MATERIALIZED (
-      SELECT * FROM Lancamentos 
+      SELECT * FROM Lancamentos
       WHERE UsuarioId = $1 AND DataVencimento >= $2 AND DataVencimento < $3
     )
-    SELECT 
+    SELECT
       (SELECT row_to_json(t) FROM (
-        SELECT 
+        SELECT
           COALESCE(SUM(CASE WHEN Tipo = '${TIPO.RENDA}' THEN Valor ELSE 0 END), 0)::float AS totalrendas,
           COALESCE(SUM(CASE WHEN Tipo IN (${tiposContas}) AND ${SQL_SEM_TERCEIRO} THEN Valor ELSE 0 END), 0)::float AS totalcontas,
           COALESCE(SUM(CASE WHEN Tipo IN (${tiposContas}) AND ${SQL_SEM_TERCEIRO} AND Status = '${STATUS.PENDENTE}' THEN Valor ELSE 0 END), 0)::float AS faltapagar,
-          COALESCE(SUM(CASE WHEN Tipo = '${TIPO.RENDA}' THEN Valor ELSE 0 END) - 
+          COALESCE(SUM(CASE WHEN Tipo = '${TIPO.RENDA}' THEN Valor ELSE 0 END) -
                  SUM(CASE WHEN Tipo IN (${tiposContas}) AND ${SQL_SEM_TERCEIRO} THEN Valor ELSE 0 END), 0)::float AS saldoprevisto
         FROM lancamentos_mes
       ) t) AS totais,
-      
+
       (SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
-        SELECT * FROM lancamentos_mes 
-        WHERE Tipo = '${TIPO.FIXA}' AND ${SQL_SEM_TERCEIRO} 
+        SELECT * FROM lancamentos_mes
+        WHERE Tipo = '${TIPO.FIXA}' AND ${SQL_SEM_TERCEIRO}
         ORDER BY Ordem ASC
       ) t) AS fixas,
-      
+
       (SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
-        SELECT * FROM lancamentos_mes 
-        WHERE Tipo = '${TIPO.CARTAO}' AND ${SQL_SEM_TERCEIRO} 
+        SELECT * FROM lancamentos_mes
+        WHERE Tipo = '${TIPO.CARTAO}' AND ${SQL_SEM_TERCEIRO}
         ORDER BY Ordem ASC
       ) t) AS cartao,
-      
+
       (SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
-        SELECT CASE WHEN ${SQL_SEM_TERCEIRO} THEN $4 ELSE NomeTerceiro END AS pessoa, 
-               SUM(CASE WHEN Status = '${STATUS.PENDENTE}' THEN Valor ELSE 0 END)::float AS total, 
-               CASE WHEN COUNT(*) = SUM(CASE WHEN Status = '${STATUS.PAGO}' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS todospagos 
-        FROM lancamentos_mes 
-        WHERE Tipo = '${TIPO.CARTAO}' 
-        GROUP BY NomeTerceiro 
+        SELECT CASE WHEN ${SQL_SEM_TERCEIRO} THEN $4 ELSE NomeTerceiro END AS pessoa,
+               SUM(CASE WHEN Status = '${STATUS.PENDENTE}' THEN Valor ELSE 0 END)::float AS total,
+               CASE WHEN COUNT(*) = SUM(CASE WHEN Status = '${STATUS.PAGO}' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END AS todospagos
+        FROM lancamentos_mes
+        WHERE Tipo = '${TIPO.CARTAO}'
+        GROUP BY NomeTerceiro
         ORDER BY CASE WHEN ${SQL_SEM_TERCEIRO} THEN 0 ELSE 1 END, NomeTerceiro
       ) t) AS resumo_pessoas,
-      
+
       (SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
-        SELECT * FROM lancamentos_mes 
-        WHERE NomeTerceiro IS NOT NULL AND NomeTerceiro != '' 
+        SELECT * FROM lancamentos_mes
+        WHERE NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
         ORDER BY NomeTerceiro, Tipo, Ordem
       ) t) AS dados_terceiros,
-      
+
       (SELECT COALESCE(Conteudo, '') FROM Anotacoes WHERE UsuarioId = $1 AND Mes = 0 AND Ano = 0 LIMIT 1) AS anotacoes,
-      
+
       (SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
         SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC
       ) t) AS ordem_cards,
-      
+
       (SELECT COALESCE(Valor, 0)::float FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $5 AND Ano = $6) AS fatura_manual,
-      
+
       EXISTS(SELECT 1 FROM MesesFechados WHERE UsuarioId = $1 AND Mes = $5 AND Ano = $6) AS mes_fechado,
-      
+
       (SELECT COALESCE(json_agg(t.NomeTerceiro), '[]') FROM (
-        SELECT DISTINCT NomeTerceiro FROM Lancamentos 
-        WHERE UsuarioId = $1 
-          AND NomeTerceiro IS NOT NULL AND NomeTerceiro != '' 
+        SELECT DISTINCT NomeTerceiro FROM Lancamentos
+        WHERE UsuarioId = $1
+          AND NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
           AND DataVencimento >= (CURRENT_DATE - INTERVAL '12 months')
         ORDER BY NomeTerceiro
       ) t) AS distintos_terceiros,
-      
+
       (SELECT row_to_json(t) FROM (SELECT * FROM configuracoes WHERE usuario_id = $1) t) AS configuracoes
   `;
 
@@ -179,6 +228,7 @@ async function getDashboardDataBatched(userId, month, year, userName) {
     configuracoes: row.configuracoes || null,
   };
 }
+*/
 
 async function getLancamentosPorTipo(userId, tipo, month, year) {
   const query = `
@@ -250,13 +300,19 @@ async function getDetalhesRendas(userId, month, year) {
 }
 
 async function getDistinctTerceiros(userId) {
+  const cacheKey = `dashboard:distintos_terceiros:${userId}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
   const result = await db.query(
     `SELECT DISTINCT NomeTerceiro FROM Lancamentos
      WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
      ORDER BY NomeTerceiro`,
     [userId]
   );
-  return result.rows.map((r) => r.nometerceiro);
+  const terceiros = result.rows.map((r) => r.nometerceiro);
+  cache.set(cacheKey, terceiros, 5 * 60 * 1000);
+  return terceiros;
 }
 
 // ✅ OBS-20260601-03: Query leve para resumo de terceiros (grid do dashboard)
@@ -854,10 +910,44 @@ async function dividirConta(userId, idOriginal, terceiros) {
   };
 }
 
+// ==============================================================================
+// Funções Auxiliares para Dashboard Modular
+// ==============================================================================
+
+async function getAnotacoes(userId, month, year) {
+  const query = `SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3 LIMIT 1`;
+  const result = await db.query(query, [userId, month, year]);
+  return result.rows[0] || null;
+}
+
+async function getOrdemCards(userId) {
+  const query = `SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC`;
+  const result = await db.query(query, [userId]);
+  return result.rows;
+}
+
+async function getFaturaManual(userId, month, year) {
+  const query = `SELECT COALESCE(Valor, 0)::float FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3`;
+  const result = await db.query(query, [userId, month, year]);
+  return result.rows[0]?.valor || 0;
+}
+
+async function isMesFechado(userId, month, year) {
+  const query = `SELECT EXISTS(SELECT 1 FROM MesesFechados WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3)`;
+  const result = await db.query(query, [userId, month, year]);
+  return result.rows[0].exists;
+}
+
+// Invalida cache quando há mudanças
+function invalidateDashboardCache(userId, month, year) {
+  cache.invalidate(`dashboard:totais:${userId}:${month}:${year}`);
+  cache.invalidate(`dashboard:distintos_terceiros:${userId}`);
+}
+
 module.exports = {
   getUltimosLancamentos,
   getRelatorioMensal,
-  getDashboardTotals,
+  getDashboardTotals: getDashboardTotais,
   getLancamentosPorTipo,
   getDadosTerceiros,
   getLancamentosCartaoPorPessoa,
@@ -867,7 +957,8 @@ module.exports = {
   getLancamentosTerceiro,
   getLancamento,
   getMesesAnosPorIds,
-  getDashboardDataBatched,
+  getDashboardDataModular,
+  invalidateDashboardCache,
   addLancamento,
   addLancamentosBulk, // ✅ Novo método exportado
   updateLancamento,
