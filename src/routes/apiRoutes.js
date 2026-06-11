@@ -205,7 +205,8 @@ module.exports = function (repo) {
         }
       }
 
-      // 3. Busca em lote os dados consolidados e 100% consistentes do dashboard
+      // 3. Busca em lote os dados consolidados do dashboard usando abordagem modular
+      const startTime = Date.now();
       const {
         totais,
         fixas,
@@ -217,7 +218,9 @@ module.exports = function (repo) {
         faturaManualVal,
         mesFechado,
         terceirosDistinct,
-      } = await repo.getDashboardDataBatched(userId, Number(month), Number(year), userName);
+      } = await repo.getDashboardDataModular(userId, Number(month), Number(year), userName);
+      const elapsed = Date.now() - startTime;
+      console.log(`[Dashboard GET] Dados carregados em ${elapsed}ms via getDashboardDataModular`);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
@@ -791,6 +794,11 @@ module.exports = function (repo) {
         }
       });
 
+      // Invalida cache do dashboard após criação
+      if (typeof repo.invalidateDashboardCache === 'function') {
+        repo.invalidateDashboardCache(req.session.user.id, context_month, context_year);
+      }
+
       res.json({ success: true });
     })
   );
@@ -818,6 +826,13 @@ module.exports = function (repo) {
         totalParcelas: classificacao.pTotal,
         nomeTerceiro: nome_terceiro || null,
       });
+
+      // Invalida cache do dashboard após atualização
+      const item = await repo.getLancamento(req.session.user.id, req.params.id);
+      if (item && typeof repo.invalidateDashboardCache === 'function') {
+        const dt = new Date(item.datavencimento);
+        repo.invalidateDashboardCache(req.session.user.id, dt.getMonth() + 1, dt.getFullYear());
+      }
 
       res.json({ success: true });
     })
@@ -929,6 +944,13 @@ module.exports = function (repo) {
       }
 
       await repo.deleteLancamento(req.session.user.id, req.params.id);
+
+      // Invalida cache do dashboard após deleção
+      const dt = new Date(item.datavencimento);
+      if (typeof repo.invalidateDashboardCache === 'function') {
+        repo.invalidateDashboardCache(req.session.user.id, dt.getMonth() + 1, dt.getFullYear());
+      }
+
       res.json({ success: true });
     })
   );

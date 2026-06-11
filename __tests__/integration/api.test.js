@@ -135,7 +135,7 @@ describe('Integração API (Mocked DB)', () => {
   describe('Renderização de Views (GET / e GET /terceiros)', () => {
     beforeEach(() => {
       // Configura retornos padrão blindados para evitar crashes de null pointer no render do EJS
-      repo.getDashboardDataBatched.mockResolvedValue({
+      repo.getDashboardDataModular.mockResolvedValue({
         totais: { totalrendas: 0, totalcontas: 0, faltapagar: 0, saldoprevisto: 0 },
         fixas: [],
         cartao: [],
@@ -157,7 +157,7 @@ describe('Integração API (Mocked DB)', () => {
       const res = await agent.get('/');
 
       expect(res.status).toBe(200);
-      expect(repo.getDashboardDataBatched).toHaveBeenCalled();
+      expect(repo.getDashboardDataModular).toHaveBeenCalled();
     });
 
     test('GET /terceiros - deve filtrar nomes nulos (contas próprias) para evitar Erro 500 na ordenação', async () => {

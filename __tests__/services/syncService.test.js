@@ -39,7 +39,7 @@ describe('syncService (Dinâmico)', () => {
 
     expect(mockRepo.getTotalTerceiroCartao).toHaveBeenCalledWith('Morr', 1, 5, 2026);
     expect(mockRepo.findAndUpdateOrCreateContaFixa).toHaveBeenCalledWith(2, 'Cartão Douglas', valorEsperado, 5, 2026);
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[SYNC-DYNAMIC]'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[SYNC]'));
   });
 
   test('deve processar regra DIVISAO_CASA corretamente', async () => {
