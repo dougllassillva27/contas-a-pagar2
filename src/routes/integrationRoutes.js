@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { parseValor, normalizarTipoIntegracao, normalizarParcelasPorTipo } = require('../helpers/parseHelpers');
+const { normalizarTerceiro } = require('../repositories/LancamentoRepository');
 const { STATUS, TIPO } = require('../constants');
 
 module.exports = function (repo, apiAuth) {
@@ -51,14 +52,7 @@ module.exports = function (repo, apiAuth) {
       }
 
       // ✅ FIX: Normaliza terceiro "Eu", "Dodo" ou vazio para NULL
-      // Mesma lógica do sistema principal (LancamentoRepository.js:26)
-      const terceiroNormalizado = (() => {
-        const nomeNormalizado = (terceiro || '').trim().toLowerCase();
-        if (['eu', 'dodo', ''].includes(nomeNormalizado)) {
-          return null;
-        }
-        return (terceiro || '').trim();
-      })();
+      const terceiroNormalizado = normalizarTerceiro(terceiro);
 
       const dados = {
         descricao,

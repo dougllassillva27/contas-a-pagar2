@@ -30,8 +30,11 @@ function normalizarTerceiro(nome) {
   if (['eu', 'dodo', ''].includes(nomeNormalizado)) {
     return null;
   }
-  return nome.trim();
+  return (nome || '').trim();
 }
+
+// Exporta para uso em outros módulos
+module.exports.normalizarTerceiro = normalizarTerceiro;
 
 // --- LISTAGENS E DASHBOARD ---
 
