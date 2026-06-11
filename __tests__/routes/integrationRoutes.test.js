@@ -13,6 +13,17 @@ const repo = {
   getTodosUsuarios: jest.fn().mockResolvedValue([{ id: 1, nome: 'Teste' }]),
 };
 
+// Mock da função normalizarTerceiro exportada pelo LancamentoRepository
+jest.mock('../../src/repositories/LancamentoRepository', () => ({
+  normalizarTerceiro: jest.fn((nome) => {
+    const nomeNormalizado = (nome || '').trim().toLowerCase();
+    if (['eu', 'dodo', ''].includes(nomeNormalizado)) {
+      return null;
+    }
+    return (nome || '').trim();
+  }),
+}));
+
 const integrationRoutes = require('../../src/routes/integrationRoutes');
 
 function setupApp() {
