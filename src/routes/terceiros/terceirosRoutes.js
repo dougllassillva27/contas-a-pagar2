@@ -33,11 +33,12 @@ module.exports = function (repo) {
           totalGeral: t.totalGeral,
         }));
 
-      // ✅ FIX IDOR: Garante que todo terceiro ativo tenha um registro na tabela para possuir um TokenPublico
-      for (const t of todosTerceiros) {
+      // ✅ FIX IDOR: Bulk UPSERT — garante registro em única query usando UNNEST
+     if (todosTerceiros.length > 0) {
+        const nomes = todosTerceiros.map((t) => t.nome);
         await db.query(
-          'INSERT INTO terceiros (usuario_id, nome) VALUES ($1, $2) ON CONFLICT (usuario_id, nome) DO NOTHING',
-          [userId, t.nome]
+          'INSERT INTO terceiros (usuario_id, nome) SELECT $1, unnest($2::text[]) ON CONFLICT (usuario_id, nome) DO NOTHING',
+          [userId, nomes]
         );
       }
 
