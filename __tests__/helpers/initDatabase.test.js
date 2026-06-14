@@ -24,8 +24,8 @@ describe('initDatabase.js', () => {
     db.query.mockResolvedValue();
     await initDatabase();
 
-    // Conta exata de queries no initDatabase.js (incluindo a nova flag de onboarding)
-    expect(db.query).toHaveBeenCalledTimes(25);
+    // Conta exata de queries no initDatabase.js (incluindo índices e flags)
+    expect(db.query).toHaveBeenCalledTimes(24);
     expect(console.log).toHaveBeenCalledWith('✅ Database inicializado com sucesso.');
   });
 
