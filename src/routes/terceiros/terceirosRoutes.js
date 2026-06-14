@@ -17,8 +17,8 @@ module.exports = function (repo) {
       const userId = req.session.user.id;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      const [dadosTerceirosRaw, mesFechado, configuracoes] = await Promise.all([
-        repo.getDadosTerceiros(userId, month, year),
+      const [{ rows: dadosTerceirosRaw }, mesFechado, configuracoes] = await Promise.all([
+       repo.getDadosTerceiros(userId, month, year),
         repo.isMesFechado(userId, month, year),
         repo.getConfiguracoes(userId)
       ]);

@@ -92,7 +92,7 @@ module.exports = function (repo) {
       const elapsed = Date.now() - startTime;
       console.log(`[Dashboard GET] Dados carregados em ${elapsed}ms via getDashboardDataModular`);
 
-      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
@@ -132,15 +132,15 @@ module.exports = function (repo) {
       const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
       const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
 
-      const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw] = await Promise.all([
-        repo.getDashboardTotals(req.session.user.id, Number(month), Number(year)),
+       const [totais, fixas, cartao, resumoPessoas, { rows: dadosTerceirosRaw }] = await Promise.all([
+       repo.getDashboardTotals(req.session.user.id, Number(month), Number(year)),
         repo.getLancamentosPorTipo(req.session.user.id, 'FIXA', Number(month), Number(year)),
-        repo.getLancamentosPorTipo(req.session.user.id, 'CARTAO', Number(month), Number(year)),
+       repo.getLancamentosPorTipo(req.session.user.id, 'CARTAO', Number(month), Number(year)),
         repo.getResumoPessoas(req.session.user.id, Number(month), Number(year), req.session.user.nome),
-        repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year)),
-      ]);
+       repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year)),
+     ]);
 
-      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
       res.json({
