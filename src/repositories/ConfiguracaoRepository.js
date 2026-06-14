@@ -4,25 +4,21 @@
 // ==============================================================================
 
 const db = require('../config/db');
-// Cache em memória com TTL de 5 minutos
-const cache = new Map();
-const CACHE_TTL = 5 * 60 * 100; // 5 minutos
+const cacheHelpers = require('../helpers/cacheHelpers');
 
 async function getConfiguracoes(userId) {
-  // Verifica cache primeiro
-  const cached = cache.get(userId);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-   return cached.data;
-  }
-  // Busca do banco
+  const cacheKey = `configuracoes:${userId}`;
+  const cached = cacheHelpers.get(cacheKey);
+  if (cached) return cached;
+
   const res = await db.query('SELECT * FROM configuracoes WHERE usuario_id = $1', [userId]);
   const data = res.rows[0] || {};
-  // Atualiza cache
-  cache.set(userId, { data, timestamp: Date.now() });
+  cacheHelpers.set(cacheKey, data, 5 * 60 * 1000);
   return data;
 }
+
 function invalidateCache(userId) {
-  cache.delete(userId);
+  cacheHelpers.invalidate(`configuracoes:${userId}`);
 }
 async function saveConfiguracao(userId, chave, valor) {
  // Validação para evitar SQL Injection, permitindo apenas colunas conhecidas

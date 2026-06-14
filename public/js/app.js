@@ -51,10 +51,26 @@ function escapeHTML(str) {
     .replace(/'/g, '&#039;');
 }
 
+// Cache em memória para softRefresh (TTL 30s)
+const softRefreshCache = new Map();
+const SOFT_REFRESH_TTL = 30 * 1000; // 30 segundos
+
 // ==================================================================
 // ✅ ATUALIZAÇÃO DOM SEM RELOAD (Soft Refresh)
 // ==============================================================================
-async function softRefresh(delayOverride) {
+async function softRefresh(delayOverride, useCache = true) {
+  const cacheKey = `${window.location.pathname}?${new URLSearchParams(window.location.search).toString()}`;
+
+  // Verifica cache se permitido
+  if (useCache) {
+    const cached = softRefreshCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < SOFT_REFRESH_TTL) {
+      console.log('[SoftRefresh] ♻️ Usando cache (30s TTL)');
+      applyCachedHTML(cached.html);
+      return;
+    }
+  }
+
   const startTime = Date.now();
   // Delay opcional — apenas usado quando caller precisa aguardar operações async
   // Removido delay fixo de 150ms (era "band-aid" para sync fire-and-forget)
@@ -139,11 +155,14 @@ async function softRefresh(delayOverride) {
       currentAnotacaoText = document.getElementById('anotacoesArea').value;
       if (typeof renderAnotacoesPreview === 'function') renderAnotacoesPreview();
     }
+
+    // Armazena HTML no cache
+    softRefreshCache.set(cacheKey, { html: extractHTML(), timestamp: Date.now() });
   } catch (err) {
     clearTimeout(timeoutId); // Garante a limpeza do timeout em caso de erro
     console.error('%c[SoftRefresh] ❌ Falha catastrófica no Soft Refresh:', 'color: #ef4444; font-weight: bold;', err);
     localStorage.setItem('last_soft_refresh_error', err.stack || err.toString());
-    
+
     if (err.name === 'AbortError') {
       console.warn('[SoftRefresh] Recarregando página devido a Timeout/Abort de rede.');
       window.location.reload();
@@ -151,6 +170,36 @@ async function softRefresh(delayOverride) {
       console.error('[SoftRefresh] Mantendo a página sem reload para diagnóstico de erro de execução.');
       alert('Erro no SoftRefresh: ' + err.message + '\nPor favor, copie o erro do console F12!');
     }
+  }
+}
+
+// Extrai HTML atual dos elementos chave (para cache)
+function extractHTML() {
+  return {
+    header: document.querySelector('header')?.innerHTML,
+    dashboardCards: document.querySelector('.dashboard-cards')?.innerHTML,
+    mainGrid: document.querySelector('.main-grid')?.innerHTML,
+    mobileSidebar: document.querySelector('#mobileSidebar')?.innerHTML,
+    terceirosGrid: document.querySelector('.terceiros-grid')?.innerHTML,
+  };
+}
+
+// Aplica HTML armazenado em cache
+function applyCachedHTML(cached) {
+  const replaceHTML = (selector, key) => {
+    const current = document.querySelector(selector);
+    if (current && cached[key]) {
+      current.innerHTML = cached[key];
+    }
+  };
+  replaceHTML('header', 'header');
+  replaceHTML('.dashboard-cards', 'dashboardCards');
+  replaceHTML('.main-grid', 'mainGrid');
+  replaceHTML('#mobileSidebar', 'mobileSidebar');
+
+  const currentTerceiros = document.querySelector('.terceiros-grid');
+  if (currentTerceiros && cached.terceirosGrid) {
+    currentTerceiros.innerHTML = cached.terceirosGrid;
   }
 }
 
