@@ -41,6 +41,11 @@ if (isProd && (!ENV_SESSION_SECRET || !ENV_API_TOKEN)) {
   process.exit(1);
 }
 
+// Validação de segurança: API_TOKEN não deve ser igual a SESSION_SECRET
+if (ENV_API_TOKEN && ENV_SESSION_SECRET && ENV_API_TOKEN === ENV_SESSION_SECRET) {
+  console.warn('⚠️  ALERTA DE SEGURANÇA: API_TOKEN é igual ao SESSION_SECRET. Use valores distintos para reduzir superfície de ataque.');
+}
+
 const safeSessionSecret = ENV_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const safeApiToken = ENV_API_TOKEN || crypto.randomBytes(32).toString('hex');
 app.locals.API_TOKEN = safeApiToken;
