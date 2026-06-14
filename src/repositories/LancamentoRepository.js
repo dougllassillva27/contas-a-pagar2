@@ -791,6 +791,68 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
   await db.query(query, [userId, nomeConta, startDate, endDate, valor, dataVencimento]);
 }
 
+// ==============================================================================
+// ✅ Batch UPSERT para divisões — Transação única com UNNEST
+// ==============================================================================
+// Substitui 3 operações sequenciais por 1 query bulk para evitar lock contention
+async function bulkUpsertContasFixas(userId, operations) {
+  if (!Array.isArray(operations) || operations.length === 0) return;
+
+  // Prepara arrays para UNNEST
+  const descricoes = [];
+  const valores = [];
+  const vencimentos = [];
+  const terceiros = [];
+
+  operations.forEach(op => {
+    descricoes.push(op.nomeConta);
+    valores.push(op.valor);
+    vencimentos.push(op.dataVencimento);
+    terceiros.push(op.nomeTerceiro || null);
+  });
+
+  const month = operations[0].month;
+  const year = operations[0].year;
+  const { startDate, endDate } = getMesRange(month, year);
+
+  // Query bulk com UNNEST — padrão já usado em terceirosRoutes.js
+  const query = `
+    WITH params AS (
+      SELECT unnest($1::text[]) as descricao,
+             unnest($2::numeric[]) as valor,
+             unnest($3::timestamptz[]) as vencimento,
+             unnest($4::text[]) as terceiro,
+             generate_subscripts($1::text[], 1) as idx
+    ),
+    existing AS (
+      SELECT l.Id, p.idx
+      FROM Lancamentos l
+      INNER JOIN params p ON l.Descricao = p.descricao
+        AND l.UsuarioId = $5
+        AND l.Tipo = '${TIPO.FIXA}'
+        AND l.DataVencimento >= $6
+        AND l.DataVencimento < $7
+        AND (p.terceiro IS NULL OR l.NomeTerceiro = p.terceiro)
+    ),
+    updated AS (
+      UPDATE Lancamentos l
+      SET Valor = p.valor
+      FROM params p
+      WHERE l.Id = (SELECT Id FROM existing WHERE idx = p.idx)
+      RETURNING l.Id
+    )
+    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao)
+    SELECT $5, p.descricao, p.valor, '${TIPO.FIXA}', '${STATUS.PENDENTE}', p.vencimento, p.terceiro,
+           (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $5),
+           '1970-01-01'
+    FROM params p
+    WHERE NOT EXISTS (SELECT 1 FROM updated WHERE Id = (SELECT Id FROM existing WHERE idx = p.idx))
+      AND NOT EXISTS (SELECT 1 FROM existing WHERE idx = p.idx);
+  `;
+
+  await db.query(query, [descricoes, valores, vencimentos, terceiros, userId, startDate, endDate]);
+}
+
 async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valor, month, year, nomeTerceiro) {
   const dataVencimento = new Date(year, month - 1, 10);
   const { startDate, endDate } = getMesRange(month, year);
@@ -995,4 +1057,5 @@ module.exports = {
   getTotalTerceiroCartao,
   findAndUpdateOrCreateContaFixa,
   findAndUpdateOrCreateContaFixaComTerceiro,
+  bulkUpsertContasFixas, // ✅ Batch UPSERT para divisões
 };
