@@ -236,25 +236,10 @@ module.exports = function (repo) {
       const nome = queryToken.rows[0].nome;
       nomeFallback = nome;
 
-      const month = req.query.month ? parseInt(req.query.month, 10) : new Date().getMonth() + 1;
-      const year = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
+      const { calcularContextoNavegacao } = require('./dashboard/navigationHelpers');
 
-      // Navegação mensal
-      const dataAtual = new Date(year, month - 1, 1);
-      const dataAnterior = new Date(year, month - 2, 1);
-      const dataProxima = new Date(year, month, 1);
-
-      const nav = {
-        atual: { month, year, dateObj: dataAtual },
-        ant: {
-          month: dataAnterior.getMonth() + 1,
-          year: dataAnterior.getFullYear(),
-        },
-        prox: {
-          month: dataProxima.getMonth() + 1,
-          year: dataProxima.getFullYear(),
-        },
-      };
+      // Navegação mensal usando helper compartilhado
+      const { month, year, nav } = calcularContextoNavegacao(req.query);
 
       // Busca lançamentos do terceiro filtrando por usuário
       const lancamentos = await repo.getLancamentosTerceiro(userId, nome, month, year);
