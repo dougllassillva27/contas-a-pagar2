@@ -1,5 +1,5 @@
 // ==============================================================================
-// 📝 OUTROS (anotações, lajeado, fatura manual, cards reorder)
+// 📝 OUTROS (anotações, fatura manual, cards reorder)
 // ==============================================================================
 
 const express = require('express');
@@ -26,25 +26,6 @@ module.exports = function (repo) {
       const year = req.query.year !== undefined ? parseInt(req.query.year, 10) : new Date().getFullYear();
       const item = await repo.getAnotacoes(req.session.user.id, month, year);
       res.json({ conteudo: item ? item.conteudo || item : '' });
-    })
-  );
-
-  // --- LAJEADO (DADOS JSON E MURAL) ---
-  router.post(
-    '/api/lajeado',
-    asyncHandler(async (req, res) => {
-      const { dados } = req.body;
-      await repo.saveLajeado(req.session.user.id, dados);
-      res.json({ success: true });
-    })
-  );
-
-  router.post(
-    '/api/lajeado/mural',
-    asyncHandler(async (req, res) => {
-      const { conteudo } = req.body;
-      await repo.updateLajeadoMural(req.session.user.id, conteudo);
-      res.json({ success: true });
     })
   );
 

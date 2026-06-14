@@ -1,0 +1,4 @@
+/* Grid personalizado para admin (user.id === 1) */
+@media (min-width: 992px) {
+    .dashboard-cards { grid-template-columns: repeat(5, 1fr); }
+}

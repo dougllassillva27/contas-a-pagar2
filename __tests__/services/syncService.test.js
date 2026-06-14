@@ -12,7 +12,7 @@ describe('syncService (Dinâmico)', () => {
     mockRepo = {
       getTotalTerceiroCartao: jest.fn(),
       findAndUpdateOrCreateContaFixa: jest.fn(),
-      findAndUpdateOrCreateContaFixaComTerceiro: jest.fn(),
+      bulkUpsertContasFixas: jest.fn(),
     };
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
   });
@@ -44,7 +44,7 @@ describe('syncService (Dinâmico)', () => {
 
   test('deve processar regra DIVISAO_CASA corretamente', async () => {
     mockRepo.getTotalTerceiroCartao.mockResolvedValue(2000); // 2000 / 2 = 1000
-    
+
     const regras = [
       {
         tipo: 'DIVISAO_CASA',
@@ -58,17 +58,22 @@ describe('syncService (Dinâmico)', () => {
     await syncService.executarSincronizacaoDinamica(mockRepo, 1, 5, 2026, regras);
 
     expect(mockRepo.getTotalTerceiroCartao).toHaveBeenCalledWith('Casa', 1, 5, 2026);
-    // 1. Minha parte
-    expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 1000, 5, 2026, null);
-    // 2. Espelho no meu dashboard
-    expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 1000, 5, 2026, 'Morr');
-    // 3. Parte no dashboard do parceiro
-    expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(2, 'Casa', 1000, 5, 2026, null);
+    // bulkUpsertContasFixas chamado para sourceUserId e usuarioDestino
+    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenCalledTimes(2);
+    // Verifica se chamou com o sourceUserId (1) primeiro
+    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenNthCalledWith(1, 1, expect.arrayContaining([
+      expect.objectContaining({ nomeConta: 'Casa', valor: 1000 }),
+      expect.objectContaining({ nomeConta: 'Casa', valor: 1000, nomeTerceiro: 'Morr' })
+    ]));
+    // Verifica se chamou com o usuarioDestino (2)
+    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenNthCalledWith(2, 2, expect.arrayContaining([
+      expect.objectContaining({ nomeConta: 'Casa', valor: 1000 })
+    ]));
   });
 
   test('deve respeitar o valor mínimo na DIVISAO_CASA', async () => {
     mockRepo.getTotalTerceiroCartao.mockResolvedValue(1000); // 1000 / 2 = 500 < 750
-    
+
     const regras = [
       {
         tipo: 'DIVISAO_CASA',
@@ -80,7 +85,11 @@ describe('syncService (Dinâmico)', () => {
 
     await syncService.executarSincronizacaoDinamica(mockRepo, 1, 5, 2026, regras);
 
-    expect(mockRepo.findAndUpdateOrCreateContaFixaComTerceiro).toHaveBeenCalledWith(1, 'Casa', 750, 5, 2026, null);
+    // bulkUpsertContasFixas deve ter sido chamado com valor mínimo (750)
+    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenCalled();
+    const callArgs = mockRepo.bulkUpsertContasFixas.mock.calls[0];
+    const operations = callArgs[1];
+    expect(operations.some(op => op.valor === 750)).toBe(true);
   });
 
   test('deve ignorar regras inativas', async () => {

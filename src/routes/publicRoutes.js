@@ -9,7 +9,6 @@ const bcrypt = require('bcrypt');
 const { loginLimiter } = require('../middlewares/rateLimiter');
 const { LIMITES } = require('../constants');
 const db = require('../config/db');
-const DEFAULT_LAJEADO_DADOS = require('../config/defaultLajeado');
 
 module.exports = function (repo) {
   // ============================================================================
@@ -164,46 +163,6 @@ module.exports = function (repo) {
 
     req.session.destroy();
     res.redirect('/login');
-  });
-
-  // ============================================================================
-  // GET /lajeado.html — Página pública do planejamento Lajeado
-  // URL oficializada para acesso de terceiros e visitantes
-  // ============================================================================
-  router.get('/lajeado.html', async (req, res) => {
-    try {
-      // Soft Auth: Tenta reidratar a sessão silenciosamente via cookie se não houver sessão ativa (comum no Mobile)
-      let user = req.session?.user;
-      if (!user && req.cookies?.remember_me) {
-        const u = await repo.buscarUsuarioPorToken(req.cookies.remember_me);
-        if (u) {
-          req.session.user = { id: u.id, nome: u.nome, login: u.login };
-          user = req.session.user;
-        }
-      }
-
-      // Busca a Lajeado atrelada ao usuário logado
-      let item = null;
-      if (user) item = await repo.getLajeado(user.id);
-
-      // Fallback: se estiver deslogado (anônimo) ou vazio, puxa o conteúdo consolidado do Admin (ID 1)
-      if (!item && (!user || user.id !== 1)) {
-        item = await repo.getLajeado(1);
-      }
-
-      let dados = item?.dados;
-      let muralLajeado = item?.mural || '';
-
-      // Se for a primeira vez rodando, o banco vai voltar vazio e sem JSON
-      if (!dados) {
-        dados = DEFAULT_LAJEADO_DADOS;
-      }
-
-      return res.render('lajeado', { dados, muralLajeado, user: user || null, titulo: 'Gestão Financeira - Lajeado' });
-    } catch (err) {
-      console.error('[LAJEADO] Erro ao carregar mural:', err.message);
-      return res.render('lajeado', { dados: DEFAULT_LAJEADO_DADOS, muralLajeado: '', user: null });
-    }
   });
 
   // ============================================================================

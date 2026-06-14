@@ -15,7 +15,6 @@ const AnotacaoRepository = require('./AnotacaoRepository');
 const FaturaManualRepository = require('./FaturaManualRepository');
 const OrdemCardsRepository = require('./OrdemCardsRepository');
 const MesFechadoRepository = require('./MesFechadoRepository');
-const LajeadoRepository = require('./LajeadoRepository');
 const TokenRepository = require('./TokenRepository');
 const ConfiguracaoRepository = require('./ConfiguracaoRepository');
 
@@ -37,9 +36,6 @@ module.exports = {
 
   // Fechamento de Mês
   ...MesFechadoRepository,
-
-  // Lajeado (Mural Público Dinâmico)
-  ...LajeadoRepository,
 
   // Tokens (Autenticação Persistente)
   ...TokenRepository,
