@@ -51,15 +51,16 @@ function escapeHTML(str) {
     .replace(/'/g, '&#039;');
 }
 
-// ==============================================================================
+// ==================================================================
 // ✅ ATUALIZAÇÃO DOM SEM RELOAD (Soft Refresh)
 // ==============================================================================
 async function softRefresh(delayOverride) {
   const startTime = Date.now();
-  // Delay inteligente para permitir que a sincronização dinâmica fire-and-forget
-  // do POST complete antes do GET / ler os dados.
-  const delayMs = delayOverride !== undefined ? delayOverride : 150;
-  await new Promise((resolve) => setTimeout(resolve, delayMs));
+  // Delay opcional — apenas usado quando caller precisa aguardar operações async
+  // Removido delay fixo de 150ms (era "band-aid" para sync fire-and-forget)
+  if (delayOverride) {
+    await new Promise((resolve) => setTimeout(resolve, delayOverride));
+  }
 
   // Criando controle de AbortController para timeout de 30.0 segundos (failsafe contra latência física de rede com Neon Postgres na nuvem)
   const controller = new AbortController();
