@@ -16,13 +16,6 @@
 
     <%- include('partials/header') %>
 
-    <% if (user.id === 1) { %>
-    <style>
-        @media (min-width: 992px) {
-            .dashboard-cards { grid-template-columns: repeat(5, 1fr); }
-        }
-    </style>
-    <% } %>
 
     <section class="dashboard-cards">
         <div class="card" onclick="abrirModalRendasDetalhes()" role="button" tabindex="0" style="position: relative;">
