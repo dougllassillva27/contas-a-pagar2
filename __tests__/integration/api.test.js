@@ -148,7 +148,14 @@ describe('Integração API (Mocked DB)', () => {
         terceirosDistinct: [],
         configuracoes: { divisao_casa_minimo: 750.0 }
       });
-      repo.getDadosTerceiros.mockResolvedValue([]);
+      repo.getDadosTerceiros.mockResolvedValue({
+        rows: [
+          { nometerceiro: 'Mae', status: 'PENDENTE', tipo: 'CARTAO', valor: 100 },
+          { nometerceiro: null, status: 'PENDENTE', tipo: 'FIXA', valor: 50 },
+          { nometerceiro: '   ', status: 'PAGO', tipo: 'CARTAO', valor: 30 },
+        ],
+        total: 3
+      });
       repo.isMesFechado.mockResolvedValue(false);
       repo.getConfiguracoes.mockResolvedValue({ divisao_casa_minimo: '750.00', regras_sync: [] });
     });
@@ -162,11 +169,14 @@ describe('Integração API (Mocked DB)', () => {
 
     test('GET /terceiros - deve filtrar nomes nulos (contas próprias) para evitar Erro 500 na ordenação', async () => {
       // Simula o retorno bruto do banco onde a conta própria retorna nometerceiro = null
-      repo.getDadosTerceiros.mockResolvedValue([
-        { nometerceiro: 'Mae', status: 'PENDENTE', tipo: 'CARTAO', valor: 100 },
-        { nometerceiro: null, status: 'PENDENTE', tipo: 'FIXA', valor: 50 }, // Conta própria (causadora do crash)
-        { nometerceiro: '   ', status: 'PAGO', tipo: 'CARTAO', valor: 30 }, // Cadastro com espaço em branco
-      ]);
+      repo.getDadosTerceiros.mockResolvedValue({
+        rows: [
+          { nometerceiro: 'Mae', status: 'PENDENTE', tipo: 'CARTAO', valor: 100 },
+          { nometerceiro: null, status: 'PENDENTE', tipo: 'FIXA', valor: 50 }, // Conta própria (causadora do crash)
+          { nometerceiro: '   ', status: 'PAGO', tipo: 'CARTAO', valor: 30 }, // Cadastro com espaço em branco
+        ],
+        total: 3
+      });
 
       const res = await agent.get('/terceiros');
 

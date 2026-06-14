@@ -115,7 +115,7 @@ async function getDashboardDataModular(userId, month, year, userName) {
       getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
       getResumoPessoas(userId, month, year, userName),
       getDadosTerceiros(userId, month, year),
-      getAnotacoes(userId, month, year).then(r => r ? (r.conteudo || r) : ''),
+      getAnotacoes(userId, month, year).then(r => r ? (r.Conteudo || r.conteudo || r) : ''),
       getOrdemCards(userId),
       getFaturaManual(userId, month, year).then(r => r || 0),
       isMesFechado(userId, month, year),
@@ -247,17 +247,29 @@ async function getLancamentosPorTipo(userId, tipo, month, year) {
   return result.rows;
 }
 
-async function getDadosTerceiros(userId, month, year) {
+async function getDadosTerceiros(userId, month, year, limit = 100, offset = 0) {
+  // Conta total de registros para paginação frontend
+  const countQuery = `
+     SELECT COUNT(*) FROM Lancamentos
+     WHERE UsuarioId = $1
+        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '')
+       AND DataVencimento >= $2 AND DataVencimento < $3
+  `;
+ const { startDate, endDate } = getMesRange(month, year);
+  const countResult = await db.query(countQuery, [userId, startDate, endDate]);
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  // Query paginada com LIMIT/OFFSET
   const query = `
-      SELECT * FROM Lancamentos 
-      WHERE UsuarioId = $1 
-        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '') 
-        AND DataVencimento >= $2 AND DataVencimento < $3 
-      ORDER BY NomeTerceiro, Tipo, Ordem
-   `;
-  const { startDate, endDate } = getMesRange(month, year);
-  const result = await db.query(query, [userId, startDate, endDate]);
-  return result.rows;
+      SELECT * FROM Lancamentos
+      WHERE UsuarioId = $1
+        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '')
+        AND DataVencimento >= $2 AND DataVencimento < $3
+     ORDER BY NomeTerceiro, Tipo, Ordem
+   LIMIT $4 OFFSET $5
+ `;
+ const result = await db.query(query, [userId, startDate, endDate, limit, offset]);
+  return { rows: result.rows, total };
 }
 
 async function getLancamentosCartaoPorPessoa(userId, pessoa, month, year, userName) {
