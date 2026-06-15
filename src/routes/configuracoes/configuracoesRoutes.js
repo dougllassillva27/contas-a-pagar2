@@ -31,6 +31,11 @@ module.exports = function (repo) {
       `,
         [userId, template]
       );
+
+      if (typeof repo.invalidateCache === 'function') {
+        repo.invalidateCache(userId);
+      }
+
       res.json({ success: true });
     })
   );
