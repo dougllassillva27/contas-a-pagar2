@@ -481,11 +481,13 @@ async function deleteLancamentosPorPessoa(userId, pessoa, month, year, userName)
 
 async function deleteMonth(userId, month, year) {
   const { startDate, endDate } = getMesRange(month, year);
-  await db.query('DELETE FROM Lancamentos WHERE UsuarioId = $1 AND DataVencimento >= $2 AND DataVencimento < $3', [
+  console.log('[deleteMonth] Deletando lancamentos para userId:', userId, 'month:', month, 'year:', year, 'startDate:', startDate, 'endDate:', endDate);
+  const result = await db.query('DELETE FROM Lancamentos WHERE UsuarioId = $1 AND DataVencimento >= $2 AND DataVencimento < $3', [
     userId,
     startDate,
     endDate,
   ]);
+  console.log('[deleteMonth] Linhas deletadas:', result.rowCount);
 }
 
 // ==============================================================================
@@ -736,7 +738,7 @@ async function bulkUpsertContasFixas(userId, operations) {
              generate_subscripts($1::text[], 1) as idx
     ),
     existing AS (
-      SELECT l.Id, p.idx
+      SELECT DISTINCT ON (p.idx) l.Id, p.idx
       FROM Lancamentos l
       INNER JOIN params p ON l.Descricao = p.descricao
         AND l.UsuarioId = $5
@@ -744,12 +746,13 @@ async function bulkUpsertContasFixas(userId, operations) {
         AND l.DataVencimento >= $6
         AND l.DataVencimento < $7
         AND (p.terceiro IS NULL OR l.NomeTerceiro = p.terceiro)
+      ORDER BY p.idx, l.Id DESC
     ),
     updated AS (
       UPDATE Lancamentos l
       SET Valor = p.valor
       FROM params p
-      WHERE l.Id = (SELECT Id FROM existing WHERE idx = p.idx)
+      WHERE l.Id = (SELECT Id FROM existing WHERE idx = p.idx LIMIT 1)
       RETURNING l.Id
     )
     INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao)
@@ -757,7 +760,7 @@ async function bulkUpsertContasFixas(userId, operations) {
            (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $5),
            '1970-01-01'
     FROM params p
-    WHERE NOT EXISTS (SELECT 1 FROM updated WHERE Id = (SELECT Id FROM existing WHERE idx = p.idx))
+    WHERE NOT EXISTS (SELECT 1 FROM updated WHERE Id = (SELECT Id FROM existing WHERE idx = p.idx LIMIT 1))
       AND NOT EXISTS (SELECT 1 FROM existing WHERE idx = p.idx);
   `;
 

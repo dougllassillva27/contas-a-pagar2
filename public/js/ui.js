@@ -15,7 +15,7 @@ function registerModalOpen() {
 
 function handleModalClose() {
   document.body.classList.remove('no-scroll');
-  if (!isBackNavigation && history.state && history.state.modal) {
+  if (!window.isBackNavigation && history.state && history.state.modal) {
     history.back();
   }
 }
@@ -26,14 +26,14 @@ window.addEventListener('popstate', () => {
   }
   const activeModal = document.querySelector('.modal-overlay.active');
   if (activeModal) {
-    isBackNavigation = true;
+    window.isBackNavigation = true;
     if (activeModal.id === 'modalConfirmar') fecharConfirmacao();
     else if (activeModal.id === 'modalAviso') fecharModalAviso();
     else if (activeModal.id === 'modalConfirmacaoAcao') fecharConfirmacaoAcao();
     else if (activeModal.id === 'modalCalcularLuz') fecharModalCalcularLuz();
     else if (activeModal.id === 'modalConfiguracoes') fecharModalConfiguracoes();
     else fecharModais();
-    isBackNavigation = false;
+    window.isBackNavigation = false;
   }
   fecharMenuContexto();
 });
@@ -73,7 +73,11 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey && e.key.toLowerCase() === 't') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
-    window.open(`/terceiros?month=${currentMonth}&year=${currentYear}`, '_blank');
+    const getCurrentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth : () => new Date().getMonth() + 1;
+    const getCurrentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear : () => new Date().getFullYear();
+    const month = getCurrentMonth();
+    const year = getCurrentYear();
+    window.open(`/terceiros?month=${month}&year=${year}`, '_blank');
   }
   if (e.altKey && e.key.toLowerCase() === 'b') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -83,7 +87,11 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey && e.code === 'KeyI') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
-    window.open(`/relatorio?month=${currentMonth}&year=${currentYear}`, '_blank');
+    const getCurrentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth : () => new Date().getMonth() + 1;
+    const getCurrentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear : () => new Date().getFullYear();
+    const month = getCurrentMonth();
+    const year = getCurrentYear();
+    window.open(`/relatorio?month=${month}&year=${year}`, '_blank');
   }
   if (e.altKey && e.key.toLowerCase() === 'c') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -96,6 +104,38 @@ document.addEventListener('keydown', (e) => {
     togglePrivacidadeGlobal();
   }
 });
+
+async function toggleMesFechado() {
+  const getCurrentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth : () => new Date().getMonth() + 1;
+  const getCurrentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear : () => new Date().getFullYear();
+  const month = getCurrentMonth();
+  const year = getCurrentYear();
+  try {
+    const res = await fetch('/api/meses-fechados/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month, year }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('[toggleMesFechado] Erro API:', err);
+      mostrarAviso('Erro', err.error || 'Falha ao alternar mês fechado.');
+      return;
+    }
+    const data = await res.json();
+    document.body.dataset.mesFechado = data.mesFechado.toString();
+    mostrarAviso(
+      'Sucesso',
+      data.mesFechado ? 'Mês fechado com sucesso!' : 'Mês reaberto com sucesso!'
+    );
+    if (typeof window.softRefresh === 'function') {
+      await window.softRefresh(undefined, false);
+    }
+  } catch (err) {
+    console.error('[toggleMesFechado] Erro de conexão:', err);
+    mostrarAviso('Erro', 'Erro de conexão.');
+  }
+}
 
 function isMesFechado() {
   return document.body.dataset.mesFechado === 'true';
@@ -491,6 +531,51 @@ function fecharConfirmacao() {
   handleModalClose();
   document.getElementById('modalConfirmar').classList.remove('active');
 }
+
+// Handler do botão de confirmação de exclusão
+if (document.getElementById('btnConfirmarExclusao')) {
+  document.getElementById('btnConfirmarExclusao').addEventListener('click', async () => {
+    if (!window.idExcluir) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/lancamentos/${window.idExcluir}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        fecharConfirmacao();
+        if (typeof window.softRefresh === 'function') {
+          await window.softRefresh(150, false);
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        if (typeof window.mostrarAviso === 'function') {
+          window.mostrarAviso('Erro', err.error || 'Falha ao excluir conta.');
+        }
+      }
+    } catch (err) {
+      if (typeof window.mostrarAviso === 'function') {
+        window.mostrarAviso('Erro', 'Erro de conexão.');
+      }
+    }
+  });
+}
+
+// Handler do botão de confirmação genérico (exclusão em massa)
+if (document.getElementById('btnConfirmarAcao')) {
+  document.getElementById('btnConfirmarAcao').addEventListener('click', async () => {
+    if (typeof window.acaoConfirmadaCallback === 'function') {
+      try {
+        await window.acaoConfirmadaCallback();
+      } catch (err) {
+        // Erro já foi tratado no callback
+      }
+    }
+  });
+}
+
 function mostrarAviso(titulo, msg) {
   registerModalOpen();
   document.getElementById('msgAvisoTitulo').innerText = titulo;
