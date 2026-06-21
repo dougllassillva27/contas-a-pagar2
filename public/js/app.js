@@ -24,8 +24,9 @@ import {
   executarCopia,
   executarDeleteMes
 } from './modules/lancamentos.js';
-import { isAnotacaoGlobal, carregarAnotacoes, alternarAbaAnotacao, alternarModoAnotacao, renderAnotacoesPreview, toggleChecklist, inserirFormatacao, salvarAnotacao } from './modules/anotacoes.js';
+import { isAnotacaoGlobal, carregarAnotacoes, alternarAbaAnotacao, alternarModoAnotacao, renderAnotacoesPreview, toggleChecklist, inserirFormatacao, salvarAnotacao, initAnotacoes } from './modules/anotacoes.js';
 import { salvarConfiguracoes, getRegrasSync, renderizarRegrasSync, salvarRegraSync, deletarRegraSync, finalizarWizard, finalizarWizardSozinho, concluirOnboarding } from './modules/configuracoes.js';
+import { showCustomTooltip, hideCustomTooltip, initTooltipListeners } from './modules/tooltips.js';
 
 // Expõe funções globalmente para compatibilidade com EJS templates
 Object.assign(window, {
@@ -64,16 +65,16 @@ Object.assign(window, {
   finalizarWizard,
   finalizarWizardSozinho,
   concluirOnboarding,
+  showCustomTooltip,
+  hideCustomTooltip,
 });
 
 // Variáveis globais mínimas
 let isSubmitting = false;
 window.resetSubmitting = () => { isSubmitting = false; };
 
-// Expõe funções adicionais para templates EJS inline
-Object.assign(window, {
-  // ... já exportadas acima
-});
+// Inicializa tooltips nos checkboxes do header
+initTooltipListeners();
 
 // Service Worker cleanup (localhost only)
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
