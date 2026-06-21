@@ -30,8 +30,29 @@ module.exports = function (repo, apiAuth) {
     try {
       const { descricao, valor, tipo, parcelas, terceiro, usuario_id } = req.body;
 
+      // Validações básicas
+      if (!descricao || typeof descricao !== 'string') {
+        return res.status(400).json({ success: false, error: 'Campo "descricao" é obrigatório' });
+      }
+      if (!valor) {
+        return res.status(400).json({ success: false, error: 'Campo "valor" é obrigatório' });
+      }
+      if (!tipo) {
+        return res.status(400).json({ success: false, error: 'Campo "tipo" é obrigatório' });
+      }
+      if (!usuario_id) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" é obrigatório' });
+      }
+
       const idUsuarioFinal = parseInt(usuario_id, 10);
+      if (isNaN(idUsuarioFinal) || idUsuarioFinal <= 0) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" deve ser um número válido' });
+      }
+
       const valorFinal = parseValor(valor);
+      if (isNaN(valorFinal) || valorFinal <= 0) {
+        return res.status(400).json({ success: false, error: `Valor inválido: "${valor}". Use formato "100,50" ou "100.50"` });
+      }
 
       // Decide tipo no banco (regra atual):
       // - "fixa" => FIXA
@@ -79,6 +100,12 @@ module.exports = function (repo, apiAuth) {
         },
       });
     } catch (err) {
+      console.error('❌ [INTEGRACAO] Erro ao criar lançamento:', {
+        message: err.message,
+        stack: err.stack,
+        body: req.body,
+        usuario_id: req.body.usuario_id,
+      });
       return res.status(500).json({ success: false, error: err.message });
     }
   });
