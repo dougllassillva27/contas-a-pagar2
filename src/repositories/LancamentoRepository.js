@@ -13,14 +13,15 @@ const cache = require('../helpers/cacheHelpers');
 // Helper para otimizar queries por mês/ano (B-Tree friendly)
 // ==============================================================================
 function getMesRange(month, year) {
-  const startDate = new Date(year, month - 1, 1).toISOString();
+  // Gera datas como 'YYYY-MM-DD' para evitar problemas de timezone
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
   let nextMonth = parseInt(month, 10) + 1;
   let nextYear = parseInt(year, 10);
   if (nextMonth > 12) {
     nextMonth = 1;
     nextYear++;
   }
-  const endDate = new Date(nextYear, nextMonth - 1, 1).toISOString();
+  const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
   return { startDate, endDate };
 }
 
@@ -105,37 +106,53 @@ async function getDashboardTotais(userId, month, year) {
 
 async function getDashboardDataModular(userId, month, year, userName) {
   const startTime = Date.now();
-  console.log(`[getDashboardDataModular] Iniciando busca para userId=${userId}, month=${month}, year=${year}`);
+  console.log(`[🔍 DEBUG-MODULAR] >>> INICIANDO getDashboardDataModular para userId=${userId}, time=${Date.now()}`);
 
   try {
-    // Executa queries independentes em paralelo
-    const [totais, fixas, cartao, resumoPessoas, dadosTerceirosRaw, anotacoes, ordemCardsRaw, faturaManualVal, mesFechado, terceirosDistinct] = await Promise.all([
-      getDashboardTotais(userId, month, year),
-      getLancamentosPorTipo(userId, TIPO.FIXA, month, year),
-      getLancamentosPorTipo(userId, TIPO.CARTAO, month, year),
-      getResumoPessoas(userId, month, year, userName),
-      getDadosTerceiros(userId, month, year),
-      getAnotacoes(userId, month, year).then(r => r ? (r.Conteudo || r.conteudo || r) : ''),
-      getOrdemCards(userId),
-      getFaturaManual(userId, month, year).then(r => r || 0),
-      isMesFechado(userId, month, year),
-      getDistinctTerceiros(userId),
-    ]);
+    // Executa queries em paralelo — são independentes
+    // Pool com max=10 suporta até 10 conexões simultâneas
+    const queries = [
+      ['1/9 getDashboardTotais', () => getDashboardTotais(userId, month, year)],
+      ['2/9 getLancamentosPorTipo(FIXA)', () => getLancamentosPorTipo(userId, TIPO.FIXA, month, year)],
+      ['3/9 getLancamentosPorTipo(CARTAO)', () => getLancamentosPorTipo(userId, TIPO.CARTAO, month, year)],
+      ['4/9 getResumoPessoas', () => getResumoPessoas(userId, month, year, userName)],
+      ['5/9 getDadosTerceiros', () => getDadosTerceiros(userId, month, year)],
+      ['6/9 getAnotacoes', () => getAnotacoes(userId, month, year).then(r => r ? (r.Conteudo || r.conteudo || r) : '')],
+      ['7/9 getOrdemCards', () => getOrdemCards(userId)],
+      ['8/9 getFaturaManual', () => getFaturaManual(userId, month, year).then(r => r || 0)],
+      ['9/9 isMesFechado + getDistinctTerceiros', async () => {
+        const [mesFechado, terceirosDistinct] = await Promise.all([
+          isMesFechado(userId, month, year),
+          getDistinctTerceiros(userId),
+        ]);
+        return { mesFechado, terceirosDistinct };
+      }],
+    ];
+
+    // Executa todas em paralelo com logs individuais
+    const results = await Promise.all(
+      queries.map(async ([label, fn]) => {
+        const qStart = Date.now();
+        const result = await fn();
+        console.log(`[🔍 DEBUG-MODULAR] [${label}] Completado em ${Date.now() - qStart}ms`);
+        return result;
+      })
+    );
 
     const elapsed = Date.now() - startTime;
-    console.log(`[getDashboardDataModular] Concluído em ${elapsed}ms`);
+    console.log(`[🔍 DEBUG-MODULAR] <<< getDashboardDataModular COMPLETO em ${elapsed}ms (paralelo)`);
 
     return {
-      totais,
-      fixas,
-      cartao,
-      anotacoes,
-      resumoPessoas,
-      dadosTerceirosRaw,
-      ordemCardsRaw,
-      faturaManualVal,
-      mesFechado,
-      terceirosDistinct,
+      totais: results[0],
+      fixas: results[1],
+      cartao: results[2],
+      resumoPessoas: results[3],
+      dadosTerceirosRaw: results[4],
+      anotacoes: results[5],
+      ordemCardsRaw: results[6],
+      faturaManualVal: results[7],
+      mesFechado: results[8].mesFechado,
+      terceirosDistinct: results[8].terceirosDistinct,
     };
   } catch (err) {
     console.error('[getDashboardDataModular] Erro:', err.message);
@@ -431,14 +448,17 @@ async function reorderLancamentos(userId, itens) {
   try {
     await client.query('BEGIN');
 
-    // Associa a nova ordem e classifica estritamente pelo ID da tabela (ASC)
-    // para garantir o RowLock sequencial e eliminar deadlocks concorrentes.
-    const updates = itens.map((item, index) => ({ id: item.id, ordem: index }));
-    updates.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
+    // Bulk UPDATE via UNNEST — 1 query em vez de N
+    const ids = itens.map(i => i.id);
+    const ordens = itens.map((_, i) => i);
+    const userIds = itens.map(() => userId);
+    await client.query(
+      `UPDATE Lancamentos SET Ordem = data.ordem
+       FROM (SELECT UNNEST($1::int[]) AS id, UNNEST($2::int[]) AS ordem) AS data
+       WHERE Lancamentos.Id = data.id AND Lancamentos.UsuarioId = $3`,
+      [ids, ordens, userId]
+    );
 
-    for (const u of updates) {
-      await client.query('UPDATE Lancamentos SET Ordem = $1 WHERE Id = $2 AND UsuarioId = $3', [u.ordem, u.id, userId]);
-    }
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -480,14 +500,31 @@ async function deleteLancamentosPorPessoa(userId, pessoa, month, year, userName)
 }
 
 async function deleteMonth(userId, month, year) {
-  const { startDate, endDate } = getMesRange(month, year);
-  console.log('[deleteMonth] Deletando lancamentos para userId:', userId, 'month:', month, 'year:', year, 'startDate:', startDate, 'endDate:', endDate);
-  const result = await db.query('DELETE FROM Lancamentos WHERE UsuarioId = $1 AND DataVencimento >= $2 AND DataVencimento < $3', [
-    userId,
-    startDate,
-    endDate,
-  ]);
+  console.log('[deleteMonth] === INICIO ===');
+  console.log('[deleteMonth] userId:', userId, 'month:', month, 'year:', year);
+
+  // Primeiro, verificar se existem registros
+  const checkResult = await db.query(
+    'SELECT Id, DataVencimento, EXTRACT(MONTH FROM DataVencimento) as mes, EXTRACT(YEAR FROM DataVencimento) as ano FROM Lancamentos WHERE UsuarioId = $1 LIMIT 5',
+    [userId]
+  );
+  console.log('[deleteMonth] Primeiros 5 registros do usuario:', JSON.stringify(checkResult.rows));
+
+  // Verificar quantos registros existem no mes/ano alvo
+  const countResult = await db.query(
+    'SELECT COUNT(*) FROM Lancamentos WHERE UsuarioId = $1 AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3',
+    [userId, month, year]
+  );
+  console.log('[deleteMonth] Total de registros no mes/ano alvo:', countResult.rows[0].count);
+
+  // Agora deletar
+  const result = await db.query(
+    'DELETE FROM Lancamentos WHERE UsuarioId = $1 AND EXTRACT(MONTH FROM DataVencimento) = $2 AND EXTRACT(YEAR FROM DataVencimento) = $3',
+    [userId, month, year]
+  );
   console.log('[deleteMonth] Linhas deletadas:', result.rowCount);
+  console.log('[deleteMonth] === FIM ===');
+  return result.rowCount;
 }
 
 // ==============================================================================
@@ -936,6 +973,7 @@ function invalidateDashboardCache(userId, month, year) {
 }
 
 module.exports = {
+  normalizarTerceiro, // ✅ Exportar função de normalização
   getUltimosLancamentos,
   getRelatorioMensal,
   getDashboardTotals: getDashboardTotais,
