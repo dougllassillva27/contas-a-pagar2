@@ -56,6 +56,13 @@ export function alternarModoAnotacao() {
   }
 }
 
+export function initAnotacoes() {
+  if (document.getElementById('anotacoesArea')) {
+    currentAnotacaoText = document.getElementById('anotacoesArea').value;
+    renderAnotacoesPreview();
+  }
+}
+
 export function renderAnotacoesPreview() {
   const preview = document.getElementById('anotacoesPreview');
   if (!preview) return;
