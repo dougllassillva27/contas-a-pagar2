@@ -4,6 +4,9 @@
 
 import { escapeHTML, softRefreshCache, SOFT_REFRESH_TTL } from './shared.js';
 
+// Abort controller global para cancelar soft refresh pendente
+let _currentAbortController = null;
+
 // Variáveis de contexto (injetadas via window)
 export function getCurrentMonth() {
   return parseInt(document.body.dataset.month, 10);
@@ -47,14 +50,19 @@ export async function softRefresh(delayOverride, useCache = true) {
   if (useCache) {
     const cached = softRefreshCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < SOFT_REFRESH_TTL) {
-      console.log('[SoftRefresh] ♻️ Usando cache (30s TTL)');
       applyCachedHTML(cached.html);
       return;
     }
   }
 
+  // Cancela soft refresh anterior se ainda estiver rodando
+  if (_currentAbortController) {
+    _currentAbortController.abort();
+  }
+  _currentAbortController = new AbortController();
+
   const startTime = Date.now();
-  const controller = new AbortController();
+  const controller = _currentAbortController;
   const timeoutId = setTimeout(() => {
     console.warn('%c[SoftRefresh] ⚠️ Timeout de 30.0s atingido!', 'color: #f59e0b; font-weight: bold;');
     controller.abort();
@@ -113,16 +121,22 @@ export async function softRefresh(delayOverride, useCache = true) {
 
     document.body.dataset.mesFechado = doc.body.dataset.mesFechado;
 
-    if (typeof initDragAndDrop === 'function') initDragAndDrop();
-    if (typeof initCardDragAndDrop === 'function') initCardDragAndDrop();
-    if (typeof initTouchCardDragAndDrop === 'function') {
-      window.__touchCardDndInicializado = false;
-      initTouchCardDragAndDrop();
+    if (typeof window.initDragAndDrop === 'function') {
+      window.__rowDndInicializado = false;
+      window.initDragAndDrop();
     }
-    if (typeof initDoubleTapMobile === 'function') initDoubleTapMobile();
-    if (typeof initTouchDragAndDrop === 'function') {
+    if (typeof window.initCardDragAndDrop === 'function') {
+      window.__cardDndInicializado = false;
+      window.initCardDragAndDrop();
+    }
+    if (typeof window.initTouchCardDragAndDrop === 'function') {
+      window.__touchCardDndInicializado = false;
+      window.initTouchCardDragAndDrop();
+    }
+    if (typeof window.initDoubleTapMobile === 'function') window.initDoubleTapMobile();
+    if (typeof window.initTouchDragAndDrop === 'function') {
       window.__touchDndInicializado = false;
-      initTouchDragAndDrop();
+      window.initTouchDragAndDrop();
     }
 
     if (document.getElementById('anotacoesArea')) {
@@ -134,16 +148,14 @@ export async function softRefresh(delayOverride, useCache = true) {
     softRefreshCache.set(cacheKey, { html: extractHTML(), timestamp: Date.now() });
   } catch (err) {
     clearTimeout(timeoutId);
-    console.error('%c[SoftRefresh] ❌ Falha catastrófica no Soft Refresh:', 'color: #ef4444; font-weight: bold;', err);
+    if (err.name === 'AbortError') {
+      return; // Não loga erro nem faz nada — foi cancelado intencionalmente
+    }
+    console.error('%c[SoftRefresh] ❌ Falha no Soft Refresh:', 'color: #ef4444; font-weight: bold;', err);
     localStorage.setItem('last_soft_refresh_error', err.stack || err.toString());
 
-    if (err.name === 'AbortError') {
-      console.warn('[SoftRefresh] Recarregando página devido a Timeout/Abort de rede.');
-      window.location.reload();
-    } else {
-      console.error('[SoftRefresh] Mantendo a página sem reload para diagnóstico de erro de execução.');
-      alert('Erro no SoftRefresh: ' + err.message + '\nPor favor, copie o erro do console F12!');
-    }
+    // NÃO recarrega a página — se soft refresh falhar, reload causaria loop infinito
+    console.warn('[SoftRefresh] Mantendo página sem reload após erro.');
   }
 }
 

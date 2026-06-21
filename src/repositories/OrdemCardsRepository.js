@@ -14,8 +14,13 @@ async function saveOrdemCards(userId, listaNomes) {
   try {
     await client.query('BEGIN');
     await client.query('DELETE FROM OrdemCards WHERE UsuarioId = $1', [userId]);
-    for (let i = 0; i < listaNomes.length; i++) {
-      await client.query('INSERT INTO OrdemCards (Nome, Ordem, UsuarioId) VALUES ($1, $2, $3)', [listaNomes[i], i, userId]);
+    if (listaNomes.length > 0) {
+      // Bulk insert via UNNEST — 1 query em vez de N
+      const indices = listaNomes.map((_, i) => i);
+      await client.query(
+        'INSERT INTO OrdemCards (Nome, Ordem, UsuarioId) SELECT * FROM UNNEST($1::text[], $2::int[], $3::int[])',
+        [listaNomes, indices, listaNomes.map(() => userId)]
+      );
     }
     await client.query('COMMIT');
   } catch (err) {

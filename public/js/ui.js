@@ -6,6 +6,7 @@
 // Evita que history.back() assíncrono dispare fecharModais() reentrante que
 // destruiria o modalAviso criado logo após o softRefresh no fluxo de dividir conta.
 let _suppressPopstate = false;
+let pessoaSelecionadaContexto = null;
 
 function registerModalOpen() {
   if (document.activeElement) document.activeElement.blur();
@@ -316,10 +317,35 @@ function fecharModalConfiguracoes() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Restaura estado hide-rendas do localStorage
+  if (localStorage.getItem('hideRendas') === 'true') {
+    const icon = document.getElementById('iconEyeRendas');
+    if (icon) icon.innerText = 'visibility_off';
+  }
+
   document.querySelectorAll('th input[type="checkbox"]').forEach((checkbox) => {
     checkbox.setAttribute('data-tooltip', 'Marcar todas como já calculadas');
     checkbox.setAttribute('data-tooltip-dir', 'bottom-right');
   });
+
+  // Inicializa drag & drop na carga inicial (monólito fazia no DOMContentLoaded)
+  if (typeof window.initDragAndDrop === 'function') {
+    window.__rowDndInicializado = false;
+    window.initDragAndDrop();
+  }
+  if (typeof window.initCardDragAndDrop === 'function') {
+    window.__cardDndInicializado = false;
+    window.initCardDragAndDrop();
+  }
+  if (typeof window.initTouchCardDragAndDrop === 'function') {
+    window.__touchCardDndInicializado = false;
+    window.initTouchCardDragAndDrop();
+  }
+  if (typeof window.initDoubleTapMobile === 'function') window.initDoubleTapMobile();
+  if (typeof window.initTouchDragAndDrop === 'function') {
+    window.__touchDndInicializado = false;
+    window.initTouchDragAndDrop();
+  }
 });
 
 function initDoubleTapMobile() {
@@ -443,6 +469,30 @@ window.toggleRowSelection = function (e, row) {
   if (e.target.tagName === 'INPUT' || e.target.closest('.actions')) return;
   row.classList.toggle('selected-row');
 };
+
+// ✅ Marcar TODAS as contas do modal Últimas Adições como conferidas
+async function executarAcaoConferidoLote() {
+  fecharMenuContexto();
+  mostrarLoading();
+  try {
+    const res = await fetch('/api/lancamentos/conferido-recentes', { method: 'POST' });
+    if (res.ok) {
+      document.querySelectorAll('#listaUltimasConteudo tr').forEach((row) => {
+        row.classList.add('conferido');
+        const cb = row.querySelector('input[type="checkbox"]');
+        if (cb) cb.checked = true;
+      });
+      if (typeof window.atualizarTotalNaoConferido === 'function') window.atualizarTotalNaoConferido();
+      ocultarLoading();
+    } else {
+      ocultarLoading();
+      mostrarAviso('Erro', 'Falha ao atualizar lote.');
+    }
+  } catch (err) {
+    ocultarLoading();
+    console.error(err);
+  }
+}
 
 function fecharModais() {
   handleModalClose();
@@ -665,6 +715,31 @@ function handleEnterFatura(e, input) {
   if (e.key === 'Enter') input.blur();
 }
 
+async function salvarFaturaManual(input) {
+  let val = input.value;
+  if (!val) val = '0';
+  const month = parseInt(document.body.dataset.month, 10);
+  const year = parseInt(document.body.dataset.year, 10);
+  try {
+    const res = await fetch('/api/fatura-manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ valor: val, month, year }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      mostrarAviso('Erro', data.error);
+      return;
+    }
+    const num = parseFloat(val.replace('R$', '').replace(/\./g, '').replace(',', '.') || 0);
+    input.value = num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    input.style.color = 'var(--green)';
+    setTimeout(() => (input.style.color = 'var(--blue)'), 500);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function togglePrivacidadeGlobal() {
   const html = document.documentElement;
   if (html.classList.contains('hide-global-mode')) {
@@ -849,5 +924,205 @@ function fallbackCopiarAoClipboard(text) {
     document.getSelection().removeAllRanges();
     document.getSelection().addRange(selected);
   }
+}
+
+// ==============================================================================
+// ✅ ATUALIZAR TOTAIS DO DASHBOARD (sem reload completo)
+// Chamado após toggle de status PAGO/PENDENTE.
+// ==============================================================================
+async function atualizarTotais() {
+  const month = parseInt(document.body.dataset.month, 10);
+  const year = parseInt(document.body.dataset.year, 10);
+  try {
+    const res = await fetch(`/api/dashboard/totals?month=${month}&year=${year}`);
+    if (!res.ok) return;
+    const totais = await res.json();
+
+    const formatarMoeda = (n) => 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    const elRendas = document.getElementById('valorRendas');
+    const elContas = document.getElementById('valorContas');
+    const elFalta = document.getElementById('valorFaltaPagar');
+    const elSaldo = document.getElementById('valorSaldo');
+    const elContasCasa = document.getElementById('valorContasCasa');
+
+    if (elRendas) elRendas.textContent = formatarMoeda(totais.totalrendas);
+    if (elContas) elContas.textContent = formatarMoeda(totais.totalcontas);
+    if (elFalta) elFalta.textContent = formatarMoeda(totais.faltapagar);
+    if (elContasCasa) elContasCasa.textContent = formatarMoeda(totais.totalCasa);
+    if (elSaldo) {
+      elSaldo.textContent = formatarMoeda(totais.saldoprevisto);
+      elSaldo.classList.remove('vermelho', 'verde');
+      elSaldo.classList.add(Number(totais.saldoprevisto) < 0 ? 'vermelho' : 'verde');
+    }
+
+    // Atualiza totalizadores de painéis
+    const elFixas = document.getElementById('totalPanelFixas');
+    const elCartao = document.getElementById('totalPanelCartao');
+    const elCartaoGeral = document.getElementById('totalPanelCartaoGeral');
+    if (elFixas) elFixas.textContent = formatarMoeda(totais.fixasPendente);
+    if (elCartao) elCartao.textContent = formatarMoeda(totais.cartaoPendente);
+    if (elCartaoGeral) elCartaoGeral.textContent = formatarMoeda(totais.cartaoGeral);
+
+    // Atualiza resumo de pessoas
+    if (totais.resumoPessoas) {
+      totais.resumoPessoas.forEach((p) => {
+        const spanResumo = document.getElementById('totalResumo_' + p.pessoa.replace(/\s/g, ''));
+        if (spanResumo) spanResumo.textContent = formatarMoeda(p.total);
+      });
+    }
+
+    // Atualiza totais de terceiros
+    if (totais.terceiros) {
+      totais.terceiros.forEach((t) => {
+        const baseId = t.nome.replace(/\s/g, '');
+        const elTG = document.getElementById('totalTerceiroGeral_' + baseId);
+        const elTC = document.getElementById('totalTerceiroCartao_' + baseId);
+        const elTF = document.getElementById('totalTerceiroFixas_' + baseId);
+        if (elTG) elTG.textContent = formatarMoeda(t.totalGeral);
+        if (elTC) elTC.textContent = formatarMoeda(t.totalCartao);
+        if (elTF) elTF.textContent = formatarMoeda(t.totalFixas);
+      });
+    }
+  } catch (err) {
+    console.error('[atualizarTotais] Erro:', err);
+  }
+}
+
+// ==============================================================================
+// ✅ FUNÇÕES DE MODAL PARA CARTÃO E RENDAS (exportadas para window)
+// ==============================================================================
+
+async function abrirModalCartaoPessoa(nomePessoa) {
+  const month = parseInt(document.body.dataset.month, 10);
+  const year = parseInt(document.body.dataset.year, 10);
+
+
+  // Ativar modal ANTES do fetch para feedback visual imediato
+  registerModalOpen();
+  const modal = document.getElementById('modalDetalhesCartao');
+  if (modal) modal.classList.add('active');
+
+  // Carregar dados do cartão via API
+  try {
+    const res = await fetch(`/api/cartao/${encodeURIComponent(nomePessoa)}?month=${month}&year=${year}`);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const itens = await res.json();
+
+    document.getElementById('tituloModalCartao').innerText = `Cartão - ${nomePessoa}`;
+    document.getElementById('totalModalCartao').innerText = '';
+    const container = document.getElementById('listaCartaoPessoaConteudo');
+    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Carregando...</td></tr>';
+
+    if (itens.length === 0) {
+      container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum lançamento.</td></tr>';
+      return;
+    }
+
+    const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
+    document.getElementById('totalModalCartao').innerText =
+      'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    let html = '';
+    itens.forEach((item) => {
+      const v = Number(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      const safeDesc = escapeHTML(item.descricao).replace(/'/g, "\\'");
+      const pAtual = item.parcelaatual || '';
+      const pTotal = item.totalparcelas || '';
+      const safePessoa = escapeHTML(item.nometerceiro || '').replace(/'/g, "\\'");
+      let parcelasTexto =
+        item.parcelaatual && item.totalparcelas
+          ? `<small style="color:var(--text-secondary); margin-left:5px;">(${String(item.parcelaatual).padStart(2, '0')}/${String(item.totalparcelas).padStart(2, '0')})</small>`
+          : '';
+      const classePago = item.status === 'PAGO' ? ' linha-paga' : '';
+      const classeUltima =
+        item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1
+          ? ' ultima-parcela'
+          : '';
+      const titleUltima = classeUltima ? ' data-tooltip="Última parcela ✅"' : '';
+      html += `<tr class="draggable-row${classePago}${classeUltima}" draggable="true" data-id="${item.id}"><td width="20"><span class="material-icons drag-handle" style="font-size:16px;">drag_indicator</span></td><td width="30"><input type="checkbox" onchange="alternarStatus(this, ${item.id})" ${item.status === 'PAGO' ? 'checked' : ''}></td><td${titleUltima}>${escapeHTML(item.descricao)} ${parcelasTexto}</td><td class="text-right">R$ ${v}</td><td class="actions"><span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="moverMes(event, [${item.id}], -1)" data-tooltip="Mover para mês anterior" data-tooltip-dir="left">chevron_left</span><span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="moverMes(event, [${item.id}], 1)" data-tooltip="Mover para próximo mês" data-tooltip-dir="left">chevron_right</span><span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="editarConta(${item.id}, '${safeDesc}', '${v}', '${item.parcelaatual ? 'Parcelada' : 'Única'}', '${pAtual}', '${pTotal}', '${safePessoa}')" data-tooltip="Editar conta" data-tooltip-dir="left">edit</span><span class="material-icons" role="button" tabindex="0" style="font-size:18px;" onclick="confirmarExclusao(${item.id})" data-tooltip="Excluir conta" data-tooltip-dir="left">delete</span></td></tr>`;
+    });
+    container.innerHTML = html;
+
+    // Reinicializar drag and drop (reset flags para permitir init nos novos elementos)
+    if (typeof window.initDragAndDrop === 'function') {
+      window.__rowDndInicializado = false;
+      window.initDragAndDrop();
+    }
+    if (typeof window.initTouchDragAndDrop === 'function') {
+      window.__touchDndInicializado = false;
+      window.initTouchDragAndDrop();
+    }
+  } catch (err) {
+    console.error('[abrirModalCartaoPessoa] Erro:', err);
+    mostrarAviso('Erro', 'Não foi possível carregar os dados do cartão.');
+  }
+}
+
+async function abrirModalRendasDetalhes() {
+  const month = parseInt(document.body.dataset.month, 10);
+  const year = parseInt(document.body.dataset.year, 10);
+
+  registerModalOpen();
+  const modal = document.getElementById('modalRendasDetalhes');
+  if (modal) modal.classList.add('active');
+
+  // Carregar dados de rendas via API
+  try {
+    const res = await fetch(`/api/rendas?month=${month}&year=${year}`);
+    const dados = await res.json();
+
+    const conteudo = document.getElementById('listaRendasConteudo');
+    const rendas = Array.isArray(dados) ? dados : (dados.rendas || []);
+
+    if (conteudo) {
+      if (rendas.length === 0) {
+        conteudo.innerHTML = '<div style="text-align:center; padding:20px;">Nenhuma renda encontrada.</div>';
+      } else {
+        let html = '';
+        rendas.forEach(r => {
+          const v = Number(r.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+          const safeDesc = escapeHTML(r.descricao).replace(/'/g, "\\'");
+          const cat = escapeHTML(r.categoria || '').replace(/'/g, "\\'");
+          const rawValor = String(r.valor).replace('.', ',');
+          html += `<div class="renda-item" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color, #eee);">
+            <span>${escapeHTML(r.descricao)}</span>
+            <span><strong>R$ ${v}</strong></span>
+            <span>
+              <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="editarRenda(${r.id},'${safeDesc}','${rawValor}','${cat}')" data-tooltip="Editar renda">edit</span>
+              <span class="material-icons" role="button" tabindex="0" style="font-size:18px; cursor:pointer;" onclick="confirmarExclusao(${r.id})" data-tooltip="Excluir renda">delete</span>
+            </span>
+          </div>`;
+        });
+        conteudo.innerHTML = html;
+      }
+    }
+  } catch (err) {
+    console.error('[abrirModalRendasDetalhes] Erro:', err);
+    mostrarAviso('Erro', 'Não foi possível carregar os dados de rendas.');
+  }
+}
+
+// Exportar para window (para compatibilidade com HTML inline)
+window.abrirModalCartaoPessoa = abrirModalCartaoPessoa;
+window.abrirModalRendasDetalhes = abrirModalRendasDetalhes;
+window.atualizarTotais = atualizarTotais;
+
+function formatarValor(valor) {
+  return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 

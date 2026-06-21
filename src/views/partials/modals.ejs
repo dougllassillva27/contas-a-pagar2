@@ -7,11 +7,11 @@
       Compartilhar Link
     </li>
     <li class="menu-divider"></li>
-    <li onclick="executarAcaoEmLotePessoa('PAGO')" role="button" tabindex="0">
+    <li onclick="executarAcaoEmLotePessoa('PAGO', pessoaSelecionadaContexto, parseInt(document.body.dataset.month, 10), parseInt(document.body.dataset.year, 10))" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--verde)">check_circle</span>
       Marcar todas como Pagas
     </li>
-    <li onclick="executarAcaoEmLotePessoa('PENDENTE')" role="button" tabindex="0">
+    <li onclick="executarAcaoEmLotePessoa('PENDENTE', pessoaSelecionadaContexto, parseInt(document.body.dataset.month, 10), parseInt(document.body.dataset.year, 10))" role="button" tabindex="0">
       <span class="material-icons" style="color: var(--orange)">history</span>
       Marcar todas como Pendentes
     </li>

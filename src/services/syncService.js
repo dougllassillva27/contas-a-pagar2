@@ -1,5 +1,8 @@
 // src/services/syncService.js
 
+// Mutex global para evitar múltiplas execuções concorrentes do sync
+const _syncPromises = new Map();
+
 /**
  * Motor de Sincronização Dinâmico (SaaS Ready)
  * Processa regras declarativas armazenadas no JSONB do usuário.
@@ -11,56 +14,75 @@
  * @param {Array} regras - Array de objetos de regra (vindo de configuracoes.regras_sync)
  */
 async function executarSincronizacaoDinamica(repo, userId, month, year, regras) {
-  if (!Array.isArray(regras) || regras.length === 0) {
-    console.warn(`[SYNC] ⚠️ Nenhuma regra configurada para usuário ${userId}`);
+  const mutexKey = `${userId}:${month}:${year}`;
+
+  // Se já tem sync rodando para este usuário/mês/ano, retorna imediatamente
+  if (_syncPromises.has(mutexKey)) {
+    console.log(`[SYNC] ⏭️ Sync já em execução para usuário ${userId}, mês ${month}/${year} — pulando`);
     return;
   }
 
-  console.log(`[SYNC] �� Iniciando sincronização dinâmica para usuário ${userId}, mês ${month}/${year}`);
-  console.log(`[SYNC] �� ${regras.length} regra(s) encontrada(s)`);
+  // Cria promise que será resolvida quando o sync terminar
+  let resolvePromise;
+  const syncPromise = new Promise(resolve => { resolvePromise = resolve; });
+  _syncPromises.set(mutexKey, syncPromise);
 
-  const startTotal = Date.now();
-  let regrasProcessadas = 0;
-  let regrasComErro = 0;
-
-  for (const regra of regras) {
-    try {
-      const { tipo, ativo = true } = regra;
-      if (!ativo) {
-        console.log(`[SYNC] ⏭️ Regra ${tipo} inativa, pulando`);
-        continue;
-      }
-
-      console.log(`[SYNC] ▶️ Processando regra: ${JSON.stringify(regra)}`);
-      const startRegra = Date.now();
-
-      switch (tipo) {
-        case 'COPIA_TOTAL':
-          await processarCopiaTotal(repo, userId, month, year, regra);
-          break;
-
-        case 'DIVISAO_CASA':
-          await processarDivisaoCasa(repo, userId, month, year, regra);
-          break;
-
-        default:
-          console.warn(`[SYNC] ❓ Tipo de regra desconhecido: ${tipo}`);
-          continue;
-      }
-
-      const durationRegra = Date.now() - startRegra;
-      regrasProcessadas++;
-      console.log(`[SYNC] ✅ Regra ${tipo} processada em ${durationRegra}ms`);
-    } catch (err) {
-      regrasComErro++;
-      console.error(`[SYNC] ❌ Erro ao processar regra ${regra.tipo}:`, err.message);
-      console.error(`[SYNC] Stack:`, err.stack);
+  try {
+    if (!Array.isArray(regras) || regras.length === 0) {
+      console.warn(`[SYNC] ⚠️ Nenhuma regra configurada para usuário ${userId}`);
+      return;
     }
-  }
 
-  const durationTotal = Date.now() - startTotal;
-  console.log(`[SYNC] �� Sincronização concluída: ${regrasProcessadas} regra(s) processadas, ${regrasComErro} erro(s)`);
-  console.log(`[SYNC] ⏱️ Tempo total: ${durationTotal}ms`);
+    console.log(`[SYNC] 🚀 Iniciando sincronização dinâmica para usuário ${userId}, mês ${month}/${year}`);
+    console.log(`[SYNC] 📋 ${regras.length} regra(s) encontrada(s)`);
+
+    const startTotal = Date.now();
+    let regrasProcessadas = 0;
+    let regrasComErro = 0;
+
+    for (const regra of regras) {
+      try {
+        const { tipo, ativo = true } = regra;
+        if (!ativo) {
+          console.log(`[SYNC] ⏭️ Regra ${tipo} inativa, pulando`);
+          continue;
+        }
+
+        console.log(`[SYNC] ▶️ Processando regra: ${JSON.stringify(regra)}`);
+        const startRegra = Date.now();
+
+        switch (tipo) {
+          case 'COPIA_TOTAL':
+            await processarCopiaTotal(repo, userId, month, year, regra);
+            break;
+
+          case 'DIVISAO_CASA':
+            await processarDivisaoCasa(repo, userId, month, year, regra);
+            break;
+
+          default:
+            console.warn(`[SYNC] ❓ Tipo de regra desconhecido: ${tipo}`);
+            continue;
+        }
+
+        const durationRegra = Date.now() - startRegra;
+        regrasProcessadas++;
+        console.log(`[SYNC] ✅ Regra ${tipo} processada em ${durationRegra}ms`);
+      } catch (err) {
+        regrasComErro++;
+        console.error(`[SYNC] ❌ Erro ao processar regra ${regra.tipo}:`, err.message);
+        console.error(`[SYNC] Stack:`, err.stack);
+      }
+    }
+
+    const durationTotal = Date.now() - startTotal;
+    console.log(`[SYNC] 🏁 Sincronização concluída: ${regrasProcessadas} regra(s) processadas, ${regrasComErro} erro(s)`);
+    console.log(`[SYNC] ⏱️ Tempo total: ${durationTotal}ms`);
+  } finally {
+    // Libera mutex e resolve a promise
+    _syncPromises.delete(mutexKey);
+    resolvePromise();
+  }
 }
 
 /**
@@ -74,11 +96,11 @@ async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
     return;
   }
 
-  console.log(`[SYNC] �� COPIA_TOTAL: Buscando total de '${terceiroOrigem}' (U:${sourceUserId}) para mês ${month}/${year}`);
+  console.log(`[SYNC] 💰 COPIA_TOTAL: Buscando total de '${terceiroOrigem}' (U:${sourceUserId}) para mês ${month}/${year}`);
   const total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
-  console.log(`[SYNC] �� Total encontrado: R$ ${total}`);
+  console.log(`[SYNC] 💰 Total encontrado: R$ ${total}`);
 
-  console.log(`[SYNC] �� Atualizando/criando '${contaDestino}' para usuário destino (U:${usuarioDestino})`);
+  console.log(`[SYNC] 💰 Atualizando/criando '${contaDestino}' para usuário destino (U:${usuarioDestino})`);
   await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, total, month, year);
 
   console.log(`[SYNC] ✅ Copiado R$ ${total} de '${terceiroOrigem}' (U:${sourceUserId}) -> '${contaDestino}' (U:${usuarioDestino})`);

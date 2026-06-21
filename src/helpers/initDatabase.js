@@ -32,6 +32,9 @@ async function initDatabase() {
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_ordem ON Lancamentos(UsuarioId, Ordem)');
     await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_datacriacao ON Lancamentos(UsuarioId, DataCriacao DESC)');
 
+    // Índice composto para query getLancamentosPorTipo (UsuarioId + Tipo + DataVencimento)
+    await db.query('CREATE INDEX IF NOT EXISTS idx_lancamentos_tipo_usuario_data ON Lancamentos(Tipo, UsuarioId, DataVencimento)');
+
     // Índice funcional para otimizar o date_trunc na consulta de Últimos Lançamentos
     await db.query("CREATE INDEX IF NOT EXISTS idx_lancamentos_trunc_data ON Lancamentos (UsuarioId, date_trunc('second', DataCriacao) DESC)");
     

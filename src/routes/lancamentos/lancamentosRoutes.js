@@ -7,6 +7,7 @@ const router = express.Router();
 const { parseValor } = require('../../helpers/parseHelpers');
 const syncService = require('../../services/syncService');
 const asyncHandler = require('../../helpers/asyncHandler');
+const cache = require('../../helpers/cacheHelpers');
 const { classificarLancamento } = require('./classificacaoHelpers');
 
 module.exports = function (repo) {
@@ -61,7 +62,23 @@ module.exports = function (repo) {
       if (await repo.isMesFechado(req.session.user.id, nextMonth, nextYear)) {
         return res.status(403).json({ error: 'O mês de destino está fechado para alterações.' });
       }
-      await repo.copyMonth(req.session.user.id, parseInt(req.body.month, 10), parseInt(req.body.year, 10));
+      await repo.copyMonth(req.session.user.id, currentMonth, currentYear);
+
+      // ✅ Sincronização dinâmica em BACKGROUND (não bloqueia resposta)
+      const { executarSincronizacaoDinamica } = require('../../services/syncService');
+      setImmediate(async () => {
+        try {
+          const config = typeof repo.getConfiguracoes === 'function'
+            ? await repo.getConfiguracoes(req.session.user.id)
+            : null;
+          if (config && config.regras_sync && config.regras_sync.length > 0) {
+            await executarSincronizacaoDinamica(repo, req.session.user.id, nextMonth, nextYear, config.regras_sync);
+          }
+        } catch (err) {
+          console.error('[POST Copiar] Erro na sincronização em background:', err.message);
+        }
+      });
+
       res.json({ success: true });
     })
   );
@@ -101,14 +118,22 @@ module.exports = function (repo) {
   router.post(
     '/api/lancamentos/status-pessoa',
     asyncHandler(async (req, res) => {
+      const month = parseInt(req.body.month, 10);
+      const year = parseInt(req.body.year, 10);
+
+      if (!month || !year || month < 1 || month > 12) {
+        return res.status(400).json({ error: 'Mês e ano inválidos.' });
+      }
+
       await repo.updateStatusBatchPessoa(
         req.session.user.id,
         req.body.pessoa,
         req.body.status,
-        req.body.month,
-        req.body.year,
+        month,
+        year,
         req.session.user.nome
       );
+      cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
       res.json({ success: true });
     })
   );
@@ -343,6 +368,7 @@ module.exports = function (repo) {
         }
       }
       const deletedCount = await repo.deleteLancamentosEmLote(req.session.user.id, ids);
+      cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
       res.json({ success: true, deleted: deletedCount });
     })
   );
@@ -381,6 +407,7 @@ module.exports = function (repo) {
       }
 
       const updatedCount = await repo.moverLancamentosMes(userId, ids, offset);
+      cache.invalidate(`dashboard:totais:${userId}:`);
       res.json({ success: true, updated: updatedCount });
     })
   );
@@ -448,6 +475,8 @@ module.exports = function (repo) {
     '/api/lancamentos/:id/status',
     asyncHandler(async (req, res) => {
       await repo.updateStatus(req.session.user.id, req.params.id, req.body.status);
+      // Invalida cache de totais do dashboard para forçar dados frescos
+      cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
       res.json({ success: true });
     })
   );
