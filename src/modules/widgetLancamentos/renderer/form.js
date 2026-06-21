@@ -178,13 +178,17 @@
     loading.classList.remove('hidden');
     statusMessage.classList.add('hidden');
     
+    // ✅ FIX: Envia mês/ano atual para criar lançamento no mês correto
+    const now = new Date();
     const payload = {
       usuario_id: parseInt(usuarioInput.value, 10),
       descricao: descricaoInput.value.trim(),
       valor: valorInput.value.trim(),
       tipo: tipoInput.value,
       terceiro: document.getElementById('terceiro').value.trim() || null,
-      parcelas: tipoInput.value === 'parcelada' ? parcelasInput.value.trim() : ''
+      parcelas: tipoInput.value === 'parcelada' ? parcelasInput.value.trim() : '',
+      month: now.getMonth() + 1,
+      year: now.getFullYear()
     };
 
     try {

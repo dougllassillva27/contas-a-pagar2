@@ -10,19 +10,18 @@ export let currentAnotacaoText = '';
 let timeoutAnotacao = null;
 
 export async function carregarAnotacoes() {
-  const m = isAnotacaoGlobal ? 0 : getCurrentMonth();
-  const y = isAnotacaoGlobal ? 0 : getCurrentYear();
+  const area = document.getElementById('anotacoesArea');
+  if (!area) return;
 
-  try {
-    const res = await fetch(`/api/anotacoes?month=${m}&year=${y}`);
-    const data = await res.json();
-    currentAnotacaoText = data.conteudo || '';
-    const area = document.getElementById('anotacoesArea');
-    if (area) area.value = currentAnotacaoText;
-    renderAnotacoesPreview();
-  } catch (err) {
-    console.error('Erro ao carregar anotações', err);
+  // Usa dados pré-carregados no HTML (data-global e data-mensal)
+  if (isAnotacaoGlobal) {
+    currentAnotacaoText = area.dataset.global || '';
+  } else {
+    currentAnotacaoText = area.dataset.mensal || '';
   }
+
+  area.value = currentAnotacaoText;
+  renderAnotacoesPreview();
 }
 
 export function alternarAbaAnotacao(global) {
