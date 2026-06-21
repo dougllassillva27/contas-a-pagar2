@@ -50,33 +50,27 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      // 1. Lê as configurações e executa sincronização dinâmica (se houver regras)
+      const timestamp = new Date().toISOString();
+      console.log(`[${timestamp}] [🔍 DEBUG-GET] >>> INICIANDO GET / para userId=${userId}, time=${Date.now()}`);
+      console.log(`[${timestamp}] [🔍 DEBUG-GET] Headers: ${JSON.stringify(req.headers)}`);
+      console.log(`[${timestamp}] [🔍 DEBUG-GET] Query params: ${JSON.stringify(req.query)}`);
+      console.log(`[${timestamp}] [🔍 DEBUG-GET] Session ID: ${req.sessionID}`);
+
+      // 1. Lê as configurações
       let configuracoes = null;
       if (typeof repo.getConfiguracoes === 'function') {
         try {
+          console.log(`[🔍 DEBUG-GET] Lendo configuracoes...`);
           configuracoes = await repo.getConfiguracoes(userId);
+          console.log(`[🔍 DEBUG-GET] Configuracoes lidas com sucesso`);
         } catch (err) {
           console.error('[Dashboard] Falha ao ler configuracoes do banco:', err);
         }
       }
 
-      // ✅ EXECUTA SINCRONIZAÇÃO ANTES DE RENDERIZAR (F5 automático)
-      // Garante que os dados estejam atualizados ao carregar o dashboard
-      if (configuracoes && configuracoes.regras_sync && configuracoes.regras_sync.length > 0) {
-        try {
-          const syncService = require('../../services/syncService.js');
-          await syncService.executarSincronizacaoDinamica(
-            repo, userId, Number(month), Number(year), configuracoes.regras_sync
-          );
-          console.log(`[Dashboard GET] Sincronização dinâmica executada para usuário ${userId}`);
-        } catch (syncErr) {
-          console.error('[Dashboard GET] Erro na sincronização dinâmica:', syncErr.message);
-          // Não bloqueia renderização se sync falhar
-        }
-      }
-
-      // 3. Busca em lote os dados consolidados do dashboard usando abordagem modular
+      // 2. Busca dados do dashboard
       const startTime = Date.now();
+      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Chamando getDashboardDataModular em ${startTime}...`);
       const {
         totais,
         fixas,
@@ -90,19 +84,22 @@ module.exports = function (repo) {
         terceirosDistinct,
       } = await repo.getDashboardDataModular(userId, Number(month), Number(year), userName);
       const elapsed = Date.now() - startTime;
-      console.log(`[Dashboard GET] Dados carregados em ${elapsed}ms via getDashboardDataModular`);
+      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] getDashboardDataModular concluído em ${elapsed}ms`);
+      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Total queries executadas: 9 sequenciais`);
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
-      // ✅ FIX: Garante que configuracoes nunca seja nulo para evitar Erro 500 em novos usuários
+      // FIX: Garante que configuracoes nunca seja nulo
       const configuracoesValidas = configuracoes || {
         divisao_casa_minimo: '750.00',
         regras_sync: [],
         onboarding_completed: false
       };
 
+      const renderStart = Date.now();
+      console.log(`[🔍 DEBUG-GET] Iniciando render em ${renderStart}...`);
       res.render('index', {
         totais,
         fixas,
@@ -122,6 +119,8 @@ module.exports = function (repo) {
         configuracoes: configuracoesValidas,
         titulo: 'Gestão Financeira - Home',
       });
+      const renderEnd = Date.now();
+      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] <<< GET / COMPLETADO para userId=${userId}, tempo total=${Date.now() - startTime}ms, render=${renderEnd - renderStart}ms`);
     })
   );
 
@@ -148,7 +147,7 @@ module.exports = function (repo) {
         totalCasa,
         fixasPendente: fixas.filter((i) => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0),
         cartaoPendente: cartao.filter((i) => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0),
-        cartaoGeral: resumoPessoas.reduce((acc, i) => acc + Number(i.valor), 0),
+        cartaoGeral: resumoPessoas.reduce((acc, i) => acc + Number(i.total), 0),
         resumoPessoas: resumoPessoas.map((p) => ({ pessoa: p.pessoa, total: p.total })),
         terceiros: Object.values(terceirosMap).map((t) => ({
           nome: t.nome,

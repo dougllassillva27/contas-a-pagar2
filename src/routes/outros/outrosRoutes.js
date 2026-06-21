@@ -33,12 +33,11 @@ module.exports = function (repo) {
   router.post(
     '/api/fatura-manual',
     asyncHandler(async (req, res) => {
-      await repo.saveFaturaManual(
-        req.session.user.id,
-        parseInt(req.body.month, 10),
-        parseInt(req.body.year, 10),
-        parseValor(req.body.valor)
-      );
+      const userId = req.session.user.id;
+      const month = parseInt(req.body.month, 10);
+      const year = parseInt(req.body.year, 10);
+      const valor = parseValor(req.body.valor);
+      await repo.saveFaturaManual(userId, month, year, valor);
       res.json({ success: true });
     })
   );
@@ -47,8 +46,15 @@ module.exports = function (repo) {
   router.post(
     '/api/cards/reorder',
     asyncHandler(async (req, res) => {
+      console.log(`[🔍 DEBUG-REORDER] >>> POST /api/cards/reorder para userId=${req.session.user.id}, time=${Date.now()}`);
+      console.log(`[🔍 DEBUG-REORDER] Body recebido: ${JSON.stringify(req.body)}`);
+      const reorderStart = Date.now();
       await repo.saveOrdemCards(req.session.user.id, req.body.nomes);
+      const reorderElapsed = Date.now() - reorderStart;
+      console.log(`[🔍 DEBUG-REORDER] saveOrdemCards concluído em ${reorderElapsed}ms`);
+      console.log(`[🔍 DEBUG-REORDER] Enviando response {success: true}`);
       res.json({ success: true });
+      console.log(`[🔍 DEBUG-REORDER] <<< POST completado em ${Date.now() - reorderStart}ms`);
     })
   );
 

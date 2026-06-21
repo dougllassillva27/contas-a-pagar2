@@ -72,6 +72,10 @@ export async function executarAcaoEmLotePessoa(novoStatus, pessoaSelecionadaCont
     if (res.ok) {
       softRefreshCache.clear();
       await softRefresh(undefined, false);
+      // ✅ Fecha o menu de contexto após ação bem-sucedida
+      if (typeof window.fecharMenuContexto === 'function') {
+        window.fecharMenuContexto();
+      }
     } else {
       mostrarAviso('Erro', 'Falha ao atualizar lote.');
     }
@@ -124,6 +128,12 @@ export function confirmarExclusaoPessoa(pessoaSelecionadaContexto, checkBloqueio
 
 export async function moverMes(e, ids, direcao, checkBloqueioMesFechado, mostrarLoading, ocultarLoading, mostrarAviso) {
   if (e) e.stopPropagation();
+  // Fallback para inline onclick que nao passa os DI params
+  checkBloqueioMesFechado = checkBloqueioMesFechado || (typeof window.checkBloqueioMesFechado === 'function' ? window.checkBloqueioMesFechado : () => false);
+  mostrarLoading = mostrarLoading || (typeof window.mostrarLoading === 'function' ? window.mostrarLoading : () => {});
+  ocultarLoading = ocultarLoading || (typeof window.ocultarLoading === 'function' ? window.ocultarLoading : () => {});
+  mostrarAviso = mostrarAviso || (typeof window.mostrarAviso === 'function' ? window.mostrarAviso : () => {});
+  const fecharModais = typeof window.fecharModais === 'function' ? window.fecharModais : () => {};
   if (checkBloqueioMesFechado()) return;
   mostrarLoading();
   try {
@@ -137,6 +147,8 @@ export async function moverMes(e, ids, direcao, checkBloqueioMesFechado, mostrar
       ocultarLoading();
       mostrarAviso('Acesso Negado', data.error);
     } else if (res.ok) {
+      // Fecha modal primeiro para feedback visual imediato
+      fecharModais();
       softRefreshCache.clear();
       await softRefresh(undefined, false);
       ocultarLoading();
@@ -544,10 +556,9 @@ export async function executarCopia() {
   if (modalConfirmacao) modalConfirmacao.classList.remove('active');
 
   try {
-    const currentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth() : new Date().getMonth() + 1;
-    const currentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear() : new Date().getFullYear();
+    const currentMonth = getCurrentMonth();
+    const currentYear = getCurrentYear();
 
-    console.log('[executarCopia] Copiando mês:', currentMonth, currentYear);
 
     if (typeof window.mostrarLoading === 'function') window.mostrarLoading();
 
@@ -559,7 +570,6 @@ export async function executarCopia() {
 
     const data = await res.json();
 
-    console.log('[executarCopia] Resposta:', data);
 
     if (typeof window.ocultarLoading === 'function') window.ocultarLoading();
 
@@ -591,10 +601,9 @@ export async function executarDeleteMes() {
   if (modalConfirmacao) modalConfirmacao.classList.remove('active');
 
   try {
-    const currentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth() : new Date().getMonth() + 1;
-    const currentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear() : new Date().getFullYear();
+    const currentMonth = getCurrentMonth();
+    const currentYear = getCurrentYear();
 
-    console.log('[executarDeleteMes] Deletando mês:', currentMonth, currentYear);
 
     if (typeof window.mostrarLoading === 'function') window.mostrarLoading();
 
@@ -604,7 +613,6 @@ export async function executarDeleteMes() {
 
     const data = await res.json();
 
-    console.log('[executarDeleteMes] Resposta:', data);
 
     if (typeof window.ocultarLoading === 'function') window.ocultarLoading();
 

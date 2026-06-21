@@ -955,7 +955,7 @@ async function getOrdemCards(userId) {
 }
 
 async function getFaturaManual(userId, month, year) {
-  const query = `SELECT COALESCE(Valor, 0)::float FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3`;
+  const query = `SELECT COALESCE(Valor, 0)::float AS valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3`;
   const result = await db.query(query, [userId, month, year]);
   return result.rows[0]?.valor || 0;
 }

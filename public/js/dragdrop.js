@@ -2,31 +2,54 @@
 // ✅ public/js/dragdrop.js — Lógica de Movimentação e Ordenação
 // ==============================================================================
 
-// Versões com debounce para evitar flood de requisições no backend
-const salvarOrdemCardsDebounced = debounce(() => salvarOrdemCards(), 800);
-const salvarOrdemDebounced = debounce((container) => salvarOrdem(container), 800);
+// Sem debounce — fire-and-forget como no monólito original
+function salvarOrdemCardsDebounced() {
+  salvarOrdemCards();
+}
+function salvarOrdemDebounced(container) {
+  salvarOrdem(container);
+}
 
 // ===========================
 // ✅ DRAG & DROP CARDS (PC Anti-Flicker)
 // ===========================
+let _cardListenersMap = new WeakMap();
+
 function initCardDragAndDrop() {
   const draggables = document.querySelectorAll('.draggable-card');
   const container = document.querySelector('.drag-container-cards');
   if (!container) return;
 
+  // Remove listeners antigos antes de adicionar novos
   draggables.forEach((draggable) => {
-    draggable.addEventListener('dragstart', () => {
+    const oldHandlers = _cardListenersMap.get(draggable);
+    if (oldHandlers) {
+      draggable.removeEventListener('dragstart', oldHandlers.start);
+      draggable.removeEventListener('dragend', oldHandlers.end);
+    }
+
+    const startHandler = () => {
       draggable.classList.add('dragging');
-    });
-    draggable.addEventListener('dragend', () => {
+    };
+    const endHandler = () => {
       draggable.classList.remove('dragging');
       salvarOrdemCardsDebounced();
-    });
+    };
+
+    draggable.addEventListener('dragstart', startHandler);
+    draggable.addEventListener('dragend', endHandler);
+    _cardListenersMap.set(draggable, { start: startHandler, end: endHandler });
   });
-  container.addEventListener('dragover', (e) => {
+
+  // Limpa listener antigo do container se existir
+  if (container._dragoverHandler) {
+    container.removeEventListener('dragover', container._dragoverHandler);
+  }
+
+  const dragoverHandler = (e) => {
     e.preventDefault();
     const draggable = document.querySelector('.draggable-card.dragging');
-    if (!draggable) return;
+    if (!draggable || !container.contains(draggable)) return;
 
     const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')];
     let hoverCard = null;
@@ -44,7 +67,10 @@ function initCardDragAndDrop() {
       if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, hoverCard.nextSibling);
       else container.insertBefore(draggable, hoverCard);
     }
-  });
+  };
+
+  container.addEventListener('dragover', dragoverHandler);
+  container._dragoverHandler = dragoverHandler;
 }
 
 // ===========================
@@ -107,6 +133,7 @@ function initTouchCardDragAndDrop() {
   }
 }
 
+// Sem mutex — fire-and-forget como no monólito original
 async function salvarOrdemCards() {
   const container = document.querySelector('.drag-container-cards');
   if (!container) return;
@@ -125,23 +152,37 @@ async function salvarOrdemCards() {
 // ===========================
 // ✅ DRAG & DROP LINHAS (PC & MOBILE)
 // ===========================
+let _rowListenersMap = new WeakMap();
+
 function initDragAndDrop() {
   const draggables = document.querySelectorAll('.draggable-row');
   const containers = document.querySelectorAll('.drag-container');
+
+  // Limpa listeners antigos se já foram registrados
   draggables.forEach((draggable) => {
-    draggable.addEventListener('dragstart', () => {
-      draggable.classList.add('dragging');
-    });
-    draggable.addEventListener('dragend', () => {
+    const oldHandlers = _rowListenersMap.get(draggable);
+    if (oldHandlers) {
+      draggable.removeEventListener('dragstart', oldHandlers.start);
+      draggable.removeEventListener('dragend', oldHandlers.end);
+    }
+
+    const startHandler = () => draggable.classList.add('dragging');
+    const endHandler = () => {
       draggable.classList.remove('dragging');
       salvarOrdemDebounced(draggable.parentElement);
-    });
+    };
+
+    draggable.addEventListener('dragstart', startHandler);
+    draggable.addEventListener('dragend', endHandler);
+    _rowListenersMap.set(draggable, { start: startHandler, end: endHandler });
   });
   containers.forEach((container) => {
     container.ondragover = (e) => {
       e.preventDefault();
-      const afterElement = getDragAfterElement(container, e.clientY);
       const draggable = document.querySelector('.dragging');
+      // Só move se draggable for filho deste container (evita HierarchyRequestError)
+      if (!draggable || !container.contains(draggable)) return;
+      const afterElement = getDragAfterElement(container, e.clientY);
       if (afterElement == null) container.appendChild(draggable);
       else container.insertBefore(draggable, afterElement);
     };
