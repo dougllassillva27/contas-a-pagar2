@@ -59,7 +59,7 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
     const res = await request(app)
       .post('/api/v1/integracao/lancamentos')
       .set('x-api-key', 'teste-m2m-token')
-      .send({ descricao: 'Lançamento Bot', valor: 100 });
+      .send({ descricao: 'Lançamento Bot', valor: 100, tipo: 'fixa', usuario_id: 1 });
 
     expect(res.status).toBe(201);
     expect(repo.addLancamento).toHaveBeenCalled();

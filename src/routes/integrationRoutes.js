@@ -75,6 +75,11 @@ module.exports = function (repo, apiAuth) {
       // ✅ FIX: Normaliza terceiro "Eu", "Dodo" ou vazio para NULL
       const terceiroNormalizado = normalizarTerceiro(terceiro);
 
+      // ✅ FIX: Aceita mês/ano do cliente para criar lançamento no mês correto
+      const dataBase = req.body.month && req.body.year
+        ? new Date(parseInt(req.body.year, 10), parseInt(req.body.month, 10) - 1, 10)
+        : new Date();
+
       const dados = {
         descricao,
         valor: valorFinal,
@@ -83,7 +88,7 @@ module.exports = function (repo, apiAuth) {
         parcelaAtual: parcelasNorm.parcelaAtual,
         totalParcelas: parcelasNorm.totalParcelas,
         nomeTerceiro: terceiroNormalizado, // ✅ Usa valor normalizado
-        dataBase: new Date(),
+        dataBase,
       };
 
       await repo.addLancamento(idUsuarioFinal, dados);

@@ -92,7 +92,7 @@
                 <div id="anotacoesPreview" style="flex-grow: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-y: auto;"></div>
 
                 <!-- ÁREA DE EDIÇÃO RAW -->
-                <textarea id="anotacoesArea" oninput="salvarAnotacao()" placeholder="Suas anotações (suporta markdown básico)..." style="display: none; flex-grow: 1; width: 100%;"><%= typeof anotacoes !== 'undefined' && anotacoes ? (anotacoes.conteudo || anotacoes) : '' %></textarea>
+                <textarea id="anotacoesArea" oninput="salvarAnotacao()" placeholder="Suas anotações (suporta markdown básico)..." style="display: none; flex-grow: 1; width: 100%;"><%= typeof anotacoes !== 'undefined' && anotacoes?.global ? anotacoes.global : '' %></textarea>
             </div>
         </div>
 

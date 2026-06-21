@@ -73,16 +73,14 @@ describe('saveOrdemCards', () => {
     expect(mockClient.query).toHaveBeenCalledWith('DELETE FROM OrdemCards WHERE UsuarioId = $1', [1]);
     expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
 
-    // Verifica os INSERTs gerados dinamicamente
-    // Espera-se 3 chamadas de INSERT (uma para cada nome)
+    // Verifica o INSERT bulk via UNNEST (1 query em vez de N)
     const insertCalls = mockClient.query.mock.calls.filter(
       (call) => typeof call[0] === 'string' && call[0].includes('INSERT INTO OrdemCards')
     );
 
-    expect(insertCalls).toHaveLength(3);
-    expect(insertCalls[0][1]).toEqual(['Mãe', 0, 1]);
-    expect(insertCalls[1][1]).toEqual(['Casa', 1, 1]);
-    expect(insertCalls[2][1]).toEqual(['Davi', 2, 1]);
+    expect(insertCalls).toHaveLength(1);
+    expect(insertCalls[0][0]).toContain('UNNEST');
+    expect(insertCalls[0][1]).toEqual([['Mãe', 'Casa', 'Davi'], [0, 1, 2], [1, 1, 1]]);
 
     expect(mockClient.release).toHaveBeenCalled();
   });

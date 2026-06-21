@@ -117,7 +117,7 @@ async function getDashboardDataModular(userId, month, year, userName) {
       ['3/9 getLancamentosPorTipo(CARTAO)', () => getLancamentosPorTipo(userId, TIPO.CARTAO, month, year)],
       ['4/9 getResumoPessoas', () => getResumoPessoas(userId, month, year, userName)],
       ['5/9 getDadosTerceiros', () => getDadosTerceiros(userId, month, year)],
-      ['6/9 getAnotacoes', () => getAnotacoes(userId, month, year).then(r => r ? (r.Conteudo || r.conteudo || r) : '')],
+      ['6/9 getAnotacoes', () => getAnotacoes(userId, month, year)],
       ['7/9 getOrdemCards', () => getOrdemCards(userId)],
       ['8/9 getFaturaManual', () => getFaturaManual(userId, month, year).then(r => r || 0)],
       ['9/9 isMesFechado + getDistinctTerceiros', async () => {
@@ -943,9 +943,16 @@ async function dividirConta(userId, idOriginal, terceiros) {
 // ==============================================================================
 
 async function getAnotacoes(userId, month, year) {
-  const query = `SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3 LIMIT 1`;
-  const result = await db.query(query, [userId, month, year]);
-  return result.rows[0] || null;
+  // Busca anotação global (mes=0, ano=0) e mensal em paralelo
+  const [global, mensal] = await Promise.all([
+    db.query(`SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 AND Mes = 0 AND Ano = 0 LIMIT 1`, [userId]),
+    db.query(`SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3 LIMIT 1`, [userId, month, year])
+  ]);
+
+  return {
+    global: global.rows[0]?.conteudo || '',
+    mensal: mensal.rows[0]?.conteudo || ''
+  };
 }
 
 async function getOrdemCards(userId) {
