@@ -116,7 +116,7 @@ async function getDashboardDataModular(userId, month, year, userName) {
       ['2/9 getLancamentosPorTipo(FIXA)', () => getLancamentosPorTipo(userId, TIPO.FIXA, month, year)],
       ['3/9 getLancamentosPorTipo(CARTAO)', () => getLancamentosPorTipo(userId, TIPO.CARTAO, month, year)],
       ['4/9 getResumoPessoas', () => getResumoPessoas(userId, month, year, userName)],
-      ['5/9 getDadosTerceiros', () => getDadosTerceiros(userId, month, year)],
+      ['5/9 getDadosTerceiros', () => getDadosTerceiros(userId, month, year, 500)],
       ['6/9 getAnotacoes', () => getAnotacoes(userId, month, year)],
       ['7/9 getOrdemCards', () => getOrdemCards(userId)],
       ['8/9 getFaturaManual', () => getFaturaManual(userId, month, year).then(r => r || 0)],
