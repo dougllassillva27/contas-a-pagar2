@@ -87,8 +87,10 @@ module.exports = function (repo) {
       console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] getDashboardDataModular concluído em ${elapsed}ms`);
       console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Total queries executadas: 9 sequenciais`);
 
+      console.log(`[🔍 DEBUG-TERCEIROS] dadosTerceirosRaw:`, JSON.stringify(dadosTerceirosRaw));
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
+      console.log(`[🔍 DEBUG-TERCEIROS] listaTerceiros:`, JSON.stringify(listaTerceiros.map(t => ({ nome: t.nome, itensCartao: t.itensCartao.length }))));
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
       // FIX: Garante que configuracoes nunca seja nulo
@@ -139,6 +141,10 @@ module.exports = function (repo) {
        repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year)),
      ]);
 
+      console.log(`[🔍 DEBUG-TERCEIROS-API] dadosTerceirosRaw length:`, Array.isArray(dadosTerceirosRaw) ? dadosTerceirosRaw.length : 'N/A');
+      if (Array.isArray(dadosTerceirosRaw)) {
+        console.log(`[🔍 DEBUG-TERCEIROS-API] Primeiros 3 itens:`, JSON.stringify(dadosTerceirosRaw.slice(0, 3).map(i => ({ nome: i.nometerceiro, status: i.status }))));
+      }
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
