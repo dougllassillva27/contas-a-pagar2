@@ -176,36 +176,27 @@ async function getLancamentosPorTipo(userId, tipo, month, year) {
 }
 
 async function getDadosTerceiros(userId, month, year, limit = 100, offset = 0) {
-  const { startDate, endDate } = getMesRange(month, year);
-
-  // Conta total de terceiros distintos para paginação
+  // Conta total de registros para paginação frontend
   const countQuery = `
-    SELECT COUNT(DISTINCT NomeTerceiro) FROM Lancamentos
-    WHERE UsuarioId = $1
-      AND NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
-      AND DataVencimento >= $2 AND DataVencimento < $3
+     SELECT COUNT(*) FROM Lancamentos
+     WHERE UsuarioId = $1
+        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '')
+       AND DataVencimento >= $2 AND DataVencimento < $3
   `;
+ const { startDate, endDate } = getMesRange(month, year);
   const countResult = await db.query(countQuery, [userId, startDate, endDate]);
   const total = parseInt(countResult.rows[0].count, 10);
 
-  // Query agregada por terceiro (GROUP BY)
+  // Query paginada com LIMIT/OFFSET
   const query = `
-    SELECT
-      NomeTerceiro,
-      SUM(CASE WHEN Tipo = 'CARTAO' THEN Valor ELSE 0 END)::float AS totalCartao,
-      SUM(Valor)::float AS totalGeral,
-      SUM(CASE WHEN Tipo = 'FIXA' THEN Valor ELSE 0 END)::float AS totalFixas,
-      COUNT(*) FILTER (WHERE Status = 'PENDENTE') AS contasPendentes,
-      COUNT(*) FILTER (WHERE Status = 'PAGO') AS contasPagas
-    FROM Lancamentos
-    WHERE UsuarioId = $1
-      AND NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
-      AND DataVencimento >= $2 AND DataVencimento < $3
-    GROUP BY NomeTerceiro
-    ORDER BY NomeTerceiro
-    LIMIT $4 OFFSET $5
-  `;
-  const result = await db.query(query, [userId, startDate, endDate, limit, offset]);
+      SELECT * FROM Lancamentos
+      WHERE UsuarioId = $1
+        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '')
+        AND DataVencimento >= $2 AND DataVencimento < $3
+     ORDER BY NomeTerceiro, Tipo, Ordem
+   LIMIT $4 OFFSET $5
+ `;
+ const result = await db.query(query, [userId, startDate, endDate, limit, offset]);
   return { rows: result.rows, total };
 }
 
