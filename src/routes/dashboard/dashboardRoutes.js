@@ -138,7 +138,7 @@ module.exports = function (repo) {
         repo.getLancamentosPorTipo(req.session.user.id, 'FIXA', Number(month), Number(year)),
        repo.getLancamentosPorTipo(req.session.user.id, 'CARTAO', Number(month), Number(year)),
         repo.getResumoPessoas(req.session.user.id, Number(month), Number(year), req.session.user.nome),
-       repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year)),
+       repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year), 500),
      ]);
 
       console.log(`[🔍 DEBUG-TERCEIROS-API] dadosTerceirosRaw length:`, Array.isArray(dadosTerceirosRaw) ? dadosTerceirosRaw.length : 'N/A');
