@@ -56,6 +56,13 @@ export function alternarModoAnotacao() {
 }
 
 export function initAnotacoes() {
+  // Garante que sempre inicie na aba Global
+  isAnotacaoGlobal = true;
+  const btnMensal = document.getElementById('btnAnotacaoMensal');
+  const btnGlobal = document.getElementById('btnAnotacaoGlobal');
+  if (btnMensal) btnMensal.classList.remove('active');
+  if (btnGlobal) btnGlobal.classList.add('active');
+
   if (document.getElementById('anotacoesArea')) {
     currentAnotacaoText = document.getElementById('anotacoesArea').value;
     renderAnotacoesPreview();
