@@ -1635,6 +1635,15 @@ a:focus {
   color: white;
 }
 
+/* Abas de anotações (Global/Mensal) */
+#btnAnotacaoGlobal.active,
+#btnAnotacaoMensal.active {
+  background: var(--blue) !important;
+  color: white !important;
+  border-color: var(--blue) !important;
+  font-weight: bold;
+}
+
 .tab-content {
   display: none;
 }

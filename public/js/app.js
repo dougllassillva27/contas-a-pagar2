@@ -80,9 +80,11 @@ initTooltipListeners();
 window.addEventListener('DOMContentLoaded', () => {
   const btnGlobal = document.getElementById('btnAnotacaoGlobal');
   const btnMensal = document.getElementById('btnAnotacaoMensal');
+
   if (btnGlobal && btnMensal) {
     btnGlobal.classList.add('active');
     btnMensal.classList.remove('active');
+    carregarAnotacoes();
   }
 });
 
