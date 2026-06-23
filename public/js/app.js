@@ -76,6 +76,16 @@ window.resetSubmitting = () => { isSubmitting = false; };
 // Inicializa tooltips nos checkboxes do header
 initTooltipListeners();
 
+// Garante que a aba Global das anotações inicie ativa
+window.addEventListener('DOMContentLoaded', () => {
+  const btnGlobal = document.getElementById('btnAnotacaoGlobal');
+  const btnMensal = document.getElementById('btnAnotacaoMensal');
+  if (btnGlobal && btnMensal) {
+    btnGlobal.classList.add('active');
+    btnMensal.classList.remove('active');
+  }
+});
+
 // Service Worker cleanup (localhost only)
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   if ('serviceWorker' in navigator) {
