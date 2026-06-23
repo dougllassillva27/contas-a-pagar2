@@ -106,7 +106,11 @@ async function getDashboardTotais(userId, month, year) {
 
 async function getDashboardDataModular(userId, month, year, userName) {
   const startTime = Date.now();
-  console.log(`[🔍 DEBUG-MODULAR] >>> INICIANDO getDashboardDataModular para userId=${userId}, time=${Date.now()}`);
+  const isProd = process.env.NODE_ENV === 'production';
+
+  if (!isProd) {
+    console.log(`[🔍 DEBUG-MODULAR] >>> INICIANDO getDashboardDataModular para userId=${userId}`);
+  }
 
   try {
     // Executa queries em paralelo — são independentes
@@ -129,18 +133,27 @@ async function getDashboardDataModular(userId, month, year, userName) {
       }],
     ];
 
-    // Executa todas em paralelo com logs individuais
+    // Executa todas em paralelo com logs individuais (apenas dev)
     const results = await Promise.all(
       queries.map(async ([label, fn]) => {
         const qStart = Date.now();
         const result = await fn();
-        console.log(`[🔍 DEBUG-MODULAR] [${label}] Completado em ${Date.now() - qStart}ms`);
+        const elapsed = Date.now() - qStart;
+
+        // Log crítico: query individual lenta (>1000ms)
+        if (elapsed > 1000 && !isProd) {
+          console.warn(`[⚠️ PERF-SLOW] [${label}] demorou ${elapsed}ms`);
+        }
         return result;
       })
     );
 
-    const elapsed = Date.now() - startTime;
-    console.log(`[🔍 DEBUG-MODULAR] <<< getDashboardDataModular COMPLETO em ${elapsed}ms (paralelo)`);
+    const totalElapsed = Date.now() - startTime;
+
+    // Log crítico: tempo total da função
+    if (totalElapsed > 2000 && !isProd) {
+      console.warn(`[⚠️ PERF-SLOW] getDashboardDataModular demorou ${totalElapsed}ms`);
+    }
 
     return {
       totais: results[0],
