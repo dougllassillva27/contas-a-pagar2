@@ -87,10 +87,8 @@ module.exports = function (repo) {
       console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] getDashboardDataModular concluído em ${elapsed}ms`);
       console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Total queries executadas: 9 sequenciais`);
 
-      console.log(`[🔍 DEBUG-TERCEIROS] dadosTerceirosRaw:`, JSON.stringify(dadosTerceirosRaw));
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
-      console.log(`[🔍 DEBUG-TERCEIROS] listaTerceiros:`, JSON.stringify(listaTerceiros.map(t => ({ nome: t.nome, itensCartao: t.itensCartao.length }))));
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
 
       // FIX: Garante que configuracoes nunca seja nulo
