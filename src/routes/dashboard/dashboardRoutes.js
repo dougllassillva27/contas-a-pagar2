@@ -50,19 +50,20 @@ module.exports = function (repo) {
       const userName = req.session.user.nome;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      const timestamp = new Date().toISOString();
-      console.log(`[${timestamp}] [🔍 DEBUG-GET] >>> INICIANDO GET / para userId=${userId}, time=${Date.now()}`);
-      console.log(`[${timestamp}] [🔍 DEBUG-GET] Headers: ${JSON.stringify(req.headers)}`);
-      console.log(`[${timestamp}] [🔍 DEBUG-GET] Query params: ${JSON.stringify(req.query)}`);
-      console.log(`[${timestamp}] [🔍 DEBUG-GET] Session ID: ${req.sessionID}`);
+      const isProd = process.env.NODE_ENV === 'production';
+
+      // Logs de performance apenas em dev
+      if (!isProd) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] [🔍 DEBUG-GET] >>> INICIANDO GET / para userId=${userId}, time=${Date.now()}`);
+        console.log(`[${timestamp}] [🔍 DEBUG-GET] Query params: ${JSON.stringify(req.query)}`);
+      }
 
       // 1. Lê as configurações
       let configuracoes = null;
       if (typeof repo.getConfiguracoes === 'function') {
         try {
-          console.log(`[🔍 DEBUG-GET] Lendo configuracoes...`);
           configuracoes = await repo.getConfiguracoes(userId);
-          console.log(`[🔍 DEBUG-GET] Configuracoes lidas com sucesso`);
         } catch (err) {
           console.error('[Dashboard] Falha ao ler configuracoes do banco:', err);
         }
@@ -70,7 +71,9 @@ module.exports = function (repo) {
 
       // 2. Busca dados do dashboard
       const startTime = Date.now();
-      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Chamando getDashboardDataModular em ${startTime}...`);
+      if (!isProd) {
+        console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Chamando getDashboardDataModular...`);
+      }
       const {
         totais,
         fixas,
@@ -84,8 +87,11 @@ module.exports = function (repo) {
         terceirosDistinct,
       } = await repo.getDashboardDataModular(userId, Number(month), Number(year), userName);
       const elapsed = Date.now() - startTime;
-      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] getDashboardDataModular concluído em ${elapsed}ms`);
-      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Total queries executadas: 9 sequenciais`);
+
+      // Log crítico: queries lentas (>1000ms)
+      if (elapsed > 1000 && !isProd) {
+        console.warn(`[⚠️ PERF-SLOW] getDashboardDataModular demorou ${elapsed}ms para userId=${userId}`);
+      }
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
@@ -99,7 +105,6 @@ module.exports = function (repo) {
       };
 
       const renderStart = Date.now();
-      console.log(`[🔍 DEBUG-GET] Iniciando render em ${renderStart}...`);
       res.render('index', {
         totais,
         fixas,
@@ -120,7 +125,15 @@ module.exports = function (repo) {
         titulo: 'Gestão Financeira - Home',
       });
       const renderEnd = Date.now();
-      console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] <<< GET / COMPLETADO para userId=${userId}, tempo total=${Date.now() - startTime}ms, render=${renderEnd - renderStart}ms`);
+
+      // Log crítico: render lento (>500ms)
+      const renderTime = renderEnd - renderStart;
+      if (renderTime > 500 && !isProd) {
+        console.warn(`[⚠️ PERF-SLOW] Render demorou ${renderTime}ms`);
+      }
+      if (!isProd) {
+        console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] <<< GET / COMPLETADO em ${Date.now() - startTime}ms (render=${renderTime}ms)`);
+      }
     })
   );
 
@@ -139,10 +152,6 @@ module.exports = function (repo) {
        repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year), 500),
      ]);
 
-      console.log(`[🔍 DEBUG-TERCEIROS-API] dadosTerceirosRaw length:`, Array.isArray(dadosTerceirosRaw) ? dadosTerceirosRaw.length : 'N/A');
-      if (Array.isArray(dadosTerceirosRaw)) {
-        console.log(`[🔍 DEBUG-TERCEIROS-API] Primeiros 3 itens:`, JSON.stringify(dadosTerceirosRaw.slice(0, 3).map(i => ({ nome: i.nometerceiro, status: i.status }))));
-      }
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
 
