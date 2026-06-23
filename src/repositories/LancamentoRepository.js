@@ -950,8 +950,8 @@ async function getAnotacoes(userId, month, year) {
   ]);
 
   return {
-    global: global.rows[0]?.conteudo || '',
-    mensal: mensal.rows[0]?.conteudo || ''
+    global: global.rows[0]?.Conteudo || global.rows[0]?.conteudo || '',
+    mensal: mensal.rows[0]?.Conteudo || mensal.rows[0]?.conteudo || ''
   };
 }
 
