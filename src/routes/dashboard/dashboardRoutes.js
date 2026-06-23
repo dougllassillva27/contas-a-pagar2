@@ -89,7 +89,7 @@ module.exports = function (repo) {
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
-      const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
+      const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
 
       // FIX: Garante que configuracoes nunca seja nulo
       const configuracoesValidas = configuracoes || {
@@ -144,7 +144,7 @@ module.exports = function (repo) {
         console.log(`[🔍 DEBUG-TERCEIROS-API] Primeiros 3 itens:`, JSON.stringify(dadosTerceirosRaw.slice(0, 3).map(i => ({ nome: i.nometerceiro, status: i.status }))));
       }
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
-      const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalCartao : 0;
+      const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
 
       res.json({
         ...totais,
