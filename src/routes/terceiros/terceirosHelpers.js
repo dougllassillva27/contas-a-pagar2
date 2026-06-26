@@ -2,11 +2,16 @@
  * Monta o mapa de terceiros (agrupando por nome) a partir dos lançamentos brutos.
  * Cada terceiro tem seus itens de cartão e fixas, e os totais de pendentes.
  */
-function montarMapaTerceiros(dadosTerceirosRaw) {
+function montarMapaTerceiros(dadosTerceirosRaw, userName) {
   const terceirosMap = {};
 
   dadosTerceirosRaw.forEach((item) => {
-    const nome = item.nometerceiro;
+    let nome = item.nometerceiro;
+    // Substitui NULL/vazio por nome do usuario ("Eu")
+    if (!nome || nome.trim() === '') {
+      nome = userName || 'Eu';
+    }
+
     if (!terceirosMap[nome]) {
       terceirosMap[nome] = {
         nome,

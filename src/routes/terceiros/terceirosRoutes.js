@@ -17,19 +17,21 @@ module.exports = function (repo) {
       const userId = req.session.user.id;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
+      console.log(`[DEBUG-TERCEIROS] userId=${userId}, month=${month}, year=${year}`);
       const [{ rows: dadosTerceirosRaw }, mesFechado, configuracoes] = await Promise.all([
        repo.getDadosTerceiros(userId, month, year),
         repo.isMesFechado(userId, month, year),
         repo.getConfiguracoes(userId)
       ]);
+      console.log(`[DEBUG-TERCEIROS] Total terceiros retornados: ${dadosTerceirosRaw.length}`);
 
-      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw);
+      const userName = req.session.user.nome || 'Eu';
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw, userName);
 
-      // Extrai apenas os terceiros que possuem movimento no mês atual
+      // Extrai terceiros (incluindo contas próprias como "Eu")
       let todosTerceiros = Object.values(terceirosMap)
-        .filter((t) => t.nome && t.nome.trim() !== '') // Ignora contas próprias (null/vazias)
         .map((t) => ({
-          nome: t.nome,
+          nome: (t.nome && t.nome.trim() !== '') ? t.nome : userName,
           totalGeral: t.totalGeral,
         }));
 
@@ -59,6 +61,7 @@ module.exports = function (repo) {
 
       // Ordena alfabeticamente
       todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
+      console.log(`[DEBUG-TERCEIROS] Nomes: ${todosTerceiros.map(t => t.nome).join(', ')}`);
 
       // ✅ FIX: Fallback defensivo para configurações
       const configuracoesValidas = configuracoes || {
@@ -121,14 +124,26 @@ module.exports = function (repo) {
   router.get(
     '/api/terceiros/:nome/token',
     asyncHandler(async (req, res) => {
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Nao autenticado' });
+      }
+
       const userId = req.session.user.id;
       const nome = req.params.nome;
-      // Garante retorno usando UPSERT caso o terceiro seja criado no ato do compartilhamento
-      const query = await db.query(
-        'INSERT INTO terceiros (usuario_id, nome) VALUES ($1, $2) ON CONFLICT (usuario_id, nome) DO UPDATE SET nome = EXCLUDED.nome RETURNING token_publico',
-        [userId, nome]
-      );
-      res.json({ token: query.rows[0].token_publico });
+
+      // Verifica se terceiro ja tem token
+      const existing = await db.query('SELECT token_publico FROM terceiros WHERE usuario_id = $1 AND nome = $2', [userId, nome]);
+
+      let token = existing.rows[0]?.token_publico;
+
+      if (!token) {
+        // Gera novo token
+        const crypto = require('crypto');
+        token = crypto.randomBytes(16).toString('hex');
+        await db.query('UPDATE terceiros SET token_publico = $1 WHERE usuario_id = $2 AND nome = $3', [token, userId, nome]);
+      }
+
+      res.json({ token });
     })
   );
 

@@ -845,13 +845,28 @@ async function compartilharLinkTerceiro() {
   const nome = pessoaSelecionadaContexto;
   if (!nome || nome === 'ULTIMAS') return;
 
+  // Extrai mes/ano do dataset do body (definido em app.js.monolith)
+  const month = document.body.dataset.month || new Date().getMonth() + 1;
+  const year = document.body.dataset.year || new Date().getFullYear();
+
   mostrarLoading();
   try {
     const res = await fetch(`/api/terceiros/${encodeURIComponent(nome)}/token`);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
     const data = await res.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
     ocultarLoading();
 
-    urlCompartilhamentoContexto = `${window.location.origin}/contas/${data.token}?month=${currentMonth}&year=${currentYear}`;
+    urlCompartilhamentoContexto = `${window.location.origin}/contas/${data.token}?month=${month}&year=${year}`;
+
     const nomeEl = document.getElementById('nomePessoaShare');
     if (nomeEl) nomeEl.innerText = nome;
 
@@ -859,7 +874,7 @@ async function compartilharLinkTerceiro() {
     document.getElementById('modalCompartilhar').classList.add('active');
   } catch (err) {
     ocultarLoading();
-    mostrarAviso('Erro', 'Não foi possível gerar o link de compartilhamento.');
+    mostrarAviso('Erro', `Não foi possível gerar o link de compartilhamento: ${err.message}`);
   }
 }
 
