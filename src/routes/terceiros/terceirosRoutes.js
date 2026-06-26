@@ -17,34 +17,50 @@ module.exports = function (repo) {
       const userId = req.session.user.id;
       const { month, year, nav } = calcularContextoNavegacao(req.query);
 
-      console.log(`[DEBUG-TERCEIROS] userId=${userId}, month=${month}, year=${year}`);
-      const [{ rows: dadosTerceirosRaw }, mesFechado, configuracoes] = await Promise.all([
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG-TERCEIROS] userId=${userId}, month=${month}, year=${year}`);
+      }
+      const [{ rows: dadosTerceirosRaw, total }, mesFechado, configuracoes] = await Promise.all([
        repo.getDadosTerceiros(userId, month, year),
         repo.isMesFechado(userId, month, year),
         repo.getConfiguracoes(userId)
       ]);
-      console.log(`[DEBUG-TERCEIROS] Total terceiros retornados: ${dadosTerceirosRaw.length}`);
-      if (dadosTerceirosRaw.length > 0) {
-        console.log(`[DEBUG-TERCEIROS] Primeiros 5 registros:`, dadosTerceirosRaw.slice(0, 5).map(r => ({ nome: r.nometerceiro, desc: r.descricao })));
-        const temVo = dadosTerceirosRaw.some(r => r.nometerceiro && (r.nometerceiro.includes('V') || r.nometerceiro.includes('v')));
-        console.log(`[DEBUG-TERCEIROS] Tem algum terceiro com V no nome? ${temVo}`);
-        if (temVo) {
-          console.log(`[DEBUG-TERCEIROS] Quais?`, [...new Set(dadosTerceirosRaw.filter(r => r.nometerceiro && (r.nometerceiro.includes('V') || r.nometerceiro.includes('v'))).map(r => r.nometerceiro))]);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG-TERCEIROS] Total registros no banco: ${total}`);
+        console.log(`[DEBUG-TERCEIROS] Total terceiros retornados (após filtro): ${dadosTerceirosRaw.length}`);
+        if (dadosTerceirosRaw.length > 0) {
+          const nomesUnicos = [...new Set(dadosTerceirosRaw.map(r => r.nometerceiro).filter(Boolean))];
+          console.log(`[DEBUG-TERCEIROS] Nomes únicos encontrados: ${nomesUnicos.join(', ')}`);
+          console.log(`[DEBUG-TERCEIROS] Quantidade de nomes únicos: ${nomesUnicos.length}`);
+          console.log(`[DEBUG-TERCEIROS] Primeiros 5 registros:`, dadosTerceirosRaw.slice(0, 5).map(r => ({ nome: r.nometerceiro, desc: r.descricao })));
+          const temVo = dadosTerceirosRaw.some(r => r.nometerceiro && (r.nometerceiro.includes('V') || r.nometerceiro.includes('v')));
+          console.log(`[DEBUG-TERCEIROS] Tem algum terceiro com V no nome? ${temVo}`);
+          if (temVo) {
+            console.log(`[DEBUG-TERCEIROS] Quais?`, [...new Set(dadosTerceirosRaw.filter(r => r.nometerceiro && (r.nometerceiro.includes('V') || r.nometerceiro.includes('v'))).map(r => r.nometerceiro))]);
+          }
         }
       }
 
       const userName = req.session.user.nome || 'Eu';
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw, userName);
 
-      // Extrai terceiros (incluindo contas próprias como "Eu")
-      // ✅ FILTRO: Remove o próprio usuário da lista de terceiros
-      const userName = req.session.user.nome || 'Eu';
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG-TERCEIROS] Terceiros no mapa (após montarMapaTerceiros): ${Object.keys(terceirosMap).length}`);
+        console.log(`[DEBUG-TERCEIROS] Chaves do mapa: ${Object.keys(terceirosMap).join(', ')}`);
+      }
+
+      // Extrai apenas os terceiros que possuem movimento no mês atual
       let todosTerceiros = Object.values(terceirosMap)
+        .filter((t) => t.nome && t.nome.trim() !== '') // Ignora contas próprias (null/vazias)
         .map((t) => ({
-          nome: (t.nome && t.nome.trim() !== '') ? t.nome : userName,
+          nome: t.nome,
           totalGeral: t.totalGeral,
-        }))
-        .filter((t) => t.nome !== userName); // Remove o próprio usuário
+        }));
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG-TERCEIROS] Terceiros após filtro final: ${todosTerceiros.length}`);
+        console.log(`[DEBUG-TERCEIROS] Lista final: ${todosTerceiros.map(t => t.nome).join(', ')}`);
+      }
 
       // ✅ FIX IDOR: Bulk UPSERT — garante registro em única query usando UNNEST
      if (todosTerceiros.length > 0) {

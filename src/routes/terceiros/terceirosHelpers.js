@@ -6,11 +6,9 @@ function montarMapaTerceiros(dadosTerceirosRaw, userName) {
   const terceirosMap = {};
 
   dadosTerceirosRaw.forEach((item) => {
-    let nome = item.nometerceiro;
-    // Substitui NULL/vazio por nome do usuario ("Eu")
-    if (!nome || nome.trim() === '') {
-      nome = userName || 'Eu';
-    }
+    const nome = item.nometerceiro;
+    // Ignora contas sem terceiro definido (são contas do próprio usuário, já exibidas nos cards principais)
+    if (!nome || nome.trim() === '') return;
 
     if (!terceirosMap[nome]) {
       terceirosMap[nome] = {

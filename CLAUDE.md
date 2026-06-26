@@ -45,6 +45,7 @@ pytest
 2.  **Nao Simule Execucoes**: Proibido fingir que um comando ou linter funcionou sem de fato roda-lo e obter o resultado real.
 3.  **Auditoria Paginada (ID-Based)**: Qualquer mutacao ou decisao arquitetural deve ser registrada no `resumo-de-trabalho.md` sob um ID de observacao estruturado `[OBS-YYYYMMDD-NN]`.
 4.  **Uso de Proxy RTK**: Toda interacao de terminal de desenvolvimento deve ser realizada de forma otimizada para tokens.
+5.  **COMMIT PROIBIDO SEM AUTORIZACAO EXPLICITA**: Nunca faca commit, push ou deploy sem pedido direto do usuario. Commit automatico esta desativado. Aguarde instrucao explicita antes de enviar qualquer codigo ao repositorio.
 
 ## Modularização Obrigatória (Anti-Monolito)
 
