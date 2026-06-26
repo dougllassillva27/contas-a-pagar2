@@ -265,6 +265,8 @@ async function getDistinctTerceiros(userId) {
     [userId]
   );
   const terceiros = result.rows.map((r) => r.nometerceiro);
+  console.log(`[DEBUG-DISTINCT-TERCEIROS] userId=${userId}, terceiros encontrados: ${terceiros.length}`);
+  console.log(`[DEBUG-DISTINCT-TERCEIROS] Lista:`, terceiros.join(', '));
   cache.set(cacheKey, terceiros, 5 * 60 * 1000);
   return terceiros;
 }

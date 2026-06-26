@@ -24,16 +24,27 @@ module.exports = function (repo) {
         repo.getConfiguracoes(userId)
       ]);
       console.log(`[DEBUG-TERCEIROS] Total terceiros retornados: ${dadosTerceirosRaw.length}`);
+      if (dadosTerceirosRaw.length > 0) {
+        console.log(`[DEBUG-TERCEIROS] Primeiros 5 registros:`, dadosTerceirosRaw.slice(0, 5).map(r => ({ nome: r.nometerceiro, desc: r.descricao })));
+        const temVo = dadosTerceirosRaw.some(r => r.nometerceiro && (r.nometerceiro.includes('V') || r.nometerceiro.includes('v')));
+        console.log(`[DEBUG-TERCEIROS] Tem algum terceiro com V no nome? ${temVo}`);
+        if (temVo) {
+          console.log(`[DEBUG-TERCEIROS] Quais?`, [...new Set(dadosTerceirosRaw.filter(r => r.nometerceiro && (r.nometerceiro.includes('V') || r.nometerceiro.includes('v'))).map(r => r.nometerceiro))]);
+        }
+      }
 
       const userName = req.session.user.nome || 'Eu';
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw, userName);
 
       // Extrai terceiros (incluindo contas próprias como "Eu")
+      // ✅ FILTRO: Remove o próprio usuário da lista de terceiros
+      const userName = req.session.user.nome || 'Eu';
       let todosTerceiros = Object.values(terceirosMap)
         .map((t) => ({
           nome: (t.nome && t.nome.trim() !== '') ? t.nome : userName,
           totalGeral: t.totalGeral,
-        }));
+        }))
+        .filter((t) => t.nome !== userName); // Remove o próprio usuário
 
       // ✅ FIX IDOR: Bulk UPSERT — garante registro em única query usando UNNEST
      if (todosTerceiros.length > 0) {
@@ -61,7 +72,10 @@ module.exports = function (repo) {
 
       // Ordena alfabeticamente
       todosTerceiros.sort((a, b) => a.nome.localeCompare(b.nome));
-      console.log(`[DEBUG-TERCEIROS] Nomes: ${todosTerceiros.map(t => t.nome).join(', ')}`);
+      console.log(`[DEBUG-TERCEIROS] Nomes ordenados: ${todosTerceiros.map(t => t.nome).join(', ')}`);
+      console.log(`[DEBUG-TERCEIROS] Tem 'Vô'? ${todosTerceiros.some(t => t.nome === 'Vô')}`);
+      console.log(`[DEBUG-TERCEIROS] Tem 'Vo' (sem acento)? ${todosTerceiros.some(t => t.nome === 'Vo')}`);
+      console.log(`[DEBUG-TERCEIROS] Tem 'Avô'? ${todosTerceiros.some(t => t.nome === 'Avô')}`);
 
       // ✅ FIX: Fallback defensivo para configurações
       const configuracoesValidas = configuracoes || {
