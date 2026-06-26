@@ -93,7 +93,7 @@ module.exports = function (repo) {
         console.warn(`[⚠️ PERF-SLOW] getDashboardDataModular demorou ${elapsed}ms para userId=${userId}`);
       }
 
-      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw, userName);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
 
@@ -152,7 +152,8 @@ module.exports = function (repo) {
        repo.getDadosTerceiros(req.session.user.id, Number(month), Number(year), 500),
      ]);
 
-      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw);
+      const userName = req.session.user.nome || 'Eu';
+      const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw, userName);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
 
       res.json({

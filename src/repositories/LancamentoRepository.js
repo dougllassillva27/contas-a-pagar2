@@ -193,7 +193,6 @@ async function getDadosTerceiros(userId, month, year, limit = 100, offset = 0) {
   const countQuery = `
      SELECT COUNT(*) FROM Lancamentos
      WHERE UsuarioId = $1
-        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '')
        AND DataVencimento >= $2 AND DataVencimento < $3
   `;
  const { startDate, endDate } = getMesRange(month, year);
@@ -204,7 +203,6 @@ async function getDadosTerceiros(userId, month, year, limit = 100, offset = 0) {
   const query = `
       SELECT * FROM Lancamentos
       WHERE UsuarioId = $1
-        AND (NomeTerceiro IS NOT NULL AND NomeTerceiro != '')
         AND DataVencimento >= $2 AND DataVencimento < $3
      ORDER BY NomeTerceiro, Tipo, Ordem
    LIMIT $4 OFFSET $5
