@@ -188,7 +188,7 @@ async function getLancamentosPorTipo(userId, tipo, month, year) {
   return result.rows;
 }
 
-async function getDadosTerceiros(userId, month, year, limit = 100, offset = 0) {
+async function getDadosTerceiros(userId, month, year, limit = 500, offset = 0) {
   // Conta total de registros para paginação frontend
   const countQuery = `
      SELECT COUNT(*) FROM Lancamentos

@@ -99,7 +99,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>Contas Fixas</h2>
-                <span class="total-panel" id="totalPanelFixas">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                <span class="total-panel vermelho" id="totalPanelFixas">R$ <%= fixas.filter(i => i.status === 'PENDENTE').reduce((acc, i) => acc + Number(i.valor), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
             </div>
             <div class="scroll-wrapper">
                 <% if (fixas.length === 0) { %>
