@@ -581,14 +581,25 @@ async function copyMonth(userId, currentMonth, currentYear) {
       nextYear++;
     }
 
-    const { startDate, endDate } = getMesRange(currentMonth, currentYear);
+    // Buscar registros do mês atual usando colunas computadas
+    // ✅ FIX: Adiciona log de debug para ver quantos registros foram encontrados
     const res = await client.query(
-      `SELECT * FROM Lancamentos
-       WHERE UsuarioId = $1
-         AND DataVencimento >= $2 AND DataVencimento < $3
-         AND (Tipo IN ('${TIPO.FIXA}', '${TIPO.RENDA}', '${TIPO.TERCEIRO}') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))`,
-      [userId, startDate, endDate]
+      `SELECT * FROM (
+         SELECT *,
+                ROW_NUMBER() OVER (
+                  PARTITION BY Descricao, Tipo, COALESCE(NomeTerceiro, '')
+                  ORDER BY CASE WHEN NomeTerceiro IS NULL THEN 0 ELSE 1 END, Id
+                ) as rn
+         FROM Lancamentos
+         WHERE UsuarioId = $1
+           AND MesVencimento = $2
+           AND AnoVencimento = $3
+           AND (Tipo IN ('${TIPO.FIXA}', '${TIPO.RENDA}', '${TIPO.TERCEIRO}') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))
+       ) sub WHERE rn = 1`,
+      [userId, currentMonth, currentYear]
     );
+
+    console.log(`[copyMonth] 📊 Registros encontrados no mês ${currentMonth}/${currentYear}: ${res.rows.length}`);
 
     const itemsToCopy = res.rows;
     if (itemsToCopy.length === 0) {
@@ -660,8 +671,9 @@ async function copyMonth(userId, currentMonth, currentYear) {
       await client.query(
         `INSERT INTO Lancamentos
            (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
-            ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao, MesVencimento, AnoVencimento)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+         ON CONFLICT (UsuarioId, Descricao, Tipo, COALESCE(NomeTerceiro, ''), MesVencimento, AnoVencimento) DO NOTHING`,
         [
           userId,
           item.descricao,
@@ -675,6 +687,8 @@ async function copyMonth(userId, currentMonth, currentYear) {
           item.nometerceiro,
           item.ordem,
           dataCriacaoOriginal,
+          nextMonth,
+          nextYear,
         ]
       );
     }
@@ -732,26 +746,27 @@ async function getTotalTerceiroCartao(nome, userId, month, year) {
 
 async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, year) {
   const dataVencimento = new Date(year, month - 1, 10);
-  const { startDate, endDate } = getMesRange(month, year);
 
   const query = `
     WITH existing AS (
       SELECT Id FROM Lancamentos
       WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
-        AND DataVencimento >= $3 AND DataVencimento < $4
+        AND MesVencimento = EXTRACT(MONTH FROM $5)
+        AND AnoVencimento = EXTRACT(YEAR FROM $5)
       LIMIT 1
     ),
     updated AS (
-      UPDATE Lancamentos SET Valor = $5
+      UPDATE Lancamentos SET Valor = $3
       WHERE Id = (SELECT Id FROM existing)
       RETURNING Id
     )
-    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem, DataCriacao)
-    SELECT $1, $2, $5, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01'
+    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem, DataCriacao, MesVencimento, AnoVencimento)
+    SELECT $1, $2, $3, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $5, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01',
+           EXTRACT(MONTH FROM $5), EXTRACT(YEAR FROM $5)
     WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing);
   `;
 
-  await db.query(query, [userId, nomeConta, startDate, endDate, valor, dataVencimento]);
+  await db.query(query, [userId, nomeConta, valor, null, dataVencimento]);
 }
 
 // ==============================================================================
@@ -760,6 +775,8 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
 // Substitui 3 operações sequenciais por 1 query bulk para evitar lock contention
 async function bulkUpsertContasFixas(userId, operations) {
   if (!Array.isArray(operations) || operations.length === 0) return;
+
+  console.log(`[BULK-UPSERT] 📦 bulkUpsertContasFixas chamado para userId=${userId} com ${operations.length} operação(ões)`);
 
   // Prepara arrays para UNNEST
   const descricoes = [];
@@ -772,13 +789,29 @@ async function bulkUpsertContasFixas(userId, operations) {
     valores.push(op.valor);
     vencimentos.push(op.dataVencimento);
     terceiros.push(op.nomeTerceiro || null);
+    console.log(`[BULK-UPSERT]   ├─ Operação: descricao="${op.nomeConta}", valor=${op.valor}, terceiro="${op.nomeTerceiro}", vencimento=${op.dataVencimento}`);
   });
 
   const month = operations[0].month;
   const year = operations[0].year;
-  const { startDate, endDate } = getMesRange(month, year);
+  console.log(`[BULK-UPSERT]   └─ Mês/Ano: ${month}/${year}`);
 
-  // Query bulk com UNNEST — padrão já usado em terceirosRoutes.js
+  // Debug: verificar registros existentes antes do UPSERT
+  const mes = operations[0].month;
+  const ano = operations[0].year;
+  const debugQuery = `
+    SELECT Id, Descricao, Valor, NomeTerceiro
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND Tipo = '${TIPO.FIXA}'
+      AND MesVencimento = $2
+      AND AnoVencimento = $3
+      AND Descricao = ANY($4::text[])
+  `;
+  const debugResult = await db.query(debugQuery, [userId, mes, ano, descricoes]);
+  console.log(`[BULK-UPSERT] 🔍 Registros existentes encontrados para userId=${userId}:`, JSON.stringify(debugResult.rows));
+
+  // Query bulk com UNNEST — usa colunas computadas MesVencimento/AnoVencimento
   const query = `
     WITH params AS (
       SELECT unnest($1::text[]) as descricao,
@@ -787,62 +820,80 @@ async function bulkUpsertContasFixas(userId, operations) {
              unnest($4::text[]) as terceiro,
              generate_subscripts($1::text[], 1) as idx
     ),
-    existing AS (
+    first_match AS (
       SELECT DISTINCT ON (p.idx) l.Id, p.idx
       FROM Lancamentos l
       INNER JOIN params p ON l.Descricao = p.descricao
         AND l.UsuarioId = $5
         AND l.Tipo = '${TIPO.FIXA}'
-        AND l.DataVencimento >= $6
-        AND l.DataVencimento < $7
-        AND (p.terceiro IS NULL OR l.NomeTerceiro = p.terceiro)
+        AND l.MesVencimento = EXTRACT(MONTH FROM p.vencimento)
+        AND l.AnoVencimento = EXTRACT(YEAR FROM p.vencimento)
+        AND (
+          (p.terceiro IS NULL AND (l.NomeTerceiro IS NULL OR l.NomeTerceiro = ''))
+          OR l.NomeTerceiro = p.terceiro
+        )
       ORDER BY p.idx, l.Id DESC
     ),
     updated AS (
       UPDATE Lancamentos l
       SET Valor = p.valor
       FROM params p
-      WHERE l.Id = (SELECT Id FROM existing WHERE idx = p.idx LIMIT 1)
+      WHERE l.Id = (SELECT Id FROM first_match WHERE idx = p.idx LIMIT 1)
       RETURNING l.Id
     )
-    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao)
+    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao, MesVencimento, AnoVencimento)
     SELECT $5, p.descricao, p.valor, '${TIPO.FIXA}', '${STATUS.PENDENTE}', p.vencimento, p.terceiro,
            (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $5),
-           '1970-01-01'
+           '1970-01-01',
+           EXTRACT(MONTH FROM p.vencimento),
+           EXTRACT(YEAR FROM p.vencimento)
     FROM params p
-    WHERE NOT EXISTS (SELECT 1 FROM updated WHERE Id = (SELECT Id FROM existing WHERE idx = p.idx LIMIT 1))
-      AND NOT EXISTS (SELECT 1 FROM existing WHERE idx = p.idx);
+    WHERE NOT EXISTS (
+      SELECT 1 FROM Lancamentos l
+      WHERE l.Descricao = p.descricao
+        AND l.UsuarioId = $5
+        AND l.Tipo = '${TIPO.FIXA}'
+        AND l.MesVencimento = EXTRACT(MONTH FROM p.vencimento)
+        AND l.AnoVencimento = EXTRACT(YEAR FROM p.vencimento)
+        AND (
+          (p.terceiro IS NULL AND (l.NomeTerceiro IS NULL OR l.NomeTerceiro = ''))
+          OR l.NomeTerceiro = p.terceiro
+        )
+    );
   `;
 
-  await db.query(query, [descricoes, valores, vencimentos, terceiros, userId, startDate, endDate]);
+  console.log(`[BULK-UPSERT] ⚙️ Executando query bulk para userId=${userId}`);
+  const result = await db.query(query, [descricoes, valores, vencimentos, terceiros, userId]);
+  console.log(`[BULK-UPSERT] ✅ Query executada para userId=${userId} (rowCount=${result?.rowCount || 'N/A'})`);
 }
 
 async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valor, month, year, nomeTerceiro) {
   const dataVencimento = new Date(year, month - 1, 10);
-  const { startDate, endDate } = getMesRange(month, year);
 
   const terceiro = nomeTerceiro || null;
-  const terceiroCondition = terceiro ? 'NomeTerceiro = $7' : "(NomeTerceiro IS NULL OR NomeTerceiro = '')";
+  const terceiroCondition = terceiro ? 'NomeTerceiro = $6' : "(NomeTerceiro IS NULL OR NomeTerceiro = '')";
 
   const query = `
     WITH existing AS (
       SELECT Id FROM Lancamentos
       WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
-        AND DataVencimento >= $3 AND DataVencimento < $4
+        AND MesVencimento = EXTRACT(MONTH FROM $5)
+        AND AnoVencimento = EXTRACT(YEAR FROM $5)
         AND ${terceiroCondition}
       LIMIT 1
     ),
     updated AS (
-      UPDATE Lancamentos SET Valor = $5
+      UPDATE Lancamentos SET Valor = $3
       WHERE Id = (SELECT Id FROM existing)
       RETURNING Id
     )
-    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao)
-    SELECT $1, $2, $5, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $6, $7, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01'
+    INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao, MesVencimento, AnoVencimento)
+    SELECT $1, $2, $3, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $5, $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01',
+           EXTRACT(MONTH FROM $5), EXTRACT(YEAR FROM $5)
     WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing);
   `;
 
-  await db.query(query, [userId, nomeConta, startDate, endDate, valor, dataVencimento, terceiro]);
+  await db.query(query, [userId, nomeConta, valor, null, dataVencimento, terceiro]);
 }
 
 // ==============================================================================

@@ -105,6 +105,19 @@ module.exports = function (repo) {
       };
 
       const renderStart = Date.now();
+
+      // ✅ Sincronização automática ao carregar dashboard (background)
+      if (configuracoesValidas && configuracoesValidas.regras_sync && configuracoesValidas.regras_sync.length > 0) {
+        setImmediate(async () => {
+          try {
+            const { executarSincronizacaoDinamica } = require('../../services/syncService');
+            await executarSincronizacaoDinamica(repo, userId, month, year, configuracoesValidas.regras_sync);
+          } catch (err) {
+            console.error('[Dashboard] Erro na sincronização automática:', err.message);
+          }
+        });
+      }
+
       res.render('index', {
         totais,
         fixas,
