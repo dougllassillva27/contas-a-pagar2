@@ -147,6 +147,11 @@ src/modules/widgetLancamentos/Log_erros.txt
 whatch-deploy.ps1
 
 # =========================================
+# SCRIPTS LOCAIS / MIGRAÇÃO
+# =========================================
+scripts/
+
+# =========================================
 # EXCEÇÕES
 # =========================================
 !src/modules/widgetLancamentos/config/default.example.json

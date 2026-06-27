@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node versionamento/versionador.js",
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
+    "dev": "set TZ=America/Sao_Paulo&&nodemon src/app.js",
     "test": "jest --verbose",
     "test:coverage": "jest --coverage",
     "test:unit": "jest __tests__/helpers __tests__/middlewares --verbose",
@@ -39,6 +39,7 @@
     "pg": "^8.18.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.3.0",
     "nodemon": "^3.1.0",

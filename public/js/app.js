@@ -25,7 +25,7 @@ import {
   executarDeleteMes
 } from './modules/lancamentos.js';
 import { isAnotacaoGlobal, carregarAnotacoes, alternarAbaAnotacao, alternarModoAnotacao, renderAnotacoesPreview, toggleChecklist, inserirFormatacao, salvarAnotacao, initAnotacoes } from './modules/anotacoes.js';
-import { salvarConfiguracoes, getRegrasSync, renderizarRegrasSync, salvarRegraSync, deletarRegraSync, finalizarWizard, finalizarWizardSozinho, concluirOnboarding } from './modules/configuracoes.js';
+import { salvarConfiguracoes, getRegrasSync, renderizarRegrasSync, editarRegraSync, confirmarDeletarRegraSync, salvarRegraSync, deletarRegraSync, finalizarWizard, finalizarWizardSozinho, concluirOnboarding } from './modules/configuracoes.js';
 import { showCustomTooltip, hideCustomTooltip, initTooltipListeners } from './modules/tooltips.js';
 
 // Expõe funções globalmente para compatibilidade com EJS templates
@@ -60,6 +60,7 @@ Object.assign(window, {
   salvarConfiguracoes,
   getRegrasSync,
   renderizarRegrasSync,
+  editarRegraSync,
   salvarRegraSync,
   deletarRegraSync,
   finalizarWizard,

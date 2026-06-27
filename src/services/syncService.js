@@ -114,27 +114,41 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
   const { terceiroOrigem, usuarioDestino, valorMinimo = 0, terceiroEspelhoNoOrigem } = config;
   if (!terceiroOrigem || !usuarioDestino) return;
 
+  console.log(`[SYNC-DIVISAO] 📊 Processando divisão para sourceUserId=${sourceUserId}, usuarioDestino=${usuarioDestino}`);
+  console.log(`[SYNC-DIVISAO] 📊 Config completa:`, JSON.stringify(config));
+  console.log(`[SYNC-DIVISAO] 📊 terceiroOrigem="${terceiroOrigem}", valorMinimo=${valorMinimo}, terceiroEspelhoNoOrigem="${terceiroEspelhoNoOrigem}"`);
+
   const totalRaw = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  console.log(`[SYNC-DIVISAO] 💰 Total bruto encontrado para terceiro="${terceiroOrigem}": R$ ${totalRaw}`);
 
   let metade = (totalRaw || 0) / 2;
-  if (metade < valorMinimo) metade = valorMinimo;
+  console.log(`[SYNC-DIVISAO] 🧮 Metade calculada: ${metade} (mínimo configurado: ${valorMinimo})`);
+  if (metade < valorMinimo) {
+    console.log(`[SYNC-DIVISAO] ⚠️ Metade (${metade}) < mínimo (${valorMinimo}), usando valor mínimo`);
+    metade = valorMinimo;
+  }
   metade = Math.round(metade * 100) / 100;
+  console.log(`[SYNC-DIVISAO] 💵 Valor final da metade após round: R$ ${metade}`);
 
   // ✅ Refatoração: substitui loop sequencial por batch UPSERT em transação única
   // Reduz de 9 queries sequenciais para 1 query bulk com UNNEST
+  // NOTA: conta fixa "Casa" do usuário origem tem NomeTerceiro = null (sem terceiro)
   const operations = [
     { nomeConta: terceiroOrigem, valor: metade, month, year, dataVencimento: new Date(year, month - 1, 10), nomeTerceiro: null },
-    { nomeConta: terceiroOrigem, valor: metade, month, year, dataVencimento: new Date(year, month - 1, 10), nomeTerceiro: terceiroEspelhoNoOrigem },
     { nomeConta: terceiroOrigem, valor: metade, month, year, dataVencimento: new Date(year, month - 1, 10), nomeTerceiro: null, userIdOverride: usuarioDestino },
   ];
 
+  console.log(`[SYNC-DIVISAO] 🔄 Operations preparadas:`, JSON.stringify(operations));
+  console.log(`[SYNC-DIVISAO] 🔄 Chamando bulkUpsertContasFixas para sourceUserId=${sourceUserId} com 1 operação`);
+  console.log(`[SYNC-DIVISAO] 🔄 Chamando bulkUpsertContasFixas para usuarioDestino=${usuarioDestino} com 1 operação`);
+
   // Executa operações em paralelo (sem lock contention)
   await Promise.all([
-    repo.bulkUpsertContasFixas(sourceUserId, [operations[0], operations[1]]),
-    repo.bulkUpsertContasFixas(usuarioDestino, [{ ...operations[2], nomeTerceiro: null }]),
+    repo.bulkUpsertContasFixas(sourceUserId, [operations[0]]),
+    repo.bulkUpsertContasFixas(usuarioDestino, [operations[1]]),
   ]);
 
-  console.log(`[SYNC-DYNAMIC] Divisão '${terceiroOrigem}' processada. Total: ${totalRaw} -> Metade: ${metade}`);
+  console.log(`[SYNC-DIVISAO] ✅ Divisão '${terceiroOrigem}' processada. Total: ${totalRaw} -> Metade: ${metade}`);
 }
 
 module.exports = { executarSincronizacaoDinamica };
