@@ -64,6 +64,13 @@ module.exports = function (repo) {
       }
       await repo.copyMonth(req.session.user.id, currentMonth, currentYear);
 
+      // Invalida cache do dashboard para ambos os meses (origem e destino)
+      if (typeof repo.invalidateDashboardCache === 'function') {
+        repo.invalidateDashboardCache(req.session.user.id, currentMonth, currentYear);
+        repo.invalidateDashboardCache(req.session.user.id, nextMonth, nextYear);
+      }
+      cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
+
       // ✅ Sincronização dinâmica em BACKGROUND (não bloqueia resposta)
       const { executarSincronizacaoDinamica } = require('../../services/syncService');
       setImmediate(async () => {
@@ -92,6 +99,13 @@ module.exports = function (repo) {
         return res.status(403).json({ error: 'Este mês está fechado. Reabra-o para deletar lançamentos.' });
       }
       await repo.deleteMonth(req.session.user.id, parseInt(req.query.month, 10), parseInt(req.query.year, 10));
+
+      // Invalida cache do dashboard para o mês deletado
+      if (typeof repo.invalidateDashboardCache === 'function') {
+        repo.invalidateDashboardCache(req.session.user.id, parseInt(req.query.month, 10), parseInt(req.query.year, 10));
+      }
+      cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
+
       res.json({ success: true });
     })
   );
