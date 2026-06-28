@@ -106,8 +106,9 @@ module.exports = function (repo) {
 
       const renderStart = Date.now();
 
-      // ✅ Sincronização automática ao carregar dashboard (background)
-      if (configuracoesValidas && configuracoesValidas.regras_sync && configuracoesValidas.regras_sync.length > 0) {
+      // ✅ Sincronização automática ao carregar dashboard (background) — apenas se mês tem dados
+      const temDados = fixas.length > 0 || cartao.length > 0 || (dadosTerceirosRaw && dadosTerceirosRaw.rows && dadosTerceirosRaw.rows.length > 0);
+      if (temDados && configuracoesValidas && configuracoesValidas.regras_sync && configuracoesValidas.regras_sync.length > 0) {
         setImmediate(async () => {
           try {
             const { executarSincronizacaoDinamica } = require('../../services/syncService');
