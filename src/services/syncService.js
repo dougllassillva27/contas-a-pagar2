@@ -18,7 +18,6 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
 
   // Se já tem sync rodando para este usuário/mês/ano, retorna imediatamente
   if (_syncPromises.has(mutexKey)) {
-    console.log(`[SYNC] ⏭️ Sync já em execução para usuário ${userId}, mês ${month}/${year} — pulando`);
     return;
   }
 
@@ -29,12 +28,8 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
 
   try {
     if (!Array.isArray(regras) || regras.length === 0) {
-      console.warn(`[SYNC] ⚠️ Nenhuma regra configurada para usuário ${userId}`);
       return;
     }
-
-    console.log(`[SYNC] 🚀 Iniciando sincronização dinâmica para usuário ${userId}, mês ${month}/${year}`);
-    console.log(`[SYNC] 📋 ${regras.length} regra(s) encontrada(s)`);
 
     const startTotal = Date.now();
     let regrasProcessadas = 0;
@@ -44,11 +39,9 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
       try {
         const { tipo, ativo = true } = regra;
         if (!ativo) {
-          console.log(`[SYNC] ⏭️ Regra ${tipo} inativa, pulando`);
           continue;
         }
 
-        console.log(`[SYNC] ▶️ Processando regra: ${JSON.stringify(regra)}`);
         const startRegra = Date.now();
 
         switch (tipo) {
@@ -61,23 +54,18 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
             break;
 
           default:
-            console.warn(`[SYNC] ❓ Tipo de regra desconhecido: ${tipo}`);
+            console.warn(`[SYNC] Tipo de regra desconhecido: ${tipo}`);
             continue;
         }
 
-        const durationRegra = Date.now() - startRegra;
         regrasProcessadas++;
-        console.log(`[SYNC] ✅ Regra ${tipo} processada em ${durationRegra}ms`);
       } catch (err) {
         regrasComErro++;
-        console.error(`[SYNC] ❌ Erro ao processar regra ${regra.tipo}:`, err.message);
-        console.error(`[SYNC] Stack:`, err.stack);
+        console.error(`[SYNC] Erro ao processar regra ${regra.tipo}:`, err.message);
       }
     }
 
     const durationTotal = Date.now() - startTotal;
-    console.log(`[SYNC] 🏁 Sincronização concluída: ${regrasProcessadas} regra(s) processadas, ${regrasComErro} erro(s)`);
-    console.log(`[SYNC] ⏱️ Tempo total: ${durationTotal}ms`);
   } finally {
     // Libera mutex e resolve a promise
     _syncPromises.delete(mutexKey);
@@ -92,63 +80,69 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
 async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
   const { terceiroOrigem, usuarioDestino, contaDestino } = config;
   if (!terceiroOrigem || !usuarioDestino || !contaDestino) {
-    console.warn(`[SYNC] ⚠️ Configuração incompleta para COPIA_TOTAL:`, config);
     return;
   }
 
-  console.log(`[SYNC] 💰 COPIA_TOTAL: Buscando total de '${terceiroOrigem}' (U:${sourceUserId}) para mês ${month}/${year}`);
   const total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
-  console.log(`[SYNC] 💰 Total encontrado: R$ ${total}`);
-
-  console.log(`[SYNC] 💰 Atualizando/criando '${contaDestino}' para usuário destino (U:${usuarioDestino})`);
   await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, total, month, year);
-
-  console.log(`[SYNC] ✅ Copiado R$ ${total} de '${terceiroOrigem}' (U:${sourceUserId}) -> '${contaDestino}' (U:${usuarioDestino})`);
 }
 
 /**
  * Regra: DIVISAO_CASA
- * Lógica específica de divisão de despesas fixas da residência.
+ * Divide contas do terceiro "CASA" com base fixa de R$ 750 + metade do excedente:
+ * - Conta "Casa" (terceiro=null): R$ 750 + metade do excedente acima de R$ 1.500
+ * - Conta "Casa" (terceiro="Morr"): R$ 750 + metade do excedente acima de R$ 1.500
+ *
+ * Gatilho: qualquer alteração em contas do terceiro CASA
  */
 async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
-  const { terceiroOrigem, usuarioDestino, valorMinimo = 0, terceiroEspelhoNoOrigem } = config;
-  if (!terceiroOrigem || !usuarioDestino) return;
+  const { terceiroOrigem, usuarioDestino, valorMinimo = 750, terceiroEspelhoNoOrigem } = config;
 
-  console.log(`[SYNC-DIVISAO] 📊 Processando divisão para sourceUserId=${sourceUserId}, usuarioDestino=${usuarioDestino}`);
-  console.log(`[SYNC-DIVISAO] 📊 Config completa:`, JSON.stringify(config));
-  console.log(`[SYNC-DIVISAO] 📊 terceiroOrigem="${terceiroOrigem}", valorMinimo=${valorMinimo}, terceiroEspelhoNoOrigem="${terceiroEspelhoNoOrigem}"`);
-
-  const totalRaw = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
-  console.log(`[SYNC-DIVISAO] 💰 Total bruto encontrado para terceiro="${terceiroOrigem}": R$ ${totalRaw}`);
-
-  let metade = (totalRaw || 0) / 2;
-  console.log(`[SYNC-DIVISAO] 🧮 Metade calculada: ${metade} (mínimo configurado: ${valorMinimo})`);
-  if (metade < valorMinimo) {
-    console.log(`[SYNC-DIVISAO] ⚠️ Metade (${metade}) < mínimo (${valorMinimo}), usando valor mínimo`);
-    metade = valorMinimo;
+  if (!terceiroOrigem || !usuarioDestino) {
+    return;
   }
-  metade = Math.round(metade * 100) / 100;
-  console.log(`[SYNC-DIVISAO] 💵 Valor final da metade após round: R$ ${metade}`);
 
-  // ✅ Refatoração: substitui loop sequencial por batch UPSERT em transação única
-  // Reduz de 9 queries sequenciais para 1 query bulk com UNNEST
-  // NOTA: conta fixa "Casa" do usuário origem tem NomeTerceiro = null (sem terceiro)
+  // Busca total do terceiro CASA no cartão
+  const totalRaw = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  const totalValor = totalRaw || 0;
+
+  // Base fixa: R$ 750 para cada conta (R$ 1.500 total base)
+  const baseFixa = valorMinimo; // R$ 750
+  const limiteBase = baseFixa * 2; // R$ 1.500
+
+  // Calcula valor de cada conta
+  let valorPorConta = baseFixa;
+
+  if (totalValor > limiteBase) {
+    const excedente = totalValor - limiteBase;
+    const metadeExcedente = Math.round((excedente / 2) * 100) / 100;
+    valorPorConta = baseFixa + metadeExcedente;
+  }
+
+  // Cria/atualiza DUAS contas fixas no MESMO usuário (sourceUserId):
+  // 1. Conta "Casa" com terceiro = null (card Casa geral)
+  // 2. Conta "Casa" com terceiro = terceiroEspelhoNoOrigem (ex: "Morr")
   const operations = [
-    { nomeConta: terceiroOrigem, valor: metade, month, year, dataVencimento: new Date(year, month - 1, 10), nomeTerceiro: null },
-    { nomeConta: terceiroOrigem, valor: metade, month, year, dataVencimento: new Date(year, month - 1, 10), nomeTerceiro: null, userIdOverride: usuarioDestino },
+    {
+      nomeConta: 'Casa',
+      valor: valorPorConta,
+      month,
+      year,
+      dataVencimento: new Date(year, month - 1, 10),
+      nomeTerceiro: null, // Card Casa geral
+    },
+    {
+      nomeConta: 'Casa',
+      valor: valorPorConta,
+      month,
+      year,
+      dataVencimento: new Date(year, month - 1, 10),
+      nomeTerceiro: terceiroEspelhoNoOrigem || 'Morr', // Card do espelho (Morr)
+    },
   ];
 
-  console.log(`[SYNC-DIVISAO] 🔄 Operations preparadas:`, JSON.stringify(operations));
-  console.log(`[SYNC-DIVISAO] 🔄 Chamando bulkUpsertContasFixas para sourceUserId=${sourceUserId} com 1 operação`);
-  console.log(`[SYNC-DIVISAO] 🔄 Chamando bulkUpsertContasFixas para usuarioDestino=${usuarioDestino} com 1 operação`);
-
-  // Executa operações em paralelo (sem lock contention)
-  await Promise.all([
-    repo.bulkUpsertContasFixas(sourceUserId, [operations[0]]),
-    repo.bulkUpsertContasFixas(usuarioDestino, [operations[1]]),
-  ]);
-
-  console.log(`[SYNC-DIVISAO] ✅ Divisão '${terceiroOrigem}' processada. Total: ${totalRaw} -> Metade: ${metade}`);
+  // Executa batch UPSERT em transação única
+  await repo.bulkUpsertContasFixas(sourceUserId, operations);
 }
 
 module.exports = { executarSincronizacaoDinamica };
