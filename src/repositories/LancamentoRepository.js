@@ -51,9 +51,10 @@ async function getUltimosLancamentos(userId) {
           LIMIT 20
       ),
       Unicos AS (
-          SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, '')) 
-            * 
-          FROM UltimosCem 
+          SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, ''))
+            *
+          FROM UltimosCem
+          WHERE Tipo IN ('${TIPO.CARTAO}', '${TIPO.PARCELADO}')
           ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, COALESCE(NomeTerceiro, '') ASC, Id ASC
       )
       SELECT * FROM Unicos 
@@ -138,22 +139,11 @@ async function getDashboardDataModular(userId, month, year, userName) {
       queries.map(async ([label, fn]) => {
         const qStart = Date.now();
         const result = await fn();
-        const elapsed = Date.now() - qStart;
-
-        // Log crítico: query individual lenta (>1000ms)
-        if (elapsed > 1000 && !isProd) {
-          console.warn(`[⚠️ PERF-SLOW] [${label}] demorou ${elapsed}ms`);
-        }
         return result;
       })
     );
 
     const totalElapsed = Date.now() - startTime;
-
-    // Log crítico: tempo total da função
-    if (totalElapsed > 2000 && !isProd) {
-      console.warn(`[⚠️ PERF-SLOW] getDashboardDataModular demorou ${totalElapsed}ms`);
-    }
 
     return {
       totais: results[0],
@@ -778,9 +768,33 @@ async function getLancamentosTerceiro(userId, nome, month, year) {
 }
 
 // ==============================================================================
-// Funções de Sincronização (Morr -> Cartão Douglas)
+// Funções de Sincronização - DIVISAO_CASA
 // ==============================================================================
 
+/**
+ * Busca total do terceiro incluindo contas fixas e cartão (para DIVISAO_CASA)
+ */
+async function getTotalTerceiroParaDivisaoCasa(nome, userId, month, year) {
+  const query = `
+    SELECT COALESCE(SUM(Valor), 0)::float AS total
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND NomeTerceiro = $2
+      AND Tipo IN ('${TIPO.CARTAO}', '${TIPO.FIXA}')
+      AND DataVencimento >= $3 AND DataVencimento < $4
+  `;
+  const { startDate, endDate } = getMesRange(month, year);
+  const result = await db.query(query, [userId, nome, startDate, endDate]);
+  return result.rows[0]?.total || 0;
+}
+
+// ==============================================================================
+// Funções de Sincronização - COPIAR_CONTAS
+// ==============================================================================
+
+/**
+ * Busca total do terceiro APENAS no cartão (para COPIAR_CONTAS)
+ */
 async function getTotalTerceiroCartao(nome, userId, month, year) {
   const query = `
     SELECT COALESCE(SUM(Valor), 0)::float AS total
@@ -795,8 +809,47 @@ async function getTotalTerceiroCartao(nome, userId, month, year) {
   return result.rows[0]?.total || 0;
 }
 
+/**
+ * Busca o valor de uma conta fixa específica com terceiro opcional.
+ * @param {string} descricao - Nome da conta (ex: "Casa")
+ * @param {string|null} terceiro - Nome do terceiro (ex: "Morr" ou null)
+ * @param {number} userId - ID do usuário
+ * @param {number} month - Mês
+ * @param {number} year - Ano
+ * @returns {number} Valor da conta ou 0 se não encontrada
+ */
+async function getContaFixaValor(descricao, terceiro, userId, month, year) {
+  const query = `
+    SELECT COALESCE(Valor, 0)::float AS valor
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND Descricao = $2
+      AND Tipo = '${TIPO.FIXA}'
+      AND MesVencimento = $3
+      AND AnoVencimento = $4
+      AND (${terceiro === null ? 'NomeTerceiro IS NULL' : `NomeTerceiro = '${terceiro}'`})
+    LIMIT 1
+  `;
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[getContaFixaValor] 🔍 Buscando: userId=${userId}, descricao="${descricao}", terceiro=${terceiro || 'NULL'}, mes/ano=${month}/${year}`);
+  }
+
+  const result = await db.query(query, [userId, descricao, month, year]);
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[getContaFixaValor] 📊 Resultado: ${result.rows.length} linha(s), valor=${result.rows[0]?.valor || 0}`);
+  }
+
+  return result.rows[0]?.valor || 0;
+}
+
 async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, year) {
   const dataVencimento = new Date(year, month - 1, 10);
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[findAndUpdateOrCreateContaFixa] 💾 Salvando: userId=${userId}, conta="${nomeConta}", valor=R$ ${valor?.toFixed(2)}, mes/ano=${month}/${year}`);
+  }
 
   const query = `
     WITH existing AS (
@@ -817,7 +870,12 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
     WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing);
   `;
 
-  await db.query(query, [userId, nomeConta, valor, dataVencimento]);
+  const result = await db.query(query, [userId, nomeConta, valor, dataVencimento]);
+
+  if (process.env.NODE_ENV !== 'production') {
+    const rowsAffected = result?.rowCount || 0;
+    console.log(`[findAndUpdateOrCreateContaFixa] ✅ Query executada, linhas afetadas: ${rowsAffected}`);
+  }
 }
 
 // ==============================================================================
@@ -827,9 +885,7 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
 async function bulkUpsertContasFixas(userId, operations) {
   if (!Array.isArray(operations) || operations.length === 0) return;
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[BULK-UPSERT] 📦 bulkUpsertContasFixas chamado para userId=${userId} com ${operations.length} operação(ões)`);
-  }
+  // [BULK-UPSERT] log removido
 
   // Prepara arrays para UNNEST
   const descricoes = [];
@@ -842,16 +898,11 @@ async function bulkUpsertContasFixas(userId, operations) {
     valores.push(op.valor);
     vencimentos.push(op.dataVencimento);
     terceiros.push(op.nomeTerceiro || null);
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[BULK-UPSERT]   ├─ Operação: descricao="${op.nomeConta}", valor=${op.valor}, terceiro="${op.nomeTerceiro}", vencimento=${op.dataVencimento}`);
-    }
   });
 
   const month = operations[0].month;
   const year = operations[0].year;
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[BULK-UPSERT]   └─ Mês/Ano: ${month}/${year}`);
-  }
+  // [BULK-UPSERT] log removido
 
   // Debug: verificar registros existentes antes do UPSERT
   const mes = operations[0].month;
@@ -866,9 +917,7 @@ async function bulkUpsertContasFixas(userId, operations) {
       AND Descricao = ANY($4::text[])
   `;
   const debugResult = await db.query(debugQuery, [userId, mes, ano, descricoes]);
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[BULK-UPSERT] 🔍 Registros existentes encontrados para userId=${userId}:`, JSON.stringify(debugResult.rows));
-  }
+  // [BULK-UPSERT] log removido
 
   // Query bulk com UNNEST — usa colunas computadas MesVencimento/AnoVencimento
   // Se ignoreTerceiro=true, atualiza TODOS os registros com mesmo nome (independente do terceiro)
@@ -929,9 +978,7 @@ async function bulkUpsertContasFixas(userId, operations) {
     console.log(`[BULK-UPSERT] ⚙️ Executando query bulk para userId=${userId}`);
   }
   const result = await db.query(query, [descricoes, valores, vencimentos, terceiros, userId]);
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[BULK-UPSERT] ✅ Query executada para userId=${userId} (rowCount=${result?.rowCount || 'N/A'})`);
-  }
+  // [BULK-UPSERT] log removido
 }
 
 async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valor, month, year, nomeTerceiro) {
@@ -1144,7 +1191,9 @@ module.exports = {
   deleteLancamentosPorPessoa,
   deleteMonth,
   copyMonth,
-  getTotalTerceiroCartao,
+  getTotalTerceiroParaDivisaoCasa, // ✅ Total do terceiro para divisão (CARTAO + FIXA)
+  getTotalTerceiroCartao, // ✅ Total do terceiro apenas CARTAO
+  getContaFixaValor, // ✅ Busca valor de conta fixa específica
   findAndUpdateOrCreateContaFixa,
   findAndUpdateOrCreateContaFixaComTerceiro,
   bulkUpsertContasFixas, // ✅ Batch UPSERT para divisões

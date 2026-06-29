@@ -41,27 +41,31 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
         if (!ativo) {
           continue;
         }
-
         const startRegra = Date.now();
 
         switch (tipo) {
-          case 'COPIA_TOTAL':
-            await processarCopiaTotal(repo, userId, month, year, regra);
+          case 'COPIAR_CONTAS':
+            await processarCopiarContas(repo, userId, month, year, regra);
+            break;
+
+          case 'COPIAR_CONTA_FIXA':
+            await processarCopiarContaFixa(repo, userId, month, year, regra);
             break;
 
           case 'DIVISAO_CASA':
             await processarDivisaoCasa(repo, userId, month, year, regra);
             break;
+            break;
 
           default:
-            console.warn(`[SYNC] Tipo de regra desconhecido: ${tipo}`);
+            // [SYNC] log removido
             continue;
         }
 
         regrasProcessadas++;
       } catch (err) {
         regrasComErro++;
-        console.error(`[SYNC] Erro ao processar regra ${regra.tipo}:`, err.message);
+        // [SYNC] log removido
       }
     }
 
@@ -74,10 +78,11 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
 }
 
 /**
- * Regra: COPIA_TOTAL
- * Pega o total de um terceiro no cartão e injeta como valor de uma conta fixa em outro usuário.
+ * Regra: COPIAR_CONTAS
+ * Copia o total de um terceiro do usuário origem para uma conta fixa no usuário destino.
+ * Ex: Total do cartão "Morr" (usuário 1) → Conta "Cartão Douglas" (usuário 2)
  */
-async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
+async function processarCopiarContas(repo, sourceUserId, month, year, config) {
   const { terceiroOrigem, usuarioDestino, contaDestino } = config;
   if (!terceiroOrigem || !usuarioDestino || !contaDestino) {
     return;
@@ -88,10 +93,39 @@ async function processarCopiaTotal(repo, sourceUserId, month, year, config) {
 }
 
 /**
+ * Regra: COPIAR_CONTA_FIXA
+ * Copia o valor de uma conta fixa específica de um usuário para outro.
+ * Ex: Conta "Casa" do usuário 1 (terceiro "Morr") → Conta "Casa" do usuário 2
+ */
+async function processarCopiarContaFixa(repo, sourceUserId, month, year, config) {
+  const { descricaoOrigem, terceiroOrigem, usuarioDestino, contaDestino } = config;
+
+  // [SYNC] log removido
+
+  if (!descricaoOrigem || !usuarioDestino || !contaDestino) {
+    return;
+  }
+
+  // Busca valor da conta fixa específica no usuário origem
+  const valorOrigem = await repo.getContaFixaValor(
+    descricaoOrigem,
+    terceiroOrigem,
+    sourceUserId,
+    month,
+    year
+  );
+
+  // [SYNC] log removido
+
+  // Injeta na conta fixa do usuário destino
+  await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, valorOrigem, month, year);
+}
+
+/**
  * Regra: DIVISAO_CASA
  * Divide contas do terceiro "CASA" com base fixa de R$ 750 + metade do excedente:
- * - Conta "Casa" (terceiro=null): R$ 750 + metade do excedente acima de R$ 1.500
- * - Conta "Casa" (terceiro="Morr"): R$ 750 + metade do excedente acima de R$ 1.500
+ * - Conta "Casa" (terceiro=null): fica no usuário origem com valor calculado
+ * - Conta "Casa" (terceiro="Morr"): vai para o usuário destino com valor calculado
  *
  * Gatilho: qualquer alteração em contas do terceiro CASA
  */
@@ -102,8 +136,8 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
     return;
   }
 
-  // Busca total do terceiro CASA no cartão
-  const totalRaw = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  // Busca total do terceiro CASA (cartão + fixas) para divisão
+  const totalRaw = await repo.getTotalTerceiroParaDivisaoCasa(terceiroOrigem, sourceUserId, month, year);
   const totalValor = totalRaw || 0;
 
   // Base fixa: R$ 750 para cada conta (R$ 1.500 total base)
@@ -120,8 +154,8 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
   }
 
   // Cria/atualiza DUAS contas fixas no MESMO usuário (sourceUserId):
-  // 1. Conta "Casa" com terceiro = null (card Casa geral)
-  // 2. Conta "Casa" com terceiro = terceiroEspelhoNoOrigem (ex: "Morr")
+  // 1. Conta "Casa" com terceiro=null (card Casa geral)
+  // 2. Conta "Casa" com terceiro=terceiroEspelhoNoOrigem (ex: "Morr")
   const operations = [
     {
       nomeConta: 'Casa',
@@ -141,7 +175,7 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
     },
   ];
 
-  // Executa batch UPSERT em transação única
+  // Executa batch UPSERT em transação única no USUÁRIO ORIGEM
   await repo.bulkUpsertContasFixas(sourceUserId, operations);
 }
 
