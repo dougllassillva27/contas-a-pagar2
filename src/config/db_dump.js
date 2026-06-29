@@ -25,8 +25,6 @@ module.exports = {
     if (isPerfEnabled || (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test')) {
       const start = Date.now();
       const result = await pool.query(text, params);
-      const duration = Date.now() - start;
-      console.log(`[DB-PERF] ⏱️ ${duration}ms | Query: ${String(text).substring(0, 100).replace(/\n/g, ' ')}...`);
       return result;
     }
     return pool.query(text, params);
@@ -39,8 +37,6 @@ module.exports = {
       client.query = async (text, params) => {
         const start = Date.now();
         const result = await originalQuery(text, params);
-        const duration = Date.now() - start;
-        console.log(`[DB-PERF-CLIENT] ⏱️ ${duration}ms | Query: ${String(text).substring(0, 100).replace(/\n/g, ' ')}...`);
         return result;
       };
     }

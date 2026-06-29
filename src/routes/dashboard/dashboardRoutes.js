@@ -88,11 +88,6 @@ module.exports = function (repo) {
       } = await repo.getDashboardDataModular(userId, Number(month), Number(year), userName);
       const elapsed = Date.now() - startTime;
 
-      // Log crítico: queries lentas (>1000ms)
-      if (elapsed > 1000 && !isProd) {
-        console.warn(`[⚠️ PERF-SLOW] getDashboardDataModular demorou ${elapsed}ms para userId=${userId}`);
-      }
-
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw, userName);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
@@ -108,15 +103,27 @@ module.exports = function (repo) {
 
       // ✅ Sincronização automática ao carregar dashboard (background) — apenas se mês tem dados
       const temDados = fixas.length > 0 || cartao.length > 0 || (dadosTerceirosRaw && dadosTerceirosRaw.rows && dadosTerceirosRaw.rows.length > 0);
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[SYNC-CHECK] userId=${userId}, temDados=${temDados}, regras=${configuracoesValidas?.regras_sync?.length || 0}`);
+        console.log(`[SYNC-CHECK] fixas.length=${fixas.length}, cartao.length=${cartao.length}, terceirosRows=${dadosTerceirosRaw?.rows?.length || 0}`);
+      }
+
       if (temDados && configuracoesValidas && configuracoesValidas.regras_sync && configuracoesValidas.regras_sync.length > 0) {
         setImmediate(async () => {
           try {
+            // [SYNC] log removido
             const { executarSincronizacaoDinamica } = require('../../services/syncService');
             await executarSincronizacaoDinamica(repo, userId, month, year, configuracoesValidas.regras_sync);
+            // [SYNC] log removido
           } catch (err) {
             console.error('[Dashboard] Erro na sincronização automática:', err.message);
           }
         });
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`[SYNC-CHECK] ⏸️ Sync não executado: temDados=${temDados}, config=${!!configuracoesValidas}, regras=${!!(configuracoesValidas?.regras_sync)}, total=${configuracoesValidas?.regras_sync?.length}`);
+        }
       }
 
       res.render('index', {
@@ -142,9 +149,6 @@ module.exports = function (repo) {
 
       // Log crítico: render lento (>500ms)
       const renderTime = renderEnd - renderStart;
-      if (renderTime > 500 && !isProd) {
-        console.warn(`[⚠️ PERF-SLOW] Render demorou ${renderTime}ms`);
-      }
       if (!isProd) {
         console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] <<< GET / COMPLETADO em ${Date.now() - startTime}ms (render=${renderTime}ms)`);
       }
