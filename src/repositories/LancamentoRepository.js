@@ -303,25 +303,74 @@ async function addLancamento(userId, dados) {
   // ✅ FIX: Normaliza terceiro "Eu", "Dodo" ou vazio para NULL (mesma lógica de addLancamentosBulk)
   const terceiroNormalizado = normalizarTerceiro(dados.nomeTerceiro);
 
-  const query = `
+  console.log('[DEBUG] addLancamento - tipo:', dados.tipo, 'TIPO.FIXA:', TIPO.FIXA, 'igual:', dados.tipo === TIPO.FIXA);
+
+  // ✅ Para contas fixas, usa UPSERT para evitar violação de constraint única
+  if (dados.tipo === TIPO.FIXA) {
+    const query = `
+      WITH existing AS (
+        SELECT Id FROM Lancamentos
+        WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
+          AND MesVencimento = EXTRACT(MONTH FROM $7::timestamptz)::integer
+          AND AnoVencimento = EXTRACT(YEAR FROM $7::timestamptz)::integer
+          AND COALESCE(NomeTerceiro, '') = COALESCE($10, '')
+        LIMIT 1
+      ),
+      updated AS (
+        UPDATE Lancamentos SET Valor = $3, Categoria = $5, Status = $6,
+          ParcelaAtual = $8, TotalParcelas = $9
+        WHERE Id = (SELECT Id FROM existing)
+        RETURNING Id
+      )
       INSERT INTO Lancamentos
         (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
-         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1))
-   `;
-  await db.query(query, [
-    userId,
-    dados.descricao,
-    dados.valor,
-    dados.tipo,
-    dados.categoria,
-    dados.status || STATUS.PENDENTE,
-    dataVencimento,
-    dados.parcelaAtual || null,
-    dados.totalParcelas || null,
-    terceiroNormalizado, // ✅ Usa valor normalizado
-  ]);
+         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, MesVencimento, AnoVencimento)
+      SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1),
+        EXTRACT(MONTH FROM $7::timestamptz)::integer, EXTRACT(YEAR FROM $7::timestamptz)::integer
+      WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing)
+    `;
+    await db.query(query, [
+      userId,
+      dados.descricao,
+      dados.valor,
+      dados.tipo,
+      dados.categoria,
+      dados.status || STATUS.PENDENTE,
+      dataVencimento,
+      dados.parcelaAtual || null,
+      dados.totalParcelas || null,
+      terceiroNormalizado,
+    ]);
+  } else {
+    const query = `
+      WITH mes_ano AS (
+        SELECT EXTRACT(MONTH FROM $7::timestamptz)::integer AS mes,
+               EXTRACT(YEAR FROM $7::timestamptz)::integer AS ano
+      )
+      INSERT INTO Lancamentos
+        (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
+         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, MesVencimento, AnoVencimento)
+      SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1),
+        mes, ano
+      FROM mes_ano
+      ON CONFLICT (usuarioid, descricao, tipo, COALESCE(nometerceiro, ''), mesvencimento, anovencimento)
+      DO NOTHING
+    `;
+    await db.query(query, [
+      userId,
+      dados.descricao,
+      dados.valor,
+      dados.tipo,
+      dados.categoria,
+      dados.status || STATUS.PENDENTE,
+      dataVencimento,
+      dados.parcelaAtual || null,
+      dados.totalParcelas || null,
+      terceiroNormalizado,
+    ]);
+  }
 }
 
 // ==============================================================================
@@ -751,8 +800,8 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
     WITH existing AS (
       SELECT Id FROM Lancamentos
       WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
-        AND MesVencimento = EXTRACT(MONTH FROM $5)
-        AND AnoVencimento = EXTRACT(YEAR FROM $5)
+        AND MesVencimento = EXTRACT(MONTH FROM $4::timestamptz)::integer
+        AND AnoVencimento = EXTRACT(YEAR FROM $4::timestamptz)::integer
       LIMIT 1
     ),
     updated AS (
@@ -761,12 +810,12 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
       RETURNING Id
     )
     INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, Ordem, DataCriacao, MesVencimento, AnoVencimento)
-    SELECT $1, $2, $3, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $5, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01',
-           EXTRACT(MONTH FROM $5), EXTRACT(YEAR FROM $5)
+    SELECT $1, $2, $3, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $4, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01',
+           EXTRACT(MONTH FROM $4::timestamptz)::integer, EXTRACT(YEAR FROM $4::timestamptz)::integer
     WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing);
   `;
 
-  await db.query(query, [userId, nomeConta, valor, null, dataVencimento]);
+  await db.query(query, [userId, nomeConta, valor, dataVencimento]);
 }
 
 // ==============================================================================
@@ -812,6 +861,16 @@ async function bulkUpsertContasFixas(userId, operations) {
   console.log(`[BULK-UPSERT] 🔍 Registros existentes encontrados para userId=${userId}:`, JSON.stringify(debugResult.rows));
 
   // Query bulk com UNNEST — usa colunas computadas MesVencimento/AnoVencimento
+  // Se ignoreTerceiro=true, atualiza TODOS os registros com mesmo nome (independente do terceiro)
+  const ignoreTerceiro = operations[0]?.ignoreTerceiro || false;
+
+  const terceiroCondition = ignoreTerceiro
+    ? '' // Sem filtro de terceiro
+    : `AND (
+          (p.terceiro IS NULL AND (l.NomeTerceiro IS NULL OR l.NomeTerceiro = ''))
+          OR l.NomeTerceiro = p.terceiro
+        )`;
+
   const query = `
     WITH params AS (
       SELECT unnest($1::text[]) as descricao,
@@ -820,45 +879,39 @@ async function bulkUpsertContasFixas(userId, operations) {
              unnest($4::text[]) as terceiro,
              generate_subscripts($1::text[], 1) as idx
     ),
-    first_match AS (
-      SELECT DISTINCT ON (p.idx) l.Id, p.idx
+    all_matches AS (
+      SELECT l.Id, p.idx
       FROM Lancamentos l
       INNER JOIN params p ON l.Descricao = p.descricao
         AND l.UsuarioId = $5
         AND l.Tipo = '${TIPO.FIXA}'
-        AND l.MesVencimento = EXTRACT(MONTH FROM p.vencimento)
-        AND l.AnoVencimento = EXTRACT(YEAR FROM p.vencimento)
-        AND (
-          (p.terceiro IS NULL AND (l.NomeTerceiro IS NULL OR l.NomeTerceiro = ''))
-          OR l.NomeTerceiro = p.terceiro
-        )
-      ORDER BY p.idx, l.Id DESC
+        AND l.MesVencimento = EXTRACT(MONTH FROM p.vencimento::timestamptz)::integer
+        AND l.AnoVencimento = EXTRACT(YEAR FROM p.vencimento::timestamptz)::integer
+        ${terceiroCondition}
     ),
     updated AS (
       UPDATE Lancamentos l
       SET Valor = p.valor
-      FROM params p
-      WHERE l.Id = (SELECT Id FROM first_match WHERE idx = p.idx LIMIT 1)
+      FROM all_matches am
+      INNER JOIN params p ON p.idx = am.idx
+      WHERE l.Id = am.Id
       RETURNING l.Id
     )
     INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao, MesVencimento, AnoVencimento)
     SELECT $5, p.descricao, p.valor, '${TIPO.FIXA}', '${STATUS.PENDENTE}', p.vencimento, p.terceiro,
            (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $5),
            '1970-01-01',
-           EXTRACT(MONTH FROM p.vencimento),
-           EXTRACT(YEAR FROM p.vencimento)
+           EXTRACT(MONTH FROM p.vencimento::timestamptz)::integer,
+           EXTRACT(YEAR FROM p.vencimento::timestamptz)::integer
     FROM params p
     WHERE NOT EXISTS (
       SELECT 1 FROM Lancamentos l
       WHERE l.Descricao = p.descricao
         AND l.UsuarioId = $5
         AND l.Tipo = '${TIPO.FIXA}'
-        AND l.MesVencimento = EXTRACT(MONTH FROM p.vencimento)
-        AND l.AnoVencimento = EXTRACT(YEAR FROM p.vencimento)
-        AND (
-          (p.terceiro IS NULL AND (l.NomeTerceiro IS NULL OR l.NomeTerceiro = ''))
-          OR l.NomeTerceiro = p.terceiro
-        )
+        AND l.MesVencimento = EXTRACT(MONTH FROM p.vencimento::timestamptz)::integer
+        AND l.AnoVencimento = EXTRACT(YEAR FROM p.vencimento::timestamptz)::integer
+        ${terceiroCondition}
     );
   `;
 
@@ -877,8 +930,8 @@ async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valo
     WITH existing AS (
       SELECT Id FROM Lancamentos
       WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
-        AND MesVencimento = EXTRACT(MONTH FROM $5)
-        AND AnoVencimento = EXTRACT(YEAR FROM $5)
+        AND MesVencimento = EXTRACT(MONTH FROM $5::timestamptz)::integer
+        AND AnoVencimento = EXTRACT(YEAR FROM $5::timestamptz)::integer
         AND ${terceiroCondition}
       LIMIT 1
     ),
@@ -889,7 +942,7 @@ async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valo
     )
     INSERT INTO Lancamentos (UsuarioId, Descricao, Valor, Tipo, Status, DataVencimento, NomeTerceiro, Ordem, DataCriacao, MesVencimento, AnoVencimento)
     SELECT $1, $2, $3, '${TIPO.FIXA}', '${STATUS.PENDENTE}', $5, $6, (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1), '1970-01-01',
-           EXTRACT(MONTH FROM $5), EXTRACT(YEAR FROM $5)
+           EXTRACT(MONTH FROM $5::timestamptz)::integer, EXTRACT(YEAR FROM $5::timestamptz)::integer
     WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing);
   `;
 
