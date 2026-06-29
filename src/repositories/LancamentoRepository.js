@@ -265,8 +265,10 @@ async function getDistinctTerceiros(userId) {
     [userId]
   );
   const terceiros = result.rows.map((r) => r.nometerceiro);
-  console.log(`[DEBUG-DISTINCT-TERCEIROS] userId=${userId}, terceiros encontrados: ${terceiros.length}`);
-  console.log(`[DEBUG-DISTINCT-TERCEIROS] Lista:`, terceiros.join(', '));
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEBUG-DISTINCT-TERCEIROS] userId=${userId}, terceiros encontrados: ${terceiros.length}`);
+    console.log(`[DEBUG-DISTINCT-TERCEIROS] Lista:`, terceiros.join(', '));
+  }
   cache.set(cacheKey, terceiros, 5 * 60 * 1000);
   return terceiros;
 }
@@ -825,7 +827,9 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
 async function bulkUpsertContasFixas(userId, operations) {
   if (!Array.isArray(operations) || operations.length === 0) return;
 
-  console.log(`[BULK-UPSERT] 📦 bulkUpsertContasFixas chamado para userId=${userId} com ${operations.length} operação(ões)`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[BULK-UPSERT] 📦 bulkUpsertContasFixas chamado para userId=${userId} com ${operations.length} operação(ões)`);
+  }
 
   // Prepara arrays para UNNEST
   const descricoes = [];
@@ -838,12 +842,16 @@ async function bulkUpsertContasFixas(userId, operations) {
     valores.push(op.valor);
     vencimentos.push(op.dataVencimento);
     terceiros.push(op.nomeTerceiro || null);
-    console.log(`[BULK-UPSERT]   ├─ Operação: descricao="${op.nomeConta}", valor=${op.valor}, terceiro="${op.nomeTerceiro}", vencimento=${op.dataVencimento}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[BULK-UPSERT]   ├─ Operação: descricao="${op.nomeConta}", valor=${op.valor}, terceiro="${op.nomeTerceiro}", vencimento=${op.dataVencimento}`);
+    }
   });
 
   const month = operations[0].month;
   const year = operations[0].year;
-  console.log(`[BULK-UPSERT]   └─ Mês/Ano: ${month}/${year}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[BULK-UPSERT]   └─ Mês/Ano: ${month}/${year}`);
+  }
 
   // Debug: verificar registros existentes antes do UPSERT
   const mes = operations[0].month;
@@ -858,7 +866,9 @@ async function bulkUpsertContasFixas(userId, operations) {
       AND Descricao = ANY($4::text[])
   `;
   const debugResult = await db.query(debugQuery, [userId, mes, ano, descricoes]);
-  console.log(`[BULK-UPSERT] 🔍 Registros existentes encontrados para userId=${userId}:`, JSON.stringify(debugResult.rows));
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[BULK-UPSERT] 🔍 Registros existentes encontrados para userId=${userId}:`, JSON.stringify(debugResult.rows));
+  }
 
   // Query bulk com UNNEST — usa colunas computadas MesVencimento/AnoVencimento
   // Se ignoreTerceiro=true, atualiza TODOS os registros com mesmo nome (independente do terceiro)
@@ -915,9 +925,13 @@ async function bulkUpsertContasFixas(userId, operations) {
     );
   `;
 
-  console.log(`[BULK-UPSERT] ⚙️ Executando query bulk para userId=${userId}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[BULK-UPSERT] ⚙️ Executando query bulk para userId=${userId}`);
+  }
   const result = await db.query(query, [descricoes, valores, vencimentos, terceiros, userId]);
-  console.log(`[BULK-UPSERT] ✅ Query executada para userId=${userId} (rowCount=${result?.rowCount || 'N/A'})`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[BULK-UPSERT] ✅ Query executada para userId=${userId} (rowCount=${result?.rowCount || 'N/A'})`);
+  }
 }
 
 async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valor, month, year, nomeTerceiro) {
