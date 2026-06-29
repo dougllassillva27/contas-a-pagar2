@@ -163,16 +163,76 @@ export async function moverMes(e, ids, direcao, checkBloqueioMesFechado, mostrar
   }
 }
 
-export function moverLoteUltimas(fecharMenuContexto) {
+export async function moverLoteUltimas(direcao) {
+  const fecharMenuContexto = typeof window.fecharMenuContexto === 'function' ? window.fecharMenuContexto : () => {};
+  const mostrarLoading = typeof window.mostrarLoading === 'function' ? window.mostrarLoading : () => {};
+  const ocultarLoading = typeof window.ocultarLoading === 'function' ? window.ocultarLoading : () => {};
+  const mostrarAviso = typeof window.mostrarAviso === 'function' ? window.mostrarAviso : () => {};
+
   fecharMenuContexto();
   const selectedRows = document.querySelectorAll('#listaUltimasConteudo tr.selected-row');
   const ids = Array.from(selectedRows).map((tr) => Number(tr.dataset.id));
   if (ids.length === 0) return;
-  // moverMes chamado externamente
+
+  // Chamar moverMes com os IDs selecionados
+  await moverMes(null, ids, direcao, null, mostrarLoading, ocultarLoading, mostrarAviso);
+
+  // Exibir mensagem de sucesso após concluir
+  mostrarAviso('Sucesso', `${ids.length} conta(s) movida(s) com sucesso!`);
 }
 
 let _idContaDividir = null;
 let _valorContaDividir = 0;
+
+function setupAutocompleteTerceiros(input, preview, btnConfirmar) {
+  // Obter lista de terceiros disponíveis do datalist ou window
+  let terceirosDisponiveis = [];
+
+  // Tentar obter do datalist
+  const datalist = document.getElementById('nomesTerceiros');
+  if (datalist) {
+    terceirosDisponiveis = Array.from(datalist.querySelectorAll('option')).map(opt => opt.value);
+  }
+
+  // Fallback: tentar de window.terceirosDisponiveis
+  if (terceirosDisponiveis.length === 0 && window.terceirosDisponiveis) {
+    terceirosDisponiveis = window.terceirosDisponiveis;
+  }
+
+  // Função para atualizar preview com valores divididos
+  function atualizarPreview(terceirosList) {
+    if (terceirosList.length === 0) {
+      preview.textContent = '';
+      btnConfirmar.disabled = true;
+      return;
+    }
+
+    const valorUnitario = _valorContaDividir / terceirosList.length;
+    const resumo = terceirosList.map(t => `${t}: ${valorUnitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`).join(' • ');
+    preview.textContent = `${terceirosList.length}x divisão • ${resumo}`;
+    btnConfirmar.disabled = false;
+  }
+
+  // Input handler para atualizar preview
+  input.addEventListener('input', () => {
+    const value = input.value.trim();
+    const partes = value.split(',').map(p => p.trim()).filter(Boolean);
+    atualizarPreview(partes);
+  });
+
+  // Handler para quando usuário pressiona Enter ou vírgula
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const value = input.value.trim();
+      if (value && !value.endsWith(',')) {
+        input.value = value + ', ';
+        // Disparar evento input para atualizar preview
+        input.dispatchEvent(new Event('input'));
+      }
+    }
+  });
+}
 
 export function abrirModalDividirConta(fecharMenuContexto, registerModalOpen, fecharModais) {
   fecharMenuContexto();
@@ -194,6 +254,9 @@ export function abrirModalDividirConta(fecharMenuContexto, registerModalOpen, fe
   input.value = '';
   preview.textContent = '';
   btnConfirmar.disabled = true;
+
+  // Setup autocomplete para terceiros disponíveis
+  setupAutocompleteTerceiros(input, preview, btnConfirmar);
 
   document.getElementById('modalDividirConta').classList.add('active');
   registerModalOpen();
@@ -229,9 +292,9 @@ export async function confirmarDivisaoConta(mostrarLoading, ocultarLoading, most
     if (res.ok && data.success) {
       // Limpar cache ANTES do refresh para garantir dados frescos
       softRefreshCache.clear();
-      fecharModalDividirConta();
-      ocultarLoading();
       await softRefreshSafe(800, false);
+      ocultarLoading();
+      fecharModalDividirConta();
       mostrarAviso('Sucesso', 'Conta dividida com sucesso!');
       return;
     } else {

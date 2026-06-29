@@ -415,7 +415,11 @@ function abrirMenuContexto(e, pessoa) {
       btnDividirConta.style.display = 'flex';
       btnDividirConta.classList.remove('disabled');
       btnDividirConta.removeAttribute('data-tooltip');
-      btnDividirConta.onclick = () => abrirModalDividirConta();
+      btnDividirConta.onclick = () => {
+        if (typeof abrirModalDividirConta === 'function') {
+          abrirModalDividirConta(fecharMenuContexto, registerModalOpen, fecharModais);
+        }
+      };
     } else if (isUltimas && selectedCount > 1) {
       btnDividirConta.style.display = 'flex';
       btnDividirConta.classList.add('disabled');
@@ -451,6 +455,8 @@ function abrirMenuContexto(e, pessoa) {
 function fecharMenuContexto() {
   document.getElementById('customContextMenu').style.display = 'none';
 }
+window.fecharMenuContexto = fecharMenuContexto;
+
 window.onclick = (e) => {
   if (!e.target.closest('#customContextMenu')) fecharMenuContexto();
   if (e.target.classList.contains('modal-overlay') && e.target.id !== 'modalLoading') fecharModais();
@@ -1120,6 +1126,25 @@ async function abrirModalRendasDetalhes() {
     console.error('[abrirModalRendasDetalhes] Erro:', err);
     mostrarAviso('Erro', 'Não foi possível carregar os dados de rendas.');
   }
+}
+
+// ==============================================================================
+// ✅ EVENT LISTENER PARA BOTÃO CONFIRMAR DIVISÃO
+// ==============================================================================
+
+const btnConfirmarDivisao = document.getElementById('btnConfirmarDivisao');
+if (btnConfirmarDivisao) {
+  btnConfirmarDivisao.addEventListener('click', async () => {
+    const input = document.getElementById('inputTerceirosDivisao');
+    const terceiros = input.value.split(',').map((t) => t.trim()).filter(Boolean);
+
+    if (terceiros.length === 0) return;
+
+    // Chamar confirmarDivisaoConta com as funções necessárias
+    if (typeof confirmarDivisaoConta === 'function') {
+      await confirmarDivisaoConta(mostrarLoading, ocultarLoading, mostrarAviso);
+    }
+  });
 }
 
 // Exportar para window (para compatibilidade com HTML inline)
