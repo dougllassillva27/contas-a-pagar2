@@ -28,10 +28,26 @@ function initCardDragAndDrop() {
       draggable.removeEventListener('dragend', oldHandlers.end);
     }
 
+    let isDraggingCard = false;
     const startHandler = (e) => {
+      // Impede que dragstart de elementos internos (tabelas, rows) seja capturado
+      const target = e.target;
+      if (
+        target.closest('.draggable-row') ||
+        target.closest('tbody') ||
+        target.closest('table') ||
+        target.closest('tr') ||
+        target.closest('td')
+      ) {
+        return;
+      }
+      e.stopPropagation();
+      isDraggingCard = true;
       draggable.classList.add('dragging');
     };
     const endHandler = () => {
+      if (!isDraggingCard) return; // Não salva se drag não foi iniciado neste handler
+      isDraggingCard = false;
       draggable.classList.remove('dragging');
       salvarOrdemCardsDebounced();
     };
@@ -48,6 +64,8 @@ function initCardDragAndDrop() {
 
   const dragoverHandler = (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Impede propagação para outros containers
+
     const draggable = document.querySelector('.draggable-card.dragging');
     if (!draggable || !container.contains(draggable)) return;
 
@@ -169,8 +187,23 @@ function initDragAndDrop() {
       draggable.removeEventListener('dragend', oldHandlers.end);
     }
 
-    const startHandler = () => draggable.classList.add('dragging');
+    let isDraggingRow = false;
+    const startHandler = (e) => {
+      // Só permite se for .draggable-row E não for ao mesmo tempo .draggable-card
+      const target = e.target;
+      const isRow = target.closest('.draggable-row');
+      const isCard = target.classList.contains('draggable-card');
+
+      if (!isRow || isCard) {
+        return;
+      }
+      e.stopPropagation();
+      isDraggingRow = true;
+      draggable.classList.add('dragging');
+    };
     const endHandler = () => {
+      if (!isDraggingRow) return; // Só salva se o drag foi realmente iniciado
+      isDraggingRow = false;
       draggable.classList.remove('dragging');
       salvarOrdemDebounced(draggable.parentElement);
     };
@@ -182,6 +215,8 @@ function initDragAndDrop() {
   containers.forEach((container) => {
     container.ondragover = (e) => {
       e.preventDefault();
+      e.stopPropagation(); // Impede propagação para outros containers
+
       const draggable = document.querySelector('.dragging');
       // Só move se draggable for filho deste container (evita HierarchyRequestError)
       if (!draggable || !container.contains(draggable)) return;
@@ -242,6 +277,8 @@ function initTouchDragAndDrop() {
 
         const row = e.target.closest('.draggable-row');
         if (!row) return;
+
+        e.stopPropagation(); // Impede propagação para outros handlers
 
         draggingRow = row;
         activeContainer = container;
