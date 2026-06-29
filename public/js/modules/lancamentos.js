@@ -207,9 +207,11 @@ function setupAutocompleteTerceiros(input, preview, btnConfirmar) {
       return;
     }
 
-    const valorUnitario = _valorContaDividir / terceirosList.length;
+    // Backend divide entre (novos + original)
+    const totalPartes = terceirosList.length + 1;
+    const valorUnitario = _valorContaDividir / totalPartes;
     const resumo = terceirosList.map(t => `${t}: ${valorUnitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`).join(' • ');
-    preview.textContent = `${terceirosList.length}x divisão • ${resumo}`;
+    preview.textContent = `${totalPartes}x divisão • ${resumo}`;
     btnConfirmar.disabled = false;
   }
 
