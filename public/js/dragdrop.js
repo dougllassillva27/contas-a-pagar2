@@ -28,7 +28,7 @@ function initCardDragAndDrop() {
       draggable.removeEventListener('dragend', oldHandlers.end);
     }
 
-    const startHandler = () => {
+    const startHandler = (e) => {
       draggable.classList.add('dragging');
     };
     const endHandler = () => {
@@ -51,6 +51,7 @@ function initCardDragAndDrop() {
     const draggable = document.querySelector('.draggable-card.dragging');
     if (!draggable || !container.contains(draggable)) return;
 
+    // Grid layout: encontrar card sob o cursor usando X e Y
     const siblings = [...container.querySelectorAll('.draggable-card:not(.dragging)')];
     let hoverCard = null;
 
@@ -63,8 +64,10 @@ function initCardDragAndDrop() {
     }
 
     if (hoverCard) {
+      // Determinar posição relativa no grid baseado na posição horizontal
       const box = hoverCard.getBoundingClientRect();
-      if (e.clientX > box.left + box.width / 2) container.insertBefore(draggable, hoverCard.nextSibling);
+      const isAfter = e.clientX > box.left + box.width / 2;
+      if (isAfter) container.insertBefore(draggable, hoverCard.nextSibling);
       else container.insertBefore(draggable, hoverCard);
     }
   };
