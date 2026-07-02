@@ -15,16 +15,13 @@ async function isMesFechado(userId, mes, ano) {
 
 async function toggleMesFechado(userId, mes, ano) {
   const jaFechado = await isMesFechado(userId, mes, ano);
-  console.log(`[🔍 DEBUG-REPO-TOGGLE] Verificando: userId=${userId}, mes=${mes}, ano=${ano}, jaFechado=${jaFechado}`);
 
   if (jaFechado) {
     await db.query('DELETE FROM MesesFechados WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3', [userId, mes, ano]);
-    console.log(`[🔍 DEBUG-REPO-TOGGLE] DELETE executado - mês reaberto`);
     return false;
   }
 
   await db.query('INSERT INTO MesesFechados (UsuarioId, Mes, Ano) VALUES ($1, $2, $3)', [userId, mes, ano]);
-  console.log(`[🔍 DEBUG-REPO-TOGGLE] INSERT executado - mês fechado`);
   return true;
 }
 

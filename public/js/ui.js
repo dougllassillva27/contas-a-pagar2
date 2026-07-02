@@ -107,17 +107,15 @@ document.addEventListener('keydown', (e) => {
 });
 
 async function toggleMesFechado() {
-  const getCurrentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth : () => new Date().getMonth() + 1;
-  const getCurrentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear : () => new Date().getFullYear();
-  const month = getCurrentMonth();
-  const year = getCurrentYear();
+  const month = parseInt(document.body.dataset.month, 10);
+  const year = parseInt(document.body.dataset.year, 10);
+
   try {
     const res = await fetch('/api/meses-fechados/toggle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ month, year }),
     });
-    console.log(`[🔍 DEBUG-FRONTEND-TOGGLE] Response status: ${res.status}`);
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -126,9 +124,7 @@ async function toggleMesFechado() {
       return;
     }
     const data = await res.json();
-    console.log(`[🔍 DEBUG-FRONTEND-TOGGLE] Resposta da API: mesFechado=${data.mesFechado}`);
     document.body.dataset.mesFechado = data.mesFechado.toString();
-    console.log(`[🔍 DEBUG-FRONTEND-TOGGLE] Dataset atualizado: ${document.body.dataset.mesFechado}`);
     mostrarAviso(
       'Sucesso',
       data.mesFechado ? 'Mês fechado com sucesso!' : 'Mês reaberto com sucesso!',

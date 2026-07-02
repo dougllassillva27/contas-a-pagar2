@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../../config/db');
 const { calcularContextoNavegacao } = require('./navigationHelpers');
 const { montarMapaTerceiros, ordenarTerceiros } = require('../terceiros/terceirosHelpers');
 const asyncHandler = require('../../helpers/asyncHandler');
@@ -89,10 +90,6 @@ module.exports = function (repo) {
         terceirosDistinct,
       } = await repo.getDashboardDataModular(userId, Number(month), Number(year), userName);
       const elapsed = Date.now() - startTime;
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[🔍 DEBUG-MES-FECHADO] mesFechado=${mesFechado}, userId=${userId}, month=${month}, year=${year}`);
-      }
 
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw, userName);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
