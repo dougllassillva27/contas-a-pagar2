@@ -8,13 +8,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/social-media.webp",
+      "src": "/social-media.webp?v=6bd00ada",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any maskable"
     },
     {
-      "src": "/social-media.webp",
+      "src": "/social-media.webp?v=6bd00ada",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any maskable"
