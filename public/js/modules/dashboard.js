@@ -16,6 +16,57 @@ export function getCurrentYear() {
   return parseInt(document.body.dataset.year, 10);
 }
 
+// =============================================================================
+// ✅ updateDashboardFromJSON — Atualiza dashboard via API JSON parcial
+// =============================================================================
+export function updateDashboardFromJSON(data) {
+  const { totais, lancamentosFixaECartao, resumoPessoas, dadosTerceiros, auxQueries, terceirosDistinct } = data;
+
+  console.log('[DEBUG] updateDashboardFromJSON chamado com:', data);
+
+  // 1. Atualiza cards de totais
+  if (totais) {
+    const rendaEl = document.getElementById('valorRendas');
+    const gastoEl = document.getElementById('valorContas');
+    const saldoEl = document.getElementById('totalPanelFixas') || document.getElementById('totalPanelCartao');
+    console.log('[DEBUG] Totais recebidos:', totais);
+    console.log('[DEBUG] Elementos encontrados:', { rendaEl, gastoEl, saldoEl });
+    if (rendaEl) rendaEl.textContent = `R$ ${(totais.totalrendas || 0).toFixed(2)}`;
+    if (gastoEl) gastoEl.textContent = `R$ ${(totais.totalcontas || 0).toFixed(2)}`;
+    if (saldoEl && !saldoEl.id.includes('Cartao')) saldoEl.textContent = `R$ ${(totais.faltapagar || 0).toFixed(2)}`;
+  }
+
+  // 2. Detecta mudança em terceiros e força reload se necessário
+  // NOTA: removido para evitar reload duplo com ui.js
+
+  // 2. Atualiza lista de últimas contas
+  if (lancamentosFixaECartao && lancamentosFixaECartao.rows) {
+    const tbody = document.getElementById('listaUltimasConteudo');
+    console.log('[DEBUG] tbody encontrado:', tbody);
+    console.log('[DEBUG] Rows recebidas:', lancamentosFixaECartao.rows.length);
+    if (tbody) {
+      tbody.innerHTML = '';
+      lancamentosFixaECartao.rows.slice(0, 20).forEach(l => {
+        const tr = document.createElement('tr');
+        const statusClass = l.Status === 'CONFERIDO' ? 'success' : l.Status === 'PAGO' ? 'info' : 'warning';
+        tr.innerHTML = `
+          <td>${escapeHTML(l.Descricao || '')}</td>
+          <td>R$ ${(l.Valor || 0).toFixed(2)}</td>
+          <td><span class="badge badge-${statusClass}">${escapeHTML(l.Status || 'PENDENTE')}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      console.log(`[DEBUG] ${lancamentosFixaECartao.rows.length} rows renderizadas no tbody`);
+    } else {
+      console.warn('[DEBUG] ⚠️ tbody #listaUltimasConteudo NÃO ENCONTRADO!');
+    }
+  } else {
+    console.warn('[DEBUG] ⚠️ lancamentosFixaECartao.rows não encontrado ou vazio');
+  }
+
+  console.log('[updateDashboardFromJSON] Dashboard atualizado via JSON parcial');
+}
+
 export function extractHTML() {
   return {
     header: document.querySelector('header')?.innerHTML,
@@ -45,15 +96,37 @@ function applyCachedHTML(cached) {
 }
 
 export async function softRefresh(delayOverride, useCache = true) {
-  const cacheKey = `${window.location.pathname}?${new URLSearchParams(window.location.search).toString()}`;
+  console.log('[DEBUG] softRefresh chamado');
 
-  if (useCache) {
-    const cached = softRefreshCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < SOFT_REFRESH_TTL) {
-      applyCachedHTML(cached.html);
-      return;
-    }
+  // ✅ SoftRefresh via API JSON parcial — ~200ms vs ~1800ms do fetch HTML
+  const params = new URLSearchParams(window.location.search);
+  const month = params.get('month') || new Date().getMonth() + 1;
+  const year = params.get('year') || new Date().getFullYear();
+
+  console.log(`[DEBUG] Mês/Ano: ${month}/${year}`);
+
+  const startTime = Date.now();
+  try {
+    const url = `/api/dashboard/resumo?month=${month}&year=${year}`;
+    console.log(`[DEBUG] Fetching: ${url}`);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: Fallback para fetch HTML`);
+
+    const json = await res.json();
+    console.log('[DEBUG] JSON recebido:', json);
+    if (!json.success || !json.data) throw new Error('Resposta inválida');
+
+    // Atualiza dashboard via funções específicas (mais rápido que parse DOM)
+    updateDashboardFromJSON(json.data);
+
+    const elapsed = Date.now() - startTime;
+    console.log(`%c[SoftRefresh] ✅ JSON parcial em ${elapsed}ms`, 'color: #10b981;');
+    return;
+  } catch (err) {
+    console.warn(`[SoftRefresh] ⚠️ Fallback para fetch HTML: ${err.message}`);
   }
+
+  // Fallback: fetch HTML completo (código original preservado abaixo)
 
   // Cancela soft refresh anterior se ainda estiver rodando
   if (_currentAbortController) {
@@ -61,7 +134,6 @@ export async function softRefresh(delayOverride, useCache = true) {
   }
   _currentAbortController = new AbortController();
 
-  const startTime = Date.now();
   const controller = _currentAbortController;
   const timeoutId = setTimeout(() => {
     console.warn('%c[SoftRefresh] ⚠️ Timeout de 30.0s atingido!', 'color: #f59e0b; font-weight: bold;');
@@ -102,7 +174,7 @@ export async function softRefresh(delayOverride, useCache = true) {
       if (mainGrid) {
         mainGrid.insertAdjacentHTML(
           'afterend',
-          '<div id="terceirosHeader" style="margin: 30px 0 15px 0; border-top: 1px solid rgba(255,255,0.1); padding-top: 20px;"><h2 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 20px;">Painéis de Terceiros</h2></div><div class="terceiros-grid drag-container-cards">' +
+          '<div id="terceirosHeader" style="margin: 30px 0 15px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;"><h2 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 20px;">Painéis de Terceiros</h2></div><div class="terceiros-grid drag-container-cards">' +
             newTerceiros.innerHTML +
             '</div>'
         );
@@ -197,4 +269,22 @@ export function atualizarTotalNaoConferido() {
 
 export function fazerBackup() {
   window.location.href = '/api/backup';
+}
+
+// =============================================================================
+// ✅ refreshOnInsert — Atualiza dashboard após inserção de lançamento
+// =============================================================================
+export async function refreshOnInsert() {
+  // Limpa cache e força reload completo para garantir consistência
+  softRefreshCache.clear();
+  setTimeout(() => location.reload(), 50);
+}
+
+// =============================================================================
+// ✅ refreshOnDelete — Atualiza dashboard após exclusão de lançamento
+// =============================================================================
+export async function refreshOnDelete() {
+  // Limpa cache e força reload completo para garantir consistência
+  softRefreshCache.clear();
+  setTimeout(() => location.reload(), 200);
 }

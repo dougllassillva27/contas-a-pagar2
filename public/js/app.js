@@ -5,7 +5,7 @@
 // Variáveis globais devem vir PRIMEIRO, antes de qualquer import
 window.isBackNavigation = false;
 
-import { softRefresh, softRefreshSafe, atualizarTotalNaoConferido, fazerBackup } from './modules/dashboard.js';
+import { softRefresh, softRefreshSafe, atualizarTotalNaoConferido, fazerBackup, refreshOnInsert, refreshOnDelete } from './modules/dashboard.js';
 import {
   executarAcaoEmLotePessoa,
   confirmarExclusaoPessoa,
@@ -99,3 +99,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     });
   }
 }
+
+// Registrar funções de refresh no window para acesso global
+window.refreshOnInsert = refreshOnInsert;
+window.refreshOnDelete = refreshOnDelete;

@@ -505,51 +505,59 @@ function fecharModais() {
   document.querySelectorAll('.modal-overlay').forEach((m) => {
     if (m.id !== 'modalLoading') m.classList.remove('active');
   });
-  setTimeout(() => {
-    const frmRenda = document.getElementById('formRenda');
-    const frmConta = document.getElementById('formConta');
-    if (frmRenda) frmRenda.reset();
-    if (frmConta) frmConta.reset();
-    if (document.getElementById('rendaId')) document.getElementById('rendaId').value = '';
-    if (document.getElementById('contaId')) document.getElementById('contaId').value = '';
-    if (document.getElementById('modalGridForm'))
-      document.getElementById('modalGridForm').classList.remove('single-col');
-    if (document.getElementById('colRenda')) document.getElementById('colRenda').style.display = 'block';
-    if (document.getElementById('colConta')) document.getElementById('colConta').style.display = 'block';
-    if (document.getElementById('modalTitulo'))
-      document.getElementById('modalTitulo').innerText = 'Adicionar Lançamento';
-    if (typeof toggleParcelas === 'function') toggleParcelas();
-    if (typeof toggleBulkMode === 'function') toggleBulkMode();
-    
-    // CORREÇÃO: Resetar e ocultar o contador de lote nativo
-    const bulkCounterNative = document.getElementById('bulkCounterNative');
-    if (bulkCounterNative) {
-      bulkCounterNative.style.display = 'none';
-      bulkCounterNative.textContent = '';
-    }
+  const frmRenda = document.getElementById('formRenda');
+  const frmConta = document.getElementById('formConta');
+  if (frmRenda) frmRenda.reset();
+  if (frmConta) frmConta.reset();
+  if (document.getElementById('rendaId')) document.getElementById('rendaId').value = '';
+  if (document.getElementById('contaId')) document.getElementById('contaId').value = '';
+  if (document.getElementById('modalGridForm'))
+    document.getElementById('modalGridForm').classList.remove('single-col');
+  if (document.getElementById('colRenda')) document.getElementById('colRenda').style.display = 'block';
+  if (document.getElementById('colConta')) document.getElementById('colConta').style.display = 'block';
+  if (document.getElementById('modalTitulo'))
+    document.getElementById('modalTitulo').innerText = 'Adicionar Lançamento';
+  if (typeof toggleParcelas === 'function') toggleParcelas();
+  if (typeof toggleBulkMode === 'function') toggleBulkMode();
 
-    // CORREÇÃO: Garantir reativação preventiva dos botões de submit no fechamento
-    const btnSalvarConta = document.getElementById('btnSalvarConta');
-    if (btnSalvarConta) {
-      btnSalvarConta.disabled = false;
-      btnSalvarConta.style.opacity = '1';
-    }
-    const btnSalvarRenda = document.getElementById('btnSalvarRenda');
-    if (btnSalvarRenda) {
-      btnSalvarRenda.disabled = false;
-      btnSalvarRenda.style.opacity = '1';
-    }
+  // CORREÇÃO: Resetar e ocultar o contador de lote nativo
+  const bulkCounterNative = document.getElementById('bulkCounterNative');
+  if (bulkCounterNative) {
+    bulkCounterNative.style.display = 'none';
+    bulkCounterNative.textContent = '';
+  }
 
-    // CORREÇÃO: Resetar a variável de submissão global
-    if (typeof window.resetSubmitting === 'function') {
-      window.resetSubmitting();
-    }
-  }, 300);
+  // CORREÇÃO: Garantir reativação preventiva dos botões de submit no fechamento
+  const btnSalvarConta = document.getElementById('btnSalvarConta');
+  if (btnSalvarConta) {
+    btnSalvarConta.disabled = false;
+    btnSalvarConta.style.opacity = '1';
+  }
+  const btnSalvarRenda = document.getElementById('btnSalvarRenda');
+  if (btnSalvarRenda) {
+    btnSalvarRenda.disabled = false;
+    btnSalvarRenda.style.opacity = '1';
+  }
+
+  // CORREÇÃO: Resetar a variável de submissão global
+  if (typeof window.resetSubmitting === 'function') {
+    window.resetSubmitting();
+  }
 }
 
 function fecharModalAviso() {
   handleModalClose();
   document.getElementById('modalAviso').classList.remove('active');
+
+  // Chama callback se existir
+  if (window._avisoCallback && typeof window._avisoCallback.fn === 'function') {
+    try {
+      window._avisoCallback.fn();
+    } catch (err) {
+      console.error('[fecharModalAviso] Erro no callback:', err);
+    }
+    delete window._avisoCallback;
+  }
 }
 
 function abrirConfirmacaoAcao(acao) {
@@ -589,12 +597,18 @@ function fecharConfirmacao() {
 }
 
 // Handler do botão de confirmação de exclusão
-if (document.getElementById('btnConfirmarExclusao')) {
-  document.getElementById('btnConfirmarExclusao').addEventListener('click', async () => {
-    if (!window.idExcluir) {
-      return;
-    }
+document.addEventListener('click', async (e) => {
+  const modal = document.getElementById('modalConfirmar');
+  if (!modal || !modal.classList.contains('active')) return;
 
+  // Verifica se clicou em botão com texto "Sim" ou classe similar
+  const target = e.target.closest('button, .material-icons');
+  if (!target) return;
+
+  const btnText = target.textContent?.trim().toLowerCase();
+  const isBtnSim = btnText.includes('sim') || target.id === 'btnConfirmarExclusao' || target.classList.contains('btn-primary');
+
+  if (isBtnSim && window.idExcluir) {
     try {
       const res = await fetch(`/api/lancamentos/${window.idExcluir}`, {
         method: 'DELETE',
@@ -602,8 +616,9 @@ if (document.getElementById('btnConfirmarExclusao')) {
 
       if (res.ok) {
         fecharConfirmacao();
-        if (typeof window.softRefresh === 'function') {
-          await window.softRefresh(150, false);
+        // Deleção única: refresh direto sem modal
+        if (typeof window.refreshOnDelete === 'function') {
+          await window.refreshOnDelete();
         }
       } else {
         const err = await res.json().catch(() => ({}));
@@ -612,12 +627,13 @@ if (document.getElementById('btnConfirmarExclusao')) {
         }
       }
     } catch (err) {
+      console.error('[DEBUG] Erro na exclusão:', err);
       if (typeof window.mostrarAviso === 'function') {
         window.mostrarAviso('Erro', 'Erro de conexão.');
       }
     }
-  });
-}
+  }
+});
 
 // Handler do botão de confirmação genérico (exclusão em massa)
 if (document.getElementById('btnConfirmarAcao')) {
@@ -632,12 +648,20 @@ if (document.getElementById('btnConfirmarAcao')) {
   });
 }
 
-function mostrarAviso(titulo, msg) {
+function mostrarAviso(titulo, msg, onFechar) {
   registerModalOpen();
   document.getElementById('msgAvisoTitulo').innerText = titulo;
   document.getElementById('msgAvisoTexto').innerText = msg;
+
+  // Armazena callback para ser chamado ao fechar (protegendo existente)
+  if (onFechar) {
+    const callbackId = 'callback_' + Date.now();
+    window._avisoCallback = { fn: onFechar, id: callbackId };
+  }
+
   document.getElementById('modalAviso').classList.add('active');
 }
+
 function abrirModalAdicionar() {
   if (checkBloqueioMesFechado()) return;
   registerModalOpen();
