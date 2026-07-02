@@ -23,23 +23,23 @@
 <title><%= typeof titulo !== 'undefined' ? titulo : 'Gestão Financeira' %></title>
 
 <!-- PWA Setup -->
-<link rel="manifest" href="/manifest.json" />
+<link rel="manifest" href="/manifest.json?v=f3f05a4f" />
 <meta name="theme-color" content="#121212" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<link rel="apple-touch-icon" href="/social-media.webp" />
+<link rel="apple-touch-icon" href="/social-media.webp?v=6bd00ada" />
 <script>
   if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
+      navigator.serviceWorker.register('/sw.js?v=e0ecfd50').catch((err) => console.log('SW falhou:', err));
     });
   }
 </script>
 
-<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-<link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/index.css" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=c652aa2c" />
+<link rel="stylesheet" href="/css/style.css?v=e38ca365" />
+<link rel="stylesheet" href="/css/index.css?v=e9bb2279" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
