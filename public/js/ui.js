@@ -127,11 +127,15 @@ async function toggleMesFechado() {
     document.body.dataset.mesFechado = data.mesFechado.toString();
     mostrarAviso(
       'Sucesso',
-      data.mesFechado ? 'Mês fechado com sucesso!' : 'Mês reaberto com sucesso!'
+      data.mesFechado ? 'Mês fechado com sucesso!' : 'Mês reaberto com sucesso!',
+      () => {
+        // Reload ao clicar no OK do modal
+        if (typeof window.softRefreshCache === 'object') {
+          window.softRefreshCache.clear();
+        }
+        location.reload();
+      }
     );
-    if (typeof window.softRefresh === 'function') {
-      await window.softRefresh(undefined, false);
-    }
   } catch (err) {
     console.error('[toggleMesFechado] Erro de conexão:', err);
     mostrarAviso('Erro', 'Erro de conexão.');
@@ -627,7 +631,6 @@ document.addEventListener('click', async (e) => {
         }
       }
     } catch (err) {
-      console.error('[DEBUG] Erro na exclusão:', err);
       if (typeof window.mostrarAviso === 'function') {
         window.mostrarAviso('Erro', 'Erro de conexão.');
       }
