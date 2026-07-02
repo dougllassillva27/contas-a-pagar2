@@ -22,15 +22,11 @@ export function getCurrentYear() {
 export function updateDashboardFromJSON(data) {
   const { totais, lancamentosFixaECartao, resumoPessoas, dadosTerceiros, auxQueries, terceirosDistinct } = data;
 
-  console.log('[DEBUG] updateDashboardFromJSON chamado com:', data);
-
   // 1. Atualiza cards de totais
   if (totais) {
     const rendaEl = document.getElementById('valorRendas');
     const gastoEl = document.getElementById('valorContas');
     const saldoEl = document.getElementById('totalPanelFixas') || document.getElementById('totalPanelCartao');
-    console.log('[DEBUG] Totais recebidos:', totais);
-    console.log('[DEBUG] Elementos encontrados:', { rendaEl, gastoEl, saldoEl });
     if (rendaEl) rendaEl.textContent = `R$ ${(totais.totalrendas || 0).toFixed(2)}`;
     if (gastoEl) gastoEl.textContent = `R$ ${(totais.totalcontas || 0).toFixed(2)}`;
     if (saldoEl && !saldoEl.id.includes('Cartao')) saldoEl.textContent = `R$ ${(totais.faltapagar || 0).toFixed(2)}`;
@@ -42,8 +38,6 @@ export function updateDashboardFromJSON(data) {
   // 2. Atualiza lista de últimas contas
   if (lancamentosFixaECartao && lancamentosFixaECartao.rows) {
     const tbody = document.getElementById('listaUltimasConteudo');
-    console.log('[DEBUG] tbody encontrado:', tbody);
-    console.log('[DEBUG] Rows recebidas:', lancamentosFixaECartao.rows.length);
     if (tbody) {
       tbody.innerHTML = '';
       lancamentosFixaECartao.rows.slice(0, 20).forEach(l => {
@@ -56,15 +50,8 @@ export function updateDashboardFromJSON(data) {
         `;
         tbody.appendChild(tr);
       });
-      console.log(`[DEBUG] ${lancamentosFixaECartao.rows.length} rows renderizadas no tbody`);
-    } else {
-      console.warn('[DEBUG] ⚠️ tbody #listaUltimasConteudo NÃO ENCONTRADO!');
     }
-  } else {
-    console.warn('[DEBUG] ⚠️ lancamentosFixaECartao.rows não encontrado ou vazio');
   }
-
-  console.log('[updateDashboardFromJSON] Dashboard atualizado via JSON parcial');
 }
 
 export function extractHTML() {
@@ -96,31 +83,23 @@ function applyCachedHTML(cached) {
 }
 
 export async function softRefresh(delayOverride, useCache = true) {
-  console.log('[DEBUG] softRefresh chamado');
-
   // ✅ SoftRefresh via API JSON parcial — ~200ms vs ~1800ms do fetch HTML
   const params = new URLSearchParams(window.location.search);
   const month = params.get('month') || new Date().getMonth() + 1;
   const year = params.get('year') || new Date().getFullYear();
 
-  console.log(`[DEBUG] Mês/Ano: ${month}/${year}`);
-
   const startTime = Date.now();
   try {
     const url = `/api/dashboard/resumo?month=${month}&year=${year}`;
-    console.log(`[DEBUG] Fetching: ${url}`);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}: Fallback para fetch HTML`);
 
     const json = await res.json();
-    console.log('[DEBUG] JSON recebido:', json);
     if (!json.success || !json.data) throw new Error('Resposta inválida');
 
     // Atualiza dashboard via funções específicas (mais rápido que parse DOM)
     updateDashboardFromJSON(json.data);
 
-    const elapsed = Date.now() - startTime;
-    console.log(`%c[SoftRefresh] ✅ JSON parcial em ${elapsed}ms`, 'color: #10b981;');
     return;
   } catch (err) {
     console.warn(`[SoftRefresh] ⚠️ Fallback para fetch HTML: ${err.message}`);
