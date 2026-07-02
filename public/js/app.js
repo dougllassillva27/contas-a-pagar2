@@ -1,5 +1,6 @@
 // ==============================================================================
 // ✅ public/js/app.js — Entry point (ES6 modules)
+// Atualizado: 2026-07-02 - Forçando novo hash para corrigir erro refreshOnDelete
 // ==============================================================================
 
 // Variáveis globais devem vir PRIMEIRO, antes de qualquer import
