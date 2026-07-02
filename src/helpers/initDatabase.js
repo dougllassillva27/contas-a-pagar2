@@ -37,6 +37,35 @@ async function initDatabase() {
 
     // Índice funcional para otimizar o date_trunc na consulta de Últimos Lançamentos
     await db.query("CREATE INDEX IF NOT EXISTS idx_lancamentos_trunc_data ON Lancamentos (UsuarioId, date_trunc('second', DataCriacao) DESC)");
+
+    // Normaliza dados legados: converte NomeTerceiro vazio para NULL
+    // Permite partial index único e simplifica SQL_SEM_TERCEIRO
+    await db.query(`UPDATE Lancamentos SET NomeTerceiro = NULL WHERE NomeTerceiro = ''`);
+
+    // Partial index para contas do próprio usuário (NomeTerceiro IS NULL)
+    // Cobre queries: getDashboardTotais, getLancamentosPorTipo, getResumoPessoas, getDadosTerceiros
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_data_sem_terceiro
+      ON Lancamentos(UsuarioId, DataVencimento)
+      WHERE NomeTerceiro IS NULL
+    `);
+
+    // Índice composto para queries de terceiros específicos
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_lancamentos_usuario_terceiro_data
+      ON Lancamentos(UsuarioId, NomeTerceiro, DataVencimento)
+      WHERE NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
+    `);
+
+    // Índices para tabelas auxiliares do dashboard
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_mesesfechados_usuario_mes_ano
+      ON MesesFechados(UsuarioId, Mes, Ano)
+    `);
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_ordemcards_usuario
+      ON OrdemCards(UsuarioId)
+    `);
     
     // 1. Tabela OrdemCards
     await db.query(`

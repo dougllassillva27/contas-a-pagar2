@@ -4,6 +4,8 @@ const { calcularContextoNavegacao } = require('./navigationHelpers');
 const { montarMapaTerceiros, ordenarTerceiros } = require('../terceiros/terceirosHelpers');
 const asyncHandler = require('../../helpers/asyncHandler');
 
+const resumoCache = require('../../helpers/resumoCache');
+
 module.exports = function (repo) {
   // --- RELATÓRIO ---
   router.get(
@@ -188,6 +190,51 @@ module.exports = function (repo) {
           totalFixas: t.totalFixas,
         })),
       });
+    })
+  );
+
+  // ✅ Endpoint JSON parcial para softRefresh rápido
+  router.get(
+    '/api/dashboard/resumo',
+    asyncHandler(async (req, res) => {
+      console.log('[DEBUG BACKEND] /api/dashboard/resumo chamado');
+      const userId = req.session.user.id;
+      const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+      const year = parseInt(req.query.year) || new Date().getFullYear();
+      const cacheKey = `${userId}-${month}-${year}`;
+
+      console.log(`[DEBUG BACKEND] userId=${userId}, month=${month}, year=${year}, cacheKey=${cacheKey}`);
+
+      const cached = resumoCache.get(userId, month, year);
+      if (cached) {
+        console.log('[DEBUG BACKEND] Cache HIT - retornando cache');
+        return res.json(cached);
+      }
+
+      console.log('[DEBUG BACKEND] Cache MISS - chamando getDashboardDataModular');
+
+      const { getDashboardDataModular } = repo;
+      const startTime = Date.now();
+      const data = await getDashboardDataModular(userId, month, year);
+      const elapsed = Date.now() - startTime;
+      console.log(`[DEBUG BACKEND] getDashboardDataModular executou em ${elapsed}ms`);
+
+      const response = {
+        success: true,
+        data: {
+          totais: data.totais,
+          lancamentosFixaECartao: { rows: [...(data.fixas || []), ...(data.cartao || [])] },
+          resumoPessoas: data.resumoPessoas,
+          dadosTerceiros: data.dadosTerceiros,
+          auxQueries: data.auxQueries,
+          terceirosDistinct: data.terceirosDistinct
+        }
+      };
+
+      resumoCache.set(response, userId, month, year);
+
+      console.log('[DEBUG BACKEND] Response enviado com', data.fixas?.length + data.cartao?.length || 0, 'rows');
+      res.json(response);
     })
   );
 

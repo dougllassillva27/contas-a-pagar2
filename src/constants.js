@@ -21,6 +21,7 @@ const LIMITES = {
 };
 
 // Fragmento SQL reutilizável: "sem terceiro" (owner do lançamento)
-const SQL_SEM_TERCEIRO = "(NomeTerceiro IS NULL OR NomeTerceiro = '')";
+// Após normalização (initDatabase), apenas NULL é usado (partial index friendly)
+const SQL_SEM_TERCEIRO = "NomeTerceiro IS NULL";
 
 module.exports = { STATUS, TIPO, LIMITES, SQL_SEM_TERCEIRO };

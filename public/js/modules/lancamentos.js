@@ -363,10 +363,12 @@ export function confirmarExclusaoLoteUltimas() {
         if (modal) modal.classList.remove('active');
 
         ocultarLoading();
-        mostrarAviso('Sucesso', `${ids.length} itens excluídos.`);
-
-        // Refresh imediato sem delay
-        await softRefresh(undefined, false);
+        mostrarAviso('Sucesso', `${ids.length} itens excluídos.`, async () => {
+          // Chamar função específica de refresh após exclusão quando modal for fechado
+          if (typeof window.refreshOnDelete === 'function') {
+            await window.refreshOnDelete();
+          }
+        });
       } else {
         ocultarLoading();
         mostrarAviso('Erro', 'Falha ao excluir itens.');
@@ -410,7 +412,10 @@ export function confirmarExclusao(id) {
   const registerModalOpen = typeof window.registerModalOpen === 'function' ? window.registerModalOpen : () => {};
   registerModalOpen();
   window.idExcluir = id;
-  document.getElementById('modalConfirmar').classList.add('active');
+  const modal = document.getElementById('modalConfirmar');
+  if (modal) {
+    modal.classList.add('active');
+  }
 }
 
 export async function enviarLancamento(e, tipoTransacao) {
@@ -496,17 +501,25 @@ export async function enviarLancamento(e, tipoTransacao) {
       // Limpar cache ANTES do refresh para garantir dados frescos
       softRefreshCache.clear();
 
-      // Aguardar refresh COM loading visível
-      if (responseData.criados) {
-        await softRefreshSafe(1500, false);
+      // Chamar função específica de refresh após inserção
+      if (typeof window.refreshOnInsert === 'function') {
         fecharModais();
         ocultarLoading();
-        mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
+        mostrarAviso('Sucesso', responseData.criados ? `${responseData.criados} contas lançadas com sucesso!` : 'Lançamento salvo com sucesso!');
+        await window.refreshOnInsert();
       } else {
-        await softRefreshSafe(1500, false);
-        fecharModais();
-        ocultarLoading();
-        mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!');
+        // Fallback: comportamento antigo
+        if (responseData.criados) {
+          await softRefreshSafe(0, false);
+          fecharModais();
+          ocultarLoading();
+          mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
+        } else {
+          await softRefreshSafe(0, false);
+          fecharModais();
+          ocultarLoading();
+          mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!');
+        }
       }
     } else {
       console.error('%c[EnviarLancamento] ❌ Falha na requisição:', 'color: #ef4444;', res.statusText);
@@ -701,4 +714,9 @@ export async function executarDeleteMes() {
       window.mostrarAviso('Erro', 'Erro de conexão ao deletar mês.');
     }
   }
+}
+
+// Expor funções para uso no HTML (oninput)
+if (typeof window !== 'undefined') {
+  window.atualizarBulkCounterNative = atualizarBulkCounterNative;
 }

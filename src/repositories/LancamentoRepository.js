@@ -114,24 +114,94 @@ async function getDashboardDataModular(userId, month, year, userName) {
   }
 
   try {
-    // Executa queries em paralelo — são independentes
-    // Pool com max=10 suporta até 10 conexões simultâneas
+    // ✅ Fase 2.5: Merge FIXA+CARTAO → 1 query só
+    const getLancamentosFixaECartao = async () => {
+      const { startDate, endDate } = getMesRange(month, year);
+      const query = `
+        SELECT * FROM Lancamentos
+        WHERE UsuarioId = $1
+          AND Tipo IN ('${TIPO.FIXA}', '${TIPO.CARTAO}')
+          AND ${SQL_SEM_TERCEIRO}
+          AND DataVencimento >= $2 AND DataVencimento < $3
+        ORDER BY Ordem ASC
+      `;
+      const result = await db.query(query, [userId, startDate, endDate]);
+      return result.rows;
+    };
+
+    // ✅ Fase 2.5: Merge aux queries via CTE — 4 queries → 1 conexão
+    const getAuxQueries = async () => {
+      const query = `
+        WITH mes_fechado AS (
+          SELECT EXISTS(SELECT 1 FROM MesesFechados WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3) AS fechado
+        ),
+        fatura_manual AS (
+          SELECT COALESCE(Valor, 0)::float AS valor FROM FaturaManual WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3
+        ),
+        ordem_cards AS (
+          SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC
+        ),
+        anotacoes AS (
+          SELECT
+            Mes,
+            Ano,
+            Conteudo
+          FROM Anotacoes
+          WHERE UsuarioId = $1
+            AND ((Mes = 0 AND Ano = 0) OR (Mes = $2 AND Ano = $3))
+        )
+        SELECT
+          'mes_fechado' AS tipo,
+          'mes_fechado' AS fonte,
+          fechado::text AS row_data
+        FROM mes_fechado
+        UNION ALL
+        SELECT
+          'fatura_manual' AS tipo,
+          'fatura_manual' AS fonte,
+          valor::text AS row_data
+        FROM fatura_manual
+        UNION ALL
+        SELECT
+          'ordem_card' AS tipo,
+          'ordem_cards' AS fonte,
+          row_to_json(ordem_cards.*)::text AS row_data
+        FROM ordem_cards
+        UNION ALL
+        SELECT
+          CASE WHEN Mes = 0 AND Ano = 0 THEN 'anotacao_global' ELSE 'anotacao_mensal' END AS tipo,
+          'anotacoes' AS fonte,
+          Conteudo::text AS row_data
+        FROM anotacoes
+        WHERE Conteudo IS NOT NULL
+      `;
+      const result = await db.query(query, [userId, month, year]);
+
+      let mesFechado = false;
+      let faturaManual = 0;
+      const ordemCards = [];
+      let anotacaoGlobal = '';
+      let anotacaoMensal = '';
+
+      result.rows.forEach(row => {
+        if (row.tipo === 'mes_fechado') mesFechado = row.row_data === 'true';
+        else if (row.tipo === 'fatura_manual') faturaManual = parseFloat(row.row_data) || 0;
+        else if (row.tipo === 'ordem_card') ordemCards.push(JSON.parse(row.row_data));
+        else if (row.tipo === 'anotacao_global') anotacaoGlobal = row.row_data;
+        else if (row.tipo === 'anotacao_mensal') anotacaoMensal = row.row_data;
+      });
+
+      return { mesFechado, faturaManual, ordemCards, anotacaoGlobal, anotacaoMensal };
+    };
+
+    // Executa queries em paralelo — agora 7 conexões em vez de 11
     const queries = [
-      ['1/9 getDashboardTotais', () => getDashboardTotais(userId, month, year)],
-      ['2/9 getLancamentosPorTipo(FIXA)', () => getLancamentosPorTipo(userId, TIPO.FIXA, month, year)],
-      ['3/9 getLancamentosPorTipo(CARTAO)', () => getLancamentosPorTipo(userId, TIPO.CARTAO, month, year)],
-      ['4/9 getResumoPessoas', () => getResumoPessoas(userId, month, year, userName)],
-      ['5/9 getDadosTerceiros', () => getDadosTerceiros(userId, month, year, 500)],
-      ['6/9 getAnotacoes', () => getAnotacoes(userId, month, year)],
-      ['7/9 getOrdemCards', () => getOrdemCards(userId)],
-      ['8/9 getFaturaManual', () => getFaturaManual(userId, month, year).then(r => r || 0)],
-      ['9/9 isMesFechado + getDistinctTerceiros', async () => {
-        const [mesFechado, terceirosDistinct] = await Promise.all([
-          isMesFechado(userId, month, year),
-          getDistinctTerceiros(userId),
-        ]);
-        return { mesFechado, terceirosDistinct };
-      }],
+      ['1/7 getDashboardTotais', () => getDashboardTotais(userId, month, year)],
+      ['2/7 getLancamentosFixaECartao (merged)', getLancamentosFixaECartao],
+      ['3/7 getResumoPessoas', () => getResumoPessoas(userId, month, year, userName)],
+      ['4/7 getDadosTerceiros', () => getDadosTerceiros(userId, month, year, 500)],
+      ['5/7 getAuxQueries (merged)', getAuxQueries],
+      ['6/7 getDistinctTerceiros', () => getDistinctTerceiros(userId)],
     ];
 
     // Executa todas em paralelo com logs individuais (apenas dev)
@@ -145,17 +215,24 @@ async function getDashboardDataModular(userId, month, year, userName) {
 
     const totalElapsed = Date.now() - startTime;
 
+    // Extrai resultados do merge
+    const auxQueries = results[4];
+
+    // Separa FIXA e CARTAO do resultado merged
+    const fixas = results[1].filter(item => item.tipo === TIPO.FIXA);
+    const cartao = results[1].filter(item => item.tipo === TIPO.CARTAO);
+
     return {
       totais: results[0],
-      fixas: results[1],
-      cartao: results[2],
-      resumoPessoas: results[3],
-      dadosTerceirosRaw: results[4],
-      anotacoes: results[5],
-      ordemCardsRaw: results[6],
-      faturaManualVal: results[7],
-      mesFechado: results[8].mesFechado,
-      terceirosDistinct: results[8].terceirosDistinct,
+      fixas,
+      cartao,
+      resumoPessoas: results[2],
+      dadosTerceirosRaw: results[3],
+      anotacoes: { global: auxQueries.anotacaoGlobal, mensal: auxQueries.anotacaoMensal },
+      ordemCardsRaw: auxQueries.ordemCards,
+      faturaManualVal: auxQueries.faturaManual,
+      mesFechado: auxQueries.mesFechado,
+      terceirosDistinct: results[5],
     };
   } catch (err) {
     console.error('[getDashboardDataModular] Erro:', err.message);
@@ -179,25 +256,20 @@ async function getLancamentosPorTipo(userId, tipo, month, year) {
 }
 
 async function getDadosTerceiros(userId, month, year, limit = 500, offset = 0) {
-  // Conta total de registros para paginação frontend
-  const countQuery = `
-     SELECT COUNT(*) FROM Lancamentos
-     WHERE UsuarioId = $1
-       AND DataVencimento >= $2 AND DataVencimento < $3
-  `;
- const { startDate, endDate } = getMesRange(month, year);
-  const countResult = await db.query(countQuery, [userId, startDate, endDate]);
-  const total = parseInt(countResult.rows[0].count, 10);
+  const { startDate, endDate } = getMesRange(month, year);
 
-  // Query paginada com LIMIT/OFFSET
+  // Window function COUNT OVER() elimina query COUNT separada (padrão N+1)
   const query = `
-      SELECT * FROM Lancamentos
-      WHERE UsuarioId = $1
-        AND DataVencimento >= $2 AND DataVencimento < $3
-     ORDER BY NomeTerceiro, Tipo, Ordem
-   LIMIT $4 OFFSET $5
- `;
- const result = await db.query(query, [userId, startDate, endDate, limit, offset]);
+    SELECT *, COUNT(*) OVER() AS total_count
+    FROM Lancamentos
+    WHERE UsuarioId = $1
+      AND DataVencimento >= $2 AND DataVencimento < $3
+    ORDER BY NomeTerceiro, Tipo, Ordem
+    LIMIT $4 OFFSET $5
+  `;
+  const result = await db.query(query, [userId, startDate, endDate, limit, offset]);
+
+  const total = result.rows.length > 0 ? parseInt(result.rows[0].total_count, 10) : 0;
   return { rows: result.rows, total };
 }
 
@@ -250,7 +322,7 @@ async function getDistinctTerceiros(userId) {
 
   const result = await db.query(
     `SELECT DISTINCT NomeTerceiro FROM Lancamentos
-     WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL AND NomeTerceiro != ''
+     WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL
      ORDER BY NomeTerceiro`,
     [userId]
   );
@@ -277,7 +349,6 @@ async function getResumoTerceirosGrid(userId, month, year) {
     FROM Lancamentos
     WHERE UsuarioId = $1
       AND NomeTerceiro IS NOT NULL
-      AND NomeTerceiro != ''
       AND DataVencimento >= $2
       AND DataVencimento < $3
     GROUP BY NomeTerceiro
@@ -847,6 +918,14 @@ async function getContaFixaValor(descricao, terceiro, userId, month, year) {
 async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, year) {
   const dataVencimento = new Date(year, month - 1, 10);
 
+  // ✅ Evita criar/atualizar conta com valor zerado ou nulo
+  if (!valor || valor <= 0) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[findAndUpdateOrCreateContaFixa] ⏭️ Ignorado: userId=${userId}, conta="${nomeConta}", valor inválido=${valor}`);
+    }
+    return;
+  }
+
   if (process.env.NODE_ENV !== 'production') {
     console.log(`[findAndUpdateOrCreateContaFixa] 💾 Salvando: userId=${userId}, conta="${nomeConta}", valor=R$ ${valor?.toFixed(2)}, mes/ano=${month}/${year}`);
   }
@@ -926,7 +1005,7 @@ async function bulkUpsertContasFixas(userId, operations) {
   const terceiroCondition = ignoreTerceiro
     ? '' // Sem filtro de terceiro
     : `AND (
-          (p.terceiro IS NULL AND (l.NomeTerceiro IS NULL OR l.NomeTerceiro = ''))
+          (p.terceiro IS NULL AND l.NomeTerceiro IS NULL)
           OR l.NomeTerceiro = p.terceiro
         )`;
 
@@ -985,7 +1064,7 @@ async function findAndUpdateOrCreateContaFixaComTerceiro(userId, nomeConta, valo
   const dataVencimento = new Date(year, month - 1, 10);
 
   const terceiro = nomeTerceiro || null;
-  const terceiroCondition = terceiro ? 'NomeTerceiro = $6' : "(NomeTerceiro IS NULL OR NomeTerceiro = '')";
+  const terceiroCondition = terceiro ? 'NomeTerceiro = $6' : "NomeTerceiro IS NULL";
 
   const query = `
     WITH existing AS (
@@ -1099,7 +1178,6 @@ async function dividirConta(userId, idOriginal, terceiros) {
     FROM Lancamentos
     WHERE UsuarioId = $1
       AND NomeTerceiro IS NOT NULL
-      AND NomeTerceiro != ''
       AND DataVencimento >= $2
       AND DataVencimento < $3
     GROUP BY NomeTerceiro
@@ -1119,19 +1197,6 @@ async function dividirConta(userId, idOriginal, terceiros) {
 // ==============================================================================
 // Funções Auxiliares para Dashboard Modular
 // ==============================================================================
-
-async function getAnotacoes(userId, month, year) {
-  // Busca anotação global (mes=0, ano=0) e mensal em paralelo
-  const [global, mensal] = await Promise.all([
-    db.query(`SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 AND Mes = 0 AND Ano = 0 LIMIT 1`, [userId]),
-    db.query(`SELECT Conteudo FROM Anotacoes WHERE UsuarioId = $1 AND Mes = $2 AND Ano = $3 LIMIT 1`, [userId, month, year])
-  ]);
-
-  return {
-    global: global.rows[0]?.Conteudo || global.rows[0]?.conteudo || '',
-    mensal: mensal.rows[0]?.Conteudo || mensal.rows[0]?.conteudo || ''
-  };
-}
 
 async function getOrdemCards(userId) {
   const query = `SELECT * FROM OrdemCards WHERE UsuarioId = $1 ORDER BY Ordem ASC`;
