@@ -281,9 +281,10 @@
     <%- include('partials/modals') %>
     <%- include('partials/sidebar') %>
 
-    <script src="/js/utils.js" defer></script>
-    <script src="/js/ui.js" defer></script>
-    <script src="/js/dragdrop.js" defer></script>
-    <script type="module" src="/js/app.js" defer></script>
+    <% const cacheBust = Date.now(); %>
+    <script src="/js/utils.js?v=<%= cacheBust %>" defer></script>
+    <script src="/js/ui.js?v=<%= cacheBust %>" defer></script>
+    <script src="/js/dragdrop.js?v=<%= cacheBust %>" defer></script>
+    <script type="module" src="/js/app.js?v=<%= cacheBust %>" defer></script>
 </body>
 </html>
