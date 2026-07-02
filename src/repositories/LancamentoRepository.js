@@ -184,7 +184,7 @@ async function getDashboardDataModular(userId, month, year, userName) {
       let anotacaoMensal = '';
 
       result.rows.forEach(row => {
-        if (row.tipo === 'mes_fechado') mesFechado = row.row_data === 'true';
+        if (row.tipo === 'mes_fechado') mesFechado = row.row_data === true || row.row_data === 't' || row.row_data === 'true';
         else if (row.tipo === 'fatura_manual') faturaManual = parseFloat(row.row_data) || 0;
         else if (row.tipo === 'ordem_card') ordemCards.push(JSON.parse(row.row_data));
         else if (row.tipo === 'anotacao_global') anotacaoGlobal = row.row_data;
