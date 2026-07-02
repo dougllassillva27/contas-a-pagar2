@@ -90,6 +90,10 @@ module.exports = function (repo) {
       } = await repo.getDashboardDataModular(userId, Number(month), Number(year), userName);
       const elapsed = Date.now() - startTime;
 
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[🔍 DEBUG-MES-FECHADO] mesFechado=${mesFechado}, userId=${userId}, month=${month}, year=${year}`);
+      }
+
       const terceirosMap = montarMapaTerceiros(dadosTerceirosRaw.rows || dadosTerceirosRaw, userName);
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;

@@ -13,7 +13,11 @@ module.exports = function (repo) {
     '/api/meses-fechados/toggle',
     asyncHandler(async (req, res) => {
       const { month, year } = req.body;
+      console.log(`[🔍 DEBUG-TOGGLE] Recebendo toggle: month=${month}, year=${year}, userId=${req.session.user.id}`);
+
       const novoStatus = await repo.toggleMesFechado(req.session.user.id, parseInt(month, 10), parseInt(year, 10));
+      console.log(`[🔍 DEBUG-TOGGLE] Resultado do toggle: mesFechado=${novoStatus}`);
+
       res.json({ success: true, mesFechado: novoStatus });
     })
   );
