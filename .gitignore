@@ -90,6 +90,18 @@ Thumbs.db
 .cursorrules
 resumo-de-trabalho.md
 
+# Arquivos de ferramentas IA
+.claude/
+.agents/
+.antigravitycli/
+graphify-out/
+tasks/
+versionamento/
+AGENT.md
+CLAUDE.md
+GEMINI.md
+.claudeignore
+
 # =========================================
 # IGNORADOS DO PROJETO (Personal/Local)
 # =========================================
