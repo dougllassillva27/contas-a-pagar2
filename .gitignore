@@ -126,12 +126,15 @@ guia_integracao.md
 resumo_skills.json
 skills_completa.json
 master-skill-config.json
+# Documentação técnica (permite .md da raiz, ignora subpastas internas)
+!docs/*.md
 docs/history/
 docs/bkp/
 docs/security/
 docs/contexto
 docs/versionamento
 docs/SaaS
+docs/skills/
 geral.txt
 Single user/
 buscarContas/
