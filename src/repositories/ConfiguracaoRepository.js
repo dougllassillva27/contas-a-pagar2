@@ -27,6 +27,26 @@ async function saveConfiguracao(userId, chave, valor) {
     throw new Error('Chave de configuração inválida.');
   }
 
+  // Se for divisao_casa_minimo, atualiza também as regras DIVISAO_CASA em regras_sync
+  if (chave === 'divisao_casa_minimo') {
+    const configAtual = await getConfiguracoes(userId);
+
+    if (configAtual && configAtual.regras_sync && Array.isArray(configAtual.regras_sync)) {
+      const regrasAtualizadas = configAtual.regras_sync.map(regra => {
+        if (regra.tipo === 'DIVISAO_CASA') {
+          return { ...regra, valorMinimo: valor };
+        }
+        return regra;
+      });
+
+      const queryRegras = `
+        INSERT INTO configuracoes (usuario_id, regras_sync) VALUES ($1, $2)
+        ON CONFLICT (usuario_id) DO UPDATE SET regras_sync = EXCLUDED.regras_sync
+      `;
+      await db.query(queryRegras, [userId, JSON.stringify(regrasAtualizadas)]);
+    }
+  }
+
   // Usamos a sintaxe de placeholder do pg para o nome da coluna de forma segura
   const query = `
     INSERT INTO configuracoes (usuario_id, ${chave}) VALUES ($1, $2)
@@ -37,6 +57,11 @@ async function saveConfiguracao(userId, chave, valor) {
 
   // Invalida cache após salvar
   invalidateCache(userId);
+
+  // Se for divisao_casa_minimo, invalida cache de TODOS os usuários (sync afeta múltiplos usuários)
+  if (chave === 'divisao_casa_minimo') {
+    cacheHelpers.invalidateAll();
+  }
 }
 
 module.exports = { getConfiguracoes, saveConfiguracao, invalidateCache };

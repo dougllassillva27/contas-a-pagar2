@@ -2,6 +2,15 @@
 
 // Mutex global para evitar múltiplas execuções concorrentes do sync
 const _syncPromises = new Map();
+// Cache para evitar queries repetidas no mesmo ciclo de sync
+const _queryCache = new Map();
+
+/**
+ * Limpa o cache de queries após o sync terminar
+ */
+function clearQueryCache() {
+  _queryCache.clear();
+}
 
 /**
  * Motor de Sincronização Dinâmico (SaaS Ready)
@@ -31,17 +40,12 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
       return;
     }
 
-    const startTotal = Date.now();
-    let regrasProcessadas = 0;
-    let regrasComErro = 0;
-
     for (const regra of regras) {
       try {
         const { tipo, ativo = true } = regra;
         if (!ativo) {
           continue;
         }
-        const startRegra = Date.now();
 
         switch (tipo) {
           case 'COPIAR_CONTAS':
@@ -55,24 +59,18 @@ async function executarSincronizacaoDinamica(repo, userId, month, year, regras) 
           case 'DIVISAO_CASA':
             await processarDivisaoCasa(repo, userId, month, year, regra);
             break;
-            break;
 
           default:
-            // [SYNC] log removido
             continue;
         }
-
-        regrasProcessadas++;
       } catch (err) {
-        regrasComErro++;
-        // [SYNC] log removido
+        console.error('[SYNC] Erro ao processar regra:', err.message);
       }
     }
-
-    const durationTotal = Date.now() - startTotal;
   } finally {
     // Libera mutex e resolve a promise
     _syncPromises.delete(mutexKey);
+    clearQueryCache();
     resolvePromise();
   }
 }
@@ -88,7 +86,14 @@ async function processarCopiarContas(repo, sourceUserId, month, year, config) {
     return;
   }
 
-  const total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+  const cacheKey = `total_${terceiroOrigem}_${sourceUserId}_${month}_${year}`;
+  let total = _queryCache.get(cacheKey);
+
+  if (total === undefined) {
+    total = await repo.getTotalTerceiroCartao(terceiroOrigem, sourceUserId, month, year);
+    _queryCache.set(cacheKey, total);
+  }
+
   await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, total, month, year);
 }
 
@@ -100,24 +105,24 @@ async function processarCopiarContas(repo, sourceUserId, month, year, config) {
 async function processarCopiarContaFixa(repo, sourceUserId, month, year, config) {
   const { descricaoOrigem, terceiroOrigem, usuarioDestino, contaDestino } = config;
 
-  // [SYNC] log removido
-
   if (!descricaoOrigem || !usuarioDestino || !contaDestino) {
     return;
   }
 
-  // Busca valor da conta fixa específica no usuário origem
-  const valorOrigem = await repo.getContaFixaValor(
-    descricaoOrigem,
-    terceiroOrigem,
-    sourceUserId,
-    month,
-    year
-  );
+  const cacheKey = `fixa_${descricaoOrigem}_${terceiroOrigem}_${sourceUserId}_${month}_${year}`;
+  let valorOrigem = _queryCache.get(cacheKey);
 
-  // [SYNC] log removido
+  if (valorOrigem === undefined) {
+    valorOrigem = await repo.getContaFixaValor(
+      descricaoOrigem,
+      terceiroOrigem,
+      sourceUserId,
+      month,
+      year
+    );
+    _queryCache.set(cacheKey, valorOrigem);
+  }
 
-  // Injeta na conta fixa do usuário destino
   await repo.findAndUpdateOrCreateContaFixa(usuarioDestino, contaDestino, valorOrigem, month, year);
 }
 
@@ -136,9 +141,14 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
     return;
   }
 
-  // Busca total do terceiro CASA (cartão + fixas) para divisão
-  const totalRaw = await repo.getTotalTerceiroParaDivisaoCasa(terceiroOrigem, sourceUserId, month, year);
-  const totalValor = totalRaw || 0;
+  const cacheKey = `divisao_${terceiroOrigem}_${sourceUserId}_${month}_${year}`;
+  let totalValor = _queryCache.get(cacheKey);
+
+  if (totalValor === undefined) {
+    const totalRaw = await repo.getTotalTerceiroParaDivisaoCasa(terceiroOrigem, sourceUserId, month, year);
+    totalValor = totalRaw || 0;
+    _queryCache.set(cacheKey, totalValor);
+  }
 
   // Base fixa: R$ 750 para cada conta (R$ 1.500 total base)
   const baseFixa = valorMinimo; // R$ 750

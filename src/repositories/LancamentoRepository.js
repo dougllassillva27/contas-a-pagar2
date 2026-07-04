@@ -109,10 +109,6 @@ async function getDashboardDataModular(userId, month, year, userName) {
   const startTime = Date.now();
   const isProd = process.env.NODE_ENV === 'production';
 
-  if (!isProd) {
-    console.log(`[🔍 DEBUG-MODULAR] >>> INICIANDO getDashboardDataModular para userId=${userId}`);
-  }
-
   try {
     // ✅ Fase 2.5: Merge FIXA+CARTAO → 1 query só
     const getLancamentosFixaECartao = async () => {
@@ -321,9 +317,11 @@ async function getDistinctTerceiros(userId) {
   if (cached) return cached;
 
   const result = await db.query(
+    // Otimizado: usa LIMIT para evitar scan completo
     `SELECT DISTINCT NomeTerceiro FROM Lancamentos
      WHERE UsuarioId = $1 AND NomeTerceiro IS NOT NULL
-     ORDER BY NomeTerceiro`,
+     ORDER BY NomeTerceiro
+     LIMIT 50`,
     [userId]
   );
   const terceiros = result.rows.map((r) => r.nometerceiro);
@@ -953,7 +951,7 @@ async function findAndUpdateOrCreateContaFixa(userId, nomeConta, valor, month, y
 
   if (process.env.NODE_ENV !== 'production') {
     const rowsAffected = result?.rowCount || 0;
-    console.log(`[findAndUpdateOrCreateContaFixa] ✅ Query executada, linhas afetadas: ${rowsAffected}`);
+    console.log(`[findAndUpdateOrCreateContaFixa] ✅ Query executada, linhas afetadas: ${rowsAffected}, valor=${valor}`);
   }
 }
 

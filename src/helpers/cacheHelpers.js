@@ -45,4 +45,11 @@ function clear() {
   cache.clear();
 }
 
-module.exports = { set, get, invalidate, clear };
+/**
+ * Invalida TODO o cache (usado para mudanças globais que afetam múltiplos usuários).
+ */
+function invalidateAll() {
+  cache.clear();
+}
+
+module.exports = { set, get, invalidate, invalidateAll, clear };

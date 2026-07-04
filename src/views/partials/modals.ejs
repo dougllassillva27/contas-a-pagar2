@@ -75,7 +75,7 @@
 
       <!-- ABA GERAL -->
       <div id="tab-geral" class="tab-content active">
-        <form id="formConfig">
+        <form id="formConfig" onsubmit="event.preventDefault(); salvarConfiguracoes();">
           <div class="form-group">
             <label for="configDivisaoMinimo">Valor Mínimo da Divisão "Casa"</label>
             <input type="text" id="configDivisaoMinimo" class="form-input" placeholder="R$ 750,00" />

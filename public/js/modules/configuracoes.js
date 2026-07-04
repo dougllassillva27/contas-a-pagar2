@@ -5,7 +5,7 @@
 import { softRefresh, softRefreshSafe } from './dashboard.js';
 import { softRefreshCache } from './shared.js';
 
-export async function salvarConfiguracoes(mostrarLoading, ocultarLoading, mostrarAviso, fecharModais) {
+export async function salvarConfiguracoes() {
   const inputMinimo = document.getElementById('configDivisaoMinimo');
   if (!inputMinimo) return;
 
@@ -24,12 +24,17 @@ export async function salvarConfiguracoes(mostrarLoading, ocultarLoading, mostra
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chave: 'divisao_casa_minimo', valor: valorNumerico }),
     });
-    if (typeof ocultarLoading === 'function') ocultarLoading();
     if (res.ok) {
       softRefreshCache.clear();
-      await softRefresh(undefined, false);
-      fecharModais();
-    } else if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Falha ao salvar configuração.');
+      if (typeof ocultarLoading === 'function') ocultarLoading();
+      window._reloadAfterSuccess = true;
+      if (typeof mostrarAviso === 'function') {
+        mostrarAviso('Sucesso', 'Configuração salva com sucesso!');
+      }
+    } else {
+      if (typeof ocultarLoading === 'function') ocultarLoading();
+      if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Falha ao salvar configuração.');
+    }
   } catch (err) {
     if (typeof ocultarLoading === 'function') ocultarLoading();
     if (typeof mostrarAviso === 'function') mostrarAviso('Erro', 'Erro de conexão.');
