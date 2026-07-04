@@ -72,7 +72,25 @@ module.exports = function (repo) {
         }
       }
 
-      // 2. Busca dados do dashboard
+      // FIX: Garante que configuracoes nunca seja nulo
+      const configuracoesValidas = configuracoes || {
+        divisao_casa_minimo: '750.00',
+        regras_sync: [],
+        onboarding_completed: false
+      };
+
+      // ✅ Sincronização automática ANTES de buscar dados — corrige race condition
+      // Otimizado: sem query EXISTS, verifica durante o próprio sync
+      if (configuracoesValidas.regras_sync && configuracoesValidas.regras_sync.length > 0) {
+        try {
+          const { executarSincronizacaoDinamica } = require('../../services/syncService');
+          await executarSincronizacaoDinamica(repo, userId, month, year, configuracoesValidas.regras_sync);
+        } catch (err) {
+          console.error('[Dashboard] Erro na sincronização automática:', err.message);
+        }
+      }
+
+      // 2. Busca dados do dashboard (AGORA COM DADOS ATUALIZADOS PELO SYNC)
       const startTime = Date.now();
       if (!isProd) {
         console.log(`[${new Date().toISOString()}] [🔍 DEBUG-GET] Chamando getDashboardDataModular...`);
@@ -95,39 +113,7 @@ module.exports = function (repo) {
       const listaTerceiros = ordenarTerceiros(terceirosMap, ordemCardsRaw);
       const totalCasa = terceirosMap['Casa'] ? terceirosMap['Casa'].totalGeral : 0;
 
-      // FIX: Garante que configuracoes nunca seja nulo
-      const configuracoesValidas = configuracoes || {
-        divisao_casa_minimo: '750.00',
-        regras_sync: [],
-        onboarding_completed: false
-      };
-
       const renderStart = Date.now();
-
-      // ✅ Sincronização automática ao carregar dashboard (background) — apenas se mês tem dados
-      const temDados = fixas.length > 0 || cartao.length > 0 || (dadosTerceirosRaw && dadosTerceirosRaw.rows && dadosTerceirosRaw.rows.length > 0);
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[SYNC-CHECK] userId=${userId}, temDados=${temDados}, regras=${configuracoesValidas?.regras_sync?.length || 0}`);
-        console.log(`[SYNC-CHECK] fixas.length=${fixas.length}, cartao.length=${cartao.length}, terceirosRows=${dadosTerceirosRaw?.rows?.length || 0}`);
-      }
-
-      if (temDados && configuracoesValidas && configuracoesValidas.regras_sync && configuracoesValidas.regras_sync.length > 0) {
-        setImmediate(async () => {
-          try {
-            // [SYNC] log removido
-            const { executarSincronizacaoDinamica } = require('../../services/syncService');
-            await executarSincronizacaoDinamica(repo, userId, month, year, configuracoesValidas.regras_sync);
-            // [SYNC] log removido
-          } catch (err) {
-            console.error('[Dashboard] Erro na sincronização automática:', err.message);
-          }
-        });
-      } else {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`[SYNC-CHECK] ⏸️ Sync não executado: temDados=${temDados}, config=${!!configuracoesValidas}, regras=${!!(configuracoesValidas?.regras_sync)}, total=${configuracoesValidas?.regras_sync?.length}`);
-        }
-      }
 
       res.render('index', {
         totais,

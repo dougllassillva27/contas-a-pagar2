@@ -662,6 +662,20 @@ function mostrarAviso(titulo, msg, onFechar) {
     window._avisoCallback = { fn: onFechar, id: callbackId };
   }
 
+  // Se for mensagem de sucesso sem callback específico, adiciona reload com cache-busting
+  if (titulo === 'Sucesso' && !onFechar) {
+    window._avisoCallback = {
+      fn: () => {
+        if (window._reloadAfterSuccess) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('_t', Date.now());
+          window.location.href = url.toString();
+        }
+      },
+      id: 'refresh_callback'
+    };
+  }
+
   document.getElementById('modalAviso').classList.add('active');
 }
 
