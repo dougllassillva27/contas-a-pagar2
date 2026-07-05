@@ -150,6 +150,11 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
     _queryCache.set(cacheKey, totalValor);
   }
 
+  // Mes sem lancamentos do terceiro CASA — nao criar contas automaticamente
+  if (totalValor <= 0) {
+    return;
+  }
+
   // Base fixa: R$ 750 para cada conta (R$ 1.500 total base)
   const baseFixa = valorMinimo; // R$ 750
   const limiteBase = baseFixa * 2; // R$ 1.500

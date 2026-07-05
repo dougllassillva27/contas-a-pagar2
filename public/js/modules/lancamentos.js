@@ -696,12 +696,12 @@ export async function executarDeleteMes() {
 
     if (data.success) {
       if (typeof window.mostrarAviso === 'function') {
-        window.mostrarAviso('Sucesso', 'Mês deletado com sucesso!');
-        // Aguarda o usuário clicar OK antes de fazer refresh
-        await new Promise(resolve => setTimeout(resolve, 500));
+        window.mostrarAviso('Sucesso', 'Mês deletado com sucesso!', () => {
+          window.location.reload();
+        });
+      } else {
+        window.location.reload();
       }
-      softRefreshCache.clear();
-      await softRefresh(undefined, false);
     } else {
       if (typeof window.mostrarAviso === 'function') {
         window.mostrarAviso('Erro', data.error || 'Falha ao deletar mês.');

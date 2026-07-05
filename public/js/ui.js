@@ -2,6 +2,8 @@
 // ✅ public/js/ui.js — Gerenciamento de Modais, Interações e Eventos DOM
 // ==============================================================================
 
+import { getCurrentMonth, getCurrentYear } from './modules/dashboard.js';
+
 // ✅ OBS-20260531-13: Flag para suprimir popstate durante fechamento programático.
 // Evita que history.back() assíncrono dispare fecharModais() reentrante que
 // destruiria o modalAviso criado logo após o softRefresh no fluxo de dividir conta.
@@ -74,8 +76,6 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey && e.key.toLowerCase() === 't') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
-    const getCurrentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth : () => new Date().getMonth() + 1;
-    const getCurrentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear : () => new Date().getFullYear();
     const month = getCurrentMonth();
     const year = getCurrentYear();
     window.open(`/terceiros?month=${month}&year=${year}`, '_blank');
@@ -88,8 +88,6 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey && e.code === 'KeyI') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();
-    const getCurrentMonth = typeof window.getCurrentMonth === 'function' ? window.getCurrentMonth : () => new Date().getMonth() + 1;
-    const getCurrentYear = typeof window.getCurrentYear === 'function' ? window.getCurrentYear : () => new Date().getFullYear();
     const month = getCurrentMonth();
     const year = getCurrentYear();
     window.open(`/relatorio?month=${month}&year=${year}`, '_blank');
