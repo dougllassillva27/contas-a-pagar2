@@ -416,8 +416,6 @@ async function addLancamento(userId, dados) {
         (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1),
         mes, ano
       FROM mes_ano
-      ON CONFLICT (usuarioid, descricao, tipo, COALESCE(nometerceiro, ''), mesvencimento, anovencimento)
-      DO NOTHING
     `;
     await db.query(query, [
       userId,
@@ -782,8 +780,7 @@ async function copyMonth(userId, currentMonth, currentYear) {
         `INSERT INTO Lancamentos
            (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
             ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, DataCriacao, MesVencimento, AnoVencimento)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-         ON CONFLICT (UsuarioId, Descricao, Tipo, COALESCE(NomeTerceiro, ''), MesVencimento, AnoVencimento) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
         [
           userId,
           item.descricao,
