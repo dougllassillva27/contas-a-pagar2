@@ -1210,7 +1210,8 @@ window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela :
 window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
 window.fecharModais = typeof fecharModais !== 'undefined' ? fecharModais : undefined;
 window.checkBloqueioMesFechado = typeof checkBloqueioMesFechado !== 'undefined' ? checkBloqueioMesFechado : undefined;
-window.fecharSidebar = typeof fecharSidebar !== 'undefined' ? fecharSidebar : undefined;
+window.fecharSidebar = fecharSidebar;
+window.abrirSidebar = abrirSidebar;
 window.abrirModalCalcularLuz = typeof abrirModalCalcularLuz !== 'undefined' ? abrirModalCalcularLuz : undefined;
 window.editarConta = typeof editarConta !== 'undefined' ? editarConta : undefined;
 window.toggleRendas = typeof toggleRendas !== 'undefined' ? toggleRendas : undefined;
