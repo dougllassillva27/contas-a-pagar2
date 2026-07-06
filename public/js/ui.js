@@ -1191,6 +1191,27 @@ window.abrirModalCartaoPessoa = abrirModalCartaoPessoa;
 window.abrirModalRendasDetalhes = abrirModalRendasDetalhes;
 window.atualizarTotais = atualizarTotais;
 
+// ✅ OBS-20260706-01 a OBS-20260707-02: Exportacao global completa de todas as funcoes inline
+// Modulos ES6 com type=module criam escopo proprio e nao expoe funcoes ao escopo global window,
+// quebrando chamadas inline onfocus/onkeypress/onblur/onclick nos modals EJS.
+window.abrirMenuContexto = typeof abrirMenuContexto !== 'undefined' ? abrirMenuContexto : undefined;
+window.toggleParcelas = toggleParcelas;
+window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
+window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela : undefined;
+window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
+window.fecharModais = typeof fecharModais !== 'undefined' ? fecharModais : undefined;
+window.checkBloqueioMesFechado = typeof checkBloqueioMesFechado !== 'undefined' ? checkBloqueioMesFechado : undefined;
+window.fecharSidebar = typeof fecharSidebar !== 'undefined' ? fecharSidebar : undefined;
+window.abrirModalCalcularLuz = typeof abrirModalCalcularLuz !== 'undefined' ? abrirModalCalcularLuz : undefined;
+window.editarConta = typeof editarConta !== 'undefined' ? editarConta : undefined;
+window.toggleRendas = typeof toggleRendas !== 'undefined' ? toggleRendas : undefined;
+window.limparMascara = limparMascara;
+window.handleEnterFatura = handleEnterFatura;
+window.salvarFaturaManual = salvarFaturaManual;
+window.mostrarLoading = typeof mostrarLoading !== 'undefined' ? mostrarLoading : undefined;
+window.ocultarLoading = typeof ocultarLoading !== 'undefined' ? ocultarLoading : undefined;
+window.executarAcaoEmLotePessoa = typeof executarAcaoEmLotePessoa !== 'undefined' ? executarAcaoEmLotePessoa : undefined;
+
 function formatarValor(valor) {
   return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
