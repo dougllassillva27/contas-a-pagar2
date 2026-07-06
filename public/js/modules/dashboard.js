@@ -52,6 +52,16 @@ export function updateDashboardFromJSON(data) {
       });
     }
   }
+
+  // ✅ OBS-20260707-04: Atualiza resumo de pessoas (totalResumo_Nome)
+  if (resumoPessoas && Array.isArray(resumoPessoas)) {
+    resumoPessoas.forEach((p) => {
+      const spanResumo = document.getElementById('totalResumo_' + p.pessoa.replace(/\s/g, ''));
+      if (spanResumo) {
+        spanResumo.textContent = 'R$ ' + (p.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    });
+  }
 }
 
 export function extractHTML() {
@@ -196,7 +206,7 @@ export async function softRefresh(delayOverride, useCache = true) {
       if (typeof window.renderAnotacoesPreview === 'function') window.renderAnotacoesPreview();
     }
 
-    softRefreshCache.set(cacheKey, { html: extractHTML(), timestamp: Date.now() });
+    // Cache removido — feature incompleta
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
