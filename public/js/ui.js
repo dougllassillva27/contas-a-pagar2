@@ -1194,7 +1194,7 @@ window.atualizarTotais = atualizarTotais;
 // ✅ OBS-20260706-01 a OBS-20260707-05: Exportacao global COMPLETA de TODAS as funcoes inline
 // Modulos ES6 com type=module criam escopo proprio e nao expoe funcoes ao escopo global window,
 // quebrando chamadas inline onfocus/onkeypress/onblur/onclick nos modals EJS.
-window.abrirMenuContexto = typeof abrirMenuContexto !== 'undefined' ? abrirMenuContexto : undefined;
+window.abrirMenuContexto = abrirMenuContexto;
 window.toggleParcelas = toggleParcelas;
 window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
 window.copiarLinkCompartilhado = copiarLinkCompartilhado;

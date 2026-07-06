@@ -58,6 +58,9 @@ export function atualizarBulkCounterNative(input) {
 }
 
 export async function executarAcaoEmLotePessoa(novoStatus, pessoaSelecionadaContexto, currentMonth, currentYear) {
+  // ✅ OBS-20260707-04: Loading overlay para feedback visual durante operacoes em lote
+  if (typeof window.mostrarLoading === 'function') window.mostrarLoading();
+
   try {
     const res = await fetch('/api/lancamentos/status-pessoa', {
       method: 'POST',
@@ -77,10 +80,15 @@ export async function executarAcaoEmLotePessoa(novoStatus, pessoaSelecionadaCont
         window.fecharMenuContexto();
       }
     } else {
-      mostrarAviso('Erro', 'Falha ao atualizar lote.');
+      const data = await res.json();
+      mostrarAviso('Erro', data.error || 'Falha ao atualizar lote.');
     }
   } catch (err) {
-    console.error(err);
+    console.error('[executarAcaoEmLotePessoa] Erro:', err);
+    mostrarAviso('Erro', 'Erro interno ao processar lote.');
+  } finally {
+    // ✅ OBS-20260707-04: Sempre oculta loading, mesmo em caso de erro
+    if (typeof window.ocultarLoading === 'function') window.ocultarLoading();
   }
 }
 
