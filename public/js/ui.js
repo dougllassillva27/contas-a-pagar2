@@ -1191,12 +1191,21 @@ window.abrirModalCartaoPessoa = abrirModalCartaoPessoa;
 window.abrirModalRendasDetalhes = abrirModalRendasDetalhes;
 window.atualizarTotais = atualizarTotais;
 
-// ✅ OBS-20260706-01 a OBS-20260707-02: Exportacao global completa de todas as funcoes inline
+// ✅ OBS-20260706-01 a OBS-20260707-05: Exportacao global COMPLETA de TODAS as funcoes inline
 // Modulos ES6 com type=module criam escopo proprio e nao expoe funcoes ao escopo global window,
 // quebrando chamadas inline onfocus/onkeypress/onblur/onclick nos modals EJS.
 window.abrirMenuContexto = typeof abrirMenuContexto !== 'undefined' ? abrirMenuContexto : undefined;
 window.toggleParcelas = toggleParcelas;
 window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
+window.copiarLinkCompartilhado = copiarLinkCompartilhado;
+window.abrirLinkCompartilhado = abrirLinkCompartilhado;
+// ✅ Variavel pessoaSelecionadaContexto precisa ser acessivel no window para EJS
+Object.defineProperty(window, 'pessoaSelecionadaContexto', {
+  get() { return typeof pessoaSelecionadaContexto !== 'undefined' ? pessoaSelecionadaContexto : null; },
+  set(val) { pessoaSelecionadaContexto = val; },
+  configurable: true,
+  enumerable: true
+});
 window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela : undefined;
 window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
 window.fecharModais = typeof fecharModais !== 'undefined' ? fecharModais : undefined;
@@ -1211,6 +1220,22 @@ window.salvarFaturaManual = salvarFaturaManual;
 window.mostrarLoading = typeof mostrarLoading !== 'undefined' ? mostrarLoading : undefined;
 window.ocultarLoading = typeof ocultarLoading !== 'undefined' ? ocultarLoading : undefined;
 window.executarAcaoEmLotePessoa = typeof executarAcaoEmLotePessoa !== 'undefined' ? executarAcaoEmLotePessoa : undefined;
+
+// ✅ OBS-20260706-01 a OBS-20260707-05: Exportacoes globais COMPLETAS
+// Corrige ReferenceError: copiarLinkCompartilhado, abrirLinkCompartilhado, pessoaSelecionadaContexto
+window.copiarLinkCompartilhado = copiarLinkCompartilhado;
+window.abrirLinkCompartilhado = abrirLinkCompartilhado;
+// ✅ Variavel pessoaSelecionadaContexto precisa ser acessivel no window para EJS
+Object.defineProperty(window, 'pessoaSelecionadaContexto', {
+  get() { return typeof pessoaSelecionadaContexto !== 'undefined' ? pessoaSelecionadaContexto : null; },
+  set(val) { pessoaSelecionadaContexto = val; },
+  configurable: true,
+  enumerable: true
+});
+window.fecharModalCompartilhar = fecharModalCompartilhar;
+window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
+window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela : undefined;
+window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
 
 function formatarValor(valor) {
   return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
