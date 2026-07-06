@@ -9,6 +9,7 @@ import { getCurrentMonth, getCurrentYear } from './modules/dashboard.js';
 // destruiria o modalAviso criado logo após o softRefresh no fluxo de dividir conta.
 let _suppressPopstate = false;
 let pessoaSelecionadaContexto = null;
+let acaoConfirmadaCallback = null; // Variável de estado para callback de confirmação genérica
 
 function registerModalOpen() {
   if (document.activeElement) document.activeElement.blur();
@@ -1212,6 +1213,7 @@ window.fecharModais = typeof fecharModais !== 'undefined' ? fecharModais : undef
 window.checkBloqueioMesFechado = typeof checkBloqueioMesFechado !== 'undefined' ? checkBloqueioMesFechado : undefined;
 window.fecharSidebar = fecharSidebar;
 window.abrirSidebar = abrirSidebar;
+window.fecharSidebarE = fecharSidebarE;
 window.abrirModalCalcularLuz = typeof abrirModalCalcularLuz !== 'undefined' ? abrirModalCalcularLuz : undefined;
 window.editarConta = typeof editarConta !== 'undefined' ? editarConta : undefined;
 window.toggleRendas = typeof toggleRendas !== 'undefined' ? toggleRendas : undefined;
@@ -1237,6 +1239,39 @@ window.fecharModalCompartilhar = fecharModalCompartilhar;
 window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
 window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela : undefined;
 window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
+
+// ✅ CORRECAO SIDEBAR (OBS-20260707): Exportar funcoes usadas em onclick inline do sidebar.ejs
+globalThis.abrirModalAdicionar = abrirModalAdicionar;
+globalThis.abrirModalConfiguracoes = abrirModalConfiguracoes;
+globalThis.abrirConfirmacaoAcao = abrirConfirmacaoAcao;
+globalThis.toggleMesFechado = toggleMesFechado;
+globalThis.fecharModalAviso = fecharModalAviso;
+globalThis.switchTab = switchTab;
+globalThis.copiarAoClipboard = copiarAoClipboard;
+globalThis.mostrarAviso = mostrarAviso;
+
+// Exportacoes adicionais para handlers inline (OBS-20260707)
+globalThis.fecharSidebar = fecharSidebar;
+globalThis.fecharSidebarE = fecharSidebarE;
+globalThis.abrirModalCalcularLuz = abrirModalCalcularLuz;
+globalThis.fecharModalRegraSync = fecharModalRegraSync;
+globalThis.toggleSyncFields = toggleSyncFields;
+globalThis.wizardNextStep = wizardNextStep;
+globalThis.wizardPrevStep = wizardPrevStep;
+globalThis.toggleAllConferido = toggleAllConferido;
+globalThis.fecharModais = fecharModais;
+globalThis.fecharConfirmacaoAcao = fecharConfirmacaoAcao;
+globalThis.fecharConfirmacao = fecharConfirmacao;
+globalThis.toggleRendas = toggleRendas;
+globalThis.togglePrivacidadeGlobal = togglePrivacidadeGlobal;
+globalThis.mascaraParcela = mascaraParcela;
+globalThis.fecharModalCompartilhar = fecharModalCompartilhar;
+globalThis.abrirLinkCompartilhado = abrirLinkCompartilhado;
+globalThis.copiarLinkCompartilhado = copiarLinkCompartilhado;
+globalThis.executarAcaoConferidoLote = executarAcaoConferidoLote;
+globalThis.compartilharLinkTerceiro = compartilharLinkTerceiro;
+globalThis.abrirModalCartaoPessoa = abrirModalCartaoPessoa;
+globalThis.abrirModalRendasDetalhes = abrirModalRendasDetalhes;
 
 function formatarValor(valor) {
   return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
