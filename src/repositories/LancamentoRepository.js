@@ -53,7 +53,7 @@ async function getUltimosLancamentos(userId) {
       Unicos AS (
           SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, ''))
             *
-          FROM UltimosCem
+          FROM UltimosTrinta
           WHERE Tipo IN ('${TIPO.CARTAO}', '${TIPO.PARCELADO}')
           ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, COALESCE(NomeTerceiro, '') ASC, Id ASC
       )
