@@ -40,25 +40,26 @@ module.exports.normalizarTerceiro = normalizarTerceiro;
 // --- LISTAGENS E DASHBOARD ---
 
 async function getUltimosLancamentos(userId) {
-  // Otimização: Restringe a busca aos últimos 30 registros (usando o índice idx_lancamentos_usuario_criacao)
+  // Otimização: Restringe a busca aos últimos 100 registros (usando o índice idx_lancamentos_usuario_criacao)
   // antes de aplicar o DISTINCT ON pesado em memória, erradicando o Full Table Scan.
+  // Busca 100 para garantir que após filtros (tipo e deduplicação) ainda tenha 30 itens.
   const query = `
-      WITH UltimosTrinta AS (
+      WITH UltimosCem AS (
           SELECT *
           FROM Lancamentos
           WHERE UsuarioId = $1
           ORDER BY DataCriacao DESC NULLS LAST, Id DESC
-          LIMIT 30
+          LIMIT 100
       ),
       Unicos AS (
           SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, ''))
             *
-          FROM UltimosTrinta
+          FROM UltimosCem
           WHERE Tipo IN ('${TIPO.CARTAO}', '${TIPO.PARCELADO}')
           ORDER BY date_trunc('second', DataCriacao) DESC NULLS LAST, Descricao ASC, COALESCE(NomeTerceiro, '') ASC, Id ASC
       )
-      SELECT * FROM Unicos 
-      ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
+      SELECT * FROM Unicos
+      ORDER BY DataCriacao DESC NULLS LAST, Id DESC
       LIMIT ${LIMITES.ULTIMOS_LANCAMENTOS}
    `;
   const result = await db.query(query, [userId]);
