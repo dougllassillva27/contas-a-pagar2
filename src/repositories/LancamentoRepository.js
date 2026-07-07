@@ -40,15 +40,15 @@ module.exports.normalizarTerceiro = normalizarTerceiro;
 // --- LISTAGENS E DASHBOARD ---
 
 async function getUltimosLancamentos(userId) {
-  // Otimização: Restringe a busca aos últimos 100 registros (usando o índice idx_lancamentos_usuario_criacao)
+  // Otimização: Restringe a busca aos últimos 30 registros (usando o índice idx_lancamentos_usuario_criacao)
   // antes de aplicar o DISTINCT ON pesado em memória, erradicando o Full Table Scan.
   const query = `
-      WITH UltimosCem AS (
-          SELECT * 
-          FROM Lancamentos 
-          WHERE UsuarioId = $1 
-          ORDER BY DataCriacao DESC NULLS LAST, Id DESC 
-          LIMIT 20
+      WITH UltimosTrinta AS (
+          SELECT *
+          FROM Lancamentos
+          WHERE UsuarioId = $1
+          ORDER BY DataCriacao DESC NULLS LAST, Id DESC
+          LIMIT 30
       ),
       Unicos AS (
           SELECT DISTINCT ON (date_trunc('second', DataCriacao), Descricao, COALESCE(NomeTerceiro, ''))
