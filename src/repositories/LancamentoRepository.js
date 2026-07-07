@@ -365,72 +365,32 @@ async function addLancamento(userId, dados) {
   // ✅ FIX: Normaliza terceiro "Eu", "Dodo" ou vazio para NULL (mesma lógica de addLancamentosBulk)
   const terceiroNormalizado = normalizarTerceiro(dados.nomeTerceiro);
 
-  console.log('[DEBUG] addLancamento - tipo:', dados.tipo, 'TIPO.FIXA:', TIPO.FIXA, 'igual:', dados.tipo === TIPO.FIXA);
-
-  // ✅ Para contas fixas, usa UPSERT para evitar violação de constraint única
-  if (dados.tipo === TIPO.FIXA) {
-    const query = `
-      WITH existing AS (
-        SELECT Id FROM Lancamentos
-        WHERE UsuarioId = $1 AND Descricao = $2 AND Tipo = '${TIPO.FIXA}'
-          AND MesVencimento = EXTRACT(MONTH FROM $7::timestamptz)::integer
-          AND AnoVencimento = EXTRACT(YEAR FROM $7::timestamptz)::integer
-          AND COALESCE(NomeTerceiro, '') = COALESCE($10, '')
-        LIMIT 1
-      ),
-      updated AS (
-        UPDATE Lancamentos SET Valor = $3, Categoria = $5, Status = $6,
-          ParcelaAtual = $8, TotalParcelas = $9
-        WHERE Id = (SELECT Id FROM existing)
-        RETURNING Id
-      )
-      INSERT INTO Lancamentos
-        (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
-         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, MesVencimento, AnoVencimento)
-      SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1),
-        EXTRACT(MONTH FROM $7::timestamptz)::integer, EXTRACT(YEAR FROM $7::timestamptz)::integer
-      WHERE NOT EXISTS (SELECT 1 FROM updated) AND NOT EXISTS (SELECT 1 FROM existing)
-    `;
-    await db.query(query, [
-      userId,
-      dados.descricao,
-      dados.valor,
-      dados.tipo,
-      dados.categoria,
-      dados.status || STATUS.PENDENTE,
-      dataVencimento,
-      dados.parcelaAtual || null,
-      dados.totalParcelas || null,
-      terceiroNormalizado,
-    ]);
-  } else {
-    const query = `
-      WITH mes_ano AS (
-        SELECT EXTRACT(MONTH FROM $7::timestamptz)::integer AS mes,
-               EXTRACT(YEAR FROM $7::timestamptz)::integer AS ano
-      )
-      INSERT INTO Lancamentos
-        (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
-         ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, MesVencimento, AnoVencimento)
-      SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1),
-        mes, ano
-      FROM mes_ano
-    `;
-    await db.query(query, [
-      userId,
-      dados.descricao,
-      dados.valor,
-      dados.tipo,
-      dados.categoria,
-      dados.status || STATUS.PENDENTE,
-      dataVencimento,
-      dados.parcelaAtual || null,
-      dados.totalParcelas || null,
-      terceiroNormalizado,
-    ]);
-  }
+  // ✅ INSERT simples para todos os tipos (incluindo FIXA) - permite duplicatas
+  const query = `
+    WITH mes_ano AS (
+      SELECT EXTRACT(MONTH FROM $7::timestamptz)::integer AS mes,
+             EXTRACT(YEAR FROM $7::timestamptz)::integer AS ano
+    )
+    INSERT INTO Lancamentos
+      (UsuarioId, Descricao, Valor, Tipo, Categoria, Status, DataVencimento,
+       ParcelaAtual, TotalParcelas, NomeTerceiro, Ordem, MesVencimento, AnoVencimento)
+    SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+      (SELECT COALESCE(MAX(Ordem), 0) + 1 FROM Lancamentos WHERE UsuarioId = $1),
+      mes, ano
+    FROM mes_ano
+  `;
+  await db.query(query, [
+    userId,
+    dados.descricao,
+    dados.valor,
+    dados.tipo,
+    dados.categoria,
+    dados.status || STATUS.PENDENTE,
+    dataVencimento,
+    dados.parcelaAtual || null,
+    dados.totalParcelas || null,
+    terceiroNormalizado,
+  ]);
 }
 
 // ==============================================================================
