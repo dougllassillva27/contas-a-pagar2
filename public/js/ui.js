@@ -1197,9 +1197,10 @@ window.atualizarTotais = atualizarTotais;
 // quebrando chamadas inline onfocus/onkeypress/onblur/onclick nos modals EJS.
 window.abrirMenuContexto = abrirMenuContexto;
 window.toggleParcelas = toggleParcelas;
-window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
+window.compartilharLinkTerceiro = compartilharLinkTerceiro;
 window.copiarLinkCompartilhado = copiarLinkCompartilhado;
 window.abrirLinkCompartilhado = abrirLinkCompartilhado;
+window.fecharModalCompartilhar = fecharModalCompartilhar;
 // ✅ Variavel pessoaSelecionadaContexto precisa ser acessivel no window para EJS
 Object.defineProperty(window, 'pessoaSelecionadaContexto', {
   get() { return typeof pessoaSelecionadaContexto !== 'undefined' ? pessoaSelecionadaContexto : null; },
@@ -1207,38 +1208,21 @@ Object.defineProperty(window, 'pessoaSelecionadaContexto', {
   configurable: true,
   enumerable: true
 });
-window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela : undefined;
-window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
-window.fecharModais = typeof fecharModais !== 'undefined' ? fecharModais : undefined;
-window.checkBloqueioMesFechado = typeof checkBloqueioMesFechado !== 'undefined' ? checkBloqueioMesFechado : undefined;
+window.mascaraParcela = mascaraParcela;
+window.executarAcaoConferidoLote = executarAcaoConferidoLote;
+window.fecharModais = fecharModais;
+window.checkBloqueioMesFechado = checkBloqueioMesFechado;
 window.fecharSidebar = fecharSidebar;
 window.abrirSidebar = abrirSidebar;
 window.fecharSidebarE = fecharSidebarE;
-window.abrirModalCalcularLuz = typeof abrirModalCalcularLuz !== 'undefined' ? abrirModalCalcularLuz : undefined;
-window.editarConta = typeof editarConta !== 'undefined' ? editarConta : undefined;
-window.toggleRendas = typeof toggleRendas !== 'undefined' ? toggleRendas : undefined;
+window.abrirModalCalcularLuz = abrirModalCalcularLuz;
+window.editarConta = editarConta;
+window.toggleRendas = toggleRendas;
 window.limparMascara = limparMascara;
 window.handleEnterFatura = handleEnterFatura;
 window.salvarFaturaManual = salvarFaturaManual;
-window.mostrarLoading = typeof mostrarLoading !== 'undefined' ? mostrarLoading : undefined;
-window.ocultarLoading = typeof ocultarLoading !== 'undefined' ? ocultarLoading : undefined;
-window.executarAcaoEmLotePessoa = typeof executarAcaoEmLotePessoa !== 'undefined' ? executarAcaoEmLotePessoa : undefined;
-
-// ✅ OBS-20260706-01 a OBS-20260707-05: Exportacoes globais COMPLETAS
-// Corrige ReferenceError: copiarLinkCompartilhado, abrirLinkCompartilhado, pessoaSelecionadaContexto
-window.copiarLinkCompartilhado = copiarLinkCompartilhado;
-window.abrirLinkCompartilhado = abrirLinkCompartilhado;
-// ✅ Variavel pessoaSelecionadaContexto precisa ser acessivel no window para EJS
-Object.defineProperty(window, 'pessoaSelecionadaContexto', {
-  get() { return typeof pessoaSelecionadaContexto !== 'undefined' ? pessoaSelecionadaContexto : null; },
-  set(val) { pessoaSelecionadaContexto = val; },
-  configurable: true,
-  enumerable: true
-});
-window.fecharModalCompartilhar = fecharModalCompartilhar;
-window.compartilharLinkTerceiro = typeof compartilharLinkTerceiro !== 'undefined' ? compartilharLinkTerceiro : undefined;
-window.mascaraParcela = typeof mascaraParcela !== 'undefined' ? mascaraParcela : undefined;
-window.executarAcaoConferidoLote = typeof executarAcaoConferidoLote !== 'undefined' ? executarAcaoConferidoLote : undefined;
+window.mostrarLoading = mostrarLoading;
+window.ocultarLoading = ocultarLoading;
 
 // ✅ CORRECAO SIDEBAR (OBS-20260707): Exportar funcoes usadas em onclick inline do sidebar.ejs
 globalThis.abrirModalAdicionar = abrirModalAdicionar;
