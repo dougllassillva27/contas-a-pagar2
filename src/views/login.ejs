@@ -112,19 +112,8 @@
     </div>
 
     <script>
-        // Log de debug no console do navegador
-        console.log('[LOGIN PAGE] Loaded');
-        console.log('[LOGIN PAGE] Form action:', document.getElementById('loginForm')?.action);
-        
         // Monitora submit do form
         document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-            const password = document.getElementById('password')?.value;
-            const lembrar = document.getElementById('lembrar')?.checked;
-            
-            console.log('[LOGIN FORM] Submit triggered');
-            console.log('[LOGIN FORM] Password length:', password?.length);
-            console.log('[LOGIN FORM] Remember me:', lembrar);
-            
             // Não previne o submit - deixa o form fazer POST tradicional
         });
     </script>
