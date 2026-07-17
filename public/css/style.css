@@ -1371,7 +1371,11 @@ input[type='checkbox'] {
 }
 
 .hidden-checkbox {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
 
 .custom-checkbox {
@@ -1388,6 +1392,11 @@ input[type='checkbox'] {
 
 .custom-checkbox-wrapper:hover .custom-checkbox {
   border-color: rgba(56, 120, 225, 0.5);
+}
+
+.custom-checkbox-wrapper:focus-within .custom-checkbox {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(56, 120, 225, 0.3);
 }
 
 .hidden-checkbox:checked + .custom-checkbox {

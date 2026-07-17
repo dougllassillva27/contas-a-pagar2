@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
       } catch (err) {
-        console.error('Erro ao validar token:', err);
+        // Erro ao validar token
       }
     }
 
@@ -103,7 +103,6 @@ if (loginForm) {
         alert(errorData.error || 'Senha incorreta!');
       }
     } catch (err) {
-      console.error('Erro no login:', err);
       alert('Erro de conexão. Tente novamente.');
     }
   });
@@ -123,7 +122,7 @@ async function logoutPersistente() {
         body: JSON.stringify({ token }),
       });
     } catch (err) {
-      console.error('Erro ao revogar token:', err);
+      // Erro ao revogar token
     }
   }
 
