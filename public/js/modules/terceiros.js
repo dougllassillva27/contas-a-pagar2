@@ -2,7 +2,7 @@
 // ✅ TERCEIROS — Modal exclusão pessoa
 // ==============================================================================
 
-import { softRefresh } from './dashboard.js';
+import { softRefresh, getCurrentMonth, getCurrentYear } from './dashboard.js';
 import { softRefreshCache } from './shared.js';
 
 export function confirmarExclusaoPessoa(pessoaSelecionadaContexto, checkBloqueioMesFechado, fecharMenuContexto, registerModalOpen, mostrarLoading, ocultarLoading, mostrarAviso, fecharModais) {
@@ -31,8 +31,11 @@ export function confirmarExclusaoPessoa(pessoaSelecionadaContexto, checkBloqueio
   document.getElementById('iconConfirmacao').innerText = 'warning';
   document.getElementById('iconConfirmacao').style.color = 'var(--red)';
 
-  let acaoConfirmadaCallback = async () => {
+  window.acaoConfirmadaCallback = async () => {
+    modal.classList.remove('active');
     mostrarLoading();
+    const currentMonth = getCurrentMonth();
+    const currentYear = getCurrentYear();
     try {
       const res = await fetch(
         `/api/lancamentos/pessoa/${encodeURIComponent(pessoaSelecionadaContexto)}?month=${currentMonth}&year=${currentYear}`,
@@ -44,9 +47,12 @@ export function confirmarExclusaoPessoa(pessoaSelecionadaContexto, checkBloqueio
         mostrarAviso('Acesso Negado', err.error);
       } else {
         softRefreshCache.clear();
-        await softRefresh(undefined, false);
-        fecharModais();
         ocultarLoading();
+        mostrarAviso('Sucesso', `Todas as contas de "${pessoaSelecionadaContexto}" foram excluídas.`, async () => {
+          if (typeof window.refreshOnDelete === 'function') {
+            await window.refreshOnDelete();
+          }
+        });
       }
     } catch (e) {
       ocultarLoading();
@@ -54,5 +60,5 @@ export function confirmarExclusaoPessoa(pessoaSelecionadaContexto, checkBloqueio
     }
   };
   modal.classList.add('active');
-  return acaoConfirmadaCallback;
+  return window.acaoConfirmadaCallback;
 }
