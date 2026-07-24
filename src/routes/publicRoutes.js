@@ -103,9 +103,9 @@ module.exports = function (repo) {
       }
 
       if (userLogado) {
-        req.session.user = { id: userLogado.id, nome: userLogado.nome, login: userLogado.login };
+        req.session.user = { id: userLogado.id, nome: userLogado.nome, login: userLogado.login, passwordVersion: userLogado.passwordversion || 0 };
 
-        console.log(`[LOGIN] ✅ Sucesso - Usuário: ${userLogado.nome} (Lembrar: ${lembrar})`);
+        console.log(`[LOGIN] ✅ Sucesso - Usuário: ${userLogado.nome} (Lembrar: ${lembrar}, passwordVersion: ${userLogado.passwordversion || 0})`);
 
         // ✅ PERSISTÊNCIA: Gera o token se solicitado
         if (lembrar) {

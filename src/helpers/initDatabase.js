@@ -177,6 +177,11 @@ async function initDatabase() {
       ALTER TABLE configuracoes ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE
     `);
 
+    // 11. Campo passwordVersion para invalidação de sessões (Feature: Alterar Senha)
+    await db.query(`
+      ALTER TABLE Usuarios ADD COLUMN IF NOT EXISTS passwordVersion INT DEFAULT 0
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);
