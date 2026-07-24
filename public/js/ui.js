@@ -319,6 +319,78 @@ function fecharModalConfiguracoes() {
   document.getElementById('modalConfiguracoes').classList.remove('active');
 }
 
+// ==============================================================================
+// Feature: Alterar Senha - Função para trocar senha do usuário logado
+// ==============================================================================
+async function trocarSenha() {
+  const novaSenha = document.getElementById('novaSenha').value;
+  const confirmarSenha = document.getElementById('confirmarSenha').value;
+  const erroDiv = document.getElementById('senhaErro');
+  const btn = document.querySelector('#formTrocarSenha button[type="submit"]');
+
+  // Reset estado
+  erroDiv.style.display = 'none';
+  erroDiv.textContent = '';
+
+  // Validação client-side
+  if (!novaSenha || !confirmarSenha) {
+    erroDiv.textContent = 'Preencha todos os campos';
+    erroDiv.style.display = 'block';
+    return;
+  }
+
+  if (novaSenha !== confirmarSenha) {
+    erroDiv.textContent = 'As senhas não coincidem';
+    erroDiv.style.display = 'block';
+    return;
+  }
+
+  // Loading state
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Alterando...';
+
+  try {
+    const response = await fetch('/api/auth/trocar-senha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ novaSenha, confirmarSenha })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      // Sucesso - mostrar mensagem e redirect para login
+      erroDiv.style.color = '#2ecc71';
+      erroDiv.textContent = 'Senha alterada com sucesso! Redirecionando...';
+      erroDiv.style.display = 'block';
+
+      // Aguardar 2s antes do redirect
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+    } else {
+      // Erro genérico
+      erroDiv.style.color = '#e74c3c';
+      erroDiv.textContent = data.error || 'Erro ao alterar senha';
+      erroDiv.style.display = 'block';
+
+      // Reset button
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  } catch (error) {
+    console.error('[UI] Erro ao trocar senha:', error);
+    erroDiv.style.color = '#e74c3c';
+    erroDiv.textContent = 'Erro de conexão. Tente novamente.';
+    erroDiv.style.display = 'block';
+
+    // Reset button
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Restaura estado hide-rendas do localStorage
   if (localStorage.getItem('hideRendas') === 'true') {
@@ -1259,6 +1331,7 @@ globalThis.executarAcaoConferidoLote = executarAcaoConferidoLote;
 globalThis.compartilharLinkTerceiro = compartilharLinkTerceiro;
 globalThis.abrirModalCartaoPessoa = abrirModalCartaoPessoa;
 globalThis.abrirModalRendasDetalhes = abrirModalRendasDetalhes;
+globalThis.trocarSenha = trocarSenha;
 
 function formatarValor(valor) {
   return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

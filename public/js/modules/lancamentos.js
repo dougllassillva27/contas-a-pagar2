@@ -529,20 +529,21 @@ export async function enviarLancamento(e, tipoTransacao) {
       if (typeof window.refreshOnInsert === 'function') {
         fecharModais();
         ocultarLoading();
-        mostrarAviso('Sucesso', responseData.criados ? `${responseData.criados} contas lançadas com sucesso!` : 'Lançamento salvo com sucesso!');
-        await window.refreshOnInsert();
+        mostrarAviso('Sucesso', responseData.criados ? `${responseData.criados} contas lançadas com sucesso!` : 'Lançamento salvo com sucesso!', async () => {
+          await window.refreshOnInsert();
+        });
       } else {
         // Fallback: comportamento antigo
+        fecharModais();
+        ocultarLoading();
         if (responseData.criados) {
-          await softRefreshSafe(0, false);
-          fecharModais();
-          ocultarLoading();
-          mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`);
+          mostrarAviso('Sucesso', `${responseData.criados} contas lançadas com sucesso!`, async () => {
+            await softRefreshSafe(0, false);
+          });
         } else {
-          await softRefreshSafe(0, false);
-          fecharModais();
-          ocultarLoading();
-          mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!');
+          mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!', async () => {
+            await softRefreshSafe(0, false);
+          });
         }
       }
     } else {

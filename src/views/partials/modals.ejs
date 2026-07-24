@@ -71,6 +71,7 @@
       <div class="modal-tabs">
         <button class="modal-tab active" onclick="switchTab('tab-geral', this)">Geral</button>
         <button class="modal-tab" onclick="switchTab('tab-sync', this)">Sincronização</button>
+        <button class="modal-tab" onclick="switchTab('tab-seguranca', this)">Segurança</button>
       </div>
 
       <!-- ABA GERAL -->
@@ -101,6 +102,29 @@
             Carregando regras...
           </div>
         </div>
+      </div>
+
+      <!-- ABA SEGURANÇA -->
+      <div id="tab-seguranca" class="tab-content">
+        <form id="formTrocarSenha" onsubmit="event.preventDefault(); trocarSenha();">
+          <input type="text" name="username" value="" autocomplete="username" style="display:none" aria-hidden="true" tabindex="-1" />
+          <h3 style="margin: 0 0 15px 0; font-size: 1rem;">Alterar Senha</h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">
+            Ao alterar sua senha, você será desconectado de todos os dispositivos.
+          </p>
+          <div class="form-group">
+            <label for="novaSenha">Nova Senha</label>
+            <input type="password" id="novaSenha" class="form-input" placeholder="Digite a nova senha" required autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label for="confirmarSenha">Confirmar Nova Senha</label>
+            <input type="password" id="confirmarSenha" class="form-input" placeholder="Confirme a nova senha" required autocomplete="new-password" />
+          </div>
+          <div id="senhaErro" style="color: #e74c3c; font-size: 0.85rem; margin-top: 10px; display: none;"></div>
+          <div style="text-align: right; margin-top: 20px;">
+            <button type="submit" class="btn-primary" style="width: auto; padding: 10px 25px;">Alterar Senha</button>
+          </div>
+        </form>
       </div>
     </div>
 <!-- Footer removido para as abas terem botões próprios se necessário ou simplificar -->

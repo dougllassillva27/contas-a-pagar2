@@ -96,5 +96,64 @@ module.exports = function(repo) {
     }
   }));
 
+  // ==============================================================================
+  // POST /api/auth/trocar-senha — Altera senha do usuário logado
+  // Feature: Invalida todas sessões via passwordVersion
+  // ==============================================================================
+  router.post('/api/auth/trocar-senha', asyncHandler(async (req, res) => {
+    const { novaSenha, confirmarSenha } = req.body;
+
+    // Validação básica
+    if (!novaSenha || !confirmarSenha) {
+      return res.status(400).json({ error: 'Preencha todos os campos' });
+    }
+
+    if (novaSenha !== confirmarSenha) {
+      return res.status(400).json({ error: 'As senhas não coincidem' });
+    }
+
+    // Verificar se usuário está logado
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const userId = req.session.user.id;
+
+    try {
+      // Hash da nova senha (bcrypt cost 12)
+      const bcrypt = require('bcrypt');
+      const saltRounds = 12;
+      const senhaHash = await bcrypt.hash(novaSenha, saltRounds);
+
+      // Atualizar senha + incrementar passwordVersion (transação)
+      const UsuarioRepository = require('../repositories/UsuarioRepository');
+      const resultado = await UsuarioRepository.atualizarSenha(userId, senhaHash);
+
+      if (!resultado.senhaAtualizada) {
+        return res.status(500).json({ error: 'Erro ao alterar senha' });
+      }
+
+      // Limpar todos tokens persistentes (força logout em todos dispositivos)
+      await UsuarioRepository.limparTokensPersistentes(userId);
+
+      // Destruir sessão atual
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('[AUTH] Erro ao destruir sessão após troca de senha:', err);
+        }
+      });
+
+      // Responder sucesso (frontend fará redirect para /login)
+      res.json({
+        success: true,
+        message: 'Senha alterada com sucesso',
+        passwordVersion: resultado.novoPasswordVersion,
+      });
+    } catch (error) {
+      console.error('[AUTH] Erro ao trocar senha:', error.message);
+      res.status(500).json({ error: 'Erro ao alterar senha' });
+    }
+  }));
+
   return router;
 };
