@@ -93,6 +93,16 @@ export async function executarAcaoEmLotePessoa(novoStatus, pessoaSelecionadaCont
 }
 
 export function confirmarExclusaoPessoa(pessoaSelecionadaContexto, checkBloqueioMesFechado, fecharMenuContexto, registerModalOpen, mostrarLoading, ocultarLoading, mostrarAviso, fecharModais) {
+  // Fallback para inline onclick que nao passa os DI params
+  pessoaSelecionadaContexto = pessoaSelecionadaContexto || window.pessoaSelecionadaContexto;
+  checkBloqueioMesFechado = checkBloqueioMesFechado || (typeof window.checkBloqueioMesFechado === 'function' ? window.checkBloqueioMesFechado : () => false);
+  fecharMenuContexto = fecharMenuContexto || (typeof window.fecharMenuContexto === 'function' ? window.fecharMenuContexto : () => {});
+  registerModalOpen = registerModalOpen || (typeof window.registerModalOpen === 'function' ? window.registerModalOpen : () => {});
+  mostrarLoading = mostrarLoading || (typeof window.mostrarLoading === 'function' ? window.mostrarLoading : () => {});
+  ocultarLoading = ocultarLoading || (typeof window.ocultarLoading === 'function' ? window.ocultarLoading : () => {});
+  mostrarAviso = mostrarAviso || (typeof window.mostrarAviso === 'function' ? window.mostrarAviso : () => {});
+  fecharModais = fecharModais || (typeof window.fecharModais === 'function' ? window.fecharModais : () => {});
+
   if (checkBloqueioMesFechado()) {
     fecharMenuContexto();
     return;
