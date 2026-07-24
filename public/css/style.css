@@ -466,6 +466,11 @@ html.hide-global-mode .dashboard-cards .card .valor {
   transform: scale(1.05);
 }
 
+/* Evita corte das bordas no hover dentro de modais (overflow do scroll) */
+.modal-scroll .btn-primary:hover {
+  transform: none;
+}
+
 .main-grid {
   display: grid;
   grid-template-columns: 480px 1fr 1fr 1fr;

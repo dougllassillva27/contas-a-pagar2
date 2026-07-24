@@ -45,7 +45,7 @@ async function criarToken(userId, expiresEmDias = 90) {
 async function validarToken(tokenBruto) {
   const tokenHash = hashToken(tokenBruto);
   const query = `
-    SELECT tp.*, u.Id, u.Nome, u.Login
+    SELECT tp.*, u.Id, u.Nome, u.Login, u.passwordVersion
     FROM TokensPersistentes tp
     INNER JOIN Usuarios u ON tp.UsuarioId = u.Id
     WHERE tp.Token = $1

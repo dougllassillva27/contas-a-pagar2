@@ -23,6 +23,7 @@ const infraRoutes = require('./routes/infraRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+const authRoutes = require('./routes/authRoutes');
 const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
 const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
@@ -117,6 +118,7 @@ app.use(authMiddleware);
 // Aplica o rate limiter geral para todas as chamadas de API internas do dashboard
 app.use('/api', apiLimiter);
 app.use(apiRoutes(repo));
+app.use(authRoutes(repo));
 
 // ==============================================================================
 // Error Handler Global (Failsafe final da esteira)
