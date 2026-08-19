@@ -11,39 +11,42 @@ const db = require('../../src/config/db');
 const lancamentoRepo = require('../../src/repositories/LancamentoRepository');
 const cache = require('../../src/helpers/cacheHelpers');
 
+let consoleLogSpy;
+
 beforeEach(() => {
   jest.clearAllMocks();
   cache.clear();
+  // Suprime logs de DEBUG (ex: getDistinctTerceiros) para output limpo
+  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 });
 
-describe('getDashboardDataModular', () => {
-  test('deve retornar dados consolidados com chamadas em paralelo', async () => {
-    // Mock das respostas do banco
-    const mockTotais = { totalrendas: 5000, totalcontas: 3000, faltapagar: 1000, saldoprevisto: 2000 };
-    const mockFixas = [{ id: 1, descricao: 'Aluguel' }];
-    const mockCartao = [{ id: 2, descricao: 'Netflix' }];
-    const mockResumoPessoas = [{ pessoa: 'Mae', total: 55.9, todospagos: 0 }];
-    const mockAnotacoes = { Conteudo: 'Teste de anotacao' };
-    const mockOrdemCards = [];
-    const mockFaturaManual = 0;
-    const mockMesFechado = false;
-    const mockDistintos = ['Mae', 'Pai'];
+afterEach(() => {
+  consoleLogSpy.mockRestore();
+});
 
+describe('getDataModular', () => {
+  test('deve retornar dados consolidados com chamadas em paralelo', async () => {
+    const mockTotais = { totalrendas: 5000, totalcontas: 3000, faltapagar: 1000, saldoprevisto: 2000 };
+    // Fase 2.5: FIXA e CARTAO vêm de UMA query merged; o código separa pelo campo `tipo`
+    const mockFixas = [{ id: 1, descricao: 'Aluguel', tipo: 'FIXA' }];
+    const mockCartao = [{ id: 2, descricao: 'Netflix', tipo: 'CARTAO' }];
+    const mockResumoPessoas = [{ pessoa: 'Mae', total: 55.9, todospagos: 0 }];
+    const mockTerceirosRows = [{ id: 5, descricao: 'Conta', total_count: '1' }];
+    const mockDistintos = [{ nometerceiro: 'Mae' }, { nometerceiro: 'Pai' }];
+    // Fase 2.5: queries auxiliares vêm de UMA CTE única (colunas tipo/fonte/row_data)
+    const auxRows = [
+      { tipo: 'mes_fechado', fonte: 'mes_fechado', row_data: 'false' },
+      { tipo: 'fatura_manual', fonte: 'fatura_manual', row_data: '0' },
+    ];
+
+    // getDashboardDataModular dispara 6 db.query em paralelo, nesta ordem:
     db.query
       .mockResolvedValueOnce({ rows: [mockTotais] }) // 1. getDashboardTotais
-      .mockResolvedValueOnce({ rows: mockFixas }) // 2. getLancamentosPorTipo FIXA
-      .mockResolvedValueOnce({ rows: mockCartao }) // 3. getLancamentosPorTipo CARTAO
-      .mockResolvedValueOnce({ rows: mockResumoPessoas }) // 4. getResumoPessoas
-      .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // 5. COUNT getDadosTerceiros
-      .mockResolvedValueOnce({ rows: [] }) // 6. SELECT paginado getDadosTerceiros (fallback vazio)
-      .mockResolvedValueOnce({ rows: mockOrdemCards }) // 7. getOrdemCards
-      .mockResolvedValueOnce({ rows: [{ valor: mockFaturaManual }] }) // 8. getFaturaManual
-      .mockResolvedValueOnce({ rows: [{ exists: mockMesFechado }] }) // 9. isMesFechado
-      .mockResolvedValueOnce({ rows: [mockAnotacoes] }) // 10. getAnotacoes
-      .mockResolvedValueOnce({ rows: mockDistintos.map((n) => ({ NomeTerceiro: n })) }); // 11. getDistinctTerceiros
-
-    // Fallback genérico para qualquer query extra não prevista (incluindo getDadosTerceiros)
-    db.query.mockResolvedValue({ rows: [], count: 0 });
+      .mockResolvedValueOnce({ rows: [...mockFixas, ...mockCartao] }) // 2. FIXA+CARTAO merged
+      .mockResolvedValueOnce({ rows: mockResumoPessoas }) // 3. getResumoPessoas
+      .mockResolvedValueOnce({ rows: mockTerceirosRows }) // 4. getDadosTerceiros
+      .mockResolvedValueOnce({ rows: auxRows }) // 5. getAuxQueries (CTE)
+      .mockResolvedValueOnce({ rows: mockDistintos }); // 6. getDistinctTerceiros
 
     const result = await lancamentoRepo.getDashboardDataModular(1, 3, 2026, 'Douglas');
 
@@ -51,7 +54,9 @@ describe('getDashboardDataModular', () => {
     expect(result.fixas).toEqual(mockFixas);
     expect(result.cartao).toEqual(mockCartao);
     expect(result.resumoPessoas).toEqual(mockResumoPessoas);
-    // Demais campos variam por ordem de consumo dos mocks
+    expect(result.mesFechado).toBe(false);
+    expect(result.faturaManualVal).toBe(0);
+    expect(result.terceirosDistinct).toEqual(['Mae', 'Pai']);
   });
 
   test('cache funciona no getDashboardTotais', async () => {

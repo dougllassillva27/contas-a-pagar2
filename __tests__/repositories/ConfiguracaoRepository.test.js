@@ -8,10 +8,12 @@ jest.mock('../../src/config/db', () => ({
 
 const db = require('../../src/config/db');
 const repo = require('../../src/repositories/ConfiguracaoRepository');
+const cache = require('../../src/helpers/cacheHelpers');
 
 describe('ConfiguracaoRepository', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    cache.clear(); // isola os testes do cache em memória do repositório
   });
 
   test('getConfiguracoes — deve retornar configurações do usuário', async () => {
@@ -25,12 +27,16 @@ describe('ConfiguracaoRepository', () => {
   });
 
   test('saveConfiguracao — deve salvar chave permitida usando UPSERT', async () => {
-    db.query.mockResolvedValue({});
+    // rows vazio → getConfiguracoes retorna {} e o ramo de regras_sync é pulado,
+    // restando apenas o UPSERT principal como chamada ao banco
+    db.query.mockResolvedValue({ rows: [] });
 
     await repo.saveConfiguracao(1, 'divisao_casa_minimo', 800);
 
-    const [query, params] = db.query.mock.calls[0];
-    expect(query).toContain('INSERT INTO configuracoes');
+    // calls[0] é o SELECT do getConfiguracoes; localiza a chamada de UPSERT
+    const insertCall = db.query.mock.calls.find(([q]) => q.includes('INSERT INTO configuracoes'));
+    expect(insertCall).toBeDefined();
+    const [query, params] = insertCall;
     expect(query).toContain('ON CONFLICT (usuario_id) DO UPDATE');
     expect(params).toEqual([1, 800]);
   });
