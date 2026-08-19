@@ -24,8 +24,20 @@ const app = require('../../src/app');
 const repo = require('../../src/repositories/FinanceiroRepository');
 const bcrypt = require('bcrypt');
 
-// Mockamos o repositório inteiro para não precisarmos de um banco de dados real rodando!
-jest.mock('../../src/repositories/FinanceiroRepository');
+// Mock PARCIAL do FinanceiroRepository (facade):
+// - addLancamento usa a implementação REAL (LancamentoRepository) para que o INSERT
+//   passe pelo db.query mockado e possa ser contabilizado no assert final.
+// - Métodos de auth/config são stubados para o fluxo de login funcionar sem banco real.
+jest.mock('../../src/repositories/FinanceiroRepository', () => {
+  const LancamentoRepository = jest.requireActual('../../src/repositories/LancamentoRepository');
+  return {
+    ...LancamentoRepository,
+    obterUsuarioPorLogin: jest.fn(),
+    criarToken: jest.fn(),
+    isMesFechado: jest.fn(),
+    getConfiguracoes: jest.fn(),
+  };
+});
 
 // Precisamos mockar o DB também, pois as rotas de terceiros fazem chamadas diretas ao db.query
 jest.mock('../../src/config/db', () => ({

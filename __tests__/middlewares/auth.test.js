@@ -14,6 +14,13 @@
 //   npx jest __tests__/middlewares/auth.test.js
 // ==============================================================================
 
+// Mock do UsuarioRepository (authMiddleware agora valida passwordVersion contra o banco)
+jest.mock('../../src/repositories/UsuarioRepository', () => ({
+  obterPasswordVersion: jest.fn(),
+  limparTokensPersistentes: jest.fn(),
+}));
+
+const UsuarioRepository = require('../../src/repositories/UsuarioRepository');
 const { authMiddleware, createApiAuth } = require('../../src/middlewares/auth');
 
 // ==========================================================================
@@ -34,10 +41,12 @@ describe('authMiddleware', () => {
     };
   }
 
-  test('se tem sessão com user, chama next() (acesso liberado)', () => {
-    const { req, res, next } = criarMocks({ id: 1, nome: 'Dodo' });
+  test('se tem sessão com user, chama next() (acesso liberado)', async () => {
+    // authMiddleware agora é async (valida passwordVersion). Versões iguais → libera.
+    UsuarioRepository.obterPasswordVersion.mockResolvedValue(0);
+    const { req, res, next } = criarMocks({ id: 1, nome: 'Dodo', passwordVersion: 0 });
 
-    authMiddleware(req, res, next);
+    await authMiddleware(req, res, next);
 
     // next foi chamado = middleware deixou passar
     expect(next).toHaveBeenCalled();

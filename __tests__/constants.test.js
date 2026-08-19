@@ -21,6 +21,6 @@ describe('Constantes do Sistema (constants.js)', () => {
   });
 
   test('SQL_SEM_TERCEIRO retorna a string exata de validação nula', () => {
-    expect(constants.SQL_SEM_TERCEIRO).toBe("(NomeTerceiro IS NULL OR NomeTerceiro = '')");
+    expect(constants.SQL_SEM_TERCEIRO).toBe("NomeTerceiro IS NULL");
   });
 });

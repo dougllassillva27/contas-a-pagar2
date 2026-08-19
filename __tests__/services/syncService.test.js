@@ -11,6 +11,7 @@ describe('syncService (Dinâmico)', () => {
   beforeEach(() => {
     mockRepo = {
       getTotalTerceiroCartao: jest.fn(),
+      getTotalTerceiroParaDivisaoCasa: jest.fn(),
       findAndUpdateOrCreateContaFixa: jest.fn(),
       bulkUpsertContasFixas: jest.fn(),
     };
@@ -22,13 +23,13 @@ describe('syncService (Dinâmico)', () => {
     jest.clearAllMocks();
   });
 
-  test('deve processar regra COPIA_TOTAL corretamente', async () => {
+  test('deve processar regra COPIAR_CONTAS corretamente', async () => {
     const valorEsperado = 1200.50;
     mockRepo.getTotalTerceiroCartao.mockResolvedValue(valorEsperado);
-    
+
     const regras = [
       {
-        tipo: 'COPIA_TOTAL',
+        tipo: 'COPIAR_CONTAS',
         terceiroOrigem: 'Morr',
         usuarioDestino: 2,
         contaDestino: 'Cartão Douglas'
@@ -39,11 +40,12 @@ describe('syncService (Dinâmico)', () => {
 
     expect(mockRepo.getTotalTerceiroCartao).toHaveBeenCalledWith('Morr', 1, 5, 2026);
     expect(mockRepo.findAndUpdateOrCreateContaFixa).toHaveBeenCalledWith(2, 'Cartão Douglas', valorEsperado, 5, 2026);
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[SYNC]'));
   });
 
   test('deve processar regra DIVISAO_CASA corretamente', async () => {
-    mockRepo.getTotalTerceiroCartao.mockResolvedValue(2000); // 2000 / 2 = 1000
+    // Lógica atual: base fixa 750 + metade do excedente acima de 1500 (2x base).
+    // 2000 → excedente 500 / 2 = 250 → 750 + 250 = 1000 por conta.
+    mockRepo.getTotalTerceiroParaDivisaoCasa.mockResolvedValue(2000);
 
     const regras = [
       {
@@ -57,22 +59,18 @@ describe('syncService (Dinâmico)', () => {
 
     await syncService.executarSincronizacaoDinamica(mockRepo, 1, 5, 2026, regras);
 
-    expect(mockRepo.getTotalTerceiroCartao).toHaveBeenCalledWith('Casa', 1, 5, 2026);
-    // bulkUpsertContasFixas chamado para sourceUserId e usuarioDestino
-    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenCalledTimes(2);
-    // Verifica se chamou com o sourceUserId (1) primeiro
-    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenNthCalledWith(1, 1, expect.arrayContaining([
-      expect.objectContaining({ nomeConta: 'Casa', valor: 1000 }),
+    expect(mockRepo.getTotalTerceiroParaDivisaoCasa).toHaveBeenCalledWith('Casa', 1, 5, 2026);
+    // bulkUpsertContasFixas chamado UMA vez no usuário origem (1) com 2 operações
+    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenCalledTimes(1);
+    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenCalledWith(1, expect.arrayContaining([
+      expect.objectContaining({ nomeConta: 'Casa', valor: 1000, nomeTerceiro: null }),
       expect.objectContaining({ nomeConta: 'Casa', valor: 1000, nomeTerceiro: 'Morr' })
-    ]));
-    // Verifica se chamou com o usuarioDestino (2)
-    expect(mockRepo.bulkUpsertContasFixas).toHaveBeenNthCalledWith(2, 2, expect.arrayContaining([
-      expect.objectContaining({ nomeConta: 'Casa', valor: 1000 })
     ]));
   });
 
   test('deve respeitar o valor mínimo na DIVISAO_CASA', async () => {
-    mockRepo.getTotalTerceiroCartao.mockResolvedValue(1000); // 1000 / 2 = 500 < 750
+    // 1000 <= limite da base (1500) → mantém base fixa de 750 por conta
+    mockRepo.getTotalTerceiroParaDivisaoCasa.mockResolvedValue(1000);
 
     const regras = [
       {
@@ -93,7 +91,7 @@ describe('syncService (Dinâmico)', () => {
   });
 
   test('deve ignorar regras inativas', async () => {
-    const regras = [{ tipo: 'COPIA_TOTAL', ativo: false }];
+    const regras = [{ tipo: 'COPIAR_CONTAS', ativo: false }];
     await syncService.executarSincronizacaoDinamica(mockRepo, 1, 5, 2026, regras);
     expect(mockRepo.getTotalTerceiroCartao).not.toHaveBeenCalled();
   });
@@ -103,7 +101,7 @@ describe('syncService (Dinâmico)', () => {
     mockRepo.getTotalTerceiroCartao.mockRejectedValue(new Error('Erro Fatal'));
 
     const regras = [
-      { tipo: 'COPIA_TOTAL', terceiroOrigem: 'X', usuarioDestino: 2, contaDestino: 'Y' },
+      { tipo: 'COPIAR_CONTAS', terceiroOrigem: 'X', usuarioDestino: 2, contaDestino: 'Y' },
       { tipo: 'DESCONHECIDO' }
     ];
 
