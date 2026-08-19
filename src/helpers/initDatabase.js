@@ -138,6 +138,25 @@ async function initDatabase() {
       )
     `);
 
+    // 8a. Tabela configuracoes_luz (Tarifas configuráveis do módulo Calcular Luz)
+    // Defaults = conta referência JUL/26 (TUSD/TE com tributos, CIP e bandeira amarela)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS configuracoes_luz (
+          usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          tusd NUMERIC(12, 8) NOT NULL DEFAULT 0.74627832,
+          te NUMERIC(12, 8) NOT NULL DEFAULT 0.45158577,
+          cip NUMERIC(10, 2) NOT NULL DEFAULT 13.57,
+          bandeira_amarela NUMERIC(10, 4) NOT NULL DEFAULT 2.39,
+          bandeira_vermelha1 NUMERIC(10, 4) NOT NULL DEFAULT 0.00,
+          bandeira_vermelha2 NUMERIC(10, 4) NOT NULL DEFAULT 0.00,
+          atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 8b. Registros de medição passam a guardar a bandeira vigente no mês
+    await db.query(`ALTER TABLE registros_luz ADD COLUMN IF NOT EXISTS bandeira VARCHAR(10) NOT NULL DEFAULT 'verde'`);
+    await db.query(`ALTER TABLE registros_luz ADD COLUMN IF NOT EXISTS adicional_bandeira NUMERIC(10, 2) NOT NULL DEFAULT 0`);
+
     // 9. Tabela Terceiros (Contatos para WhatsApp)
     await db.query(`
       CREATE TABLE IF NOT EXISTS terceiros (

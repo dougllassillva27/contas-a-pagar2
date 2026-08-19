@@ -1,14 +1,23 @@
 /**
  * Business Rules Configuration
- * Updated based on real electricity bill metrics.
+ * Tarifas carregadas do backend (GET /configuracoes) por usuário.
+ * Defaults = conta referência JUL/26 enquanto o fetch não resolve.
  */
-const TARIFF_CONFIG = {
-  PRICE_PER_KWH: 1.0383, // TUSD (0.65380953) + TE (0.38448980) com impostos
-  PUBLIC_LIGHTING: 13.57, // Contribuição Custeio IP-CIP
+const DEFAULT_TARIFF_CONFIG = {
+  tusd: 0.74627832,
+  te: 0.45158577,
+  cip: 13.57,
+  bandeira_amarela: 2.39,
+  bandeira_vermelha1: 0,
+  bandeira_vermelha2: 0,
 };
 
 // DOM Elements
 const form = document.getElementById('energyForm');
+const configForm = document.getElementById('configForm');
+const feedbackModal = document.getElementById('feedbackModal');
+const feedbackModalTitle = document.getElementById('feedbackModalTitle');
+const feedbackModalMessage = document.getElementById('feedbackModalMessage');
 const resultCard = document.getElementById('resultCard');
 const displayConsumo = document.getElementById('displayConsumo');
 const displayValor = document.getElementById('displayValor');
@@ -16,6 +25,18 @@ const historyBody = document.getElementById('historyBody');
 
 // State Management
 let historyData = [];
+let tariffConfig = { ...DEFAULT_TARIFF_CONFIG };
+
+// Valor da bandeira (R$/100 kWh) conforme seleção do formulário
+const getValorBandeira = (bandeira) => {
+  const mapa = {
+    verde: 0,
+    amarela: Number(tariffConfig.bandeira_amarela) || 0,
+    vermelha1: Number(tariffConfig.bandeira_vermelha1) || 0,
+    vermelha2: Number(tariffConfig.bandeira_vermelha2) || 0,
+  };
+  return mapa[bandeira] || 0;
+};
 
 // Formatadores (Visuais apenas)
 const formatReading = (value) => {
@@ -26,8 +47,13 @@ const formatCurrency = (value) => {
   return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
+const round2 = (value) => Math.round(value * 100) / 100;
+
 // Initialize Application
-document.addEventListener('DOMContentLoaded', fetchHistory);
+document.addEventListener('DOMContentLoaded', () => {
+  fetchHistory();
+  fetchConfig();
+});
 
 // Event Listeners
 form.addEventListener('submit', async (e) => {
@@ -43,8 +69,13 @@ form.addEventListener('submit', async (e) => {
   }
 
   // Core Business Logic
+  // valor = consumo × (TUSD + TE) + adicional de bandeira + CIP
   const consumo = leituraAtual - leituraAnterior;
-  const valorEstimado = consumo * TARIFF_CONFIG.PRICE_PER_KWH + TARIFF_CONFIG.PUBLIC_LIGHTING;
+  const bandeira = document.getElementById('bandeira').value;
+  const adicionalBandeira = round2((consumo / 100) * getValorBandeira(bandeira));
+  const valorEstimado = round2(
+    consumo * (Number(tariffConfig.tusd) + Number(tariffConfig.te)) + adicionalBandeira + Number(tariffConfig.cip)
+  );
 
   // Update UI Results
   displayConsumo.textContent = `${formatReading(consumo)} kWh`;
@@ -58,6 +89,8 @@ form.addEventListener('submit', async (e) => {
     leituraAtual,
     consumo,
     valorEstimado,
+    bandeira,
+    adicionalBandeira,
   };
 
   try {
@@ -156,3 +189,81 @@ window.deleteRecord = async (id) => {
     console.error('Error deleting record:', error);
   }
 };
+
+// ============================================================================
+// Modal de Feedback (substitui alert no padrão visual do sistema)
+// ============================================================================
+
+function showFeedbackModal(title, message) {
+  feedbackModalTitle.textContent = title;
+  feedbackModalMessage.textContent = message;
+  feedbackModal.classList.add('active');
+}
+
+function hideFeedbackModal() {
+  feedbackModal.classList.remove('active');
+}
+
+document.getElementById('feedbackModalOk').addEventListener('click', hideFeedbackModal);
+document.getElementById('feedbackModalClose').addEventListener('click', hideFeedbackModal);
+document.getElementById('feedbackModal').addEventListener('click', (e) => {
+  if (e.target.id === 'feedbackModal') hideFeedbackModal();
+});
+
+// ============================================================================
+// Configurações de Tarifas (GET/PUT /configuracoes)
+// ============================================================================
+
+async function fetchConfig() {
+  try {
+    const response = await fetch('/calcularLuz-v2/api/configuracoes');
+    const data = await response.json();
+    tariffConfig = { ...DEFAULT_TARIFF_CONFIG, ...data };
+    fillConfigForm();
+  } catch (error) {
+    console.error('Error fetching config:', error);
+  }
+}
+
+function fillConfigForm() {
+  document.getElementById('cfgTusd').value = tariffConfig.tusd;
+  document.getElementById('cfgTe').value = tariffConfig.te;
+  document.getElementById('cfgCip').value = tariffConfig.cip;
+  document.getElementById('cfgBandeiraAmarela').value = tariffConfig.bandeira_amarela;
+  document.getElementById('cfgBandeiraVermelha1').value = tariffConfig.bandeira_vermelha1;
+  document.getElementById('cfgBandeiraVermelha2').value = tariffConfig.bandeira_vermelha2;
+}
+
+configForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    tusd: parseFloat(document.getElementById('cfgTusd').value),
+    te: parseFloat(document.getElementById('cfgTe').value),
+    cip: parseFloat(document.getElementById('cfgCip').value),
+    bandeira_amarela: parseFloat(document.getElementById('cfgBandeiraAmarela').value),
+    bandeira_vermelha1: parseFloat(document.getElementById('cfgBandeiraVermelha1').value),
+    bandeira_vermelha2: parseFloat(document.getElementById('cfgBandeiraVermelha2').value),
+  };
+
+  try {
+    const response = await fetch('/calcularLuz-v2/api/configuracoes', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      tariffConfig = { ...tariffConfig, ...payload };
+      showFeedbackModal('Configurações', 'Configurações salvas com sucesso.');
+    } else {
+      const errorData = await response.json();
+      showFeedbackModal('Erro', errorData.error || 'Não foi possível salvar as configurações.');
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    showFeedbackModal('Erro', 'Erro de conexão ao salvar configurações.');
+  }
+});
