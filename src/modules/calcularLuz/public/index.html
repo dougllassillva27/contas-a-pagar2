@@ -6,9 +6,21 @@
     <title>Calculadora de Luz - Simplificada</title>
     <!-- Ignora requisição de favicon para evitar Erro 404 no console -->
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="css/style.css?v=06ce1c48" />
+    <link rel="stylesheet" href="css/style.css?v=9d41e7b2" />
   </head>
   <body>
+    <!-- Modal de feedback (salvar configurações) -->
+    <div class="modal-overlay" id="feedbackModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="feedbackModalTitle">Configurações</h3>
+          <button type="button" class="modal-close" id="feedbackModalClose" aria-label="Fechar">&times;</button>
+        </div>
+        <p class="modal-message" id="feedbackModalMessage"></p>
+        <button type="button" class="btn-primary modal-ok" id="feedbackModalOk">OK</button>
+      </div>
+    </div>
+
     <div class="container">
       <header>
         <h1>Controle de Energia</h1>
@@ -40,6 +52,16 @@
               <input type="number" id="leituraAtual" step="0.01" placeholder="O que está no relógio hoje" required />
             </div>
 
+            <div class="form-group">
+              <label for="bandeira">Bandeira Tarifária do Mês</label>
+              <select id="bandeira" required>
+                <option value="verde">Verde (sem adicional)</option>
+                <option value="amarela">Amarela</option>
+                <option value="vermelha1">Vermelha 1</option>
+                <option value="vermelha2">Vermelha 2</option>
+              </select>
+            </div>
+
             <button type="submit" class="btn-primary">Calcular e Salvar</button>
           </form>
         </section>
@@ -56,6 +78,48 @@
               <strong id="displayValor">R$ 0,00</strong>
             </div>
           </div>
+        </section>
+
+        <section class="card config-section">
+          <h2>Configurações de Tarifas</h2>
+          <p class="config-hint">
+            Informe as tarifas <strong>com tributos</strong>, conforme o demonstrativo da conta da concessionária.
+          </p>
+          <form id="configForm">
+            <div class="config-grid">
+              <div class="form-group">
+                <label for="cfgTusd">TUSD c/ tributos (R$/kWh)</label>
+                <input type="number" id="cfgTusd" step="0.00000001" min="0" required />
+              </div>
+
+              <div class="form-group">
+                <label for="cfgTe">TE c/ tributos (R$/kWh)</label>
+                <input type="number" id="cfgTe" step="0.00000001" min="0" required />
+              </div>
+
+              <div class="form-group">
+                <label for="cfgCip">CIP / Iluminação Pública (R$)</label>
+                <input type="number" id="cfgCip" step="0.01" min="0" required />
+              </div>
+
+              <div class="form-group">
+                <label for="cfgBandeiraAmarela">Bandeira Amarela (R$/100 kWh)</label>
+                <input type="number" id="cfgBandeiraAmarela" step="0.01" min="0" required />
+              </div>
+
+              <div class="form-group">
+                <label for="cfgBandeiraVermelha1">Bandeira Vermelha 1 (R$/100 kWh)</label>
+                <input type="number" id="cfgBandeiraVermelha1" step="0.01" min="0" required />
+              </div>
+
+              <div class="form-group">
+                <label for="cfgBandeiraVermelha2">Bandeira Vermelha 2 (R$/100 kWh)</label>
+                <input type="number" id="cfgBandeiraVermelha2" step="0.01" min="0" required />
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Salvar Configurações</button>
+          </form>
         </section>
 
         <section class="card history-section">
@@ -80,6 +144,6 @@
         </section>
       </main>
     </div>
-    <script src="js/app.js?v=a0e358cc" defer></script>
+    <script src="js/app.js?v=6b3f09d8" defer></script>
   </body>
 </html>
