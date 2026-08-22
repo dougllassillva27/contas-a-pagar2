@@ -457,6 +457,9 @@ body {
 /* ==============================================================================
    TOOLTIP CUSTOMIZADO (100% CSS)
    ============================================================================== */
+[data-tooltip] {
+  position: relative;
+}
 [data-tooltip]::before,
 [data-tooltip]::after {
   position: absolute;

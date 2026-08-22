@@ -57,3 +57,23 @@ describe('Tooltips 100% CSS nos Templates EJS', () => {
     expect(html).toContain('data-tooltip-dir="left"');
   });
 });
+
+// ==============================================================================
+// TESTE DE CONSISTÊNCIA CSS
+// Sem position:relative no elemento [data-tooltip], os pseudo-elementos
+// position:absolute ancoram na viewport e o tooltip sai da tela (invisível).
+// Regressão: terceiro.css não tinha a âncora e o tooltip não aparecia em
+// /contas/:tokenPublico.
+// ==============================================================================
+describe('Âncora position:relative dos tooltips CSS', () => {
+  const cssFiles = [
+    '../../public/css/style.css',
+    '../../public/css/relatorio.css',
+    '../../public/css/terceiro.css',
+  ];
+
+  test.each(cssFiles)('%s declara [data-tooltip] { position: relative }', (relPath) => {
+    const css = fs.readFileSync(path.resolve(__dirname, relPath), 'utf8');
+    expect(css).toMatch(/\[data-tooltip\]\s*\{\s*position:\s*relative;\s*\}/);
+  });
+});
