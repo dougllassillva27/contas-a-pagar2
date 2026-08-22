@@ -4,7 +4,7 @@
   "description": "Sistema de controle financeiro pessoal com PostgreSQL",
   "main": "src/app.js",
   "scripts": {
-    "build": "node versionamento/versionador.js",
+    "build": "cross-env NODE_ENV=production node versionamento/versionador.js",
     "start": "node src/app.js",
     "dev": "set TZ=America/Sao_Paulo&&nodemon src/app.js",
     "test": "jest --verbose",
