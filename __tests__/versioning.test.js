@@ -16,6 +16,7 @@ describe('Script de Versionamento (versionador.js)', () => {
     html: path.join(testDir, 'test-versioning-page.html'),
     css: path.join(testDir, 'test-versioning-style.css'),
     js: path.join(testDir, 'test-versioning-main.js'),
+    module: path.join(testDir, 'test-versioning-module.js'),
     sw: path.join(testDir, 'test-versioning-sw.js'),
   };
 
@@ -23,8 +24,9 @@ describe('Script de Versionamento (versionador.js)', () => {
   beforeAll(() => {
     if (!fs.existsSync(testDir)) fs.mkdirSync(testDir);
     fs.writeFileSync(testFiles.css, 'body { color: red; }');
-    fs.writeFileSync(testFiles.js, 'console.log("test");');
-    fs.writeFileSync(testFiles.sw, 'console.log("service worker");');
+    fs.writeFileSync(testFiles.module, 'export const teste = 1;');
+    fs.writeFileSync(testFiles.js, "import { teste } from './test-versioning-module.js';\nconsole.log(teste);");
+    fs.writeFileSync(testFiles.sw, "const CACHE_NAME = 'test-cache-v1';\nconsole.log('service worker');");
 
     const htmlContent = `
       <html>
@@ -60,7 +62,7 @@ describe('Script de Versionamento (versionador.js)', () => {
     }
   });
 
-  it('deve injetar hashes de versão em referências de CSS, JS e Service Worker', () => {
+  it('deve injetar hashes de versão em referências de CSS, JS, Service Worker e imports ES6', () => {
     execSync(`node "${versionerScript}"`, {
       stdio: 'inherit',
       env: { ...process.env, NODE_ENV: 'test', TEST_DIR: testDir },
@@ -69,6 +71,14 @@ describe('Script de Versionamento (versionador.js)', () => {
     expect(modifiedHtml).toMatch(/href="\/test-versioning-style\.css\?v=[a-f0-9]{8}"/);
     expect(modifiedHtml).toMatch(/src="\/test-versioning-main\.js\?v=[a-f0-9]{8}"/);
     expect(modifiedHtml).toMatch(/\.register\('\/test-versioning-sw\.js\?v=[a-f0-9]{8}'\)/);
+
+    // Imports ES6: módulo referenciado via import deve receber ?v= com hash do conteúdo
+    const modifiedJs = fs.readFileSync(testFiles.js, 'utf-8');
+    expect(modifiedJs).toMatch(/from\s+'\.\/test-versioning-module\.js\?v=[a-f0-9]{8}'/);
+
+    // CACHE_NAME do Service Worker: sufixo manual (-v1) substituído por hash automático
+    const modifiedSw = fs.readFileSync(testFiles.sw, 'utf-8');
+    expect(modifiedSw).toMatch(/const CACHE_NAME = 'test-cache-[0-9a-f]{8}';/);
   });
 });
 

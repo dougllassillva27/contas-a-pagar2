@@ -20,22 +20,22 @@
     <meta name="twitter:image" content="https://contas-a-pagar-nsti.onrender.com/social-media.webp?v=4">
 
     <!-- PWA Setup -->
-    <link rel="manifest" href="/manifest.json?v=ca4246a0" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#121212" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/social-media.webp?v=6bd00ada" />
+    <link rel="apple-touch-icon" href="/social-media.webp" />
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=e0ecfd50').catch((err) => console.log('SW falhou:', err));
+          navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
         });
       }
     </script>
 
-    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=c652aa2c"/> 
-    <link rel="stylesheet" href="/css/style.css?v=14785c27">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"/> 
+    <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>

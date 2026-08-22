@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dodo-finance-v10';
+const CACHE_NAME = 'dodo-finance';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Força atualização imediata, ignorando ciclo de vida padrão do PWA
@@ -40,8 +40,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Cache First: Apenas estáticos imutáveis
-  if (reqUrl.pathname.match(/\.(css|js|webp|png|woff2)$/)) {
+  // 2. Network First: JS/CSS — sempre tenta a rede (deploy novo = arquivo novo),
+  // cache apenas como fallback offline. Cache First aqui servia arquivo obsoleto eternamente.
+  if (reqUrl.pathname.match(/\.(css|js)$/)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkRes) => {
+          const copia = networkRes.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
+          return networkRes;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 3. Cache First: Imagens e fontes (raramente mudam; quando mudam, o ?v= do HTML quebra o cache)
+  if (reqUrl.pathname.match(/\.(webp|png|woff2|ico)$/)) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         return (
