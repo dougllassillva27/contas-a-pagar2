@@ -90,12 +90,14 @@
                                         </div>
                                     </td>
                                     <td <%- (item.parcelaatual && item.totalparcelas && item.parcelaatual === item.totalparcelas && item.totalparcelas > 1) ? 'data-tooltip="Última parcela ✅"' : '' %>>
-                                        <span class="item-desc"><%= item.descricao %></span>
-                                        <% if(item.parcelaatual && item.totalparcelas) { %>
-                                            <span class="item-parcela">
-                                                <%= String(item.parcelaatual).padStart(2,'0') %> / <%= String(item.totalparcelas).padStart(2,'0') %>
-                                            </span>
-                                        <% } %>
+                                        <div class="item-desc-wrap">
+                                            <span class="item-desc"><%= item.descricao %></span>
+                                            <% if(item.parcelaatual && item.totalparcelas) { %>
+                                                <span class="item-parcela">
+                                                    <%= String(item.parcelaatual).padStart(2,'0') %> / <%= String(item.totalparcelas).padStart(2,'0') %>
+                                                </span>
+                                            <% } %>
+                                        </div>
                                     </td>
                                     <td style="text-align: center;">
                                         <% 

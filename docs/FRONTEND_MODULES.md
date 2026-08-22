@@ -17,7 +17,6 @@ public/js/
 │   ├── lancamentos.js              # CRUD de lancamentos, mover mes, dividir, excluir lote
 │   ├── terceiros.js                # Exclusao em lote de pessoa (dashboard grid)
 │   ├── configuracoes.js            # Sync rules, wizard onboarding, salvamento de config
-│   ├── tooltips.js                 # Tooltip customizado para checkboxes do header
 │   └── anotacoes.js                # Anotacoes globais/mensais, checklist, formatacao
 ├── dragdrop.js                     # Drag & drop de linhas e cards
 ├── login.js                        # Pagina de login
@@ -172,29 +171,6 @@ Nao importa de outros modulos do diretorio `modules/`. Usa `window.*` e `fetch` 
 
 ---
 
-## Modulo: `tooltips.js`
-
-**Responsabilidade:** Tooltip customizado para elementos do header (checkboxes de "marcar todos").
-
-### Funcoes Exportadas
-
-| Funcao | Tipo | Descricao |
-|--------|------|-----------|
-| `showCustomTooltip(element, text)` | `function` | Posiciona e exibe tooltip customizado acima do elemento |
-| `hideCustomTooltip()` | `function` | Oculta tooltip customizado |
-| `initTooltipListeners()` | `function` | Registra listeners `mouseenter`/`mouseleave` nos checkboxes `th input[type="checkbox"]` |
-
-### Dependencias
-
-Nenhuma. Modulo independente.
-
-### Notas
-
-- Usa elemento `#customTooltip` existente no DOM.
-- Tooltip posicionado dinamicamente via `getBoundingClientRect()`.
-
----
-
 ## Modulo: `anotacoes.js`
 
 **Responsabilidade:** Sistema de anotacoes do usuario — globais (persistem entre meses) e mensais. Suporta checklist, formatacao rica e preview.
@@ -235,9 +211,8 @@ Nao importa de outros modulos do diretorio `modules/`.
 2. Importa funcoes de todos os modulos
 3. Expoe via `Object.assign(window, {...})` — 30+ funcoes
 4. Registra `refreshOnInsert` e `refreshOnDelete` no window
-5. Inicializa tooltips (`initTooltipListeners()`)
-6. No `DOMContentLoaded`: ativa aba "Global" de anotacoes e carrega
-7. Em localhost: desregistra Service Workers
+5. No `DOMContentLoaded`: ativa aba "Global" de anotacoes e carrega
+6. Em localhost: desregistra Service Workers
 
 ### Dependencias (imports)
 
@@ -247,7 +222,6 @@ Nao importa de outros modulos do diretorio `modules/`.
 | `lancamentos.js` | 16 funcoes (CRUD completo) |
 | `anotacoes.js` | 8 funcoes (sistema de anotacoes) |
 | `configuracoes.js` | 10 funcoes (config + sync + wizard) |
-| `tooltips.js` | `showCustomTooltip`, `hideCustomTooltip`, `initTooltipListeners` |
 
 ---
 
@@ -264,7 +238,6 @@ app.js (entry point)
 │   ├── dashboard.js
 │   └── shared.js
 ├── configuracoes.js (independente)
-├── tooltips.js (independente)
 └── anotacoes.js (independente)
 ```
 
@@ -273,7 +246,7 @@ app.js (entry point)
 - `shared.js` = modulo raiz, sem dependencias
 - `dashboard.js` = core, dependente apenas de `shared.js`
 - `lancamentos.js` e `terceiros.js` = dependem de `dashboard.js` + `shared.js`
-- `configuracoes.js`, `tooltips.js`, `anotacoes.js` = modulos independentes
+- `configuracoes.js`, `anotacoes.js` = modulos independentes
 
 ---
 
