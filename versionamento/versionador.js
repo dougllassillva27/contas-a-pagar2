@@ -7,7 +7,9 @@
  * SE VOCÊ (IA) ESTÁ INICIANDO OU CONFIGURANDO UM PROJETO, SIGA O PASSO A PASSO:
  * 1. INFRAESTRUTURA: Certifique-se de que a pasta `versionamento/` (contendo este arquivo) esteja na RAIZ absoluta do projeto.
  * 2. AUTOMAÇÃO: Modifique o arquivo `package.json` para executar este script no processo de build.
- *    -> Exemplo: "scripts": { "build": "vite build && node versionamento/versionador.js" }
+ *    -> Exemplo: "scripts": { "build": "cross-env NODE_ENV=production node versionamento/versionador.js" }
+ *    -> OBRIGATÓRIO: NODE_ENV=production no build. Plataformas como Render NÃO definem NODE_ENV
+ *       na fase de build (só no runtime) — sem forçar, o guard de segurança aborta silenciosamente.
  *    -> O script irá atuar EXCLUSIVAMENTE na pasta `dist/` gerada pelo Vite.
  * 3. ESCRITA DE CÓDIGO (NÃO BURLAR):
  *    -> Escreva chamadas de arquivos estáticos localmente sem se preocupar com cache. (Ex: `<script src="/main.js"></script>`)
