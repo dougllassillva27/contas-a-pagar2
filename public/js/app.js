@@ -27,7 +27,6 @@ import {
 } from './modules/lancamentos.js';
 import { isAnotacaoGlobal, carregarAnotacoes, alternarAbaAnotacao, alternarModoAnotacao, renderAnotacoesPreview, toggleChecklist, inserirFormatacao, salvarAnotacao, initAnotacoes } from './modules/anotacoes.js';
 import { salvarConfiguracoes, getRegrasSync, renderizarRegrasSync, editarRegraSync, confirmarDeletarRegraSync, salvarRegraSync, deletarRegraSync, finalizarWizard, finalizarWizardSozinho, concluirOnboarding } from './modules/configuracoes.js';
-import { showCustomTooltip, hideCustomTooltip, initTooltipListeners } from './modules/tooltips.js';
 
 // Expõe funções globalmente para compatibilidade com EJS templates
 Object.assign(window, {
@@ -67,16 +66,11 @@ Object.assign(window, {
   finalizarWizard,
   finalizarWizardSozinho,
   concluirOnboarding,
-  showCustomTooltip,
-  hideCustomTooltip,
 });
 
 // Variáveis globais mínimas
 let isSubmitting = false;
 window.resetSubmitting = () => { isSubmitting = false; };
-
-// Inicializa tooltips nos checkboxes do header
-initTooltipListeners();
 
 // Garante que a aba Global das anotações inicie ativa
 window.addEventListener('DOMContentLoaded', () => {

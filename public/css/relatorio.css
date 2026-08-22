@@ -188,6 +188,12 @@ body {
 
 .list-table td:nth-child(2) {
     white-space: nowrap;
+}
+
+/* Ellipsis no wrapper interno: overflow:hidden no proprio td cliparia o
+   tooltip CSS ([data-tooltip] usa position:relative no td, tornando-o o
+   containing block dos pseudo-elementos). */
+.item-desc-wrap {
     overflow: hidden;
     text-overflow: ellipsis;
 }
