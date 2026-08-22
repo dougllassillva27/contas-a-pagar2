@@ -6,7 +6,7 @@
 // Variáveis globais devem vir PRIMEIRO, antes de qualquer import
 window.isBackNavigation = false;
 
-import { softRefresh, softRefreshSafe, atualizarTotalNaoConferido, fazerBackup, refreshOnInsert, refreshOnDelete } from './modules/dashboard.js?v=e75b53e0';
+import { softRefresh, softRefreshSafe, atualizarTotalNaoConferido, fazerBackup, refreshOnInsert, refreshOnDelete } from './modules/dashboard.js';
 import {
   executarAcaoEmLotePessoa,
   confirmarExclusaoPessoa,

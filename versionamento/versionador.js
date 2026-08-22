@@ -99,6 +99,29 @@ function processarConteudo(conteudo, caminhoArquivo) {
     });
   }
 
+  // Processa imports/exports de módulos ES6 (import ... from, import() dinâmico, side-effect import)
+  // Sem isso, módulos carregados via import ficam sem hash e o Service Worker serve versão obsoleta eterna.
+  if (['.js', '.html', '.ejs'].includes(ext)) {
+    novoConteudo = novoConteudo.replace(
+      /\b(from\s+|import\s*\(\s*|import\s+)(['"])((?:\.{1,2}\/|\/)[^'"]*?\.js)\2/gi,
+      (match, prefix, aspas, url) => {
+        return `${prefix}${aspas}${processarUrl(url, caminhoArquivo)}${aspas}`;
+      }
+    );
+  }
+
+  // Auto-injeta hash de conteúdo no CACHE_NAME do Service Worker (elimina bump manual)
+  // Base do nome preservada; sufixo existente (-vNN manual ou -<8hex> automático) substituído pelo hash atual.
+  if (ext === '.js') {
+    novoConteudo = novoConteudo.replace(
+      /\b((?:const|let|var)\s+CACHE_NAME\s*=\s*)(['"])([^'"]*)\2/g,
+      (match, prefix, aspas, valorAtual) => {
+        const base = valorAtual.replace(/-(?:v\d+|[0-9a-f]{8})$/, '') || 'cache';
+        return `${prefix}${aspas}${base}-${gerarHash(caminhoArquivo)}${aspas}`;
+      }
+    );
+  }
+
   // Processa srcset (imagens responsivas)
   novoConteudo = novoConteudo.replace(/srcset=(['"])(.*?)\1/gi, (match, aspas, srcset) => {
     const novoSrcset = srcset
