@@ -1,0 +1,49 @@
+# Dependências locais e logs
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Git e CI/CD
+.git
+.gitignore
+.github
+
+# Variáveis de ambiente sensíveis locais
+.env
+.env.*
+!.env.example
+
+# Testes, relatórios e linting
+coverage
+__tests__
+tests
+.pytest_cache
+.ruff.toml
+.eslintrc.json
+.prettierrc
+
+# Módulo Desktop Electron (não roda no container backend/web)
+src/modules/widgetLancamentos
+
+# Documentações e arquivos de contexto de IA / Workspace
+docs
+_contexto-ia
+graphify-out
+tasks
+.claude
+.antigravitycli
+.agents
+.aiexclude
+.geminiignore
+resumo-de-trabalho.md
+[Acao]
+[Motivo]
+cookies.txt
+setup.ps1
+setup.sh
+requirements.txt
+
+# SO e temporários
+.DS_Store
+Thumbs.db

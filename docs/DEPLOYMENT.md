@@ -164,15 +164,38 @@ npm start
 
 Equivalente a `node src/app.js`. Usa a porta definida em `PORT` ou `3000`.
 
-### 4.3 Deploy no Render
+### 4.3 Deploy com Docker / VPS (Recomendado)
+
+O projeto conta com suporte oficial a Docker com multi-stage build e Docker Compose:
+
+1. Clone o repositório na VPS:
+   ```bash
+   git clone <repo-url>
+   cd contas-a-pagar
+   ```
+2. Crie e configure o arquivo `.env` com suas variáveis de produção:
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+3. Inicie os containers com Docker Compose:
+   ```bash
+   docker compose up -d --build
+   ```
+4. Configure o webhook do Telegram (se habilitado):
+   ```bash
+   docker compose exec app npm run telegram:setup
+   ```
+
+### 4.4 Deploy no Render (Legado)
 
 1. Conecte o repositorio Git ao Render.
 2. Defina as variaveis de ambiente no painel do Render (todas listadas na secao 2).
 3. Build command: `npm install && npm run build`
 4. Start command: `npm start`
-5. `NODE_VERSION=18` deve estar definido nas variaveis de ambiente.
+5. `NODE_VERSION=18` ou superior deve estar definido nas variaveis de ambiente.
 
-### 4.4 Configuracao do pool de conexoes
+### 4.5 Configuracao do pool de conexoes
 
 O pool PostgreSQL e configurado para cenarios de producao com limitacoes de conexao (Neon):
 
