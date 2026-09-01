@@ -649,14 +649,14 @@ function abrirConfirmacaoAcao(acao) {
     icon.innerText = 'content_copy';
     icon.style.color = 'var(--blue)';
     btn.style.backgroundColor = 'var(--blue)';
-    acaoConfirmadaCallback = executarCopia;
+    acaoConfirmadaCallback = window.executarCopia;
   } else if (acao === 'DELETAR') {
     titulo.innerText = 'Deletar Mês';
     texto.innerText = 'Deseja realmente apagar TODOS os lançamentos deste mês? Esta ação não pode ser desfeita.';
     icon.innerText = 'warning';
     icon.style.color = 'var(--red)';
     btn.style.backgroundColor = 'var(--red)';
-    acaoConfirmadaCallback = executarDeleteMes;
+    acaoConfirmadaCallback = window.executarDeleteMes;
   }
   modal.classList.add('active');
 }
@@ -712,9 +712,9 @@ document.addEventListener('click', async (e) => {
 // Handler do botão de confirmação genérico (exclusão em massa)
 if (document.getElementById('btnConfirmarAcao')) {
   document.getElementById('btnConfirmarAcao').addEventListener('click', async () => {
-    if (typeof window.acaoConfirmadaCallback === 'function') {
+    if (typeof acaoConfirmadaCallback === 'function') {
       try {
-        await window.acaoConfirmadaCallback();
+        await acaoConfirmadaCallback();
       } catch (err) {
         // Erro já foi tratado no callback
       }
