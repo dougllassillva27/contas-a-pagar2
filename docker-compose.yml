@@ -1,3 +1,5 @@
+name: contas-a-pagar-dodo
+
 services:
   app:
     build:

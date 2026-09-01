@@ -24,6 +24,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const reqUrl = new URL(event.request.url);
 
+  // Bypass: requests cross-origin (CDNs, analytics, beacons) — SW não deve interceptar terceiros
+  if (reqUrl.origin !== self.location.origin) {
+    return; // Deixa o browser buscar nativamente
+  }
+
   // CORREÇÃO: Bypass total do Service Worker para o Soft Refresh para evitar travamento da Promise pendente
   if (reqUrl.searchParams.has('_t')) {
     return; // NÃO chama event.respondWith. O navegador busca diretamente da rede real!
