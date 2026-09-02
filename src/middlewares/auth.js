@@ -67,7 +67,7 @@ async function authMiddleware(req, res, next) {
 // Autenticação para a API de Integração (App Android / Bot)
 function createApiAuth(API_TOKEN) {
   return function apiAuth(req, res, next) {
-    const clientToken = req.headers['x-api-key'] || req.query.token;
+    const clientToken = req.headers['x-api-key'];
 
     if (!clientToken || clientToken !== API_TOKEN) {
       console.log(`[API-AUTH] Bloqueado. Token fornecido: ${clientToken ? 'Sim' : 'Não'}`);
@@ -82,7 +82,7 @@ function createApiAuth(API_TOKEN) {
 // Usada para proteger rotas que podem ser acessadas via navegador ou via M2M (ex: /dataHora)
 function createAuthHybrid(API_TOKEN) {
   return function authHybrid(req, res, next) {
-    const clientToken = req.headers['x-api-key'] || req.query.token;
+    const clientToken = req.headers['x-api-key'];
     if (clientToken && clientToken === API_TOKEN) {
       return next(); // M2M Autenticado
     }

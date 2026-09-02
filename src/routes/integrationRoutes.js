@@ -9,6 +9,8 @@ const { parseValor, normalizarTipoIntegracao, normalizarParcelasPorTipo } = requ
 const { normalizarTerceiro } = require('../repositories/LancamentoRepository');
 const { STATUS, TIPO } = require('../constants');
 
+const { integracaoLimiter } = require('../middlewares/rateLimiter');
+
 module.exports = function (repo, apiAuth) {
   /**
    * Rota de integração Android:
@@ -26,7 +28,7 @@ module.exports = function (repo, apiAuth) {
    * - Se tipo NÃO for parcelada: ignora parcelas (salva null/null)
    * - Se tipo for parcelada: valida e aceita "10" ou "1/10"
    */
-  router.post('/api/v1/integracao/lancamentos', apiAuth, async (req, res) => {
+  router.post('/api/v1/integracao/lancamentos', integracaoLimiter, apiAuth, async (req, res) => {
     try {
       const { descricao, valor, tipo, parcelas, terceiro, usuario_id } = req.body;
 
@@ -121,7 +123,7 @@ module.exports = function (repo, apiAuth) {
    * 
    * Segurança: requer Header 'x-api-key' ou query param 'token' igual au API_TOKEN.
    */
-  router.post('/api/v1/integracao/copiar-mensal', apiAuth, async (req, res) => {
+  router.post('/api/v1/integracao/copiar-mensal', integracaoLimiter, apiAuth, async (req, res) => {
     console.log('--- [API-AUTO-COPY] Iniciando via Webhook Integrado ---');
     
     try {

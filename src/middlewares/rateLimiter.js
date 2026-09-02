@@ -12,6 +12,30 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3, // Limite agressivo: 3 cadastros por IP a cada 15 min
+  message: 'Muitas tentativas de cadastro a partir deste IP. Tente novamente após 15 minutos.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const portalTerceiroLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30, // Previne brute-force de UUID sem bloquear uso legítimo
+  message: 'Muitas requisições. Tente novamente mais tarde.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const integracaoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // Endpoint crítico: limite conservador mesmo com token válido
+  message: { success: false, error: 'Limite de requisições excedido para esta API.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // Janela de 15 minutos
   max: 200, // Limite generoso para uso normal da API, bloqueia apenas flood agressivo
@@ -20,4 +44,4 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { loginLimiter, apiLimiter };
+module.exports = { loginLimiter, signupLimiter, portalTerceiroLimiter, integracaoLimiter, apiLimiter };
