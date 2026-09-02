@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { loginLimiter } = require('../middlewares/rateLimiter');
+const { loginLimiter, signupLimiter, portalTerceiroLimiter } = require('../middlewares/rateLimiter');
 const { LIMITES } = require('../constants');
 const db = require('../config/db');
 
@@ -35,7 +35,7 @@ module.exports = function (repo) {
   // ============================================================================
   // POST /signup — Processa criação de nova conta
   // ============================================================================
-  router.post('/signup', loginLimiter, async (req, res) => {
+  router.post('/signup', signupLimiter, async (req, res) => {
     const nome = (req.body.nome || '').trim();
     const login = (req.body.login || '').trim().toLowerCase();
     const password = (req.body.password || '').trim();
@@ -169,7 +169,7 @@ module.exports = function (repo) {
   // GET /contas/:tokenPublico — Portal público de terceiros (Blindado)
   // Impede vazamento de dados de outros usuários baseando acesso em UUID
   // ============================================================================
-  router.get('/contas/:tokenPublico', async (req, res) => {
+  router.get('/contas/:tokenPublico', portalTerceiroLimiter, async (req, res) => {
     let nomeFallback = 'Desconhecido';
     try {
       const { tokenPublico } = req.params;
