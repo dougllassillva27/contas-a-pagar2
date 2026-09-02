@@ -29,6 +29,7 @@ const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
 const { apiLimiter } = require('./middlewares/rateLimiter');
 const { csrfProtect } = require('./middlewares/csrf');
+const { loginBanMiddleware } = require('./middlewares/loginBan');
 const crypto = require('crypto');
 
 const app = express();
@@ -99,6 +100,9 @@ app.use(integrationRoutes(repo, createApiAuth(safeApiToken)));
 app.use(telegramRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
+// Login ban: bloqueia IPs com muitas falhas (antes do rate limiter)
+app.use('/login', loginBanMiddleware);
+app.use('/signup', loginBanMiddleware);
 // CSRF protection: gera token para formulários, valida em POSTs
 app.use(csrfProtect);
 
@@ -127,6 +131,10 @@ app.use((req, res, next) => {
         formAction: ["'self'"],
       },
     },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    crossOriginEmbedderPolicy: false, // Desativado: EJS/CDNs externos podem quebrar
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: 'same-origin' },
   })(req, res, next);
 });
 

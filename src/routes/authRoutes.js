@@ -108,6 +108,14 @@ module.exports = function(repo) {
       return res.status(400).json({ error: 'Preencha todos os campos' });
     }
 
+    if (novaSenha.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
+    }
+
+    if (novaSenha.length > 128) {
+      return res.status(400).json({ error: 'A senha não pode exceder 128 caracteres.' });
+    }
+
     if (novaSenha !== confirmarSenha) {
       return res.status(400).json({ error: 'As senhas não coincidem' });
     }

@@ -9,6 +9,7 @@ const syncService = require('../../services/syncService');
 const asyncHandler = require('../../helpers/asyncHandler');
 const cache = require('../../helpers/cacheHelpers');
 const { classificarLancamento } = require('./classificacaoHelpers');
+const { isBoolean, isValidIdArray, validateParamId, sanitizeString } = require('../../middlewares/inputValidation');
 
 module.exports = function (repo) {
   // --- LISTAGENS ---
@@ -163,6 +164,9 @@ module.exports = function (repo) {
   router.post(
     '/api/lancamentos/reorder',
     asyncHandler(async (req, res) => {
+      if (!Array.isArray(req.body.itens) || req.body.itens.length === 0) {
+        return res.status(400).json({ error: 'Campo itens deve ser um array não-vazio.' });
+      }
       await repo.reorderLancamentos(req.session.user.id, req.body.itens);
       res.json({ success: true });
     })
@@ -337,6 +341,7 @@ module.exports = function (repo) {
    */
   router.put(
     '/api/lancamentos/:id',
+    validateParamId,
     asyncHandler(async (req, res) => {
       const { descricao, valor, tipo_transacao, sub_tipo, parcelas, nome_terceiro } = req.body;
 
@@ -464,6 +469,7 @@ module.exports = function (repo) {
 
   router.delete(
     '/api/lancamentos/:id',
+    validateParamId,
     asyncHandler(async (req, res) => {
       const item = await repo.getLancamento(req.session.user.id, req.params.id);
       if (item) {
@@ -487,7 +493,11 @@ module.exports = function (repo) {
 
   router.patch(
     '/api/lancamentos/:id/status',
+    validateParamId,
     asyncHandler(async (req, res) => {
+      if (!isBoolean(req.body.status)) {
+        return res.status(400).json({ error: 'Campo status deve ser boolean.' });
+      }
       await repo.updateStatus(req.session.user.id, req.params.id, req.body.status);
       // Invalida cache de totais do dashboard para forçar dados frescos
       cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
@@ -497,7 +507,11 @@ module.exports = function (repo) {
 
   router.patch(
     '/api/lancamentos/:id/conferido',
+    validateParamId,
     asyncHandler(async (req, res) => {
+      if (!isBoolean(req.body.conferido)) {
+        return res.status(400).json({ error: 'Campo conferido deve ser boolean.' });
+      }
       await repo.updateConferido(req.session.user.id, req.params.id, req.body.conferido);
       res.json({ success: true });
     })
@@ -505,7 +519,11 @@ module.exports = function (repo) {
 
   router.patch(
     '/api/lancamentos/:id/conferido-extrato',
+    validateParamId,
     asyncHandler(async (req, res) => {
+      if (!isBoolean(req.body.conferido)) {
+        return res.status(400).json({ error: 'Campo conferido deve ser boolean.' });
+      }
       await repo.updateConferidoExtrato(req.session.user.id, req.params.id, req.body.conferido);
       res.json({ success: true });
     })

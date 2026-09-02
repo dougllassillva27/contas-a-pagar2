@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const { loginLimiter, signupLimiter, portalTerceiroLimiter } = require('../middlewares/rateLimiter');
+const { registerFailure } = require('../middlewares/loginBan');
 const { LIMITES } = require('../constants');
 const db = require('../config/db');
 
@@ -137,6 +138,9 @@ module.exports = function (repo) {
 
     // ✅ LOG SEGURO: Loga falha sem expor a senha tentada
     console.log('[LOGIN] ❌ Falha - Senha incorreta');
+
+    // Registra falha para ban progressivo por IP
+    registerFailure(req.ip || req.connection.remoteAddress || 'unknown');
 
     // Retorno imediato. A defesa agora é feita em camada superior pelo express-rate-limit
     return res.render('login', { error: 'Senha incorreta!' });
