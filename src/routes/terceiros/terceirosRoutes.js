@@ -8,6 +8,7 @@ const db = require('../../config/db');
 const { calcularContextoNavegacao } = require('../dashboard/navigationHelpers');
 const { montarMapaTerceiros } = require('./terceirosHelpers');
 const asyncHandler = require('../../helpers/asyncHandler');
+const { sanitizeString } = require('../../middlewares/inputValidation');
 
 module.exports = function (repo) {
   // --- DASHBOARD DE TERCEIROS ---
@@ -129,7 +130,12 @@ module.exports = function (repo) {
     '/api/terceiros/telefone',
     asyncHandler(async (req, res) => {
       const userId = req.session.user.id;
-      const { nome, telefone } = req.body;
+      const nome = sanitizeString(req.body.nome, 200);
+      const telefone = req.body.telefone;
+
+      if (!nome || nome.length === 0) {
+        return res.status(400).json({ error: 'Nome do terceiro é obrigatório.' });
+      }
 
       let cleanPhone = telefone ? telefone.replace(/\D/g, '') : null;
       if (cleanPhone && (cleanPhone.length === 10 || cleanPhone.length === 11)) cleanPhone = '55' + cleanPhone;
@@ -159,7 +165,11 @@ module.exports = function (repo) {
       }
 
       const userId = req.session.user.id;
-      const nome = req.params.nome;
+      const nome = sanitizeString(req.params.nome, 200);
+
+      if (!nome || nome.length === 0) {
+        return res.status(400).json({ error: 'Nome do terceiro é obrigatório.' });
+      }
 
       // Verifica se terceiro ja tem token
       const existing = await db.query('SELECT token_publico FROM terceiros WHERE usuario_id = $1 AND nome = $2', [userId, nome]);
