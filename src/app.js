@@ -129,6 +129,7 @@ app.use((req, res, next) => {
         frameAncestors: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
+        scriptSrcAttr: ["'unsafe-inline'"], // Necessario: EJS usa onclick/onchange inline
       },
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
