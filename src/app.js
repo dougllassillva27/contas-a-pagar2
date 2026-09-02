@@ -28,6 +28,7 @@ const telegramRoutes = require('./modules/botTelegram/telegramRoutes');
 const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
 const { apiLimiter } = require('./middlewares/rateLimiter');
+const { csrfProtect } = require('./middlewares/csrf');
 const crypto = require('crypto');
 
 const app = express();
@@ -58,7 +59,7 @@ app.locals.API_TOKEN = safeApiToken;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(compression());
-app.use(helmet({ contentSecurityPolicy: false })); // Hardening básico sem quebrar EJS inline scripts
+// Helmet aplicado após nonce middleware (ver abaixo)
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json({ limit: '100kb' })); // Previne DoS por payload massivo
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
@@ -71,7 +72,7 @@ app.use(
   session({
     secret: safeSessionSecret,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true, // Previne acesso via JavaScript (XSS)
@@ -98,6 +99,37 @@ app.use(integrationRoutes(repo, createApiAuth(safeApiToken)));
 app.use(telegramRoutes(repo));
 
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
+// CSRF protection: gera token para formulários, valida em POSTs
+app.use(csrfProtect);
+
+// CSP Nonce: gera nonce único por request para scripts inline
+app.use((req, res, next) => {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
+// Helmet com CSP habilitado via nonce (substitui o placeholder acima)
+// Removemos o helmet placeholder e aplicamos aqui com CSP dinâmico
+app.use((req, res, next) => {
+  // Aplica headers do helmet manualmente com CSP nonce-aware
+  const nonce = res.locals.cspNonce;
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", `'nonce-${nonce}'`, "https://fonts.googleapis.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+  })(req, res, next);
+});
+
 app.use(publicRoutes(repo));
 
 // 2.5 Módulo Data/Hora — Protegido por Autenticação Híbrida (Sessão Web ou API Key para M2M)

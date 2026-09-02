@@ -26,8 +26,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/social-media.webp" />
-    <script>
-      if ('serviceWorker' in navigator) {
+    <script nonce="<%= cspNonce %>">
+  if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
         });
@@ -59,6 +59,7 @@
             <% } %>
 
             <form action="/login" method="POST" class="login-form" id="loginForm">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="form-group">
                     <label for="login">Login / Usuário</label>
                     <input 
@@ -111,7 +112,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="<%= cspNonce %>">
         // Monitora submit do form
         document.getElementById('loginForm')?.addEventListener('submit', (e) => {
             // Não previne o submit - deixa o form fazer POST tradicional

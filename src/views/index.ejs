@@ -22,7 +22,7 @@
             <span class="material-icons card-icon-eye" id="iconEyeRendas" role="button" tabindex="0" onclick="toggleRendas(event)">visibility</span>
             <h3>Total de Rendas</h3>
             <p class="valor azul" id="valorRendas">R$ <%= Number(totais.totalrendas).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></p>
-            <script>
+            <script nonce="<%= cspNonce %>">
                 if (localStorage.getItem('hideRendas') === 'true') {
                     const el = document.getElementById('valorRendas');
                     const ic = document.getElementById('iconEyeRendas');

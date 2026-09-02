@@ -19,7 +19,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <script>
+    <script nonce="<%= cspNonce %>">
         if (localStorage.getItem('relatorioExpandedState') !== 'true') {
             document.documentElement.classList.add('relatorio-collapsed-default');
         }
@@ -151,7 +151,7 @@
     <script id="dados-raw" type="application/json"><%- JSON.stringify(dados || {}) %></script>
 
     <!-- Scripts de Interatividade e Funcionalidade -->
-    <script>
+    <script nonce="<%= cspNonce %>">
         // Recuperação segura dos dados para evitar SyntaxError em payloads grandes
         const dadosRaw = JSON.parse(document.getElementById('dados-raw').textContent);
         const totalFaturaStr = "<%= Number(totalGeral || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>";
