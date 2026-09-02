@@ -175,7 +175,7 @@
     <script src="/js/ui.js" type="module" defer></script>
     <script src="/js/dragdrop.js" defer></script>
     <script type="module" src="/js/app.js" defer></script>
-    <script>
+    <script nonce="<%= cspNonce %>">
         function obterUrlTerceiro(tokenPublico) {
             const month = document.body.dataset.month;
             const year = document.body.dataset.year;

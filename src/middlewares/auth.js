@@ -4,6 +4,7 @@
 
 const repo = require('../repositories/FinanceiroRepository');
 const UsuarioRepository = require('../repositories/UsuarioRepository');
+const TokenRepository = require('../repositories/TokenRepository');
 
 // Autenticação para rotas Web (Dashboard, Relatórios)
 async function authMiddleware(req, res, next) {
@@ -50,6 +51,11 @@ async function authMiddleware(req, res, next) {
           login: user.login || user.Login,
           passwordVersion: user.passwordversion || 0,
         };
+
+        // Sliding expiration: renova o token a cada uso válido (não-bloqueante)
+        TokenRepository.renovarToken(token, 90).catch((err) => {
+          console.error('[AUTH] ⚠️ Falha ao renovar token persistente:', err.message);
+        });
 
         return next();
       } else {
