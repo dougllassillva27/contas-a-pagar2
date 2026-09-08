@@ -121,7 +121,7 @@ app.use((req, res, next) => {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", `'nonce-${nonce}'`, "https://fonts.googleapis.com"],
+        scriptSrc: ["'self'", `'nonce-${nonce}'`, "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdn.sheetjs.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],

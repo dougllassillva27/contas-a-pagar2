@@ -495,10 +495,11 @@ module.exports = function (repo) {
     '/api/lancamentos/:id/status',
     validateParamId,
     asyncHandler(async (req, res) => {
-      if (!isBoolean(req.body.status)) {
-        return res.status(400).json({ error: 'Campo status deve ser boolean.' });
+      const status = req.body.status;
+      if (status !== 'PAGO' && status !== 'PENDENTE') {
+        return res.status(400).json({ error: 'Campo status deve ser PAGO ou PENDENTE.' });
       }
-      await repo.updateStatus(req.session.user.id, req.params.id, req.body.status);
+      await repo.updateStatus(req.session.user.id, req.params.id, status);
       // Invalida cache de totais do dashboard para forçar dados frescos
       cache.invalidate(`dashboard:totais:${req.session.user.id}:`);
       res.json({ success: true });

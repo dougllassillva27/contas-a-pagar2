@@ -26,6 +26,32 @@
     </script>
 
     <link href="/css/relatorio.css" rel="stylesheet">
+
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+    <script nonce="<%= cspNonce %>">
+      (function() {
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+          options = options || {};
+          const method = (options.method || 'GET').toUpperCase();
+          if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            if (token) {
+              options.headers = options.headers || {};
+              if (options.headers instanceof Headers) {
+                if (!options.headers.has('X-CSRF-Token')) {
+                  options.headers.set('X-CSRF-Token', token);
+                }
+              } else {
+                options.headers['X-CSRF-Token'] = options.headers['X-CSRF-Token'] || token;
+              }
+            }
+          }
+          return originalFetch.call(this, url, options);
+        };
+      })();
+    </script>
 </head>
 <body>
 
@@ -162,7 +188,7 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            initChart();
+            try { initChart(); } catch(e) { console.error('Erro ao inicializar gráfico:', e); }
             listenToCheckboxes();
             listenForRightClick();
         });
