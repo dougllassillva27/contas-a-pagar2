@@ -472,17 +472,18 @@ module.exports = function (repo) {
     validateParamId,
     asyncHandler(async (req, res) => {
       const item = await repo.getLancamento(req.session.user.id, req.params.id);
-      if (item) {
-        const dt = new Date(item.datavencimento);
-        if (await repo.isMesFechado(req.session.user.id, dt.getMonth() + 1, dt.getFullYear())) {
-          return res.status(403).json({ error: 'Este lançamento pertence a um mês fechado e não pode ser excluído.' });
-        }
+      if (!item) {
+        return res.status(404).json({ error: 'Lançamento não encontrado.' });
+      }
+
+      const dt = new Date(item.datavencimento);
+      if (await repo.isMesFechado(req.session.user.id, dt.getMonth() + 1, dt.getFullYear())) {
+        return res.status(403).json({ error: 'Este lançamento pertence a um mês fechado e não pode ser excluído.' });
       }
 
       await repo.deleteLancamento(req.session.user.id, req.params.id);
 
       // Invalida cache do dashboard após deleção
-      const dt = new Date(item.datavencimento);
       if (typeof repo.invalidateDashboardCache === 'function') {
         repo.invalidateDashboardCache(req.session.user.id, dt.getMonth() + 1, dt.getFullYear());
       }
