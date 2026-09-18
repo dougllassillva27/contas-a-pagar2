@@ -11,6 +11,9 @@ const repo = {
   addLancamento: jest.fn(),
   copyMonth: jest.fn(),
   getTodosUsuarios: jest.fn().mockResolvedValue([{ id: 1, nome: 'Teste' }]),
+  getLancamento: jest.fn(),
+  updateLancamento: jest.fn(),
+  deleteLancamento: jest.fn(),
 };
 
 // Mock da função normalizarTerceiro exportada pelo LancamentoRepository
@@ -72,5 +75,129 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
       .send({});
 
     expect(res.status).toBe(200);
+  });
+
+  // ============================================================================
+  // PUT /api/v1/integracao/lancamentos/:id
+  // ============================================================================
+  describe('PUT /api/v1/integracao/lancamentos/:id', () => {
+    test('deve bloquear requisições sem x-api-key (401)', async () => {
+      const res = await request(app).put('/api/v1/integracao/lancamentos/1').send({ usuario_id: 1 });
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('Acesso Negado');
+    });
+
+    test('deve retornar 400 se usuario_id estiver ausente', async () => {
+      const res = await request(app)
+        .put('/api/v1/integracao/lancamentos/1')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ descricao: 'Teste' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve retornar 400 se id for inválido', async () => {
+      const res = await request(app)
+        .put('/api/v1/integracao/lancamentos/abc')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ usuario_id: 1, descricao: 'Teste' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve retornar 404 se lançamento não existir', async () => {
+      repo.getLancamento.mockResolvedValue(null);
+      const res = await request(app)
+        .put('/api/v1/integracao/lancamentos/999')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ usuario_id: 1, descricao: 'Teste' });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve atualizar parcialmente e retornar 200', async () => {
+      repo.getLancamento.mockResolvedValue({
+        id: 1,
+        descricao: 'Original',
+        valor: 100,
+        tipo: 'CARTAO',
+        categoria: null,
+        parcelaatual: null,
+        totalparcelas: null,
+        nometerceiro: null,
+      });
+      repo.updateLancamento.mockResolvedValue();
+
+      const res = await request(app)
+        .put('/api/v1/integracao/lancamentos/1')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ usuario_id: 1, descricao: 'Atualizada', valor: '150,00' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(repo.updateLancamento).toHaveBeenCalledWith(1, 1, expect.objectContaining({
+        descricao: 'Atualizada',
+        valor: 150,
+      }));
+    });
+  });
+
+  // ============================================================================
+  // DELETE /api/v1/integracao/lancamentos/:id
+  // ============================================================================
+  describe('DELETE /api/v1/integracao/lancamentos/:id', () => {
+    test('deve bloquear requisições sem x-api-key (401)', async () => {
+      const res = await request(app).delete('/api/v1/integracao/lancamentos/1').send({ usuario_id: 1 });
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('Acesso Negado');
+    });
+
+    test('deve retornar 400 se usuario_id estiver ausente', async () => {
+      const res = await request(app)
+        .delete('/api/v1/integracao/lancamentos/1')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve retornar 400 se id for inválido', async () => {
+      const res = await request(app)
+        .delete('/api/v1/integracao/lancamentos/abc')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ usuario_id: 1 });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve retornar 404 se lançamento não existir', async () => {
+      repo.getLancamento.mockResolvedValue(null);
+      const res = await request(app)
+        .delete('/api/v1/integracao/lancamentos/999')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ usuario_id: 1 });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve deletar e retornar 200', async () => {
+      repo.getLancamento.mockResolvedValue({ id: 1, descricao: 'Conta' });
+      repo.deleteLancamento.mockResolvedValue();
+
+      const res = await request(app)
+        .delete('/api/v1/integracao/lancamentos/1')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ usuario_id: 1 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(repo.deleteLancamento).toHaveBeenCalledWith(1, 1);
+    });
   });
 });

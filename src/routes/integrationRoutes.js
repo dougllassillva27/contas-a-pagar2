@@ -117,6 +117,117 @@ module.exports = function (repo, apiAuth) {
     }
   });
 
+  // ============================================================================
+  // PUT /api/v1/integracao/lancamentos/:id — Atualização parcial via API
+  // ============================================================================
+  router.put('/api/v1/integracao/lancamentos/:id', integracaoLimiter, apiAuth, async (req, res) => {
+    try {
+      const { usuario_id } = req.body;
+      if (!usuario_id) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" é obrigatório' });
+      }
+
+      const idUsuarioFinal = parseInt(usuario_id, 10);
+      if (isNaN(idUsuarioFinal) || idUsuarioFinal <= 0) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" deve ser um número válido' });
+      }
+
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ success: false, error: 'ID do lançamento inválido' });
+      }
+
+      const existente = await repo.getLancamento(idUsuarioFinal, id);
+      if (!existente) {
+        return res.status(404).json({ success: false, error: 'Lançamento não encontrado' });
+      }
+
+      // Merge parcial: só sobrescreve campos presentes no body
+      const dadosMerged = {
+        descricao: req.body.descricao !== undefined ? req.body.descricao : existente.descricao,
+        valor: req.body.valor !== undefined ? parseValor(req.body.valor) : existente.valor,
+        tipo: req.body.tipo !== undefined
+          ? (normalizarTipoIntegracao(req.body.tipo) === 'fixa' ? TIPO.FIXA : TIPO.CARTAO)
+          : existente.tipo,
+        categoria: req.body.categoria !== undefined ? req.body.categoria : existente.categoria,
+        nomeTerceiro: req.body.terceiro !== undefined ? normalizarTerceiro(req.body.terceiro) : existente.nometerceiro,
+      };
+
+      // Parcelas: só recalcula se tipo for explicitamente enviado como parcelada
+      const isParcelada = req.body.tipo !== undefined
+        ? normalizarTipoIntegracao(req.body.tipo) === 'parcelada'
+        : (existente.totalparcelas != null && existente.totalparcelas > 1);
+
+      const parcelasNorm = normalizarParcelasPorTipo({
+        isParcelada,
+        parcelasRaw: req.body.parcelas !== undefined ? req.body.parcelas : '',
+      });
+
+      if (parcelasNorm.erro) {
+        return res.status(400).json({ success: false, error: parcelasNorm.erro });
+      }
+
+      dadosMerged.parcelaAtual = parcelasNorm.parcelaAtual !== null ? parcelasNorm.parcelaAtual : existente.parcelaatual;
+      dadosMerged.totalParcelas = parcelasNorm.totalParcelas !== null ? parcelasNorm.totalParcelas : existente.totalparcelas;
+
+      await repo.updateLancamento(idUsuarioFinal, id, dadosMerged);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Lançamento atualizado',
+        data: { id, ...dadosMerged },
+      });
+    } catch (err) {
+      console.error('❌ [INTEGRACAO-PUT] Erro ao atualizar lançamento:', {
+        message: err.message,
+        stack: err.stack,
+        body: req.body,
+      });
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ============================================================================
+  // DELETE /api/v1/integracao/lancamentos/:id — Remoção via API
+  // ============================================================================
+  router.delete('/api/v1/integracao/lancamentos/:id', integracaoLimiter, apiAuth, async (req, res) => {
+    try {
+      const usuario_id = req.body.usuario_id || req.query.usuario_id;
+      if (!usuario_id) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" é obrigatório' });
+      }
+
+      const idUsuarioFinal = parseInt(usuario_id, 10);
+      if (isNaN(idUsuarioFinal) || idUsuarioFinal <= 0) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" deve ser um número válido' });
+      }
+
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ success: false, error: 'ID do lançamento inválido' });
+      }
+
+      const existente = await repo.getLancamento(idUsuarioFinal, id);
+      if (!existente) {
+        return res.status(404).json({ success: false, error: 'Lançamento não encontrado' });
+      }
+
+      await repo.deleteLancamento(idUsuarioFinal, id);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Lançamento removido',
+      });
+    } catch (err) {
+      console.error('❌ [INTEGRACAO-DELETE] Erro ao remover lançamento:', {
+        message: err.message,
+        stack: err.stack,
+        body: req.body,
+      });
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   /**
    * Rota de automação: Copia as contas de todos os usuários para o próximo mês.
    * Pode ser disparada por um serviço de cron externo gratuito (ex: cron-job.org).
