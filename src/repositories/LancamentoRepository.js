@@ -555,6 +555,45 @@ async function getLancamento(userId, id) {
   return res.rows[0];
 }
 
+// ==============================================================================
+// Busca por filtros — API de integração (GET /lancamentos)
+// ==============================================================================
+async function getLancamentosPorFiltro(userId, filtros = {}) {
+  const conditions = ['UsuarioId = $1'];
+  const params = [userId];
+  let idx = 2;
+
+  if (filtros.descricao) {
+    conditions.push(`Descricao ILIKE $${idx}`);
+    params.push(`%${filtros.descricao}%`);
+    idx++;
+  }
+
+  if (filtros.terceiro) {
+    conditions.push(`NomeTerceiro ILIKE $${idx}`);
+    params.push(`%${filtros.terceiro}%`);
+    idx++;
+  }
+
+  if (filtros.mes && filtros.ano) {
+    const { startDate, endDate } = getMesRange(filtros.mes, filtros.ano);
+    conditions.push(`DataVencimento >= $${idx} AND DataVencimento < $${idx + 1}`);
+    params.push(startDate, endDate);
+    idx += 2;
+  }
+
+  const query = `
+    SELECT Id, Descricao, Valor, Tipo, Status, NomeTerceiro, ParcelaAtual, TotalParcelas, DataVencimento
+    FROM Lancamentos
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY DataVencimento DESC, Id DESC
+    LIMIT 50
+  `;
+
+  const result = await db.query(query, params);
+  return result.rows;
+}
+
 async function getMesesAnosPorIds(userId, ids) {
   if (!Array.isArray(ids) || ids.length === 0) return [];
   const res = await db.query(
@@ -1191,6 +1230,7 @@ module.exports = {
   getDistinctTerceiros,
   getLancamentosTerceiro,
   getLancamento,
+  getLancamentosPorFiltro,
   getMesesAnosPorIds,
   getDashboardDataModular,
   invalidateDashboardCache,

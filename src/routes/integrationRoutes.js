@@ -118,6 +118,43 @@ module.exports = function (repo, apiAuth) {
   });
 
   // ============================================================================
+  // GET /api/v1/integracao/lancamentos — Busca por filtros via API
+  // ============================================================================
+  router.get('/api/v1/integracao/lancamentos', integracaoLimiter, apiAuth, async (req, res) => {
+    try {
+      const usuario_id = req.query.usuario_id || req.body?.usuario_id;
+      if (!usuario_id) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" é obrigatório' });
+      }
+
+      const idUsuarioFinal = parseInt(usuario_id, 10);
+      if (isNaN(idUsuarioFinal) || idUsuarioFinal <= 0) {
+        return res.status(400).json({ success: false, error: 'Campo "usuario_id" deve ser um número válido' });
+      }
+
+      const filtros = {};
+      if (req.query.descricao) filtros.descricao = req.query.descricao;
+      if (req.query.terceiro) filtros.terceiro = req.query.terceiro;
+      if (req.query.mes) filtros.mes = parseInt(req.query.mes, 10);
+      if (req.query.ano) filtros.ano = parseInt(req.query.ano, 10);
+
+      const lancamentos = await repo.getLancamentosPorFiltro(idUsuarioFinal, filtros);
+
+      return res.status(200).json({
+        success: true,
+        data: lancamentos,
+      });
+    } catch (err) {
+      console.error('❌ [INTEGRACAO-GET] Erro ao buscar lançamentos:', {
+        message: err.message,
+        stack: err.stack,
+        query: req.query,
+      });
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ============================================================================
   // PUT /api/v1/integracao/lancamentos/:id — Atualização parcial via API
   // ============================================================================
   router.put('/api/v1/integracao/lancamentos/:id', integracaoLimiter, apiAuth, async (req, res) => {

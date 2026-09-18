@@ -14,6 +14,7 @@ const repo = {
   getLancamento: jest.fn(),
   updateLancamento: jest.fn(),
   deleteLancamento: jest.fn(),
+  getLancamentosPorFiltro: jest.fn(),
 };
 
 // Mock da função normalizarTerceiro exportada pelo LancamentoRepository
@@ -198,6 +199,96 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(repo.deleteLancamento).toHaveBeenCalledWith(1, 1);
+    });
+  });
+
+  // ============================================================================
+  // GET /api/v1/integracao/lancamentos
+  // ============================================================================
+  describe('GET /api/v1/integracao/lancamentos', () => {
+    test('deve bloquear requisições sem x-api-key (401)', async () => {
+      const res = await request(app).get('/api/v1/integracao/lancamentos').query({ usuario_id: 1 });
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('Acesso Negado');
+    });
+
+    test('deve retornar 400 se usuario_id estiver ausente', async () => {
+      const res = await request(app)
+        .get('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve retornar 400 se usuario_id for inválido', async () => {
+      const res = await request(app)
+        .get('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .query({ usuario_id: 'abc' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    test('deve buscar por descricao e retornar 200', async () => {
+      repo.getLancamentosPorFiltro.mockResolvedValue([
+        { id: 10, descricao: 'Conta de luz', valor: 150, tipo: 'CARTAO', status: 'PENDENTE', nometerceiro: null },
+      ]);
+
+      const res = await request(app)
+        .get('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .query({ usuario_id: 1, descricao: 'conta de luz' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].id).toBe(10);
+      expect(repo.getLancamentosPorFiltro).toHaveBeenCalledWith(1, expect.objectContaining({ descricao: 'conta de luz' }));
+    });
+
+    test('deve buscar por mes e ano e retornar 200', async () => {
+      repo.getLancamentosPorFiltro.mockResolvedValue([
+        { id: 11, descricao: 'Netflix', valor: 50, tipo: 'FIXA', status: 'PENDENTE', nometerceiro: null },
+      ]);
+
+      const res = await request(app)
+        .get('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .query({ usuario_id: 1, mes: 9, ano: 2026 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(repo.getLancamentosPorFiltro).toHaveBeenCalledWith(1, expect.objectContaining({ mes: 9, ano: 2026 }));
+    });
+
+    test('deve retornar lista vazia quando não houver resultados', async () => {
+      repo.getLancamentosPorFiltro.mockResolvedValue([]);
+
+      const res = await request(app)
+        .get('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .query({ usuario_id: 1, descricao: 'inexistente' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(0);
+    });
+
+    test('deve listar ultimos lancamentos sem filtros adicionais', async () => {
+      repo.getLancamentosPorFiltro.mockResolvedValue([
+        { id: 12, descricao: 'Teste', valor: 10, tipo: 'CARTAO', status: 'PENDENTE', nometerceiro: null },
+      ]);
+
+      const res = await request(app)
+        .get('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .query({ usuario_id: 1 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(repo.getLancamentosPorFiltro).toHaveBeenCalledWith(1, {});
     });
   });
 });
