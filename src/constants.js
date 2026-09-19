@@ -11,6 +11,7 @@ const STATUS = {
 const TIPO = {
   FIXA: 'FIXA',
   CARTAO: 'CARTAO',
+  PARCELADO: 'PARCELADO',
   RENDA: 'RENDA',
 };
 

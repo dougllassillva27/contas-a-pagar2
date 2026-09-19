@@ -30,7 +30,7 @@ module.exports = function (repo, apiAuth) {
    */
   router.post('/api/v1/integracao/lancamentos', integracaoLimiter, apiAuth, async (req, res) => {
     try {
-      const { descricao, valor, tipo, parcelas, terceiro, usuario_id } = req.body;
+      const { descricao, valor, tipo, parcelas, total_parcelas, parcela_atual, terceiro, usuario_id } = req.body;
 
       // Validações básicas
       if (!descricao || typeof descricao !== 'string') {
@@ -56,17 +56,24 @@ module.exports = function (repo, apiAuth) {
         return res.status(400).json({ success: false, error: `Valor inválido: "${valor}". Use formato "100,50" ou "100.50"` });
       }
 
-      // Decide tipo no banco (regra atual):
+      // Decide tipo no banco:
       // - "fixa" => FIXA
+      // - "parcelada"/"parcelado" => PARCELADO
       // - qualquer outro => CARTAO
       const tipoNorm = normalizarTipoIntegracao(tipo);
       const isFixa = tipoNorm === 'fixa';
-      const isParcelada = tipoNorm === 'parcelada';
-      const dbTipo = isFixa ? TIPO.FIXA : TIPO.CARTAO;
+      const isParcelada = tipoNorm === 'parcelada' || tipoNorm === 'parcelado';
+      const dbTipo = isFixa ? TIPO.FIXA : (isParcelada ? TIPO.PARCELADO : TIPO.CARTAO);
+
+      // Aceita parcelas como string ("2", "1/2") ou campos separados (total_parcelas + parcela_atual)
+      let parcelasRaw = parcelas;
+      if (!parcelasRaw && total_parcelas) {
+        parcelasRaw = parcela_atual ? `${parcela_atual}/${total_parcelas}` : String(total_parcelas);
+      }
 
       const parcelasNorm = normalizarParcelasPorTipo({
         isParcelada,
-        parcelasRaw: parcelas,
+        parcelasRaw,
       });
 
       // Se foi parcelada mas veio inválido, retorna 400 com mensagem clara
@@ -180,11 +187,13 @@ module.exports = function (repo, apiAuth) {
       }
 
       // Merge parcial: só sobrescreve campos presentes no body
+      const tipoNormPut = req.body.tipo !== undefined ? normalizarTipoIntegracao(req.body.tipo) : null;
+      const isParceladaPut = tipoNormPut === 'parcelada' || tipoNormPut === 'parcelado';
       const dadosMerged = {
         descricao: req.body.descricao !== undefined ? req.body.descricao : existente.descricao,
         valor: req.body.valor !== undefined ? parseValor(req.body.valor) : existente.valor,
         tipo: req.body.tipo !== undefined
-          ? (normalizarTipoIntegracao(req.body.tipo) === 'fixa' ? TIPO.FIXA : TIPO.CARTAO)
+          ? (tipoNormPut === 'fixa' ? TIPO.FIXA : (isParceladaPut ? TIPO.PARCELADO : TIPO.CARTAO))
           : existente.tipo,
         categoria: req.body.categoria !== undefined ? req.body.categoria : existente.categoria,
         nomeTerceiro: req.body.terceiro !== undefined ? normalizarTerceiro(req.body.terceiro) : existente.nometerceiro,
@@ -192,12 +201,18 @@ module.exports = function (repo, apiAuth) {
 
       // Parcelas: só recalcula se tipo for explicitamente enviado como parcelada
       const isParcelada = req.body.tipo !== undefined
-        ? normalizarTipoIntegracao(req.body.tipo) === 'parcelada'
+        ? isParceladaPut
         : (existente.totalparcelas != null && existente.totalparcelas > 1);
+
+      // Aceita parcelas via campo legado ou novos campos
+      let parcelasRawPut = req.body.parcelas !== undefined ? req.body.parcelas : '';
+      if (!parcelasRawPut && req.body.total_parcelas) {
+        parcelasRawPut = req.body.parcela_atual ? `${req.body.parcela_atual}/${req.body.total_parcelas}` : String(req.body.total_parcelas);
+      }
 
       const parcelasNorm = normalizarParcelasPorTipo({
         isParcelada,
-        parcelasRaw: req.body.parcelas !== undefined ? req.body.parcelas : '',
+        parcelasRaw: parcelasRawPut,
       });
 
       if (parcelasNorm.erro) {
