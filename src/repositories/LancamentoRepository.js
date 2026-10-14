@@ -7,8 +7,15 @@ const { STATUS, TIPO, LIMITES, SQL_SEM_TERCEIRO } = require('../constants');
 const cache = require('../helpers/cacheHelpers');
 
 // ==============================================================================
-// ✅ NOVO: Helper para normalizar palavras-chave "Eu" ou "Dodo" para NULL
+// Critério único de "lançamento copiável" pelo copiar-mensal.
+// Usado pelo SELECT do copyMonth E pela trava de idempotência
+// (temLancamentosCopiaveis) — mantém os dois em sincronia.
 // ==============================================================================
+const TIPOS_COPIAVEIS = [TIPO.FIXA, TIPO.RENDA, TIPO.TERCEIRO];
+const SQL_LANCAMENTOS_COPIAVEIS =
+  `(Tipo IN (${TIPOS_COPIAVEIS.map((t) => `'${t}'`).join(', ')})` +
+  ` OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))`;
+
 // ==============================================================================
 // Helper para otimizar queries por mês/ano (B-Tree friendly)
 // ==============================================================================
@@ -702,7 +709,7 @@ async function copyMonth(userId, currentMonth, currentYear) {
          WHERE UsuarioId = $1
            AND MesVencimento = $2
            AND AnoVencimento = $3
-           AND (Tipo IN ('${TIPO.FIXA}', '${TIPO.RENDA}', '${TIPO.TERCEIRO}') OR (ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL))
+           AND ${SQL_LANCAMENTOS_COPIAVEIS}
        ) sub WHERE rn = 1`,
       [userId, currentMonth, currentYear]
     );
@@ -712,7 +719,7 @@ async function copyMonth(userId, currentMonth, currentYear) {
     const itemsToCopy = res.rows;
     if (itemsToCopy.length === 0) {
       console.log('[copyMonth] ⚠️ Nenhum item encontrado para copiar');
-      return;
+      return { copiados: 0, resetados: 0 };
     }
 
     console.log(`[copyMonth] �� Iniciando cópia: ${itemsToCopy.length} itens encontrados`);
@@ -737,6 +744,7 @@ async function copyMonth(userId, currentMonth, currentYear) {
 
     let contagemResetados = 0;
     let contagemNormais = 0;
+    let contagemCopiados = 0; // ✅ INSERTs realmente efetivados
 
     for (const item of itemsToCopy) {
       let novoParcelaAtual = item.parcelaatual;
@@ -798,6 +806,7 @@ async function copyMonth(userId, currentMonth, currentYear) {
           nextYear,
         ]
       );
+      contagemCopiados++;
     }
 
     await client.query('COMMIT');
@@ -807,6 +816,8 @@ async function copyMonth(userId, currentMonth, currentYear) {
     console.log(`   ├─ Contas Casa resetadas: ${contagemResetados}`);
     console.log(`   └─ Contas normais copiadas: ${contagemNormais}`);
 
+    return { copiados: contagemCopiados, resetados: contagemResetados };
+
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('[copyMonth] ❌ Erro durante cópia:', err.message);
@@ -814,6 +825,25 @@ async function copyMonth(userId, currentMonth, currentYear) {
   } finally {
     client.release();
   }
+}
+
+// ==============================================================================
+// ✅ Trava de idempotência do copiar-mensal.
+// Retorna true se o mês/ano informado (destino da cópia) já possui
+// lançamentos copiáveis — mesmo critério usado pelo SELECT do copyMonth.
+// ==============================================================================
+async function temLancamentosCopiaveis(userId, month, year) {
+  const result = await db.query(
+    `SELECT EXISTS (
+       SELECT 1 FROM Lancamentos
+       WHERE UsuarioId = $1
+         AND MesVencimento = $2
+         AND AnoVencimento = $3
+         AND ${SQL_LANCAMENTOS_COPIAVEIS}
+     ) AS existe`,
+    [userId, month, year]
+  );
+  return Boolean(result.rows[0]?.existe);
 }
 
 // ==============================================================================
@@ -1252,6 +1282,7 @@ module.exports = {
   deleteLancamentosPorPessoa,
   deleteMonth,
   copyMonth,
+  temLancamentosCopiaveis, // ✅ Trava de idempotência do copiar-mensal
   getTotalTerceiroParaDivisaoCasa, // ✅ Total do terceiro para divisão (CARTAO + FIXA)
   getTotalTerceiroCartao, // ✅ Total do terceiro apenas CARTAO
   getContaFixaValor, // ✅ Busca valor de conta fixa específica

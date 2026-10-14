@@ -13,6 +13,7 @@ const TIPO = {
   CARTAO: 'CARTAO',
   PARCELADO: 'PARCELADO',
   RENDA: 'RENDA',
+  TERCEIRO: 'TERCEIRO',
 };
 
 const LIMITES = {

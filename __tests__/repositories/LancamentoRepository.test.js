@@ -442,3 +442,108 @@ describe('deleteLancamentosEmLote', () => {
     expect(db.query).not.toHaveBeenCalled();
   });
 });
+
+// ==========================================================================
+// copyMonth — contagem real (copiados / resetados)
+// ==========================================================================
+describe('copyMonth — retorno { copiados, resetados }', () => {
+  let mockClient;
+
+  beforeEach(() => {
+    mockClient = {
+      query: jest.fn(),
+      release: jest.fn(),
+    };
+    db.getClient.mockResolvedValue(mockClient);
+  });
+
+  test('conta apenas os INSERTs reais e as contas Casa resetadas', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({
+        // SELECT — itens do mês de origem
+        rows: [
+          {
+            descricao: 'Aluguel',
+            valor: 1500,
+            tipo: 'FIXA',
+            categoria: 'moradia',
+            parcelaatual: null,
+            totalparcelas: null,
+            datavencimento: new Date(2026, 9, 10),
+            nometerceiro: null,
+            ordem: 1,
+            datacriacao: new Date(),
+          },
+          {
+            descricao: 'Casa',
+            valor: 900,
+            tipo: 'FIXA',
+            categoria: 'casa',
+            parcelaatual: null,
+            totalparcelas: null,
+            datavencimento: new Date(2026, 9, 15),
+            nometerceiro: null,
+            ordem: 2,
+            datacriacao: new Date(),
+          },
+          {
+            descricao: 'TV',
+            valor: 200,
+            tipo: 'CARTAO',
+            parcelaatual: 10, // última parcela → não copia
+            totalparcelas: 10,
+            datavencimento: new Date(2026, 9, 20),
+            nometerceiro: null,
+            ordem: 3,
+            datacriacao: new Date(),
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [{ divisao_casa_minimo: 800 }] }) // configuracoes
+      .mockResolvedValue({ rows: [] }); // BEGIN / INSERTs / COMMIT
+
+    const resultado = await lancamentoRepo.copyMonth(1, 10, 2026);
+
+    expect(resultado).toEqual({ copiados: 2, resetados: 1 });
+  });
+
+  test('retorna zeros quando não há itens no mês de origem', async () => {
+    mockClient.query.mockResolvedValueOnce({ rows: [] });
+
+    const resultado = await lancamentoRepo.copyMonth(1, 10, 2026);
+
+    expect(resultado).toEqual({ copiados: 0, resetados: 0 });
+  });
+});
+
+// ==========================================================================
+// temLancamentosCopiaveis — trava de idempotência do copiar-mensal
+// ==========================================================================
+describe('temLancamentosCopiaveis', () => {
+  test('retorna true quando o mês destino já possui lançamentos copiáveis', async () => {
+    db.query.mockResolvedValue({ rows: [{ existe: true }] });
+
+    await expect(lancamentoRepo.temLancamentosCopiaveis(1, 11, 2026)).resolves.toBe(true);
+  });
+
+  test('retorna false quando o mês destino está vazio', async () => {
+    db.query.mockResolvedValue({ rows: [{ existe: false }] });
+
+    await expect(lancamentoRepo.temLancamentosCopiaveis(1, 11, 2026)).resolves.toBe(false);
+  });
+
+  test('usa o mês/ano informados e os mesmos tipos do copyMonth', async () => {
+    db.query.mockResolvedValue({ rows: [{ existe: false }] });
+
+    await lancamentoRepo.temLancamentosCopiaveis(7, 11, 2026);
+
+    const [sql, params] = db.query.mock.calls[0];
+    expect(sql).toContain('MesVencimento = $2');
+    expect(sql).toContain('AnoVencimento = $3');
+    expect(sql).toContain("'FIXA'");
+    expect(sql).toContain("'RENDA'");
+    expect(sql).toContain("'TERCEIRO'");
+    expect(sql).toContain('ParcelaAtual IS NOT NULL AND TotalParcelas IS NOT NULL');
+    expect(params).toEqual([7, 11, 2026]);
+  });
+});

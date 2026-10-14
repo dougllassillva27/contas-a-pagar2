@@ -5,6 +5,15 @@
 
 const crypto = require('crypto');
 
+// Prefixo das rotas M2M de integração (autenticadas por x-api-key).
+// Não usam sessão/cookie, portanto não são alvo de CSRF (double-submit cookie).
+const INTEGRACAO_PREFIX = '/api/v1/integracao/';
+
+function ehRotaIntegracao(req) {
+  const path = req.path || '';
+  return path === INTEGRACAO_PREFIX.slice(0, -1) || path.startsWith(INTEGRACAO_PREFIX);
+}
+
 function gerarCsrfToken() {
   return crypto.randomBytes(32).toString('hex');
 }
@@ -14,6 +23,11 @@ function gerarCsrfToken() {
  * Deve ser aplicado ANTES das rotas que renderizam formulários.
  */
 function csrfProtect(req, res, next) {
+  // ✅ ISENÇÃO EXPLÍCITA: /api/v1/integracao/* é M2M (x-api-key), não usa sessão.
+  if (ehRotaIntegracao(req)) {
+    return next();
+  }
+
   // Garante token na sessão (sobrevive a refreshes)
   if (!req.session.csrfToken) {
     req.session.csrfToken = gerarCsrfToken();

@@ -29,6 +29,7 @@ const dataHoraRoutes = require('./modules/dataHora/dataHoraRoutes');
 const calcularLuzRoutes = require('./modules/calcularLuz/calcularLuzRoutes');
 const { apiLimiter } = require('./middlewares/rateLimiter');
 const { csrfProtect } = require('./middlewares/csrf');
+const normalizePath = require('./middlewares/normalizePath');
 const { loginBanMiddleware } = require('./middlewares/loginBan');
 const crypto = require('crypto');
 
@@ -65,6 +66,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json({ limit: '100kb' })); // Previne DoS por payload massivo
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(cookieParser()); // Necessário para ler tokens persistentes
+// ✅ Normalização de path (colapsa barras duplas: //api/... → /api/...) antes
+// de qualquer roteamento/validação — defesa contra a causa raiz do incidente 30/09.
+app.use(normalizePath);
 app.use(requestLogger);
 
 app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies Secure em HTTPS

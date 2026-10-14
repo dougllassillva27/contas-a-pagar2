@@ -264,6 +264,12 @@ Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o 
 
 ## ⚡ Automação: Cópia Mensal de Contas
 
+> ⚠️ **Legado (substituído).** O Google Apps Script abaixo foi aposentado: ele montava a URL
+> com barra dupla (`//api/v1/integracao/copiar-mensal`), o Express não casava a rota e o
+> request caía no CSRF global → **403**, sem cópia (incidente de 30/09/2026). A automação
+> oficial agora é o timer systemd na VPS (`contas-copiar-mensal.timer`, script
+> `scripts/copiar-contas-mensal.sh`). O texto abaixo fica apenas como referência histórica.
+
 O sistema possui um endpoint de automação que realiza a cópia das contas e dispara rotinas de sincronização de usuários de forma automática e gratuita via **Google Apps Script**.
 
 ### Como Configurar (Google Apps Script)

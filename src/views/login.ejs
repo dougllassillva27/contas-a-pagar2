@@ -26,7 +26,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/icons/social-media/social-media.webp" />
-    <script nonce="<%= cspNonce %>">
+    <script nonce="<%- locals.cspNonce || '' %>">
   if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW falhou:', err));
@@ -112,7 +112,7 @@
         </div>
     </div>
 
-    <script nonce="<%= cspNonce %>">
+    <script nonce="<%- locals.cspNonce || '' %>">
         // Monitora submit do form
         document.getElementById('loginForm')?.addEventListener('submit', (e) => {
             // Não previne o submit - deixa o form fazer POST tradicional

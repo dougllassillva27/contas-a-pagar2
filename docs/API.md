@@ -677,23 +677,28 @@ Cria lancamento via app Android.
 
 ### POST /api/v1/integracao/copiar-mensal
 
-Automacao: copia contas de todos os usuarios para o mes atual. Disparada por cron externo.
+Automacao: copia contas de todos os usuarios para o MES DESTINO (mes seguinte ao corrente).
 
 - **Autenticacao:** `apiAuth` (header `x-api-key` ou query `token`)
+- **CSRF:** rota isenta (M2M, sem sessao/cookie) — `src/middlewares/csrf.js` libera `/api/v1/integracao/*`
+- **Idempotencia:** usuario cujo mes DESTINO ja possui lancamentos copiaveis e pulado com status `ja_copiado` (rodar 2x nao duplica)
 - **Payload:** --
 - **Response 200:**
   ```json
   {
     "success": true,
-    "context": "7/2026",
-    "resultados": [
-      { "nome": "Dodo", "status": "sucesso" },
-      { "nome": "Vitoria", "status": "erro", "error": "..." }
-    ]
+    "contexto": { "mes": 11, "ano": 2026 },
+    "usuarios": [
+      { "nome": "Dodo", "status": "copiado", "copiados": 82, "resetados": 2 },
+      { "nome": "Vitoria", "status": "ja_copiado", "copiados": 0, "resetados": 0 },
+      { "nome": "Outro", "status": "erro", "copiados": 0, "resetados": 0, "error": "..." }
+    ],
+    "total": { "usuarios": 2, "copiados": 84, "ja_copiado": 1, "erros": 0 }
   }
   ```
+  `status`: `copiado` | `ja_copiado` | `erro`. `contexto` = mes/ano DESTINO (mes seguinte).
 - **Response 500:** Erro critico
-- **Nota:** Envia notificacao via Telegram se `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` configurados.
+- **Nota:** o endpoint NAO notifica mais ninguem (o bloco do Telegram foi removido). Quem dispara (timer systemd na VPS) e responsavel por notificar WhatsApp/Discord.
 
 ---
 

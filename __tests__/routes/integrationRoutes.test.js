@@ -10,6 +10,7 @@ const { createApiAuth } = require('../../src/middlewares/auth');
 const repo = {
   addLancamento: jest.fn(),
   copyMonth: jest.fn(),
+  temLancamentosCopiaveis: jest.fn().mockResolvedValue(false),
   getTodosUsuarios: jest.fn().mockResolvedValue([{ id: 1, nome: 'Teste' }]),
   getLancamento: jest.fn(),
   updateLancamento: jest.fn(),
@@ -30,6 +31,12 @@ jest.mock('../../src/repositories/LancamentoRepository', () => ({
 
 const integrationRoutes = require('../../src/routes/integrationRoutes');
 
+// O limiter real (20 req/15min por IP) bloquearia a suíte inteira (429).
+// O rate limiting tem teste próprio em __tests__/middlewares/rateLimiter.test.js.
+jest.mock('../../src/middlewares/rateLimiter', () => ({
+  integracaoLimiter: (req, res, next) => next(),
+}));
+
 function setupApp() {
   const app = express();
   app.use(express.json());
@@ -43,8 +50,6 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock nativo do fetch para anular a notificação assíncrona (fire and forget) do Telegram
-    global.fetch = jest.fn().mockResolvedValue({ ok: true });
     app = setupApp();
   });
 
@@ -69,13 +74,133 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
     expect(repo.addLancamento).toHaveBeenCalled();
   });
 
-  test('POST /copiar-mensal - deve invocar a cópia e retornar sucesso', async () => {
-    const res = await request(app)
-      .post('/api/v1/integracao/copiar-mensal')
-      .set('x-api-key', 'teste-m2m-token')
-      .send({});
+  // ============================================================================
+  // POST /api/v1/integracao/copiar-mensal — automação mensal (timer local)
+  // ============================================================================
+  describe('POST /api/v1/integracao/copiar-mensal', () => {
+    // 15/10/2026 12:00 BRT — meio do mês: resultado independe do fuso do runner
+    const HOJE = new Date('2026-10-15T15:00:00Z');
+    const TIMERS_REAIS = [
+      'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
+      'setImmediate', 'clearImmediate', 'nextTick', 'queueMicrotask',
+      'performance', 'hrtime', 'requestAnimationFrame', 'cancelAnimationFrame',
+      'requestIdleCallback', 'cancelIdleCallback',
+    ];
 
-    expect(res.status).toBe(200);
+    beforeEach(() => {
+      jest.useFakeTimers({ now: HOJE, doNotFake: TIMERS_REAIS });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('bloqueia requisições sem x-api-key (401)', async () => {
+      const res = await request(app).post('/api/v1/integracao/copiar-mensal').send({});
+
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('Acesso Negado');
+    });
+
+    test('copia e retorna contexto do mês destino, resumo por usuário e total', async () => {
+      repo.getTodosUsuarios.mockResolvedValue([
+        { id: 1, nome: 'Dodo' },
+        { id: 2, nome: 'Vitoria' },
+      ]);
+      repo.copyMonth.mockResolvedValue({ copiados: 3, resetados: 1 });
+
+      const res = await request(app)
+        .post('/api/v1/integracao/copiar-mensal')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.contexto).toEqual({ mes: 11, ano: 2026 });
+      expect(res.body.usuarios).toEqual([
+        { nome: 'Dodo', status: 'copiado', copiados: 3, resetados: 1 },
+        { nome: 'Vitoria', status: 'copiado', copiados: 3, resetados: 1 },
+      ]);
+      expect(res.body.total).toEqual({ usuarios: 2, copiados: 6, ja_copiado: 0, erros: 0 });
+
+      // Sempre do mês corrente para o seguinte
+      expect(repo.copyMonth).toHaveBeenCalledWith(1, 10, 2026);
+      expect(repo.copyMonth).toHaveBeenCalledWith(2, 10, 2026);
+    });
+
+    test('marca ja_copiado e não copia de novo quando o mês destino já tem lançamentos copiáveis', async () => {
+      repo.getTodosUsuarios.mockResolvedValue([
+        { id: 1, nome: 'Dodo' },
+        { id: 2, nome: 'Vitoria' },
+      ]);
+      repo.temLancamentosCopiaveis.mockImplementation(async (id) => id === 1);
+      repo.copyMonth.mockResolvedValue({ copiados: 3, resetados: 0 });
+
+      const res = await request(app)
+        .post('/api/v1/integracao/copiar-mensal')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({});
+
+      expect(res.status).toBe(200);
+      expect(repo.temLancamentosCopiaveis).toHaveBeenCalledWith(1, 11, 2026);
+      expect(repo.temLancamentosCopiaveis).toHaveBeenCalledWith(2, 11, 2026);
+
+      expect(res.body.usuarios).toEqual([
+        { nome: 'Dodo', status: 'ja_copiado', copiados: 0, resetados: 0 },
+        { nome: 'Vitoria', status: 'copiado', copiados: 3, resetados: 0 },
+      ]);
+      expect(res.body.total).toEqual({ usuarios: 2, copiados: 3, ja_copiado: 1, erros: 0 });
+
+      // Só o usuário 2 é efetivamente copiado
+      expect(repo.copyMonth).toHaveBeenCalledTimes(1);
+      expect(repo.copyMonth).toHaveBeenCalledWith(2, 10, 2026);
+    });
+
+    test('registra erro por usuário sem interromper os demais', async () => {
+      repo.getTodosUsuarios.mockResolvedValue([
+        { id: 1, nome: 'Dodo' },
+        { id: 2, nome: 'Vitoria' },
+      ]);
+      repo.temLancamentosCopiaveis.mockResolvedValue(false);
+      repo.copyMonth
+        .mockRejectedValueOnce(new Error('deadlock detected'))
+        .mockResolvedValueOnce({ copiados: 2, resetados: 0 });
+
+      const res = await request(app)
+        .post('/api/v1/integracao/copiar-mensal')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.usuarios[0]).toEqual({
+        nome: 'Dodo',
+        status: 'erro',
+        copiados: 0,
+        resetados: 0,
+        error: 'deadlock detected',
+      });
+      expect(res.body.usuarios[1]).toEqual({
+        nome: 'Vitoria',
+        status: 'copiado',
+        copiados: 2,
+        resetados: 0,
+      });
+      expect(res.body.total).toEqual({ usuarios: 2, copiados: 2, ja_copiado: 0, erros: 1 });
+    });
+
+    test('não dispara mais notificação Telegram no endpoint (quem notifica é o timer)', async () => {
+      global.fetch = jest.fn();
+
+      const res = await request(app)
+        .post('/api/v1/integracao/copiar-mensal')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({});
+
+      expect(res.status).toBe(200);
+      expect(global.fetch).not.toHaveBeenCalled();
+
+      delete global.fetch;
+    });
   });
 
   // ============================================================================

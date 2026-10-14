@@ -351,9 +351,13 @@ Regras:
 
 `POST /api/v1/integracao/copiar-mensal` (autenticado via `apiAuth`)
 
-- Calcula mês/ano de referência pelo fuso de Brasília (UTC-3).
-- Itera todos os usuários e executa `copyMonth()` para cada um.
-- Envia notificação via Telegram (se tokens configurados).
+- Calcula mês/ano de referência pelo fuso de Brasília (UTC-3) e o mês DESTINO (seguinte).
+- Itera todos os usuários; para cada um, se o mês destino já possui lançamentos copiáveis
+  (`temLancamentosCopiaveis`), pula com status `ja_copiado` (idempotência — rodar 2x não duplica).
+- Caso contrário executa `copyMonth()`, que retorna `{ copiados, resetados }` (INSERTs reais).
+- Não envia mais notificação: quem dispara (timer systemd da VPS) notifica WhatsApp/Discord.
+- Rota isenta de CSRF (M2M via `x-api-key`); um middleware de normalização colapsa
+  `//api/...` → `/api/...` (causa raiz do 403 de 30/09 no Apps Script).
 
 ---
 
