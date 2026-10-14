@@ -24,6 +24,8 @@ const bcrypt = require('bcrypt');
 
 jest.mock('../../src/middlewares/rateLimiter', () => ({
   loginLimiter: (req, res, next) => next(),
+  signupLimiter: (req, res, next) => next(),
+  portalTerceiroLimiter: (req, res, next) => next(),
   apiLimiter: (req, res, next) => next(),
 }));
 

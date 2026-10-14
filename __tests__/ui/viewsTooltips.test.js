@@ -13,6 +13,7 @@ describe('Tooltips 100% CSS nos Templates EJS', () => {
   test('Injeta atributos data-tooltip corretamente para faturas finais e ações', async () => {
     // Mock completo dos objetos injetados pelo controller
     const mockData = {
+      cspNonce: 'test-nonce', // CSP injeta nonce por request nos scripts inline
       nav: {
         atual: { month: 5, year: 2026, dateObj: new Date(2026, 4, 1) },
         ant: { month: 4, year: 2026 },
@@ -22,7 +23,7 @@ describe('Tooltips 100% CSS nos Templates EJS', () => {
       query: {},
       user: { nome: 'DouglasTest', id: 1 },
       mesFechado: false,
-      configuracoes: { divisao_casa_minimo: '750.00' },
+      configuracoes: { divisao_casa_minimo: '750.00', regras_sync: [], onboarding_completed: true },
       totais: { totalrendas: 0, totalcontas: 0, faltapagar: 0, saldoprevisto: 0 },
       totalCasa: 0,
       faturaManual: 0,
@@ -39,6 +40,8 @@ describe('Tooltips 100% CSS nos Templates EJS', () => {
       ],
       resumoPessoas: [{ pessoa: 'Amigo', total: 100 }],
       terceiros: [],
+      terceirosDistinct: [],
+      anotacoes: null,
       // Fallback function global usada nas views
       safeJs: (str) => str || '',
     };
