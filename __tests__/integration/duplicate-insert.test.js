@@ -57,6 +57,20 @@ jest.mock('../../src/services/syncService', () => ({
 
 describe('Teste de Duplicação de Lançamentos (Mocked DB)', () => {
   let agent;
+  let csrfToken;
+
+  /**
+   * O csrfProtect (double-submit cookie) valida POST/PUT/DELETE/PATCH com o token
+   * da sessão, via `_csrf` no body ou header `x-csrf-token`. O POST /login também
+   * é validado — sem o token ele devolve 403 e a sessão nunca autentica, o que
+   * derruba os POSTs seguintes com 403. Token em <input name="_csrf" value="...">.
+   */
+  async function buscarCsrfToken() {
+    const res = await agent.get('/login');
+    const match = /name="_csrf" value="([^"]+)"/.exec(res.text || '');
+    if (!match) throw new Error('Token CSRF não encontrado no form de login');
+    return match[1];
+  }
 
   beforeAll(async () => {
     agent = request.agent(app);
@@ -71,8 +85,12 @@ describe('Teste de Duplicação de Lançamentos (Mocked DB)', () => {
     repo.isMesFechado.mockResolvedValue(false);
     repo.getConfiguracoes.mockResolvedValue({ divisao_casa_minimo: '750.00', regras_sync: [] });
 
-    // Fazemos o login para preencher a sessão do Supertest
-    await agent.post('/login').send({ password: 'senha_teste' });
+    // Login já com o token da sessão
+    csrfToken = await buscarCsrfToken();
+    await agent
+      .post('/login')
+      .set('x-csrf-token', csrfToken)
+      .send({ password: 'senha_teste' });
   });
 
   afterEach(() => {
@@ -95,12 +113,18 @@ describe('Teste de Duplicação de Lançamentos (Mocked DB)', () => {
     };
 
     // Primeira inserção
-    const res1 = await agent.post('/api/lancamentos').send(lancamentoDados);
+    const res1 = await agent
+      .post('/api/lancamentos')
+      .set('x-csrf-token', csrfToken)
+      .send(lancamentoDados);
     expect(res1.status).toBe(200);
     expect(res1.body.success).toBe(true);
 
     // Segunda inserção idêntica
-    const res2 = await agent.post('/api/lancamentos').send(lancamentoDados);
+    const res2 = await agent
+      .post('/api/lancamentos')
+      .set('x-csrf-token', csrfToken)
+      .send(lancamentoDados);
     expect(res2.status).toBe(200);
     expect(res2.body.success).toBe(true);
 

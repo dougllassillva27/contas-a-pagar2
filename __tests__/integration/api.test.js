@@ -38,6 +38,22 @@ jest.mock('../../src/services/syncService', () => ({
 
 describe('Integração API (Mocked DB)', () => {
   let agent;
+  let csrfToken;
+
+  /**
+   * O csrfProtect usa double-submit cookie: o token vive na sessão e precisa ser
+   * reenviado em toda mutação (POST/PUT/DELETE/PATCH), via `_csrf` no body ou no
+   * header `x-csrf-token`. O próprio POST /login é alvo da validação — sem o token
+   * ele responde 403 e a sessão nunca é autenticada, o que faz o resto da suíte
+   * falhar em cascata (GET / vira 302 e os POSTs, 403).
+   * O token aparece no HTML do form de login em <input name="_csrf" value="...">.
+   */
+  async function buscarCsrfToken() {
+    const res = await agent.get('/login');
+    const match = /name="_csrf" value="([^"]+)"/.exec(res.text || '');
+    if (!match) throw new Error('Token CSRF não encontrado no form de login');
+    return match[1];
+  }
 
   beforeAll(async () => {
     agent = request.agent(app);
@@ -50,8 +66,13 @@ describe('Integração API (Mocked DB)', () => {
     });
     repo.criarToken.mockResolvedValue({ token: 'fake-token' });
 
-    // Fazemos o login para preencher a sessão do Supertest
-    await agent.post('/login').send({ password: 'senha_teste' });
+    // Pega o token da sessão e faz o login já com ele — a sessão mantém o mesmo
+    // token para as mutações seguintes.
+    csrfToken = await buscarCsrfToken();
+    await agent
+      .post('/login')
+      .set('x-csrf-token', csrfToken)
+      .send({ password: 'senha_teste' });
   });
 
   afterEach(() => {
@@ -68,6 +89,7 @@ describe('Integração API (Mocked DB)', () => {
 
       const res = await agent
         .post('/api/lancamentos/conferido-extrato-lote')
+        .set('x-csrf-token', csrfToken)
         .send({ ids: [10, 11, 12], conferido: true });
 
       expect(res.status).toBe(200);
@@ -81,6 +103,7 @@ describe('Integração API (Mocked DB)', () => {
 
       const res = await agent
         .post('/api/lancamentos/conferido-extrato-lote')
+        .set('x-csrf-token', csrfToken)
         .send({ ids: [10, 11, 12], conferido: false });
 
       expect(res.status).toBe(200);
@@ -99,7 +122,10 @@ describe('Integração API (Mocked DB)', () => {
       // Simula que a ação de toggle retornou true (trancado)
       repo.toggleMesFechado.mockResolvedValue(true);
 
-      const res = await agent.post('/api/meses-fechados/toggle').send({ month: testMonth, year: testYear });
+      const res = await agent
+        .post('/api/meses-fechados/toggle')
+        .set('x-csrf-token', csrfToken)
+        .send({ month: testMonth, year: testYear });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.mesFechado).toBe(true);
@@ -110,7 +136,7 @@ describe('Integração API (Mocked DB)', () => {
       // Simula que o mês JÁ ESTÁ fechado
       repo.isMesFechado.mockResolvedValue(true);
 
-      const res = await agent.post('/api/lancamentos').send({
+      const res = await agent.post('/api/lancamentos').set('x-csrf-token', csrfToken).send({
         descricao: 'Tentativa de Fraude',
         valor: '100',
         tipo_transacao: 'CONTA',
@@ -127,7 +153,10 @@ describe('Integração API (Mocked DB)', () => {
       // Simula que a ação de toggle retornou false (aberto)
       repo.toggleMesFechado.mockResolvedValue(false);
 
-      const res = await agent.post('/api/meses-fechados/toggle').send({ month: testMonth, year: testYear });
+      const res = await agent
+        .post('/api/meses-fechados/toggle')
+        .set('x-csrf-token', csrfToken)
+        .send({ month: testMonth, year: testYear });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.mesFechado).toBe(false);
