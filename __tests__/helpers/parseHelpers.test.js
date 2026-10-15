@@ -134,12 +134,24 @@ describe('parseParcelasFlex', () => {
 // normalizarParcelasPorTipo — regra de negócio completa
 // ==========================================================================
 describe('normalizarParcelasPorTipo', () => {
-  // --- Quando NÃO é parcelada ---
-  test('se não é parcelada, sempre retorna nulls', () => {
+  // --- A regra mudou em 14/10/2026 ---
+  // Antes: `isParcelada` decidia se as parcelas existiam, e só tipo
+  // 'parcelada'/'parcelado' era true. Isso tornava impossível criar uma parcela
+  // VISÍVEL (Tipo=CARTAO) com parcelas pela API, porque 'parcelado' grava
+  // Tipo=PARCELADO, que não aparece em nenhuma tela.
+  // Agora: quem decide é o PAYLOAD. `isParcelada` não filtra mais nada.
+
+  test('parcelas no payload são gravadas mesmo com isParcelada=false', () => {
     const result = normalizarParcelasPorTipo({ isParcelada: false, parcelasRaw: '10' });
-    expect(result.parcelaAtual).toBeNull();
-    expect(result.totalParcelas).toBeNull();
+    expect(result.parcelaAtual).toBe(1);
+    expect(result.totalParcelas).toBe(10);
     expect(result.erro).toBeUndefined();
+  });
+
+  test('"1/12" com isParcelada=false retorna atual=1, total=12', () => {
+    const result = normalizarParcelasPorTipo({ isParcelada: false, parcelasRaw: '1/12' });
+    expect(result.parcelaAtual).toBe(1);
+    expect(result.totalParcelas).toBe(12);
   });
 
   // --- Quando É parcelada (válido) ---
@@ -156,14 +168,29 @@ describe('normalizarParcelasPorTipo', () => {
     expect(result.totalParcelas).toBe(10);
   });
 
-  // --- Quando É parcelada (inválido) ---
+  // --- Sem parcelas no payload: nada a gravar, sem erro ---
+  test('parcelasRaw vazio retorna nulls (sem erro)', () => {
+    const result = normalizarParcelasPorTipo({ isParcelada: true, parcelasRaw: '' });
+    expect(result.parcelaAtual).toBeNull();
+    expect(result.totalParcelas).toBeNull();
+    expect(result.erro).toBeUndefined();
+  });
+
+  test('parcelasRaw undefined retorna nulls (sem erro)', () => {
+    const result = normalizarParcelasPorTipo({ isParcelada: false });
+    expect(result.parcelaAtual).toBeNull();
+    expect(result.totalParcelas).toBeNull();
+    expect(result.erro).toBeUndefined();
+  });
+
+  // --- Quando as parcelas vêm inválidas: erro, independente do tipo ---
   test('parcelada com total < 2 retorna erro', () => {
     const result = normalizarParcelasPorTipo({ isParcelada: true, parcelasRaw: '1' });
     expect(result.erro).toBeDefined();
   });
 
-  test('parcelada vazia retorna erro', () => {
-    const result = normalizarParcelasPorTipo({ isParcelada: true, parcelasRaw: '' });
+  test('total < 2 com isParcelada=false também retorna erro', () => {
+    const result = normalizarParcelasPorTipo({ isParcelada: false, parcelasRaw: '1' });
     expect(result.erro).toBeDefined();
   });
 

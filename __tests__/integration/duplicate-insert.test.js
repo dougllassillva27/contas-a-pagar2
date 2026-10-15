@@ -18,6 +18,11 @@ jest.mock('node-telegram-bot-api', () => {
 jest.mock('../../src/middlewares/rateLimiter', () => ({
   loginLimiter: (req, res, next) => next(),
   apiLimiter: (req, res, next) => next(),
+  // O módulo real exporta estes também; sem eles o require de app.js quebra com
+  // "argument handler must be a function" e a suíte inteira não carrega.
+  integracaoLimiter: (req, res, next) => next(),
+  signupLimiter: (req, res, next) => next(),
+  portalTerceiroLimiter: (req, res, next) => next(),
 }));
 
 const app = require('../../src/app');

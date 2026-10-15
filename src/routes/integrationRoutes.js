@@ -58,12 +58,13 @@ module.exports = function (repo, apiAuth) {
 
       // Decide tipo no banco:
       // - "fixa" => FIXA
-      // - "parcelada"/"parcelado" => PARCELADO
-      // - qualquer outro => CARTAO
+      // - qualquer outro => CARTAO (PARCELADO NÃO é mais gerado: ele não aparece
+      //   em nenhuma tela — ver __tests__/routes/integrationRoutes.test.js e a
+      //   decisão de 09/10/2026. O marcador de parcelada é `totalParcelas`.)
       const tipoNorm = normalizarTipoIntegracao(tipo);
       const isFixa = tipoNorm === 'fixa';
       const isParcelada = tipoNorm === 'parcelada' || tipoNorm === 'parcelado';
-      const dbTipo = isFixa ? TIPO.FIXA : (isParcelada ? TIPO.PARCELADO : TIPO.CARTAO);
+      const dbTipo = isFixa ? TIPO.FIXA : TIPO.CARTAO;
 
       // Aceita parcelas como string ("2", "1/2") ou campos separados (total_parcelas + parcela_atual)
       let parcelasRaw = parcelas;
@@ -193,7 +194,7 @@ module.exports = function (repo, apiAuth) {
         descricao: req.body.descricao !== undefined ? req.body.descricao : existente.descricao,
         valor: req.body.valor !== undefined ? parseValor(req.body.valor) : existente.valor,
         tipo: req.body.tipo !== undefined
-          ? (tipoNormPut === 'fixa' ? TIPO.FIXA : (isParceladaPut ? TIPO.PARCELADO : TIPO.CARTAO))
+          ? (tipoNormPut === 'fixa' ? TIPO.FIXA : TIPO.CARTAO)
           : existente.tipo,
         categoria: req.body.categoria !== undefined ? req.body.categoria : existente.categoria,
         nomeTerceiro: req.body.terceiro !== undefined ? normalizarTerceiro(req.body.terceiro) : existente.nometerceiro,

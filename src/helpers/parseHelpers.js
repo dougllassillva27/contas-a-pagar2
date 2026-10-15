@@ -62,21 +62,33 @@ const parseParcelasFlex = (parcelasRaw) => {
 };
 
 /**
- * Regra única de negócio (SRP): parcelas só existem quando for "parcelada".
+ * Regra única de negócio (SRP): parcelas são gravadas quando VÊM no payload.
  *
- * - Se NÃO é parcelada:
- *   => retorna { parcelaAtual:null, totalParcelas:null } (mesmo que venha algo no payload)
+ * Histórico (14/10/2026): antes esta função descartava as parcelas sempre que
+ * `isParcelada` fosse false — e `isParcelada` só era true para tipo
+ * 'parcelada'/'parcelado'. Como 'parcelado' grava Tipo=PARCELADO, que NÃO aparece
+ * em nenhuma tela do app, era impossível criar uma parcelada visível E com
+ * parcelas pela API. A UI nunca teve esse problema: `classificarLancamento`
+ * grava CARTAO com pAtual/pTotal.
  *
- * - Se é parcelada:
- *   => aceita "10" ou "1/10"
- *   => valida mínimo: total >= 2, atual >= 1, atual <= total
+ * O tipo deixou de decidir se as parcelas existem: `totalParcelas` é o marcador
+ * de parcelada (é o que o dashboard projeta). `isParcelada` é mantido na
+ * assinatura por compatibilidade, mas não filtra mais nada.
+ *
+ * - Sem parcelas no payload  => { parcelaAtual: null, totalParcelas: null }
+ * - Com parcelas             => aceita "10" ou "1/10"; valida total >= 2,
+ *                               atual >= 1 e atual <= total
  */
 const normalizarParcelasPorTipo = ({ isParcelada, parcelasRaw }) => {
-  if (!isParcelada) {
+  const bruto = parcelasRaw === undefined || parcelasRaw === null
+    ? ''
+    : String(parcelasRaw).trim();
+
+  if (!bruto) {
     return { parcelaAtual: null, totalParcelas: null };
   }
 
-  const { atual, total } = parseParcelasFlex(parcelasRaw);
+  const { atual, total } = parseParcelasFlex(bruto);
 
   // Validação mínima (sem ser agressiva demais)
   if (!total || total < 2 || !atual || atual < 1 || atual > total) {

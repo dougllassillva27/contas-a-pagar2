@@ -75,6 +75,96 @@ describe('Rotas de Integração M2M (integrationRoutes)', () => {
   });
 
   // ============================================================================
+  // PARCELAS COM tipo=cartao — regressão de 14/10/2026
+  //
+  // A API descartava parcelaAtual/totalParcelas sempre que o tipo não fosse
+  // 'parcelada'/'parcelado' (parseHelpers.normalizarParcelasPorTipo). Como
+  // 'parcelado' grava Tipo=PARCELADO — que NÃO aparece em nenhuma tela do app —
+  // era impossível ter uma parcelada visível E com parcelas pela API.
+  // A UI faz diferente: classificarLancamento grava CARTAO + pAtual/pTotal.
+  // Estes testes fixam a API no mesmo comportamento da UI.
+  // ============================================================================
+  describe('POST /lancamentos — parcelas com tipo=cartao', () => {
+    test('grava parcelaAtual/totalParcelas quando tipo=cartao', async () => {
+      repo.addLancamento.mockResolvedValue({ id: 10 });
+      const res = await request(app)
+        .post('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({
+          descricao: 'Parcelada 12x', valor: '152,20', tipo: 'cartao',
+          parcela_atual: 1, total_parcelas: 12, usuario_id: 1,
+        });
+
+      expect(res.status).toBe(201);
+      expect(repo.addLancamento).toHaveBeenCalledWith(1, expect.objectContaining({
+        tipo: 'CARTAO',
+        parcelaAtual: 1,
+        totalParcelas: 12,
+      }));
+    });
+
+    test('aceita parcelas no formato "1/12" junto de tipo=cartao', async () => {
+      repo.addLancamento.mockResolvedValue({ id: 11 });
+      await request(app)
+        .post('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({
+          descricao: 'Parcelada 12x', valor: '152,20', tipo: 'cartao',
+          parcelas: '1/12', usuario_id: 1,
+        });
+
+      expect(repo.addLancamento).toHaveBeenCalledWith(1, expect.objectContaining({
+        tipo: 'CARTAO',
+        parcelaAtual: 1,
+        totalParcelas: 12,
+      }));
+    });
+
+    test('tipo=parcelado grava CARTAO (PARCELADO é invisível nas telas)', async () => {
+      repo.addLancamento.mockResolvedValue({ id: 12 });
+      await request(app)
+        .post('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({
+          descricao: 'Parcelada 6x', valor: '100,00', tipo: 'parcelado',
+          total_parcelas: 6, usuario_id: 1,
+        });
+
+      expect(repo.addLancamento).toHaveBeenCalledWith(1, expect.objectContaining({
+        tipo: 'CARTAO',
+        totalParcelas: 6,
+      }));
+    });
+
+    test('sem parcelas no payload continua gravando null/null', async () => {
+      repo.addLancamento.mockResolvedValue({ id: 13 });
+      await request(app)
+        .post('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({ descricao: 'À vista', valor: '50,00', tipo: 'cartao', usuario_id: 1 });
+
+      expect(repo.addLancamento).toHaveBeenCalledWith(1, expect.objectContaining({
+        parcelaAtual: null,
+        totalParcelas: null,
+      }));
+    });
+
+    test('total_parcelas inválido (=1) retorna 400', async () => {
+      const res = await request(app)
+        .post('/api/v1/integracao/lancamentos')
+        .set('x-api-key', 'teste-m2m-token')
+        .send({
+          descricao: 'X', valor: '10,00', tipo: 'cartao',
+          total_parcelas: 1, usuario_id: 1,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+
+  // ============================================================================
   // POST /api/v1/integracao/copiar-mensal — automação mensal (timer local)
   // ============================================================================
   describe('POST /api/v1/integracao/copiar-mensal', () => {
