@@ -1,6 +1,46 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const db = require('../config/db');
+
+// ==============================================================================
+// Gate do health interno
+// Só é "local" quando o cliente é o próprio peer da conexão (sem proxy no meio),
+// porque req.ip vem de X-Forwarded-For com `trust proxy` ligado. Requisição
+// proxiada (nginx) ou vinda de outro container cai na exigência de x-api-key.
+// ==============================================================================
+function normalizarIp(valor) {
+  return String(valor || '').replace(/^::ffff:/, '');
+}
+
+function ehEnderecoLocal(ip) {
+  const normalizado = normalizarIp(ip);
+  return (
+    normalizado === '127.0.0.1' ||
+    normalizado === '::1' ||
+    normalizado.startsWith('127.') ||
+    normalizado.startsWith('10.10.0.')
+  );
+}
+
+function requisicaoLocal(req) {
+  const peer = normalizarIp(req.socket && req.socket.remoteAddress);
+  const cliente = normalizarIp(req.ip);
+  if (!peer || peer !== cliente) {
+    return false; // proxy na frente: o IP do header não é confiável
+  }
+  return ehEnderecoLocal(peer);
+}
+
+function tokenValido(req) {
+  const esperado = (process.env.API_TOKEN || '').trim();
+  const enviado = (req.headers['x-api-key'] || '').trim();
+  if (!esperado || !enviado) return false;
+
+  const a = Buffer.from(enviado);
+  const b = Buffer.from(esperado);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 // Health público — mínimo exposto (sem uptime, latência, timestamp)
 router.get('/health', async (req, res) => {
@@ -12,11 +52,10 @@ router.get('/health', async (req, res) => {
   }
 });
 
-// Health interno — detalhes completos (só via localhost/WireGuard)
+// Health interno — detalhes completos (só local de verdade ou com x-api-key)
 router.get('/health/internal', async (req, res) => {
-  const ip = req.ip || req.connection.remoteAddress || '';
-  const isLocal = ip === '127.0.0.1' || ip === '::1' || ip.startsWith('10.10.0.') || ip.startsWith('::ffff:127.') || ip.startsWith('::ffff:10.10.0.');
-  if (!isLocal) {
+  const autorizado = requisicaoLocal(req) || tokenValido(req);
+  if (!autorizado) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

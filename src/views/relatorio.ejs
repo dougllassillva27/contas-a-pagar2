@@ -174,7 +174,7 @@
     </div>
 
     <!-- Dados provindos em tempo de compilação renderizados para JSON Seguro -->
-    <script id="dados-raw" type="application/json"><%- JSON.stringify(dados || {}) %></script>
+    <script id="dados-raw" type="application/json"><%- JSON.stringify(dados || {}).replace(/</g, '\\u003c') %></script>
 
     <!-- Scripts de Interatividade e Funcionalidade -->
     <script nonce="<%= cspNonce %>">

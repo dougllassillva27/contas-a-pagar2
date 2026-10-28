@@ -71,36 +71,27 @@ describe('Rotas Públicas (publicRoutes)', () => {
     expect(app.response.render).toHaveBeenCalledWith('login', expect.any(Object));
   });
 
-  test('GET /signup - deve renderizar view de cadastro', async () => {
+  test('GET /signup - cadastro removido (404)', async () => {
     const res = await request(app).get('/signup');
-    expect(res.status).toBe(200);
-    expect(app.response.render).toHaveBeenCalledWith('signup', expect.any(Object));
+    expect(res.status).toBe(404);
   });
 
-  test('POST /signup - deve criar usuário e redirecionar para home', async () => {
-    repo.obterUsuarioPorLogin.mockResolvedValue(null);
-    repo.criarUsuario.mockResolvedValue({ id: 3, nome: 'Novo', login: 'novo' });
-    
+  test('POST /signup - cadastro removido (404), ninguém é criado', async () => {
     const res = await request(app)
       .post('/signup')
-      .send({ nome: 'Novo', login: 'novo', password: 'password123' });
+      .send({ nome: 'Intruso', login: 'intruso', password: 'senha-do-douglas-2026', convite: 'qualquer' });
 
-    expect(res.status).toBe(302);
-    expect(res.headers.location).toBe('/');
-    expect(repo.criarUsuario).toHaveBeenCalled();
+    expect(res.status).toBe(404);
+    expect(repo.criarUsuario).not.toHaveBeenCalled();
   });
 
-  test('POST /signup - deve falhar se campos estiverem vazios', async () => {
-    const res = await request(app)
-      .post('/signup')
-      .send({ nome: '', login: '', password: '' });
-
-    expect(res.status).toBe(200); // Renderiza erro na mesma página
-    expect(app.response.render).toHaveBeenCalledWith('signup', expect.objectContaining({ error: expect.any(String) }));
-  });
-
-  test('GET /logout - deve redirecionar para login', async () => {
+  test('GET /logout - deve recusar (405) para não permitir logout por CSRF', async () => {
     const res = await request(app).get('/logout');
+    expect(res.status).toBe(405);
+  });
+
+  test('POST /logout - deve encerrar sessão e redirecionar para login', async () => {
+    const res = await request(app).post('/logout');
     expect(res.status).toBe(302);
     expect(res.headers.location).toBe('/login');
   });

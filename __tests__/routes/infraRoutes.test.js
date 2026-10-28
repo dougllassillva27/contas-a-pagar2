@@ -111,4 +111,57 @@ describe('GET /health/internal (localhost only)', () => {
     expect(res.status).toBe(403);
     expect(res.body.error).toBe('Forbidden');
   });
+
+  test('não deve confiar em X-Forwarded-For quando o peer não é o cliente', async () => {
+    const app = express();
+    app.set('trust proxy', 1);
+    // Simula requisição chegando de outro container (peer diferente do header)
+    app.use((req, _res, next) => {
+      Object.defineProperty(req, 'socket', {
+        value: { remoteAddress: '172.18.0.9' },
+        configurable: true,
+      });
+      next();
+    });
+    app.use('/', infraRoutes);
+
+    const res = await request(app).get('/health/internal').set('X-Forwarded-For', '127.0.0.1');
+    expect(res.status).toBe(403);
+  });
+
+  test('deve liberar health interno com x-api-key válido fora do local', async () => {
+    const anterior = process.env.API_TOKEN;
+    process.env.API_TOKEN = 'token-de-teste-interno';
+    db.query.mockResolvedValueOnce({});
+
+    const app = express();
+    app.set('trust proxy', 1);
+    app.use('/', infraRoutes);
+
+    const res = await request(app)
+      .get('/health/internal')
+      .set('X-Forwarded-For', '203.0.113.10')
+      .set('x-api-key', 'token-de-teste-interno');
+
+    expect(res.status).toBe(200);
+    expect(res.body.app).toBe('online');
+    process.env.API_TOKEN = anterior;
+  });
+
+  test('deve recusar x-api-key inválido', async () => {
+    const anterior = process.env.API_TOKEN;
+    process.env.API_TOKEN = 'token-de-teste-interno';
+
+    const app = express();
+    app.set('trust proxy', 1);
+    app.use('/', infraRoutes);
+
+    const res = await request(app)
+      .get('/health/internal')
+      .set('X-Forwarded-For', '203.0.113.10')
+      .set('x-api-key', 'token-errado');
+
+    expect(res.status).toBe(403);
+    process.env.API_TOKEN = anterior;
+  });
 });

@@ -31,6 +31,7 @@ const { apiLimiter } = require('./middlewares/rateLimiter');
 const { csrfProtect } = require('./middlewares/csrf');
 const normalizePath = require('./middlewares/normalizePath');
 const { loginBanMiddleware } = require('./middlewares/loginBan');
+const { PostgresSessionStore } = require('./config/sessionStore');
 const crypto = require('crypto');
 
 const app = express();
@@ -73,9 +74,14 @@ app.use(requestLogger);
 
 app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies Secure em HTTPS
 
+// Sessão persistente no Postgres: sobrevive a restart e não acumula memória.
+// Em teste fica o MemoryStore para não exigir banco.
+const sessionStore = process.env.NODE_ENV === 'test' ? undefined : new PostgresSessionStore();
+
 app.use(
   session({
     secret: safeSessionSecret,
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -106,7 +112,6 @@ app.use(telegramRoutes(repo));
 // 2. Rotas públicas (login/logout) — antes de qualquer autenticação
 // Login ban: bloqueia IPs com muitas falhas (antes do rate limiter)
 app.use('/login', loginBanMiddleware);
-app.use('/signup', loginBanMiddleware);
 // CSRF protection: gera token para formulários, valida em POSTs
 app.use(csrfProtect);
 

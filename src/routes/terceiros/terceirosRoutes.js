@@ -110,6 +110,7 @@ module.exports = function (repo) {
         currentPath: req.path,
         whatsappTemplate,
         configuracoes: configuracoesValidas,
+        safeJs: require('../lancamentos/classificacaoHelpers').safeJs,
         titulo: 'Gestão Financeira - Terceiros',
       });
     })

@@ -9,7 +9,7 @@ services:
     container_name: contas-a-pagar
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "127.0.0.1:${PORT:-3000}:3000"
     env_file:
       - .env
     environment:

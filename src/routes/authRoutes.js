@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const TokenRepository = require('../repositories/TokenRepository');
 const asyncHandler = require('../helpers/asyncHandler');
+const { validarSenha } = require('../helpers/passwordPolicy');
 
 module.exports = function(repo) {
   
@@ -13,10 +14,19 @@ module.exports = function(repo) {
   // POST /api/auth/token — Gera token persistente (login com "Lembrar de mim")
   // ==============================================================================
   router.post('/api/auth/token', asyncHandler(async (req, res) => {
-    const { userId } = req.body;
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
 
-    if (!userId) {
-      return res.status(400).json({ error: 'userId é obrigatório' });
+    // 🔒 O sujeito da operação é sempre o dono da sessão.
+    // O corpo é aceito apenas por compatibilidade com o front antigo.
+    const userId = req.session.user.id;
+
+    if (req.body && req.body.userId !== undefined && String(req.body.userId) !== String(userId)) {
+      console.warn(
+        `[AUTH] Tentativa de emitir token para outro usuário - sessão: ${userId}, solicitado: ${req.body.userId}`
+      );
+      return res.status(403).json({ error: 'Não é permitido emitir token para outro usuário' });
     }
 
     // Revoga tokens antigos do usuário (um token ativo por dispositivo)
@@ -108,16 +118,14 @@ module.exports = function(repo) {
       return res.status(400).json({ error: 'Preencha todos os campos' });
     }
 
-    if (novaSenha.length < 6) {
-      return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
-    }
-
-    if (novaSenha.length > 128) {
-      return res.status(400).json({ error: 'A senha não pode exceder 128 caracteres.' });
-    }
-
     if (novaSenha !== confirmarSenha) {
       return res.status(400).json({ error: 'As senhas não coincidem' });
+    }
+
+    // Política mínima (mesma do cadastro): 12+ caracteres, sem senha óbvia
+    const senhaAvaliada = validarSenha(novaSenha, req.session?.user?.login);
+    if (!senhaAvaliada.ok) {
+      return res.status(400).json({ error: senhaAvaliada.erro });
     }
 
     // Verificar se usuário está logado

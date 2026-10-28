@@ -1,131 +1,23 @@
 // ==============================================================================
-// ✅ login.js — Gerenciamento de Token Persistente
+// ⚠️ ARQUIVO DESATIVADO — a autenticação persistente não usa mais token em JS
+//
+// Antes: o front pedia um token de 90 dias em /api/auth/token, guardava em
+// localStorage e o reenviava a cada carregamento. Token de longa duração em
+// localStorage fica acessível a qualquer XSS e o usuário não conseguia revogar.
+//
+// Agora: a sessão persistente é o cookie httpOnly "remember_me", definido pelo
+// servidor no POST /login quando "lembrar de mim" está marcado. JavaScript da
+// página não enxerga esse cookie.
+//
+// Nenhuma view carrega este arquivo (ele já estava fora do HTML do login). Ele
+// segue aqui apenas para limpar os valores antigos que ficaram nos navegadores.
 // ==============================================================================
 
-const STORAGE_KEY = 'auth_token_persistente';
-const TOKEN_EXPIRY_KEY = 'auth_token_expiry';
-
-// ==============================================================================
-// Verifica token persistente ao carregar página de login
-// ==============================================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  const token = localStorage.getItem(STORAGE_KEY);
-  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
-
-  if (token && expiry) {
-    // Verifica se token ainda é válido
-    if (new Date(expiry) > new Date()) {
-      // Tenta validar token no backend
-      try {
-        const res = await fetch('/api/auth/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
-
-        const data = await res.json();
-
-        if (data.valid && data.user) {
-          // Token válido → redireciona para dashboard
-          window.location.href = '/';
-          return;
-        }
-      } catch (err) {
-        // Erro ao validar token
-      }
-    }
-
-    // Token inválido/expirado → limpa storage
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+(function limparTokenLegado() {
+  try {
+    localStorage.removeItem('auth_token_persistente');
+    localStorage.removeItem('auth_token_expiry');
+  } catch (_) {
+    // Modo privado / storage bloqueado: nada a fazer
   }
-});
-
-// ==============================================================================
-// Intercepta submit do formulário para gerar token se "Lembrar de mim" marcado
-// ==============================================================================
-const loginForm = document.getElementById('loginForm');
-
-if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
-    const lembrarCheckbox = document.getElementById('lembrar');
-    const passwordInput = document.getElementById('password');
-
-    // Se "Lembrar de mim" NÃO está marcado, deixa o form seguir normal
-    if (!lembrarCheckbox || !lembrarCheckbox.checked) {
-      return; // Submit normal do form
-    }
-
-    // Previne submit normal para processar token primeiro
-    e.preventDefault();
-
-    const password = passwordInput.value;
-
-    try {
-      // 1. Faz login normal via POST
-      const loginRes = await fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `password=${encodeURIComponent(password)}`,
-        redirect: 'manual', // Não segue redirect automaticamente
-      });
-
-      // 2. Verifica se login foi bem-sucedido (redirect para /)
-      if (loginRes.status === 302 && loginRes.headers.get('location') === '/') {
-        // 3. Login OK → gera token persistente
-        // Precisamos do userId → faz request para validar sessão
-        const sessionRes = await fetch('/api/auth/me');
-        
-        if (sessionRes.ok) {
-          const userData = await sessionRes.json();
-          
-          // 4. Gera token persistente
-          const tokenRes = await fetch('/api/auth/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: userData.id }),
-          });
-
-          if (tokenRes.ok) {
-            const tokenData = await tokenRes.json();
-            
-            // 5. Armazena token no localStorage
-            localStorage.setItem(STORAGE_KEY, tokenData.token);
-            localStorage.setItem(TOKEN_EXPIRY_KEY, tokenData.expiresAt);
-          }
-        }
-
-        // 6. Redireciona para dashboard
-        window.location.href = '/';
-      } else {
-        // Login falhou → mostra erro
-        const errorData = await loginRes.json().catch(() => ({}));
-        alert(errorData.error || 'Senha incorreta!');
-      }
-    } catch (err) {
-      alert('Erro de conexão. Tente novamente.');
-    }
-  });
-}
-
-// ==============================================================================
-// Função para logout (chamar antes de redirecionar para /logout)
-// ==============================================================================
-async function logoutPersistente() {
-  const token = localStorage.getItem(STORAGE_KEY);
-  
-  if (token) {
-    try {
-      await fetch('/api/auth/token', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
-    } catch (err) {
-      // Erro ao revogar token
-    }
-  }
-
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(TOKEN_EXPIRY_KEY);
-}
+})();

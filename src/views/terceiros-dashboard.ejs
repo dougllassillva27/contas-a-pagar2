@@ -81,7 +81,7 @@
     data-userid="<%= user.id %>" 
     data-mes-fechado="<%= mesFechado ? 'true' : 'false' %>"
     data-config-divisao-minimo="<%= configuracoes.divisao_casa_minimo || '750.00' %>"
-    data-regras-sync='<%- JSON.stringify(configuracoes.regras_sync || []) %>'
+    data-regras-sync='<%- JSON.stringify(configuracoes.regras_sync || []).replace(/</g, '\\u003c').replace(/'/g, '&#39;') %>'
     data-onboarding-completed="<%= configuracoes.onboarding_completed ? 'true' : 'false' %>"
 >
     <%- include('partials/header') %>
@@ -122,13 +122,13 @@
                         </div>
 
                         <div class="terceiro-dash-actions">
-                            <button class="btn-dash-whatsapp" onclick="enviarWhatsApp('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>', '<%= pessoa.tokenPublico %>')">
+                            <button class="btn-dash-whatsapp" onclick="enviarWhatsApp('<%= safeJs(pessoa.nome) %>', '<%= safeJs(pessoa.telefone || '') %>', '<%= pessoa.tokenPublico %>')">
                                 <span class="material-icons" style="font-size: 18px;">chat</span> WhatsApp
                             </button>
-                            <button class="btn-dash-copiar" onclick="copiarLinkEspecifico('<%= pessoa.nome %>', '<%= pessoa.tokenPublico %>')">
+                            <button class="btn-dash-copiar" onclick="copiarLinkEspecifico('<%= safeJs(pessoa.nome) %>', '<%= pessoa.tokenPublico %>')">
                                 <span class="material-icons" style="font-size: 18px;">content_copy</span> Copiar
                             </button>
-                            <button class="btn-dash-numero" onclick="editarTelefone('<%= pessoa.nome %>', '<%= pessoa.telefone || '' %>')">
+                            <button class="btn-dash-numero" onclick="editarTelefone('<%= safeJs(pessoa.nome) %>', '<%= safeJs(pessoa.telefone || '') %>')">
                                 <span class="material-icons" style="font-size: 18px;">edit</span> Número
                             </button>
                             <button class="btn-dash-abrir" onclick="abrirLinkEspecifico('<%= pessoa.tokenPublico %>')">

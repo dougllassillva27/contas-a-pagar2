@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { loginLimiter, signupLimiter, portalTerceiroLimiter } = require('../middlewares/rateLimiter');
+const { loginLimiter, portalTerceiroLimiter } = require('../middlewares/rateLimiter');
 const { registerFailure } = require('../middlewares/loginBan');
 const { LIMITES } = require('../constants');
 const db = require('../config/db');
@@ -21,48 +21,6 @@ module.exports = function (repo) {
       return res.redirect('/');
     }
     res.render('login', { error: null, titulo: 'Gestão Financeira - Login' });
-  });
-
-  // ============================================================================
-  // GET /signup — Renderiza página de cadastro
-  // ============================================================================
-  router.get('/signup', (req, res) => {
-    if (req.session.user) {
-      return res.redirect('/');
-    }
-    res.render('signup', { error: null, titulo: 'Gestão Financeira - Cadastro' });
-  });
-
-  // ============================================================================
-  // POST /signup — Processa criação de nova conta
-  // ============================================================================
-  router.post('/signup', signupLimiter, async (req, res) => {
-    const nome = (req.body.nome || '').trim();
-    const login = (req.body.login || '').trim().toLowerCase();
-    const password = (req.body.password || '').trim();
-
-    if (!nome || !login || !password) {
-      return res.render('signup', { error: 'Todos os campos são obrigatórios!', titulo: 'Gestão Financeira - Cadastro' });
-    }
-
-    try {
-      const usuarioExistente = await repo.obterUsuarioPorLogin(login);
-      if (usuarioExistente) {
-        return res.render('signup', { error: 'Este login já está em uso.', titulo: 'Gestão Financeira - Cadastro' });
-      }
-
-      const hash = await bcrypt.hash(password, 10);
-      const novoUsuario = await repo.criarUsuario(nome, login, hash);
-
-      console.log(`[SIGNUP] ✅ Novo usuário criado: ${novoUsuario.nome} (${novoUsuario.login})`);
-
-      // Auto-login após cadastro
-      req.session.user = { id: novoUsuario.id, nome: novoUsuario.nome, login: novoUsuario.login };
-      return res.redirect('/');
-    } catch (err) {
-      console.error(`[SIGNUP] ❌ Erro ao criar usuário: ${err.message}`);
-      return res.render('signup', { error: 'Erro interno ao criar conta.', titulo: 'Gestão Financeira - Cadastro' });
-    }
   });
 
   // ============================================================================
@@ -147,9 +105,17 @@ module.exports = function (repo) {
   });
 
   // ============================================================================
-  // GET /logout — Encerra sessão
+  // POST /logout — Encerra sessão (POST para exigir token CSRF)
+  // GET /logout responde 405: um link/logout por GET é vulnerável a CSRF
+  // (um <img src="/logout"> derrubava a sessão do usuário).
   // ============================================================================
-  router.get('/logout', async (req, res) => {
+  router.get('/logout', (req, res) => {
+    res.status(405).type('html').send(
+      '<h1>405 — Método não permitido</h1><p>Para sair, use o botão "Sair" na barra lateral.</p>'
+    );
+  });
+
+  router.post('/logout', async (req, res) => {
     const userName = req.session.user?.nome || 'Desconhecido';
     const token = req.cookies?.remember_me;
 

@@ -86,11 +86,35 @@ describe('Rotas de Autenticação Persistente', () => {
       expect(TokenRepository.criarToken).toHaveBeenCalledWith(1, 90);
     });
 
-    test('deve retornar erro 400 se userId não for fornecido', async () => {
-      const res = await request(app).post('/api/auth/token').send({});
+    test('deve emitir para o dono da sessão mesmo sem userId no corpo', async () => {
+      TokenRepository.criarToken.mockResolvedValue({ Token: 'token-sessao', ExpiresAt: new Date() });
 
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('userId é obrigatório');
+      const res = await request(app)
+        .post('/api/auth/token')
+        .set('x-test-session', JSON.stringify({ id: 1, nome: 'Dodo', login: 'dodo' }))
+        .send({});
+
+      expect(res.status).toBe(200);
+      expect(TokenRepository.criarToken).toHaveBeenCalledWith(1, 90);
+    });
+
+    test('deve recusar emissão de token para outro usuário (cross-user)', async () => {
+      TokenRepository.criarToken.mockResolvedValue({ token: 'x', expiresAt: new Date() });
+
+      const res = await request(app)
+        .post('/api/auth/token')
+        .set('x-test-session', JSON.stringify({ id: 1, nome: 'Dodo', login: 'dodo' }))
+        .send({ userId: 2 });
+
+      expect(res.status).toBe(403);
+      expect(TokenRepository.criarToken).not.toHaveBeenCalled();
+    });
+
+    test('deve exigir sessão autenticada', async () => {
+      const res = await request(app).post('/api/auth/token').send({ userId: 2 });
+
+      expect(res.status).toBe(401);
+      expect(TokenRepository.criarToken).not.toHaveBeenCalled();
     });
 
     test('deve retornar erro 500 se falhar ao criar token', async () => {

@@ -7,6 +7,7 @@ const router = express.Router();
 const db = require('../../config/db');
 const asyncHandler = require('../../helpers/asyncHandler');
 const { isValidMonthYear, sanitizeString } = require('../../middlewares/inputValidation');
+const { destinoPermitido } = require('../../services/syncService');
 
 module.exports = function (repo) {
   // --- MESES FECHADOS ---
@@ -59,6 +60,24 @@ module.exports = function (repo) {
       if (!chave || valor === undefined) {
         return res.status(400).json({ error: 'Chave e valor são obrigatórios.' });
       }
+
+      // 🔒 Regras de sincronização escrevem em outras contas: o destino precisa
+      // estar no domicílio autorizado (usuários 1 e 2 por padrão).
+      if (chave === 'regras_sync') {
+        if (!Array.isArray(valor)) {
+          return res.status(400).json({ error: 'regras_sync deve ser uma lista de regras.' });
+        }
+
+        const destinoInvalido = valor.some(
+          (regra) => regra && regra.usuarioDestino !== undefined && !destinoPermitido(regra.usuarioDestino)
+        );
+
+        if (destinoInvalido) {
+          console.warn(`[CONFIG] Usuário ${userId} tentou salvar regra de sync com destino fora do domicílio.`);
+          return res.status(400).json({ error: 'Regra de sincronização com destino não autorizado.' });
+        }
+      }
+
       await repo.saveConfiguracao(userId, chave, valor);
       res.json({ success: true });
     })

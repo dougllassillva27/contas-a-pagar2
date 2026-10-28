@@ -12,6 +12,30 @@ function clearQueryCache() {
   _queryCache.clear();
 }
 
+// ==============================================================================
+// Autorização do domicílio
+// A sincronização copia valores ENTRE as contas de um mesmo domicílio (ex.: Dodo
+// e Vitória). Só usuários listados aqui podem executar regras e só eles podem ser
+// destino — qualquer conta nova fica fora.
+// ==============================================================================
+function usuariosPermitidos() {
+  const bruto = process.env.SYNC_USUARIOS_PERMITIDOS || '1,2';
+  return new Set(
+    bruto
+      .split(',')
+      .map((v) => parseInt(v.trim(), 10))
+      .filter((v) => Number.isInteger(v) && v > 0)
+  );
+}
+
+function usuarioPodeSincronizar(userId) {
+  return usuariosPermitidos().has(Number(userId));
+}
+
+function destinoPermitido(usuarioDestino) {
+  return usuariosPermitidos().has(Number(usuarioDestino));
+}
+
 /**
  * Motor de Sincronização Dinâmico (SaaS Ready)
  * Processa regras declarativas armazenadas no JSONB do usuário.
@@ -23,6 +47,13 @@ function clearQueryCache() {
  * @param {Array} regras - Array de objetos de regra (vindo de configuracoes.regras_sync)
  */
 async function executarSincronizacaoDinamica(repo, userId, month, year, regras) {
+  // 🔒 A sincronização entre contas é um recurso do domicílio: só os usuários
+  // explicitamente autorizados podem rodar regras (e escrever em outro usuário).
+  if (!usuarioPodeSincronizar(userId)) {
+    console.warn(`[SYNC] Usuário ${userId} não autorizado a executar sincronização. Regras ignoradas.`);
+    return;
+  }
+
   const mutexKey = `${userId}:${month}:${year}`;
 
   // Se já tem sync rodando para este usuário/mês/ano, retorna imediatamente
@@ -86,6 +117,11 @@ async function processarCopiarContas(repo, sourceUserId, month, year, config) {
     return;
   }
 
+  if (!destinoPermitido(usuarioDestino)) {
+    console.warn(`[SYNC] Destino ${usuarioDestino} fora do domicílio autorizado. Regra ignorada.`);
+    return;
+  }
+
   const cacheKey = `total_${terceiroOrigem}_${sourceUserId}_${month}_${year}`;
   let total = _queryCache.get(cacheKey);
 
@@ -106,6 +142,11 @@ async function processarCopiarContaFixa(repo, sourceUserId, month, year, config)
   const { descricaoOrigem, terceiroOrigem, usuarioDestino, contaDestino } = config;
 
   if (!descricaoOrigem || !usuarioDestino || !contaDestino) {
+    return;
+  }
+
+  if (!destinoPermitido(usuarioDestino)) {
+    console.warn(`[SYNC] Destino ${usuarioDestino} fora do domicílio autorizado. Regra ignorada.`);
     return;
   }
 
@@ -194,4 +235,8 @@ async function processarDivisaoCasa(repo, sourceUserId, month, year, config) {
   await repo.bulkUpsertContasFixas(sourceUserId, operations);
 }
 
-module.exports = { executarSincronizacaoDinamica };
+module.exports = {
+  executarSincronizacaoDinamica,
+  usuarioPodeSincronizar,
+  destinoPermitido,
+};

@@ -96,6 +96,36 @@ describe('syncService (Dinâmico)', () => {
     expect(mockRepo.getTotalTerceiroCartao).not.toHaveBeenCalled();
   });
 
+  test('deve ignorar regras de usuário fora do domicílio autorizado', async () => {
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockRepo.getTotalTerceiroCartao.mockResolvedValue(999);
+
+    const regras = [
+      { tipo: 'COPIAR_CONTAS', terceiroOrigem: 'Casa', usuarioDestino: 1, contaDestino: 'Aluguel' },
+    ];
+
+    // usuário 3 = conta criada no /signup, fora de SYNC_USUARIOS_PERMITIDOS (1,2)
+    await syncService.executarSincronizacaoDinamica(mockRepo, 3, 11, 2026, regras);
+
+    expect(mockRepo.getTotalTerceiroCartao).not.toHaveBeenCalled();
+    expect(mockRepo.findAndUpdateOrCreateContaFixa).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
+
+  test('deve ignorar regra cujo destino está fora do domicílio', async () => {
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockRepo.getTotalTerceiroCartao.mockResolvedValue(500);
+
+    const regras = [
+      { tipo: 'COPIAR_CONTAS', terceiroOrigem: 'Casa', usuarioDestino: 99, contaDestino: 'Aluguel' },
+    ];
+
+    await syncService.executarSincronizacaoDinamica(mockRepo, 1, 11, 2026, regras);
+
+    expect(mockRepo.findAndUpdateOrCreateContaFixa).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
+
   test('deve tratar erros de regras individuais sem quebrar o lote', async () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     mockRepo.getTotalTerceiroCartao.mockRejectedValue(new Error('Erro Fatal'));

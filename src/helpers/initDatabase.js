@@ -201,6 +201,16 @@ async function initDatabase() {
       ALTER TABLE Usuarios ADD COLUMN IF NOT EXISTS passwordVersion INT DEFAULT 0
     `);
 
+    // 12. Tabela de sessões (session store persistente — sobrevive a restart)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS sessoes (
+          sid VARCHAR(255) PRIMARY KEY,
+          sess JSON NOT NULL,
+          expire TIMESTAMPTZ NOT NULL
+      )
+    `);
+    await db.query('CREATE INDEX IF NOT EXISTS idx_sessoes_expire ON sessoes(expire)');
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);
