@@ -55,7 +55,40 @@ document.addEventListener('keydown', (e) => {
     }
     fecharMenuContexto();
   }
-  
+
+  // Acessibilidade: fechar o modal de aviso (OK) com Enter ou Espaço, não só clique
+  if (e.key === 'Enter' || e.key === ' ') {
+    const modalAviso = document.getElementById('modalAviso');
+    if (modalAviso && modalAviso.classList.contains('active')) {
+      e.preventDefault();
+      fecharModalAviso();
+      return;
+    }
+  }
+
+  // Acessibilidade: confirmar diálogos de ação com Enter (Escape já cancela).
+  // Espaço fica de fora de propósito: são ações destrutivas e espaço é tecla de scroll.
+  if (e.key === 'Enter') {
+    const modalConfirmacaoAcao = document.getElementById('modalConfirmacaoAcao');
+    if (modalConfirmacaoAcao && modalConfirmacaoAcao.classList.contains('active')) {
+      const btnConfirmarAcao = document.getElementById('btnConfirmarAcao');
+      if (btnConfirmarAcao) {
+        e.preventDefault();
+        btnConfirmarAcao.click();
+        return;
+      }
+    }
+    const modalConfirmar = document.getElementById('modalConfirmar');
+    if (modalConfirmar && modalConfirmar.classList.contains('active')) {
+      const btnConfirmarExclusao = document.getElementById('btnConfirmarExclusao');
+      if (btnConfirmarExclusao) {
+        e.preventDefault();
+        btnConfirmarExclusao.click();
+        return;
+      }
+    }
+  }
+
   // Acessibilidade: Ativar elementos com role="button" via teclado
   if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute('role') === 'button') {
     e.preventDefault();
