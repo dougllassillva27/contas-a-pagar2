@@ -377,6 +377,23 @@ describe('dono inferido nos créditos/estornos', () => {
     expect(r.creditosBanco[0]._donoInferido).toBeUndefined();
   });
 
+  test('usa a data da compra para desempatar o mesmo estabelecimento', () => {
+    // caso real de nov/2026: três JIM.COM DAVI DE OLIVEIRA no mês, de duas pessoas
+    const r = conciliar({
+      transacoes: [
+        compraParcelada('JIM.COM DAVI DE OLIVEIRA', 475.73, 2, 12, { date: '2026-10-30' }),
+        compraParcelada('JIM.COM DAVI DE OLIVEIRA', 190.25, 4, 12, { date: '2026-10-30' }),
+        estorno('JIM.COM DAVI DE OLIVEIRA', -0.09),
+      ],
+      lancamentos: [
+        { descricao: '06/10 JIM.COM Davi De (empréstimo arrumar Uno)', valor: 475.64, dono: 'Mãe', venc: '2026-11-10', parcelaatual: 2, totalparcelas: 12 },
+        { descricao: '07/08 JIM COM Davi (empréstimo contas)', valor: 190.25, dono: 'Davi', venc: '2026-11-10', parcelaatual: 4, totalparcelas: 12 },
+      ],
+    });
+    expect(r.creditosBanco[0]._donoSugerido).toBe('Mãe');
+    expect(r.creditosBanco[0]._donoMotivo).toBe('mesmo estabelecimento e mesma data');
+  });
+
   test('titular (dono vazio no banco) é inferido como "eu", não como desconhecido', () => {
     const r = conciliar({
       transacoes: [estorno('UBER *TRIP', -2.5)],

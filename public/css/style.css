@@ -2021,6 +2021,8 @@ a:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+  flex: 0 1 auto;
   max-width: 100%;
 }
 
@@ -2098,11 +2100,10 @@ a:focus {
   font-size: 0.88rem;
 }
 
+/* Linha de atenção (cobrança fora do sistema). Sem caixa de fundo: o realce fica
+   na pílula do valor e no cabeçalho vermelho da coluna. O padding lateral também
+   saiu, era ele que fazia o texto parecer escapar do quadrinho. */
 .conciliacao-linha-destaque {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  padding-left: 8px;
-  padding-right: 8px;
   border-bottom-color: transparent;
 }
 

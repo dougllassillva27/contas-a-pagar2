@@ -355,9 +355,9 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
 
   // ---- Dono dos créditos/estornos -------------------------------------------
   // Crédito do banco chega sem dono. Herda o dono do lançamento do mesmo
-  // estabelecimento (primeiro token igual ou descrição parecida), mas só quando
-  // TODOS os candidatos apontam para um único dono: um estorno de R$ 0,09 do JIM
-  // é de quem paga a parcela do JIM, não do titular.
+  // estabelecimento, e a data resolve o empate quando o mesmo estabelecimento
+  // tem lançamentos de pessoas diferentes: o crédito de 06/10 casa com o
+  // lançamento "06/10 JIM.COM Davi De" (Mãe), não com o "07/08 JIM COM Davi" (Davi).
   const donoDe = (item) => {
     const bruto = item && (item.dono != null ? item.dono : item.nometerceiro);
     return String(bruto || '').trim() || 'eu'; // vazio no banco = titular
@@ -375,21 +375,38 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
     if (ta && ta === primeiroToken(b) && ta.length >= 4) return true;
     return similaridade(a, b) >= LIMIAR_DIVERGENTE;
   };
+  // A descrição do lançamento do app segue o padrão "DD/MM ESTABELECIMENTO".
+  const diaMesDaDescricao = (texto) => {
+    const m = String(texto || '').match(/^\s*(\d{1,2})\s*\/\s*(\d{1,2})\s+/);
+    return m ? `${m[1].padStart(2, '0')}/${m[2].padStart(2, '0')}` : null;
+  };
+  const diaMesDaData = (iso) => {
+    const [, mes, dia] = String(iso || '').slice(0, 10).split('-');
+    return mes && dia ? `${dia}/${mes}` : null;
+  };
 
   const donosConhecidos = [];
-  for (const c of casados) donosConhecidos.push([descricaoDe(c.banco), donoDe(c.app)]);
-  for (const d of divergentes) donosConhecidos.push([descricaoDe(d.banco), donoDe(d.app)]);
-  for (const r of rateios) for (const a of r.apps || []) donosConhecidos.push([descricaoDe(r.banco), donoDe(a)]);
-  for (const l of app) donosConhecidos.push([descricaoDe(l), donoDe(l)]);
+  const registrar = (descricaoApp, descricaoBanco, dono) => {
+    if (!descricaoApp && !descricaoBanco) return;
+    donosConhecidos.push({ app: descricaoApp || '', banco: descricaoBanco || '', dono, diaMes: diaMesDaDescricao(descricaoApp) });
+  };
+  for (const c of casados) registrar(descricaoDe(c.app), descricaoDe(c.banco), donoDe(c.app));
+  for (const d of divergentes) registrar(descricaoDe(d.app), descricaoDe(d.banco), donoDe(d.app));
+  for (const r of rateios) for (const a of r.apps || []) registrar(descricaoDe(a), descricaoDe(r.banco), donoDe(a));
+  for (const l of app) registrar(descricaoDe(l), '', donoDe(l));
 
   for (const t of creditosBanco) {
-    const donos = new Set();
-    for (const [desc, dono] of donosConhecidos) {
-      if (mesmoEstabelecimento(t._desc, desc)) donos.add(dono);
-    }
+    const candidatos = donosConhecidos.filter((k) => mesmoEstabelecimento(t._desc, k.app || k.banco));
+    if (!candidatos.length) continue;
+    const diaMes = diaMesDaData(t._data);
+    const porData = diaMes ? candidatos.filter((k) => k.diaMes === diaMes) : [];
+    // data só decide quando ela própria não é ambígua entre donos diferentes
+    const base = porData.length && new Set(porData.map((k) => k.dono)).size === 1 ? porData : candidatos;
+    const donos = new Set(base.map((k) => k.dono));
     if (donos.size === 1) {
       t._donoSugerido = [...donos][0];
       t._donoInferido = true;
+      t._donoMotivo = base === porData ? 'mesmo estabelecimento e mesma data' : 'único dono do estabelecimento';
     }
   }
 

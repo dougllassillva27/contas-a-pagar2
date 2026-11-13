@@ -58,6 +58,14 @@ function coluna({ titulo, itens, cor, vazio, corpo, classe = '' }) {
     </section>`;
 }
 
+// dd/MM/yyyy HH:mm:ss sem depender do locale do navegador
+function formatarDataHora(valor) {
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return String(valor);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 function render(dados) {
   const corpo = document.getElementById('conciliacaoCorpo');
   const residual = document.getElementById('conciliacaoResidual');
@@ -81,13 +89,37 @@ function render(dados) {
   }
 
   if (fonte) {
-    const quando = dados.atualizadoEm ? new Date(dados.atualizadoEm).toLocaleString('pt-BR') : '-';
-    fonte.textContent = `Banco ${brl(t.banco.total)} · ${dados.resumo.casados} de ${t.banco.quantidade} casados · sync ${quando}`;
+    // só o carimbo da sincronização: total da fatura e contagem já estão na 1ª coluna
+    const quando = dados.atualizadoEm ? formatarDataHora(dados.atualizadoEm) : '-';
+    fonte.textContent = `Última sincronização: ${quando}`;
   }
   if (residual) {
-    residual.textContent = Math.abs(t.residual) < 0.5 ? 'fechado' : brl(t.diferenca);
-    residual.classList.remove('verde', 'vermelho');
-    residual.classList.add(Math.abs(t.residual) < 0.5 ? 'verde' : 'vermelho');
+    // O selo diz o que FALTA RESOLVER, não a diferença bruta: "fechado" colidia com
+    // o Fechar Mês, e o número exibido (app - banco) assusta sem indicar pendência.
+    const faltando = dados.resumo.faltando || 0;
+    const divergentes = dados.resumo.divergentes || 0;
+    const sobrando = dados.resumo.sobrando || 0;
+    const pendencias = faltando + divergentes + sobrando;
+    const sobra = Number(t.residual) || 0;
+
+    residual.classList.remove('verde', 'vermelho', 'laranja');
+    if (pendencias > 0) {
+      const partes = [];
+      if (faltando) partes.push(`${faltando} cobrado no banco e fora do app`);
+      if (divergentes) partes.push(`${divergentes} com valor diferente`);
+      if (sobrando) partes.push(`${sobrando} no app sem cobrança`);
+      residual.textContent = `${pendencias} ${pendencias === 1 ? 'pendência' : 'pendências'}`;
+      residual.title = `Falta resolver: ${partes.join(' · ')}`;
+      residual.classList.add('vermelho');
+    } else if (Math.abs(sobra) < 0.5) {
+      residual.textContent = 'conferido';
+      residual.title = `Nada pendente. Sobra de centavos: ${brl(sobra)}`;
+      residual.classList.add('verde');
+    } else {
+      residual.textContent = `sobra ${brl(sobra)}`;
+      residual.title = 'Nenhuma cobrança sem par, mas a soma do app não fecha com a fatura';
+      residual.classList.add('laranja');
+    }
   }
 
   const totalCasado =
