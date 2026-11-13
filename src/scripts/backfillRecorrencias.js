@@ -58,9 +58,10 @@ const brl = (n) => 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDi
 // É o passo seguro para rodar em banco que nunca teve FK nenhuma.
 async function vincularSomente() {
   const recs = await db.query(
-    `SELECT id, descricao, dia_cobranca, participantes::jsonb AS participantes
+    `SELECT id, descricao, valor_total::float AS valor_total, dia_cobranca,
+            participantes::jsonb AS participantes
        FROM recorrencias
-      WHERE usuarioid = $1 AND ativo = true
+      WHERE usuario_id = $1 AND ativo = true
       ORDER BY id`,
     [USUARIO_ID]
   );
@@ -118,7 +119,7 @@ async function vincularSomente() {
   }
 
   for (const p of plano) {
-    await db.query('UPDATE lancamentos SET recorrenciaid = (SELECT id FROM recorrencias WHERE descricao = $1 AND usuarioid = $3) WHERE id = $2', [
+    await db.query('UPDATE lancamentos SET recorrenciaid = (SELECT id FROM recorrencias WHERE descricao = $1 AND usuario_id = $3) WHERE id = $2', [
       p.recorrencia,
       p.lancamentoId,
       USUARIO_ID,
