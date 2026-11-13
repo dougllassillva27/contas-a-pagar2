@@ -53,8 +53,88 @@ function descricaoParecida(a, b) {
 
 const brl = (n) => 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
+// Modo --somente-vincular: não cria nem apaga nada. Só liga as recorrências aos
+// lançamentos que já existem no mês (mesmo dono e mesmo valor, ou descrição parecida).
+// É o passo seguro para rodar em banco que nunca teve FK nenhuma.
+async function vincularSomente() {
+  const recs = await db.query(
+    `SELECT id, descricao, dia_cobranca, participantes::jsonb AS participantes
+       FROM recorrencias
+      WHERE usuarioid = $1 AND ativo = true
+      ORDER BY id`,
+    [USUARIO_ID]
+  );
+
+  const plano = [];
+  const semPar = [];
+
+  for (const r of recs.rows) {
+    let partes = r.participantes;
+    if (typeof partes === 'string') partes = JSON.parse(partes);
+    if (!Array.isArray(partes) || !partes.length) partes = [{ dono: '', valor: Number(r.valor_total) }];
+
+    for (const parte of partes) {
+      const dono = String(parte.dono || '').trim();
+      const valor = Number(parte.valor);
+      if (!(valor > 0)) continue;
+
+      const cands = await db.query(
+        `SELECT id, descricao, valor::float AS valor
+           FROM lancamentos
+          WHERE usuarioid = $1
+            AND recorrenciaid IS NULL
+            AND COALESCE(nometerceiro, '') = $2
+            AND datavencimento >= $3 AND datavencimento < $4
+          ORDER BY id`,
+        [USUARIO_ID, dono, inicio, fim]
+      );
+
+      const porValor = cands.rows.filter((c) => Math.abs(Number(c.valor) - valor) <= 0.01);
+      const porDesc = cands.rows.filter((c) => descricaoParecida(c.descricao, r.descricao));
+      const escolhido =
+        (porValor.length === 1 && porValor[0]) ||
+        porValor.find((c) => descricaoParecida(c.descricao, r.descricao)) ||
+        (porDesc.length === 1 && porDesc[0]) ||
+        null;
+
+      if (escolhido) {
+        plano.push({ recorrencia: r.descricao, dono, valor, lancamentoId: escolhido.id, descricao: escolhido.descricao });
+      } else {
+        semPar.push({ recorrencia: r.descricao, dono, valor });
+      }
+    }
+  }
+
+  console.log(`\n1) vincular ao lançamento existente: ${plano.length}`);
+  for (const p of plano) {
+    console.log(`   ${p.recorrencia} (${p.dono || 'eu'}, ${brl(p.valor)}) -> #${p.lancamentoId} "${p.descricao}"`);
+  }
+  console.log(`\n2) sem equivalente no mês (continua sem FK): ${semPar.length}`);
+  for (const s of semPar) console.log(`   ${s.recorrencia} (${s.dono || 'eu'}, ${brl(s.valor)})`);
+
+  if (!APLICAR) {
+    console.log('\nNada foi alterado. Rode com --aplicar para executar.\n');
+    return;
+  }
+
+  for (const p of plano) {
+    await db.query('UPDATE lancamentos SET recorrenciaid = (SELECT id FROM recorrencias WHERE descricao = $1 AND usuarioid = $3) WHERE id = $2', [
+      p.recorrencia,
+      p.lancamentoId,
+      USUARIO_ID,
+    ]);
+  }
+  console.log(`\n✓ ${plano.length} vínculos gravados.`);
+}
+
 async function main() {
   console.log(`\n${APLICAR ? 'APLICANDO' : 'DRY-RUN'} — usuário ${USUARIO_ID}, ${MES}/${ANO}\n`);
+
+  if (process.argv.includes('--somente-vincular')) {
+    await vincularSomente();
+    await db.pool?.end?.().catch(() => {});
+    process.exit(0);
+  }
 
   const comFk = await db.query(
     `SELECT l.id, l.recorrenciaid, r.descricao AS recorrencia,
