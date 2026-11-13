@@ -19,6 +19,7 @@ const TOLERANCIA_RELATIVA = 0.005; // 0,5% (parcela varia 1-2 centavos por mês)
 const LIMIAR_DESCRICAO = 0.25; // similaridade p/ considerar "casado com confiança"
 const LIMIAR_ANCORA = 0.5; // similaridade mínima p/ aceitar rateio (1:N)
 const LIMIAR_DIVERGENTE = 0.5;
+const LIMIAR_PREFIXO_DONO = 6; // prefixo compacto mínimo p/ dizer "mesmo estabelecimento"
 const MAX_CANDIDATOS_RATEIO = 6; // poda do subset-sum
 const TAMANHO_MAX_RATEIO = 5;
 const TOLERANCIA_RATEIO_EXATO = 0.02; // rateio sem âncora de descrição
@@ -351,6 +352,47 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
   // Compras e créditos ficam separados: crédito/estorno (-X) não é "conta esquecida".
   const faltandoApp = banco.filter((t) => !t._casado && t._valor > 0);
   const creditosBanco = banco.filter((t) => !t._casado && t._valor < 0);
+
+  // ---- Dono dos créditos/estornos -------------------------------------------
+  // Crédito do banco chega sem dono. Herda o dono do lançamento do mesmo
+  // estabelecimento (primeiro token igual ou descrição parecida), mas só quando
+  // TODOS os candidatos apontam para um único dono: um estorno de R$ 0,09 do JIM
+  // é de quem paga a parcela do JIM, não do titular.
+  const donoDe = (item) => {
+    const bruto = item && (item.dono != null ? item.dono : item.nometerceiro);
+    return String(bruto || '').trim() || 'eu'; // vazio no banco = titular
+  };
+  const primeiroToken = (valor) => normalizarDescricao(valor).split(' ')[0] || '';
+  const mesmoEstabelecimento = (a, b) => {
+    // prefixo compacto curto já basta: "JIM.COM DAVI DE OLIVEIRA" x "JIM.COM Davi De
+    // (empréstimo...)" compartilham "jimcomdavide"; "AIRBNB * HMMQ8MF" x "AIRBNB
+    // (Airbnb Gramado)" compartilham "airbnb". Códigos de adquirente ("MP *...")
+    // param no 2º caractere e não casam.
+    const ca = compactar(a);
+    const cb = compactar(b);
+    if (ca && cb && prefixoComum(ca, cb) >= LIMIAR_PREFIXO_DONO) return true;
+    const ta = primeiroToken(a);
+    if (ta && ta === primeiroToken(b) && ta.length >= 4) return true;
+    return similaridade(a, b) >= LIMIAR_DIVERGENTE;
+  };
+
+  const donosConhecidos = [];
+  for (const c of casados) donosConhecidos.push([descricaoDe(c.banco), donoDe(c.app)]);
+  for (const d of divergentes) donosConhecidos.push([descricaoDe(d.banco), donoDe(d.app)]);
+  for (const r of rateios) for (const a of r.apps || []) donosConhecidos.push([descricaoDe(r.banco), donoDe(a)]);
+  for (const l of app) donosConhecidos.push([descricaoDe(l), donoDe(l)]);
+
+  for (const t of creditosBanco) {
+    const donos = new Set();
+    for (const [desc, dono] of donosConhecidos) {
+      if (mesmoEstabelecimento(t._desc, desc)) donos.add(dono);
+    }
+    if (donos.size === 1) {
+      t._donoSugerido = [...donos][0];
+      t._donoInferido = true;
+    }
+  }
+
   const sobrasApp = disponiveis();
   const estornosApp = sobrasApp.filter((l) => l._valor < 0);
 

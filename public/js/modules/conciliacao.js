@@ -257,7 +257,10 @@ function render(dados) {
       .map((x) =>
         linha({
           descricao: x.descricao,
-          selos: [pill(x.data || x.venc, 'cinza'), pill(x.dono || 'eu', 'verde')],
+          selos: [
+            pill(x.data || x.venc, 'cinza'),
+            pill(x.dono || (x.origem === 'banco' ? 'sem dono' : 'eu'), 'verde'),
+          ],
           valor: brl(x.valor),
           valorCor: 'var(--text-secondary)',
         })

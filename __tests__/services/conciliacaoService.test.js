@@ -314,3 +314,75 @@ describe('conciliar — fechamento contábil', () => {
     expect(r.conciliado).toBe(true);
   });
 });
+
+// ==============================================================================
+// Dono dos créditos/estornos.
+// O banco manda crédito sem dono; o app sabe de quem é a compra. Estorno de
+// centavos do JIM pertence a quem paga a parcela do JIM, não ao titular.
+// ==============================================================================
+describe('dono inferido nos créditos/estornos', () => {
+  const compraParcelada = (desc, valor, atual, total, extra = {}) =>
+    banco(desc, valor, { date: '2026-10-06', status: 'POSTED', creditCardMetadata: { installmentNumber: atual, totalInstallments: total, billId: 'x' }, ...extra });
+
+  const estorno = (desc, valor) => banco(desc, valor, { date: '2026-10-06', status: 'POSTED', creditCardMetadata: { billId: 'x' } });
+
+  test('herda o dono do terceiro quando o estabelecimento é único no app', () => {
+    const r = conciliar({
+      transacoes: [compraParcelada('JIM.COM DAVI DE OLIVEIRA', 475.64, 2, 12), estorno('JIM.COM DAVI DE OLIVEIRA', -0.09)],
+      lancamentos: [
+        {
+          descricao: '06/10 JIM.COM Davi De (empréstimo arrumar Uno)',
+          valor: 475.64,
+          dono: 'Mãe',
+          venc: '2026-10-06',
+          parcelaatual: 2,
+          totalparcelas: 12,
+        },
+      ],
+    });
+
+    expect(r.creditosBanco).toHaveLength(1);
+    expect(r.creditosBanco[0]._donoSugerido).toBe('Mãe');
+    expect(r.creditosBanco[0]._donoInferido).toBe(true);
+  });
+
+  test('casa pelo prefixo do estabelecimento mesmo com sufixo de adquirente', () => {
+    const r = conciliar({
+      transacoes: [compraParcelada('AIRBNB * HMMQ8MF', 146.67, 2, 6), estorno('AIRBNB * HMMQ8MF', -0.04)],
+      lancamentos: [
+        {
+          descricao: '09/10 AIRBNB (Airbnb Gramado)',
+          valor: 146.67,
+          dono: 'Morr',
+          venc: '2026-10-09',
+          parcelaatual: 2,
+          totalparcelas: 6,
+        },
+      ],
+    });
+
+    expect(r.creditosBanco[0]._donoSugerido).toBe('Morr');
+  });
+
+  test('não chuta dono quando o estabelecimento aparece com mais de um dono', () => {
+    const r = conciliar({
+      transacoes: [estorno('CLARO FLEX*Claro', -5.0)],
+      lancamentos: [
+        { descricao: 'Claro Flex dia 06', valor: 19.99, dono: '', venc: '2026-10-06' },
+        { descricao: 'Claro Flex dia 21', valor: 49.99, dono: 'Mãe', venc: '2026-10-21' },
+      ],
+    });
+
+    expect(r.creditosBanco[0]._donoSugerido).toBeUndefined();
+    expect(r.creditosBanco[0]._donoInferido).toBeUndefined();
+  });
+
+  test('titular (dono vazio no banco) é inferido como "eu", não como desconhecido', () => {
+    const r = conciliar({
+      transacoes: [estorno('UBER *TRIP', -2.5)],
+      lancamentos: [{ descricao: '05/10 UBER (corrida shopping)', valor: 32.9, dono: '', venc: '2026-10-05' }],
+    });
+
+    expect(r.creditosBanco[0]._donoSugerido).toBe('eu');
+  });
+});

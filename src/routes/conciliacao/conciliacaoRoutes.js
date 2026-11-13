@@ -50,13 +50,22 @@ function transacoesDaFaturaAberta(transacoes) {
   });
 }
 
+// Data do banco/do app em ISO (YYYY-MM-DD) ou Date -> dd/MM/yyyy para a tela
+function formatarData(valor) {
+  if (!valor) return null;
+  const iso = String(valor).slice(0, 10);
+  const [ano, mes, dia] = iso.split('-');
+  return ano && mes && dia && dia.length === 2 ? `${dia}/${mes}/${ano}` : iso;
+}
+
 function apresentarLancamento(l) {
   return {
     id: l.id != null ? l.id : null,
     descricao: l.descricao || l.description || '',
     valor: Number(l.valor != null ? l.valor : l.amount) || 0,
     dono: l.dono || l.nometerceiro || null,
-    venc: l.venc || (l.datavencimento ? String(l.datavencimento).slice(0, 10) : null),
+    origem: 'app',
+    venc: formatarData(l.venc || l.datavencimento),
     parcela: l.parcelaatual ? `${l.parcelaatual}/${l.totalparcelas}` : null,
   };
 }
@@ -65,8 +74,13 @@ function apresentarTransacao(t) {
   return {
     descricao: t.description || '',
     valor: Number(t.amount) || 0,
-    data: t.date ? String(t.date).slice(0, 10) : null,
+    data: formatarData(t.date),
     status: t.status || null,
+    origem: 'banco',
+    // crédito/estorno não traz dono do banco: vem inferido do lançamento do
+    // mesmo estabelecimento (null quando há mais de um dono possível)
+    dono: t._donoSugerido || null,
+    donoInferido: Boolean(t._donoInferido),
     parcela: t.creditCardMetadata?.installmentNumber
       ? `${t.creditCardMetadata.installmentNumber}/${t.creditCardMetadata.totalInstallments || '?'}`
       : null,
