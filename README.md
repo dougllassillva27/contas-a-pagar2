@@ -143,6 +143,29 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
 
 ---
 
+### 🔗 Conferência do Cartão (Open Finance)
+
+- **Fatura automática**: o total da fatura aberta vem do Santander via Pluggy (Open Finance) e substitui a digitação manual no campo "Cartão de Crédito - APP"
+- **Somente leitura**: o banco alimenta a comparação, mas nenhum lançamento é importado. As contas continuam sendo lançadas à mão
+- **Motor de conciliação**: cruza fatura × lançamentos e classifica em cinco grupos (casados, rateios, divergentes, faltando no app, no app sem cobrança)
+- **Rateio 1:N**: uma cobrança no banco pode corresponder a vários lançamentos no app (compra dividida entre pessoas). A soma precisa bater para casar, e ambiguidade é rejeitada em vez de adivinhada
+- **Respeita o ciclo da fatura**: usa o `balanceCloseDate` do cartão, então cobrança feita depois do fechamento cai na fatura seguinte
+- **Previstos fora do ciclo**: cobrança recorrente que ainda não apareceu no banco fica em "Ainda não cobrado", sem virar falso positivo
+- **Sincronização manual**: o cache da Pluggy só é atualizado quando solicitado (`POST /api/conciliacao/sincronizar`, botão "Sincronizar banco")
+- **Marcação em lote**: os itens casados podem ser marcados como conferidos de uma vez pelo endpoint existente `/api/lancamentos/conferido-extrato-lote`
+
+---
+
+### 🔁 Recorrências
+
+- **Entidade própria**: assinaturas e contas fixas do cartão não dependem mais do hack `TotalParcelas = 99` (que segue aceito como fallback legado)
+- **Rateio por pessoa**: uma recorrência pode gerar N lançamentos (Petz 3x R$ 97,90, Claro 2x R$ 17,45)
+- **Geração do mês idempotente**: antes de inserir, procura lançamento do mesmo dono e mesmo valor sem vínculo e apenas o vincula. Clicar duas vezes em "Gerar lançamentos do mês" não duplica nada
+- **Vínculo retroativo**: `src/scripts/backfillRecorrencias.js` liga lançamentos antigos às recorrências e remove duplicatas (dry-run por padrão, `--aplicar` para executar)
+- **Derivação automática**: o que existe no app e não está na fatura é comparado com a recorrência do mês, separando "ainda não cobrado" de "sem cobrança"
+
+---
+
 ## ⚙️ Ferramentas Avançadas
 
 - **Motor de Sincronização Dinâmico (Core Engine)**
@@ -173,6 +196,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
   - Exportação manual de segurança
 - **Fatura Manual**
   - Campo para comparar valor calculado vs valor do app do banco
+  - Preenchido automaticamente quando a conferência do cartão está configurada (ver "Conferência do Cartão")
 - **Health Check Profissional** (`/health`)
   - Verifica aplicação + banco
   - Mede latência da checagem
@@ -258,6 +282,8 @@ Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o 
 - <kbd>Alt</kbd> + <kbd>B</kbd>: Realiza o **Backup JSON** do sistema.
 - <kbd>Alt</kbd> + <kbd>C</kbd>: Alterna o status de **Fechamento do Mês** (Cadeado).
 - <kbd>Alt</kbd> + <kbd>I</kbd>: Abre a tela de **Relatório/Impressão** do mês atual.
+- <kbd>Alt</kbd> + <kbd>K</kbd>: Abre a **Conferência do Cartão** (fatura do banco x lançamentos do app).
+- <kbd>Alt</kbd> + <kbd>R</kbd>: Abre as **Recorrências** (assinaturas e contas fixas do cartão).
 - <kbd>Esc</kbd>: Fecha qualquer modal ativo ou menu de contexto instantaneamente.
 
 ---
@@ -339,6 +365,7 @@ O script utiliza o `API_TOKEN` definido no seu `.env` para garantir que apenas o
 | **Monitoramento** | Google Apps Script (Triggers)   |
 | **Bot Telegram**  | node-telegram-bot-api (webhook) |
 | **Widget Desktop**| Electron 30 + axios             |
+| **Open Finance**  | Pluggy API (`fetch` nativo, sem SDK) |
 | **Testes**        | Jest 30 + Supertest 7           |
 
 ---
@@ -379,6 +406,9 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   │   ├── style.css                      # Design system (dark mode)
 │   │   └── terceiro.css                   # Estilos do Portal de Terceiros
 │   ├── js/app.js                          # JavaScript do dashboard
+│   ├── js/modules/
+│   │   ├── conciliacao.js                 # Modal de conferência do cartão
+│   │   └── recorrencias.js                # Modal de CRUD das recorrências
 │   ├── icons/                             # Ícones do projeto (PWA/Social)
 │   └── favicon.ico
 ├── src/
@@ -406,13 +436,21 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   │   ├── FaturaManualRepository.js      # Fatura manual (UPSERT)
 │   │   ├── OrdemCardsRepository.js        # Ordem dos cards do dashboard
 │   │   ├── MesFechadoRepository.js        # Controle de congelamento de meses
-│   │   └── BackupRepository.js            # Exportação JSON completa
+│   │   ├── BackupRepository.js            # Exportação JSON completa
+│   │   └── RecorrenciaRepository.js       # Recorrências + cache de sincronização Pluggy
 │   ├── services/
-│   │   └── syncService.js                 # Motor de regras SaaS em background
+│   │   ├── syncService.js                 # Motor de regras SaaS em background
+│   │   ├── conciliacaoService.js          # Motor de match fatura x lançamentos
+│   │   └── pluggyService.js               # Cliente Pluggy (Open Finance, somente leitura)
 │   ├── routes/
 │   │   ├── publicRoutes.js                # Login / Logout / Portal de Terceiros
+│   │   ├── conciliacao/
+│   │   │   └── conciliacaoRoutes.js       # Conciliação do cartão + CRUD de recorrências
 │   │   ├── integrationRoutes.js           # API Android
 │   │   └── apiRoutes.js                   # Dashboard + CRUD + APIs
+│   ├── scripts/
+│   │   ├── seedRecorrencias.js            # Carga inicial das recorrências
+│   │   └── backfillRecorrencias.js        # Vínculo retroativo + remoção de duplicatas
 │   └── views/
 │       ├── index.ejs                      # Dashboard principal
 │       ├── login.ejs                      # Tela de login
@@ -597,6 +635,15 @@ TELEGRAM_BOT_TOKEN=token_do_botfather
 TELEGRAM_CHAT_ID=seu_chat_id
 TELEGRAM_WEBHOOK_SECRET=string_aleatoria
 RENDER_EXTERNAL_URL=https://seu-app.onrender.com
+
+# Conferência do cartão via Open Finance (opcional)
+# Os quatro primeiros são obtidos em src/scripts/pluggy-setup.js (script interativo)
+PLUGGY_CLIENT_ID=client_id_do_meu_pluggy
+PLUGGY_CLIENT_SECRET=client_secret_do_meu_pluggy
+PLUGGY_ITEM_ID=item_id_da_conexao
+PLUGGY_ACCOUNT_ID=account_id_do_cartao
+# Em HTTP puro (preview na VPS sem TLS) o cookie precisa disto, senão o login não persiste
+COOKIE_SECURE=false
 ```
 
 ### 5️⃣ Rodar
@@ -611,9 +658,11 @@ Acesse: `http://localhost:3000`
 
 ## 🧪 Testes Automatizados (Jest & Supertest)
 
-A aplicação possui uma suíte de testes robusta contendo **211 testes automatizados** com execução ultrarrápida (~2.5s totais).
+A aplicação possui uma suíte de testes robusta contendo **352 testes automatizados** com execução ultrarrápida (~10s totais).
 
 - **Unitários**: Regras de negócio, _parseHelpers_, formatadores, cálculo de datas (fuso UTC-3 blindado) e motor de regras SaaS.
+- **Conciliação do cartão**: motor de _match_ testado isoladamente (parcela, valor + similaridade, rateio 1:N com e sem âncora, rejeição de ambiguidade, pagamento de fatura e projeções do conector).
+- **Recorrências**: geração do mês idempotente (vincula em vez de duplicar), rateio por pessoa, limite de dia em 28 e respeito ao mês já preenchido.
 - **Repositórios**: Mock da biblioteca `pg`. Validação de transações (`BEGIN/COMMIT/ROLLBACK`), `UPSERTs` e lógicas de paginação sem tocar no banco de dados físico.
 - **Middlewares**: Validação de injeção de tokens persistentes, `x-api-key`, falhas de sessão e isolamento por `UsuarioId`.
 - **Integração M2M**: Testes fim-a-ponta na API Android e endpoints de _webhook_ do Telegram.

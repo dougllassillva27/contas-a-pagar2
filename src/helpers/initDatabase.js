@@ -211,6 +211,50 @@ async function initDatabase() {
     `);
     await db.query('CREATE INDEX IF NOT EXISTS idx_sessoes_expire ON sessoes(expire)');
 
+    // 13. Recorrências do cartão (seguro, assinaturas, mensalidades)
+    // Antes eram modeladas como "TotalParcelas = 99"; agora têm identidade própria,
+    // dia de cobrança e rateio por pessoa (participantes em JSONB).
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS recorrencias (
+          id SERIAL PRIMARY KEY,
+          usuario_id INT NOT NULL REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          descricao VARCHAR(255) NOT NULL,
+          valor_total NUMERIC(18, 2) NOT NULL,
+          dia_cobranca INT,
+          cartao_label VARCHAR(120),
+          participantes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          ativo BOOLEAN NOT NULL DEFAULT TRUE,
+          inicio_mes INT,
+          inicio_ano INT,
+          criado_em TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await db.query('CREATE INDEX IF NOT EXISTS idx_recorrencias_usuario ON recorrencias(usuario_id, ativo)');
+
+    // 13b. Vínculo do lançamento com a recorrência que o gerou.
+    // Sem isso o motor casa recorrência por similaridade de texto (frágil).
+    await db.query(`
+      ALTER TABLE Lancamentos ADD COLUMN IF NOT EXISTS RecorrenciaId INT
+        REFERENCES recorrencias(id) ON DELETE SET NULL
+    `);
+
+    // 14. Cache da última sincronização com a Pluggy (fatura aberta + transações)
+    // Evita bater na API a cada render; o botão "sincronizar" atualiza.
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS pluggy_sync (
+          usuario_id INT PRIMARY KEY REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          item_id VARCHAR(64),
+          account_id VARCHAR(64),
+          cartao_label VARCHAR(120),
+          fatura_id VARCHAR(64),
+          fatura_total NUMERIC(18, 2),
+          fatura_vencimento DATE,
+          data_fechamento DATE,
+          transacoes JSONB,
+          atualizado_em TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);

@@ -89,6 +89,27 @@ async function getRelatorioMensal(userId, month, year) {
   return result.rows;
 }
 
+// Lançamentos de cartão do mês (CARTAO + PARCELADO), todos os donos.
+// Usado pela conciliação: a fatura do banco soma o cartão inteiro, inclusive as
+// compras de terceiros que o Douglas paga e depois recebe.
+async function getLancamentosCartaoMes(userId, month, year) {
+  const { startDate, endDate } = getMesRange(month, year);
+  const query = `
+      SELECT Id AS id, Descricao AS descricao, Valor::float AS valor, Tipo AS tipo,
+             ParcelaAtual AS parcelaatual, TotalParcelas AS totalparcelas,
+             COALESCE(NomeTerceiro, '') AS dono,
+             RecorrenciaId AS "recorrenciaId",
+             to_char(DataVencimento, 'YYYY-MM-DD') AS venc
+      FROM Lancamentos
+      WHERE UsuarioId = $1
+        AND Tipo IN ('${TIPO.CARTAO}', '${TIPO.PARCELADO}')
+        AND DataVencimento >= $2 AND DataVencimento < $3
+      ORDER BY Valor DESC
+   `;
+  const result = await db.query(query, [userId, startDate, endDate]);
+  return result.rows;
+}
+
 async function getDashboardTotais(userId, month, year) {
   const cacheKey = `dashboard:totais:${userId}:${month}:${year}`;
   const cached = cache.get(cacheKey);
@@ -1251,6 +1272,7 @@ module.exports = {
   normalizarTerceiro, // ✅ Exportar função de normalização
   getUltimosLancamentos,
   getRelatorioMensal,
+  getLancamentosCartaoMes,
   getDashboardTotals: getDashboardTotais,
   getLancamentosPorTipo,
   getDadosTerceiros,

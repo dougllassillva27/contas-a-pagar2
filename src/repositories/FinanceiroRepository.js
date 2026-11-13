@@ -17,6 +17,7 @@ const OrdemCardsRepository = require('./OrdemCardsRepository');
 const MesFechadoRepository = require('./MesFechadoRepository');
 const TokenRepository = require('./TokenRepository');
 const ConfiguracaoRepository = require('./ConfiguracaoRepository');
+const RecorrenciaRepository = require('./RecorrenciaRepository');
 
 module.exports = {
   // Usuários
@@ -42,4 +43,7 @@ module.exports = {
 
   // Configurações do Usuário
   ...ConfiguracaoRepository,
+
+  // Recorrências do cartão + cache da sincronização com a Pluggy
+  ...RecorrenciaRepository,
 };

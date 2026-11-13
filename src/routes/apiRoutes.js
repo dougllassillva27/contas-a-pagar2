@@ -13,6 +13,7 @@ module.exports = function (repo) {
   const configuracoesRoutes = require('./configuracoes/configuracoesRoutes')(repo);
   const lancamentosRoutes = require('./lancamentos/lancamentosRoutes')(repo);
   const outrosRoutes = require('./outros/outrosRoutes')(repo);
+  const conciliacaoRoutes = require('./conciliacao/conciliacaoRoutes')(repo);
 
   // Monta todas as rotas nos mesmos paths anteriores
   router.use('/', dashboardRoutes);
@@ -20,6 +21,7 @@ module.exports = function (repo) {
   router.use('/', configuracoesRoutes);
   router.use('/', lancamentosRoutes);
   router.use('/', outrosRoutes);
+  router.use('/', conciliacaoRoutes);
 
   return router;
 };

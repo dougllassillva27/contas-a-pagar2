@@ -11,23 +11,31 @@
     
     <div class="sidebar-actions">
         <button class="sidebar-btn hide-on-mobile" onclick="fecharSidebarE(abrirModalAdicionar)">
-            <span class="material-icons" style="color: var(--green);">add_circle</span> Novo Lançamento
+            <span class="material-icons">add_circle</span> Novo Lançamento
         </button>
 
         <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalUltimas)">
             <span class="material-icons">history</span> Últimas
         </button>
 
+        <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalConciliacao)">
+            <span class="material-icons">fact_check</span> Conferência Cartão
+        </button>
+
+        <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalRecorrencias)">
+            <span class="material-icons">autorenew</span> Recorrências
+        </button>
+
         <a href="/terceiros?month=<%= nav.atual.month %>&year=<%= nav.atual.year %>" target="_blank" class="sidebar-btn" onclick="fecharSidebar()">
-            <span class="material-icons" style="color: var(--green);">share</span> Terceiros
+            <span class="material-icons">share</span> Terceiros
         </a>
 
         <button class="sidebar-btn" onclick="fecharSidebarE(abrirModalCalcularLuz)">
-            <span class="material-icons" style="color: var(--yellow);">lightbulb</span> Calcular Luz
+            <span class="material-icons">lightbulb</span> Calcular Luz
         </button>
 
         <button class="sidebar-btn hide-on-desktop" onclick="fecharSidebarE(togglePrivacidadeGlobal)">
-            <span class="material-icons" style="color: var(--text-secondary);">visibility_off</span> Privacidade
+            <span class="material-icons">visibility_off</span> Privacidade
         </button>
 
         <button class="sidebar-btn" onclick="fecharSidebarE(() => abrirConfirmacaoAcao('COPIAR'))">
@@ -46,9 +54,9 @@
 
         <button class="sidebar-btn" onclick="fecharSidebarE(toggleMesFechado)" id="btnToggleMes">
             <% if (typeof mesFechado !== 'undefined' && mesFechado) { %>
-                <span class="material-icons" style="color: var(--blue);">lock_open</span> Reabrir Mês
+                <span class="material-icons">lock_open</span> Reabrir Mês
             <% } else { %>
-                <span class="material-icons" style="color: var(--red);">lock</span> Fechar Mês
+                <span class="material-icons">lock</span> Fechar Mês
             <% } %>
         </button>
 
@@ -75,6 +83,14 @@
             <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                 <span style="color: var(--text-muted);">Novo Lançamento</span>
                 <kbd style="background: rgba(255,255,255,0.1); color: var(--text-main); padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">Alt + N</kbd>
+            </li>
+            <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: var(--text-muted);">Conferência Cartão</span>
+                <kbd style="background: rgba(255,255,255,0.1); color: var(--text-main); padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">Alt + K</kbd>
+            </li>
+            <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: var(--text-muted);">Recorrências</span>
+                <kbd style="background: rgba(255,255,255,0.1); color: var(--text-main); padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">Alt + R</kbd>
             </li>
             <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                 <span style="color: var(--text-muted);">Gestão Terceiros</span>

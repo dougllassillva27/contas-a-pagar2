@@ -174,3 +174,6 @@ graphify-out/contexto_contas-a-pagar_estrutura.yaml
 _contexto-ia/Geral.md
 .antigravitycli/
 tasks/
+# Scripts de aplicacao versionados (seed, backfill, setup do Open Finance)
+!src/scripts/
+!src/scripts/**

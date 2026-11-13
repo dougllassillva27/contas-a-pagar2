@@ -107,6 +107,16 @@ document.addEventListener('keydown', (e) => {
     const modalAdicionar = document.getElementById('modalAdicionar');
     if (modalAdicionar && !document.querySelector('.modal-overlay.active')) abrirModalAdicionar();
   }
+  if (e.altKey && e.key.toLowerCase() === 'k') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    if (typeof window.abrirModalConciliacao === 'function') window.abrirModalConciliacao();
+  }
+  if (e.altKey && e.key.toLowerCase() === 'r') {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    e.preventDefault();
+    if (typeof window.abrirModalRecorrencias === 'function') window.abrirModalRecorrencias();
+  }
   if (e.altKey && e.key.toLowerCase() === 't') {
     if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
     e.preventDefault();

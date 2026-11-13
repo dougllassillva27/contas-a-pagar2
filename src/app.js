@@ -78,6 +78,23 @@ app.set('trust proxy', 1); // Confia no proxy do Render para habilitar cookies S
 // Em teste fica o MemoryStore para não exigir banco.
 const sessionStore = process.env.NODE_ENV === 'test' ? undefined : new PostgresSessionStore();
 
+// Cookie Secure só funciona sobre HTTPS: servido por HTTP, o navegador descarta o
+// Set-Cookie e a sessão nunca é criada (sintoma: login sempre volta pra tela de login).
+// Default continua sendo NODE_ENV === 'production'; o override existe para ambientes
+// de teste servidos por HTTP (preview na Tailscale, localhost) — nunca use em produção.
+function resolverCookieSecure() {
+  const override = String(process.env.COOKIE_SECURE || '').trim().toLowerCase();
+  if (['false', '0', 'off', 'nao', 'não'].includes(override)) return false;
+  if (['true', '1', 'on', 'sim'].includes(override)) return true;
+  return process.env.NODE_ENV === 'production';
+}
+
+// Ambiente servido por HTTP (preview/localhost). Governa duas coisas que só fazem
+// sentido em HTTPS: o cookie Secure e o `upgrade-insecure-requests` da CSP — este
+// último faz o navegador pedir CSS/manifest/favicon por https:// e falha com
+// ERR_SSL_PROTOCOL_ERROR quando o servidor fala HTTP puro.
+const servindoPorHttps = resolverCookieSecure();
+
 app.use(
   session({
     secret: safeSessionSecret,
@@ -85,7 +102,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: servindoPorHttps,
       httpOnly: true, // Previne acesso via JavaScript (XSS)
       sameSite: 'strict', // Proteção contra CSRF
       maxAge: 24 * 60 * 60 * 1000, // 24 horas (tempo padrão da sessão)
@@ -139,6 +156,8 @@ app.use((req, res, next) => {
         baseUri: ["'self'"],
         formAction: ["'self'"],
         scriptSrcAttr: ["'unsafe-inline'"], // Necessario: EJS usa onclick/onchange inline
+        // Só em HTTPS: em HTTP o navegador reescreveria assets para https:// e quebraria
+        upgradeInsecureRequests: servindoPorHttps ? [] : null,
       },
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },

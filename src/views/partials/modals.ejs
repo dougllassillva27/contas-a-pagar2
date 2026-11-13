@@ -249,6 +249,65 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalConciliacao">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-wrapper">
+        <h2>Conferência do cartão</h2>
+        <span id="conciliacaoResidual" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap;">-</span>
+      </div>
+      <button class="modal-close" onclick="fecharModais()">&times;</button>
+    </div>
+
+    <div class="app-compare-wrapper" style="justify-content: space-between; align-items: center; gap: 10px;">
+      <span class="app-compare-label" id="conciliacaoFonte">Banco: -</span>
+      <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 10px; white-space: nowrap;" onclick="sincronizarBanco()">
+        Sincronizar banco
+      </button>
+    </div>
+
+    <div id="conciliacaoCorpo" class="conciliacao-corpo">
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Carregando conferência…</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRecorrencias">
+  <div class="modal-box" style="max-width: 920px">
+    <div class="modal-header">
+      <div class="modal-title-wrapper">
+        <h2>Recorrências do cartão</h2>
+        <span id="recorrenciasTotal" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap;">-</span>
+      </div>
+      <button class="modal-close" onclick="fecharModais()">&times;</button>
+    </div>
+
+    <div class="recorrencias-toolbar">
+      <button class="btn-secondary" onclick="novaRecorrencia()">+ Nova recorrência</button>
+      <button class="btn-secondary" onclick="gerarLancamentosMes()">Gerar lançamentos do mês</button>
+      <span id="recorrenciasAviso" class="recorrencias-aviso"></span>
+    </div>
+
+    <div id="recorrenciasForm" class="recorrencias-form" style="display: none;"></div>
+
+    <div class="scroll-wrapper modal-scroll">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th style="text-align: left">Recorrência</th>
+            <th style="text-align: center; width: 70px">Dia</th>
+            <th style="text-align: left">Rateio</th>
+            <th class="col-valor" style="text-align: right; white-space: nowrap">Valor</th>
+            <th style="text-align: center; width: 90px">Ativa</th>
+            <th style="text-align: center; width: 70px">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="listaRecorrencias"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <%# ================= MODAL: DIVIDIR CONTA ================= %>
 <div class="modal-overlay confirm-overlay" id="modalDividirConta">
   <div class="modal-box" style="max-width: 450px; text-align: center">

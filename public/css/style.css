@@ -1743,5 +1743,444 @@ a:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ==============================================================================
+   Recorrências do cartão — modal de CRUD
+   ============================================================================== */
+.recorrencias-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.recorrencias-toolbar .btn-secondary {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
+.recorrencias-aviso {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.recorrencias-form {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.recorrencias-form-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.recorrencias-form-linha {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr;
+  gap: 12px;
+}
+
+.recorrencias-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.recorrencias-form input[type='text'],
+.recorrencias-form input[type='number'] {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+.recorrencias-form input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.recorrencias-participante {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.recorrencias-participante input[data-campo='dono'] {
+  flex: 2;
+}
+
+.recorrencias-participante input[data-campo='valor'] {
+  flex: 1;
+  max-width: 140px;
+  text-align: right;
+}
+
+.recorrencias-form-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 720px) {
+  .recorrencias-form-linha {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==============================================================================
+   Conciliação da fatura (Pluggy) — modal "Conferência do cartão"
+   ============================================================================== */
+.conciliacao-corpo {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* Grade de colunas: resumo + 4 listas, ocupando a altura do modal */
+.conciliacao-grid {
+  display: grid;
+  grid-template-columns: minmax(340px, 1.15fr) repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+  height: 100%;
+}
+
+.conciliacao-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.conciliacao-col-resumo {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.conciliacao-col-cab {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.conciliacao-col-corpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.conciliacao-vazio {
+  margin: 12px 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.conciliacao-nota {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.conciliacao-btn-largo {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.conciliacao-sub-cab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Telas médias: 2 colunas; celular: 1 */
+@media (max-width: 1250px) {
+  .conciliacao-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    height: auto;
+  }
+
+  .conciliacao-col {
+    height: auto;
+  }
+
+  .conciliacao-col-resumo {
+    grid-column: 1 / -1;
+  }
+
+  .conciliacao-col-corpo {
+    max-height: 40vh;
+  }
+}
+
+@media (max-width: 720px) {
+  .conciliacao-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .conciliacao-col-corpo {
+    max-height: none;
+  }
+}
+
+.conciliacao-secao {
+  margin-top: 14px;
+}
+
+.conciliacao-secao h4 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.conciliacao-contador {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.conciliacao-total {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.conciliacao-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.conciliacao-esq {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.conciliacao-desc {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.conciliacao-dir {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: right;
+  justify-self: end;
+}
+
+.conciliacao-sub {
+  grid-column: 1 / -1;
+  padding-left: 2px;
+}
+
+.conciliacao-sub-item {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* Pílulas: mesma linguagem visual do badge de competência do app */
+.conciliacao-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.conciliacao-pill-azul {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.conciliacao-pill-verde {
+  background: rgba(102, 187, 106, 0.15);
+  color: #66bb6a;
+}
+
+.conciliacao-pill-vermelho {
+  background: rgba(239, 83, 80, 0.15);
+  color: #ef5350;
+}
+
+.conciliacao-pill-cinza {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+/* Linha de rateio: uma pílula por pessoa */
+.conciliacao-partes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.conciliacao-parte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.conciliacao-parte-valor {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.conciliacao-linha-destaque {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-bottom-color: transparent;
+}
+
+.conciliacao-acoes {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.conciliacao-fechamento {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+
+.conciliacao-fechamento .conciliacao-linha:last-child {
+  border-bottom: none;
+}
+
+/* Dentro do modal: tela cheia (menos uma borda), colunas altas */
+#modalConciliacao .modal-box {
+  width: 98vw;
+  max-width: 98vw;
+  height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
+  padding: clamp(14px, 1.4vw, 24px);
+  font-size: 1rem;
+}
+
+#modalConciliacao .conciliacao-corpo {
+  flex: 1;
+  min-height: 0;
+  font-size: 0.95rem;
+  overflow: visible;
+  padding-right: 0;
+}
+
+/* O rótulo do fechamento pode quebrar em vez de cortar com "..." */
+.conciliacao-col-resumo .conciliacao-desc {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+@media (max-width: 1250px) {
+  #modalConciliacao .modal-box {
+    height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+  }
+}
+
+#modalConciliacao .conciliacao-corpo small {
+  font-size: 0.85rem;
+}
+
+#modalConciliacao .conciliacao-secao h4 {
+  font-size: 0.9rem;
+}
+
+#modalConciliacao .conciliacao-linha {
+  padding: 9px 0;
+}
+
+#modalConciliacao #conciliacaoResidual {
+  font-size: 1rem;
+}
+
+#modalConciliacao .app-compare-label {
+  font-size: 0.95rem;
+}
+
+#modalConciliacao .btn-secondary {
+  font-size: 0.9rem;
+  padding: 7px 14px;
+}
+
+
+
 
 
