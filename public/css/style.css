@@ -2237,15 +2237,23 @@ a:focus {
     margin-bottom: 10px;
   }
 
+  /* o carimbo não pode quebrar no meio da data: se não couber com o botão,
+     o botão desce inteiro e a frase fica numa linha só */
   #modalConciliacao .app-compare-label {
-    flex: 1 1 150px;
-    font-size: 0.8rem;
+    flex: 1 1 auto;
+    font-size: 0.78rem;
+    white-space: nowrap;
   }
 
   #modalConciliacao .btn-secondary {
     font-size: 0.8rem;
-    padding: 6px 12px;
-    min-height: 34px;
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  #modalConciliacao .modal-close {
+    min-width: 44px;
+    min-height: 44px;
   }
 
   /* único elemento com rolagem: o corpo do modal */
@@ -2275,6 +2283,27 @@ a:focus {
     flex-wrap: wrap;
     gap: 2px 8px;
     font-size: 0.75rem;
+  }
+
+  /* título comprido pode ocupar a linha, mas o total não sai da direita:
+     sem isso a coluna do total quebra e alinha à esquerda só numa seção */
+  #modalConciliacao .conciliacao-col-cab > span:first-child {
+    flex: 1 1 60%;
+    min-width: 0;
+  }
+
+  #modalConciliacao .conciliacao-col-cab .conciliacao-total {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  /* a coluna de valores tem que cair no mesmo X do resumo e das listas */
+  #modalConciliacao .conciliacao-fechamento {
+    padding: 0;
+  }
+
+  #modalConciliacao .conciliacao-fechamento .conciliacao-linha {
+    padding: 6px 0;
   }
 
   #modalConciliacao .conciliacao-col-corpo {
