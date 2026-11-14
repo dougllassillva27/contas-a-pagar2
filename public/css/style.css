@@ -1848,7 +1848,7 @@ a:focus {
 }
 
 /* ==============================================================================
-   Conciliação da fatura (Pluggy) — modal "Conferência do cartão"
+   Conciliação da fatura (Pluggy) — modal "Conciliação"
    ============================================================================== */
 .conciliacao-corpo {
   font-size: 0.95rem;
@@ -2138,7 +2138,12 @@ a:focus {
   flex: 1;
   min-height: 0;
   font-size: 0.95rem;
-  overflow: visible;
+  /* A grade pode passar da altura do modal (2 colunas no tablet, 1 no celular):
+     sem rolagem aqui o fim do conteúdo ficava fora da caixa, inalcançável. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding-right: 0;
 }
 
@@ -2179,6 +2184,157 @@ a:focus {
 #modalConciliacao .btn-secondary {
   font-size: 0.9rem;
   padding: 7px 14px;
+}
+
+/* ==============================================================================
+   Conciliação da fatura no celular — modal reduzido e uma coluna só.
+   A grade de 5 colunas não cabe em 390px: aqui o modal ocupa a tela inteira,
+   as seções empilham e a rolagem fica no corpo do modal (não na página), para
+   nada sobrar fora da viewport.
+   ============================================================================== */
+@media (max-width: 720px) {
+  #modalConciliacao {
+    align-items: center;
+    padding: 12px;
+  }
+
+  #modalConciliacao .modal-box {
+    width: 100%;
+    max-width: 100%;
+    height: 92vh;
+    height: 92dvh;
+    max-height: 92vh;
+    max-height: 92dvh;
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  #modalConciliacao .modal-header {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  #modalConciliacao .modal-title-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    margin-right: 8px;
+  }
+
+  #modalConciliacao .modal-header h2 {
+    font-size: 1.05rem;
+  }
+
+  #modalConciliacao #conciliacaoResidual {
+    font-size: 0.85rem;
+    white-space: normal;
+  }
+
+  /* carimbo da sincronização + botão */
+  #modalConciliacao .app-compare-wrapper {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-bottom: 10px;
+  }
+
+  #modalConciliacao .app-compare-label {
+    flex: 1 1 150px;
+    font-size: 0.8rem;
+  }
+
+  #modalConciliacao .btn-secondary {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    min-height: 34px;
+  }
+
+  /* único elemento com rolagem: o corpo do modal */
+  #modalConciliacao .conciliacao-corpo {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 0 0 calc(16px + env(safe-area-inset-bottom));
+  }
+
+  #modalConciliacao .conciliacao-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    height: auto;
+  }
+
+  #modalConciliacao .conciliacao-col {
+    padding: 10px;
+  }
+
+  #modalConciliacao .conciliacao-col-resumo {
+    grid-column: auto;
+  }
+
+  #modalConciliacao .conciliacao-col-cab {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    font-size: 0.75rem;
+  }
+
+  #modalConciliacao .conciliacao-col-corpo {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  /* descrição longa quebra em vez de truncar com reticências */
+  #modalConciliacao .conciliacao-desc {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+
+  #modalConciliacao .conciliacao-linha {
+    align-items: start;
+    gap: 4px 8px;
+    padding: 8px 0;
+  }
+
+  #modalConciliacao .conciliacao-pill {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  #modalConciliacao .conciliacao-total {
+    font-size: 0.9rem;
+  }
+
+  #modalConciliacao .conciliacao-secao h4 {
+    gap: 8px;
+    font-size: 0.78rem;
+  }
+
+  #modalConciliacao .conciliacao-nota {
+    font-size: 0.78rem;
+  }
+
+  #modalConciliacao .conciliacao-btn-largo {
+    min-height: 40px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Telas bem estreitas: valor desce para a linha de baixo, sem apertar a descrição */
+@media (max-width: 360px) {
+  #modalConciliacao .modal-box {
+    padding: 10px 10px 0;
+  }
+
+  #modalConciliacao .conciliacao-linha {
+    grid-template-columns: 1fr;
+  }
+
+  #modalConciliacao .conciliacao-dir {
+    justify-self: start;
+    text-align: left;
+  }
 }
 
 

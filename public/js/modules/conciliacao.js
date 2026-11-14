@@ -1,5 +1,5 @@
 // ==============================================================================
-// conciliacao.js - modal "Conferência do cartão" (Pluggy x lançamentos do app)
+// conciliacao.js - modal "Conciliação" (Pluggy x lançamentos do app)
 // ==============================================================================
 // Só lê: busca o diff em /api/conciliacao/cartao e desenha as listas.
 // O único write é o botão "confirmar casados", que reusa o endpoint em lote que
@@ -341,7 +341,7 @@ export async function carregarConciliacao() {
   const corpo = document.getElementById('conciliacaoCorpo');
   if (!corpo) return;
   if (!window.__conciliacaoCarregada) {
-    corpo.innerHTML = `<p style="color: var(--text-secondary);">Carregando conferência…</p>`;
+    corpo.innerHTML = `<p style="color: var(--text-secondary);">Carregando conciliação…</p>`;
   }
   const { month, year } = mesAno();
   try {

@@ -143,7 +143,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
 
 ---
 
-### 🔗 Conferência do Cartão (Open Finance)
+### 🔗 Conciliação do Cartão (Open Finance)
 
 - **Fatura automática**: o total da fatura aberta vem do Santander via Pluggy (Open Finance) e substitui a digitação manual no campo "Cartão de Crédito - APP"
 - **Somente leitura**: o banco alimenta a comparação, mas nenhum lançamento é importado. As contas continuam sendo lançadas à mão
@@ -196,7 +196,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
   - Exportação manual de segurança
 - **Fatura Manual**
   - Campo para comparar valor calculado vs valor do app do banco
-  - Preenchido automaticamente quando a conferência do cartão está configurada (ver "Conferência do Cartão")
+  - Preenchido automaticamente quando a conferência do cartão está configurada (ver "Conciliação do Cartão")
 - **Health Check Profissional** (`/health`)
   - Verifica aplicação + banco
   - Mede latência da checagem
@@ -282,7 +282,7 @@ Focando em agilidade e ergonomia para quem utiliza o sistema pelo computador, o 
 - <kbd>Alt</kbd> + <kbd>B</kbd>: Realiza o **Backup JSON** do sistema.
 - <kbd>Alt</kbd> + <kbd>C</kbd>: Alterna o status de **Fechamento do Mês** (Cadeado).
 - <kbd>Alt</kbd> + <kbd>I</kbd>: Abre a tela de **Relatório/Impressão** do mês atual.
-- <kbd>Alt</kbd> + <kbd>K</kbd>: Abre a **Conferência do Cartão** (fatura do banco x lançamentos do app).
+- <kbd>Alt</kbd> + <kbd>K</kbd>: Abre a **Conciliação** (fatura do banco x lançamentos do app).
 - <kbd>Alt</kbd> + <kbd>R</kbd>: Abre as **Recorrências** (assinaturas e contas fixas do cartão).
 - <kbd>Esc</kbd>: Fecha qualquer modal ativo ou menu de contexto instantaneamente.
 
@@ -407,7 +407,7 @@ O projeto segue uma arquitetura **modular** com separação clara de responsabil
 │   │   └── terceiro.css                   # Estilos do Portal de Terceiros
 │   ├── js/app.js                          # JavaScript do dashboard
 │   ├── js/modules/
-│   │   ├── conciliacao.js                 # Modal de conferência do cartão
+│   │   ├── conciliacao.js                 # Modal de conciliação do cartão
 │   │   └── recorrencias.js                # Modal de CRUD das recorrências
 │   ├── icons/                             # Ícones do projeto (PWA/Social)
 │   └── favicon.ico
@@ -636,7 +636,7 @@ TELEGRAM_CHAT_ID=seu_chat_id
 TELEGRAM_WEBHOOK_SECRET=string_aleatoria
 RENDER_EXTERNAL_URL=https://seu-app.onrender.com
 
-# Conferência do cartão via Open Finance (opcional)
+# Conciliação do cartão via Open Finance (opcional)
 # Os quatro primeiros são obtidos em src/scripts/pluggy-setup.js (script interativo)
 PLUGGY_CLIENT_ID=client_id_do_meu_pluggy
 PLUGGY_CLIENT_SECRET=client_secret_do_meu_pluggy
