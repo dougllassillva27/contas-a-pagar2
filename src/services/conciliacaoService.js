@@ -24,6 +24,26 @@ const MAX_CANDIDATOS_RATEIO = 6; // poda do subset-sum
 const TAMANHO_MAX_RATEIO = 5;
 const TOLERANCIA_RATEIO_EXATO = 0.02; // rateio sem âncora de descrição
 const MIN_PREFIXO = 8;
+// Duas compras do mesmo estabelecimento em datas distantes são despesas diferentes,
+// não "mesma compra com valor diferente". A postagem do cartão atrasa alguns dias,
+// então a janela é curta de propósito: 08/11 no banco x 13/11 no app é outra compra.
+const JANELA_DATA_DIAS = 4;
+
+// Distância em dias entre duas datas ISO (null quando falta ou é inválida).
+function diasEntre(a, b) {
+  const iso = (v) => String(v || '').slice(0, 10);
+  const da = new Date(`${iso(a)}T00:00:00Z`);
+  const db = new Date(`${iso(b)}T00:00:00Z`);
+  if (!iso(a) || !iso(b) || Number.isNaN(da.getTime()) || Number.isNaN(db.getTime())) return null;
+  return Math.round(Math.abs(da - db) / 86400000);
+}
+
+// Data do banco é a da compra; a do app é o vencimento/lançamento. Sem data de um
+// dos lados não dá para excluir o par, então o casamento segue como antes.
+function dataCompativel(itemBanco, itemApp, janela = JANELA_DATA_DIAS) {
+  const dias = diasEntre(itemBanco && itemBanco._data, itemApp && itemApp._data);
+  return dias == null || dias <= janela;
+}
 
 // Remove acento, prefixo de data ("06/12 "), pontuação e caixa
 function normalizarDescricao(valor) {
@@ -270,8 +290,14 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
 
     const exatos = candidatos.filter(({ l }) => Math.abs(l._valor - t._valor) < 0.005);
     const ordem = (exatos.length ? exatos : candidatos)
-      .map((c) => ({ ...c, sim: similaridade(c.l._desc, t._desc) }))
-      .sort((a, b) => b.sim - a.sim);
+      .map((c) => ({
+        ...c,
+        sim: similaridade(c.l._desc, t._desc),
+        // data mais próxima ganha: o mesmo comerciante repete valor em compras
+        // diferentes no mês, então o texto desempata depois da data, não antes.
+        dist: diasEntre(t._data, c.l._data) ?? Number.POSITIVE_INFINITY,
+      }))
+      .sort((a, b) => a.dist - b.dist || b.sim - a.sim);
 
     const melhor = ordem[0];
     usados.add(melhor.idx);
@@ -336,7 +362,9 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
     if (t._casado) continue;
     const candidatos = app
       .map((l, idx) => ({ l, idx, sim: similaridade(l._desc, t._desc) }))
-      .filter((c) => !usados.has(c.idx) && c.sim >= LIMIAR_DIVERGENTE)
+      // a data é obrigatória aqui: valor diferente + nome parecido é o par mais frágil
+      // de todos, e o mesmo estabelecimento repete nome em compras de dias diferentes.
+      .filter((c) => !usados.has(c.idx) && c.sim >= LIMIAR_DIVERGENTE && dataCompativel(t, c.l))
       .sort((a, b) => b.sim - a.sim);
     if (!candidatos.length) continue;
     const melhor = candidatos[0];
@@ -500,8 +528,11 @@ module.exports = {
   similaridade,
   toleranciaPara,
   acharCombinacao,
+  diasEntre,
+  dataCompativel,
   LIMIAR_DESCRICAO,
   LIMIAR_ANCORA,
   TOLERANCIA_ABSOLUTA,
   TOLERANCIA_RELATIVA,
+  JANELA_DATA_DIAS,
 };

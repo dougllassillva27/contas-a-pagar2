@@ -10,7 +10,7 @@ const {
   toleranciaPara,
 } = require('../../src/services/conciliacaoService');
 
-const banco = (desc, valor, extra = {}) => ({ description: desc, amount: valor, date: '2026-11-05', status: 'PENDING', ...extra });
+const banco = (desc, valor, extra = {}) => ({ description: desc, amount: valor, date: '2026-11-10', status: 'PENDING', ...extra });
 const app = (descricao, valor, extra = {}) => ({ descricao, valor, venc: '2026-11-10', ...extra });
 
 describe('normalizarDescricao', () => {
@@ -148,6 +148,55 @@ describe('conciliar — divergência de valor', () => {
     expect(r.divergentes).toHaveLength(1);
     expect(r.divergentes[0].diferenca).toBeCloseTo(-0.26, 2);
     expect(r.faltandoApp).toHaveLength(0);
+  });
+});
+
+describe('conciliar — mesma loja, compras diferentes (data manda)', () => {
+  // Caso real de 13/11/2026: a fatura tinha AMAZON BR de 08/11 (R$ 28,40) que ele
+  // esqueceu de lançar, e ele comprou outra coisa na Amazon no dia 13 (R$ 21,49).
+  // O motor casava os dois como "valor diferente" só porque o nome batia.
+  test('não casa como divergente quando as datas estão a mais de JANELA_DATA_DIAS', () => {
+    const r = conciliar({
+      transacoes: [banco('AMAZON BR *Amazon BR', 28.4, { date: '2026-11-08' })],
+      lancamentos: [app('13/11 AMAZON BR .Am (Clear shampoo)', 21.49, { venc: '2026-11-13' })],
+    });
+    expect(r.divergentes).toHaveLength(0);
+    expect(r.casados).toHaveLength(0);
+    expect(r.faltandoApp).toHaveLength(1);
+    expect(r.faltandoApp[0].amount).toBeCloseTo(28.4, 2);
+    expect(r.sobrandoApp).toHaveLength(1);
+    expect(r.sobrandoApp[0].valor).toBeCloseTo(21.49, 2);
+  });
+
+  test('continua divergente quando a data é compatível (postagem atrasa dias)', () => {
+    const r = conciliar({
+      transacoes: [banco('AMAZON BR *Amazon BR', 28.4, { date: '2026-11-08' })],
+      lancamentos: [app('10/11 AMAZON BR .Am (Clear shampoo)', 21.49, { venc: '2026-11-10' })],
+    });
+    expect(r.divergentes).toHaveLength(1);
+    expect(r.faltandoApp).toHaveLength(0);
+  });
+
+  test('dois candidatos de valor igual: escolhe o da data próxima, não o do texto', () => {
+    const r = conciliar({
+      transacoes: [banco('AMAZON BR *Amazon BR', 50, { date: '2026-11-10' })],
+      lancamentos: [
+        app('13/11 AMAZON BR .Am (Clear shampoo)', 50, { venc: '2026-11-13' }),
+        app('10/11 AMAZON BR .Am (sabonete)', 50, { venc: '2026-11-10' }),
+      ],
+    });
+    expect(r.casados).toHaveLength(1);
+    expect(r.casados[0].app.descricao).toContain('sabonete');
+    expect(r.sobrandoApp).toHaveLength(1);
+    expect(r.sobrandoApp[0].descricao).toContain('Clear shampoo');
+  });
+
+  test('sem data de um dos lados, o casamento não é bloqueado', () => {
+    const r = conciliar({
+      transacoes: [{ description: 'SCP BASICO- NOV/26', amount: 10.26 }],
+      lancamentos: [{ descricao: 'SCP Basico', valor: 10.0 }],
+    });
+    expect(r.divergentes).toHaveLength(1);
   });
 });
 
