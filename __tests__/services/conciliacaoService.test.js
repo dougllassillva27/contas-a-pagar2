@@ -203,7 +203,18 @@ describe('conciliar — mesma loja, compras diferentes (data manda)', () => {
 describe('conciliar — ciclo e recorrência', () => {
   const recorrencias = [
     { id: 1, descricao: 'Claro Flex dia 19', valorTotal: 49.99, diaCobranca: 19, ativo: true },
-    { id: 2, descricao: 'Petz Digital (ração)', valorTotal: 293.7, diaCobranca: 8, ativo: true },
+    {
+      id: 2,
+      descricao: 'Petz Digital (ração)',
+      valorTotal: 293.7,
+      diaCobranca: 8,
+      ativo: true,
+      participantes: [
+        { dono: 'Mãe', valor: 97.9 },
+        { dono: 'Vô', valor: 97.9 },
+        { dono: '', valor: 97.9 },
+      ],
+    },
   ];
 
   test('recorrência com dia de cobrança no futuro = previsto, não fantasma', () => {
@@ -450,5 +461,190 @@ describe('dono inferido nos créditos/estornos', () => {
     });
 
     expect(r.creditosBanco[0]._donoSugerido).toBe('eu');
+  });
+});
+
+// ==============================================================================
+// Regressões de nov/2026: valor aproximado sem âncora, recorrência por prefixo
+// de texto e rateio ancorado no cadastro da recorrência.
+// ==============================================================================
+
+describe('conciliar — valor aproximado sem âncora', () => {
+  test('não casa R$ 29,31 com pedaço de rateio de R$ 29,29 quando há empate', () => {
+    // caso real: Amazon 29,31 x três pedaços de R$ 29,29 do IPTV. Um casamento
+    // aqui consome uma peça e o rateio de 146,47 deixa de fechar.
+    const r = conciliar({
+      transacoes: [banco('AMAZONMKTCPI*DROGARIAT', 29.31, { date: '2026-11-13' })],
+      lancamentos: [
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Casa', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Mãe', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Sogra', venc: '2026-11-03' }),
+      ],
+    });
+
+    expect(r.casados).toHaveLength(0);
+    expect(r.faltandoApp).toHaveLength(1);
+    expect(r.sobrandoApp).toHaveLength(3);
+  });
+
+  test('casa quando o candidato é único (oscilação de centavos de recorrência)', () => {
+    // caso real: YDUQS 303,04 x BMB CITTA (Estacio) 303,12, descrição sem relação
+    const r = conciliar({
+      transacoes: [banco('YDUQS', 303.04, { date: '2026-11-09' })],
+      lancamentos: [app('BMB CITTA (Estacio)', 303.12)],
+    });
+
+    expect(r.casados).toHaveLength(1);
+    expect(r.casados[0].motivo).toBe('valor');
+    expect(r.faltandoApp).toHaveLength(0);
+  });
+
+  test('aproximado com âncora de descrição continua casando', () => {
+    const r = conciliar({
+      transacoes: [banco('PETZ DIGITAL', 293.88)],
+      lancamentos: [app('Petz Digital (ração)', 293.95)],
+    });
+
+    expect(r.casados).toHaveLength(1);
+    expect(r.faltandoApp).toHaveLength(0);
+  });
+});
+
+describe('conciliar — recorrência precisa de âncora concreta', () => {
+  const iptv = {
+    id: 11,
+    descricao: 'PICPAY*DOUGLAS OLIVE (IPTV mensal)',
+    valorTotal: 146.47,
+    diaCobranca: 5,
+    ativo: true,
+    participantes: [
+      { dono: 'Casa', valor: 29.29 },
+      { dono: 'Mãe', valor: 29.29 },
+      { dono: 'Sogra', valor: 29.29 },
+      { dono: 'Vô', valor: 58.6 },
+    ],
+  };
+
+  test('prefixo de texto sozinho não transforma outra compra na recorrência', () => {
+    // caso real: Gemini 6 meses começa com "PICPAY.DOUGLAS" e virava IPTV
+    const r = conciliar({
+      transacoes: [],
+      lancamentos: [app('18/11 PICPAY.DOUGLAS (Gemini 6 meses)', 26.89, { venc: '2026-11-18' })],
+      recorrencias: [iptv],
+    });
+
+    expect(r.previstos).toHaveLength(0);
+    expect(r.sobrandoApp).toHaveLength(1);
+  });
+
+  test('dia de cobrança coincide e o lançamento é reconhecido como previsto', () => {
+    const r = conciliar({
+      transacoes: [],
+      lancamentos: [app('Claro Flex dia 21', 49.99, { dono: 'Mãe', venc: '2026-11-21' })],
+      recorrencias: [
+        { id: 9, descricao: 'Claro Flex mãe', valorTotal: 49.99, diaCobranca: 21, ativo: true, participantes: [{ dono: 'Mãe', valor: 49.99 }] },
+      ],
+    });
+
+    expect(r.previstos).toHaveLength(1);
+    expect(r.previstos[0].recorrencia.id).toBe(9);
+    expect(r.previstos[0].situacao).toBe('previsto_no_ciclo');
+  });
+});
+
+describe('conciliar — rateio ancorado na recorrência cadastrada', () => {
+  test('uma cobrança de 146,47 casa com os 4 participantes do cadastro', () => {
+    const r = conciliar({
+      transacoes: [banco('PICPAY*DOUGLAS OLIVE', 146.47, { date: '2026-11-03' })],
+      lancamentos: [
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Casa', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Mãe', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Sogra', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal, 2 partes)', 58.6, { dono: 'Vô', venc: '2026-11-03' }),
+      ],
+      recorrencias: [
+        {
+          id: 11,
+          descricao: 'PICPAY*DOUGLAS OLIVE (IPTV mensal)',
+          valorTotal: 146.47,
+          diaCobranca: 5,
+          ativo: true,
+          participantes: [
+            { dono: 'Casa', valor: 29.29 },
+            { dono: 'Mãe', valor: 29.29 },
+            { dono: 'Sogra', valor: 29.29 },
+            { dono: 'Vô', valor: 58.6 },
+          ],
+        },
+      ],
+    });
+
+    expect(r.rateios).toHaveLength(1);
+    expect(r.rateios[0].motivo).toBe('rateio_recorrencia');
+    expect(r.rateios[0].apps).toHaveLength(4);
+    expect(r.faltandoApp).toHaveLength(0);
+    expect(r.previstos).toHaveLength(0);
+    expect(r.sobrandoApp).toHaveLength(0);
+  });
+
+  test('recorrência desativada não casa cobrança', () => {
+    const r = conciliar({
+      transacoes: [banco('PICPAY*DOUGLAS OLIVE', 146.47, { date: '2026-11-03' })],
+      lancamentos: [
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Casa', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Mãe', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal)', 29.29, { dono: 'Sogra', venc: '2026-11-03' }),
+        app('03/11 PICPAY.DOUGLAS (IPTV mensal, 2 partes)', 58.6, { dono: 'Vô', venc: '2026-11-03' }),
+      ],
+      recorrencias: [
+        {
+          id: 11,
+          descricao: 'PICPAY*DOUGLAS OLIVE (IPTV mensal)',
+          valorTotal: 146.47,
+          diaCobranca: 5,
+          ativo: false,
+          participantes: [
+            { dono: 'Casa', valor: 29.29 },
+            { dono: 'Mãe', valor: 29.29 },
+            { dono: 'Sogra', valor: 29.29 },
+            { dono: 'Vô', valor: 58.6 },
+          ],
+        },
+      ],
+    });
+
+    // a regra nova (ancorada no cadastro) não dispara com recorrência desativada;
+    // o rateio por descrição continua valendo, porque é independente do cadastro
+    expect(r.rateios.every((x) => x.motivo !== 'rateio_recorrencia')).toBe(true);
+    expect(r.faltandoApp).toHaveLength(0);
+  });
+});
+
+describe('conciliar — parcela escrita no nome do banco', () => {
+  test('"YelumSeg Parc4" casa com parcelaatual 4 mesmo sem metadado de parcela', () => {
+    const r = conciliar({
+      transacoes: [
+        banco('YelumSeg Parc4', 185.53, { date: '2026-06-14' }),
+        banco('OUTRO SEGURO', 185.5, { date: '2026-06-14' }),
+      ],
+      lancamentos: [
+        app('14/03 Yellum seguro Voyage', 185.55, { venc: '2026-06-10', parcelaatual: 4, totalparcelas: 12 }),
+        app('10/06 outro seguro', 185.5, { venc: '2026-06-10' }),
+      ],
+    });
+
+    const par = r.casados.find((c) => /Yelum/i.test(c.banco.description));
+    expect(par).toBeTruthy();
+    expect(par.motivo).toBe('parcela');
+  });
+
+  test('parcela diferente no nome não casa por parcela', () => {
+    const r = conciliar({
+      transacoes: [banco('YelumSeg Parc7', 185.53, { date: '2026-06-14' })],
+      lancamentos: [app('14/03 Yellum seguro Voyage', 185.55, { venc: '2026-06-10', parcelaatual: 4, totalparcelas: 12 })],
+    });
+
+    // pode casar por valor (único candidato), nunca pela parcela 7 contra a 4
+    expect(r.casados.every((c) => c.motivo !== 'parcela')).toBe(true);
   });
 });

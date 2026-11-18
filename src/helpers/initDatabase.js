@@ -255,6 +255,28 @@ async function initDatabase() {
       )
     `);
 
+    // 14b. Histórico de faturas (snapshot por fatura). O pluggy_sync guarda só a
+    // fatura aberta e é sobrescrito a cada sync; sem este histórico o motor só pode
+    // ser calibrado contra o mês corrente. Cada sync grava/atualiza o snapshot da
+    // fatura em aberto, e o registro dela fica com o último estado antes de fechar.
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS pluggy_faturas (
+          usuario_id INT NOT NULL REFERENCES Usuarios(Id) ON DELETE CASCADE,
+          fatura_id VARCHAR(64) NOT NULL,
+          cartao_label VARCHAR(120),
+          fatura_total NUMERIC(18, 2),
+          fatura_vencimento DATE,
+          data_fechamento DATE,
+          transacoes JSONB NOT NULL DEFAULT '[]'::jsonb,
+          criado_em TIMESTAMP DEFAULT NOW(),
+          atualizado_em TIMESTAMP DEFAULT NOW(),
+          PRIMARY KEY (usuario_id, fatura_id)
+      )
+    `);
+    await db.query(
+      'CREATE INDEX IF NOT EXISTS idx_pluggy_faturas_usuario_venc ON pluggy_faturas(usuario_id, fatura_vencimento)'
+    );
+
     console.log('✅ Database inicializado com sucesso.');
   } catch (err) {
     console.error('❌ Erro ao inicializar o database:', err.message);

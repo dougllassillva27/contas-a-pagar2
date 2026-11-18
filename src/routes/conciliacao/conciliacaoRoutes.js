@@ -170,6 +170,15 @@ async function sincronizar(userId, repo) {
   };
 
   await repo.salvarPluggySync(userId, dados);
+  // Histórico: guarda/atualiza o snapshot da fatura aberta. Falha aqui não pode
+  // derrubar a sincronização (o diff do mês funciona só com o pluggy_sync).
+  if (typeof repo.salvarPluggyFatura === 'function' && dados.faturaId) {
+    try {
+      await repo.salvarPluggyFatura(userId, dados);
+    } catch (err) {
+      console.error('Falha ao gravar histórico da fatura:', err.message);
+    }
+  }
   return { ok: true, configurado: true, ...dados, transacoes: undefined };
 }
 

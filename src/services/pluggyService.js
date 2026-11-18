@@ -151,7 +151,15 @@ async function listarTransacoes({ accountId, de, ate, maxPaginas = 40 } = {}) {
   let after = null;
 
   for (let pagina = 0; pagina < maxPaginas; pagina++) {
-    const dados = await chamar(base + (after ? `&after=${encodeURIComponent(after)}` : ''), { apiKey });
+    // A Pluggy devolve `next` já como querystring completa ("?accountId=...&after=...")
+    // e a documentação manda anexar ao caminho. Montar "&after=<next>" devolve 400
+    // "Invalid cursor" quando a consulta passa de uma página (500 resultados).
+    const caminho = !after
+      ? base
+      : String(after).startsWith('?')
+        ? `/v2/transactions${after}`
+        : `${base}&after=${encodeURIComponent(after)}`;
+    const dados = await chamar(caminho, { apiKey });
     const resultados = dados?.results || (Array.isArray(dados) ? dados : []);
     todas.push(...resultados);
     after = dados?.next || null;

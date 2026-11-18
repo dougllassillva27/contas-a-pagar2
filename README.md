@@ -153,6 +153,7 @@ Originalmente desenvolvido em SQL Server local, foi modernizado para PostgreSQL,
 - **Previstos fora do ciclo**: cobrança recorrente que ainda não apareceu no banco fica em "Ainda não cobrado", sem virar falso positivo
 - **Sincronização manual**: o cache da Pluggy só é atualizado quando solicitado (`POST /api/conciliacao/sincronizar`, botão "Sincronizar banco")
 - **Marcação em lote**: os itens casados podem ser marcados como conferidos de uma vez pelo endpoint existente `/api/lancamentos/conferido-extrato-lote`
+- **Histórico de faturas**: cada sincronização guarda um snapshot em `pluggy_faturas` (o `pluggy_sync` só tem a fatura aberta). Serve para testar mudanças de regra em vários meses; `src/scripts/backfillPluggyHistorico.js --meses 6 --aplicar` popula os meses anteriores pela API
 
 ---
 
@@ -658,10 +659,10 @@ Acesse: `http://localhost:3000`
 
 ## 🧪 Testes Automatizados (Jest & Supertest)
 
-A aplicação possui uma suíte de testes robusta contendo **352 testes automatizados** com execução ultrarrápida (~10s totais).
+A aplicação possui uma suíte de testes robusta contendo **369 testes automatizados** com execução ultrarrápida (~10s totais).
 
 - **Unitários**: Regras de negócio, _parseHelpers_, formatadores, cálculo de datas (fuso UTC-3 blindado) e motor de regras SaaS.
-- **Conciliação do cartão**: motor de _match_ testado isoladamente (parcela, valor + similaridade, rateio 1:N com e sem âncora, rejeição de ambiguidade, pagamento de fatura e projeções do conector).
+- **Conciliação do cartão**: motor de _match_ testado isoladamente (parcela escrita no nome do banco, valor + similaridade, valor aproximado só com âncora ou candidato único, rateio 1:N por descrição e por recorrência cadastrada, rejeição de ambiguidade, pagamento de fatura e projeções do conector).
 - **Recorrências**: geração do mês idempotente (vincula em vez de duplicar), rateio por pessoa, limite de dia em 28 e respeito ao mês já preenchido.
 - **Repositórios**: Mock da biblioteca `pg`. Validação de transações (`BEGIN/COMMIT/ROLLBACK`), `UPSERTs` e lógicas de paginação sem tocar no banco de dados físico.
 - **Middlewares**: Validação de injeção de tokens persistentes, `x-api-key`, falhas de sessão e isolamento por `UsuarioId`.

@@ -124,8 +124,13 @@ function parcelaDe(item) {
   const meta = item.creditCardMetadata || {};
   const atual = meta.installmentNumber != null ? meta.installmentNumber : item.parcelaatual;
   const total = meta.totalInstallments != null ? meta.totalInstallments : item.totalparcelas;
-  if (!atual || !total) return null;
-  return { atual: Number(atual), total: Number(total) };
+  if (atual && total) return { atual: Number(atual), total: Number(total) };
+  // O banco costuma escrever a parcela só no nome ("YelumSeg Parc4", "PARCELA 3/12")
+  // quando o metadata vem vazio (paymentType SINGLE). Sem isso o par legítimo
+  // 4/12 x "Parc4" cai no casamento por valor aproximado e pode ser bloqueado.
+  const m = String(descricaoDe(item)).match(/\bparc(?:ela)?\s*[.:]?\s*(\d{1,2})(?:\s*\/\s*(\d{1,2}))?/i);
+  if (m) return { atual: Number(m[1]), total: m[2] ? Number(m[2]) : null };
+  return null;
 }
 
 // Subset-sum restrito: soma combinações dos candidatos até fechar o valor do banco.
@@ -211,7 +216,22 @@ function recorrenciaDoLancamento(lancamento, recorrencias) {
     }
   }
 
-  if (melhor && melhorPeso >= 0.5) return melhor;
+  // Similaridade de texto sozinha não basta para dizer "isto é a recorrência X":
+  // toda compra que começa com "PICPAY.DOUGLAS" casa com o prefixo do IPTV (13
+  // caracteres em comum já valem 0,6). Exige uma âncora concreta: dia de cobrança,
+  // valor do cadastro ou dono na lista de participantes.
+  if (melhor) {
+    const diaRec = Number(melhor.diaCobranca || 0);
+    const diaOk = Boolean(diaLancamento && diaRec && Math.abs(diaLancamento - diaRec) <= 3);
+    // valor pode ser o total da recorrência ou o da parte que este dono paga
+    const valoresRec = [Number(melhor.valorTotal || 0), ...(melhor.participantes || []).map((p) => Number((p && p.valor) || 0))]
+      .filter((v) => v > 0);
+    const valorOk = valoresRec.some((v) => Math.abs(v - valorDe(lancamento)) <= toleranciaPara(v));
+    const donosRec = (melhor.participantes || []).map((p) => String((p && p.dono) || '').trim().toLowerCase());
+    // sem participantes a recorrência é do titular, e lançamento sem dono também é
+    const donoOk = donosRec.length ? donosRec.includes(donoLancamento) : donoLancamento === '';
+    if (melhorPeso >= 0.5 && (diaOk || valorOk || donoOk)) return melhor;
+  }
   if (legado) {
     return {
       id: null,
@@ -265,10 +285,13 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
         !usados.has(i) &&
         (() => {
           const p = parcelaDe(l);
+          // total desconhecido de um dos lados não invalida: o nome do banco pode
+          // trazer só "Parc4" sem o denominador
+          const totalCompativel = Boolean(p) && (!p.total || !parcelaBanco.total || p.total === parcelaBanco.total);
           return (
             p &&
             p.atual === parcelaBanco.atual &&
-            p.total === parcelaBanco.total &&
+            totalCompativel &&
             Math.abs(l._valor - t._valor) <= toleranciaPara(t._valor)
           );
         })()
@@ -289,7 +312,20 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
     if (!candidatos.length) continue;
 
     const exatos = candidatos.filter(({ l }) => Math.abs(l._valor - t._valor) < 0.005);
-    const ordem = (exatos.length ? exatos : candidatos)
+    // Valor NÃO exato é o par mais frágil que existe: R$ 29,31 do banco casou com
+    // R$ 29,29 de um pedaço de rateio e o rateio inteiro deixou de fechar (o mesmo
+    // dinheiro aparecia em "fora do sistema" e em "ainda não cobrado"). Só aceita
+    // aproximado quando tem âncora de descrição ou quando é o único candidato.
+    const ancoradosValor = candidatos.filter(({ l }) => similaridade(l._desc, t._desc) >= LIMIAR_DESCRICAO);
+    const baseValor = exatos.length
+      ? exatos
+      : ancoradosValor.length
+        ? ancoradosValor
+        : candidatos.length === 1
+          ? candidatos
+          : [];
+    if (!baseValor.length) continue;
+    const ordem = baseValor
       .map((c) => ({
         ...c,
         sim: similaridade(c.l._desc, t._desc),
@@ -308,6 +344,54 @@ function conciliar({ transacoes = [], lancamentos = [], recorrencias = [], hoje 
       motivo: melhor.sim >= LIMIAR_DESCRICAO ? 'valor_descricao' : 'valor',
       similaridade: Number(melhor.sim.toFixed(3)),
     });
+  }
+
+  // ---- Regra 4a: rateio ancorado na RECORRÊNCIA cadastrada -------------------
+  // O cadastro já diz "esta cobrança é R$ X dividida entre estes participantes".
+  // Quando todos os participantes têm lançamento de mesmo dono e valor no mês, é
+  // prova melhor que qualquer heurística de texto e não depende de subset-sum.
+  // Caso real: PICPAY*DOUGLAS OLIVE 146,47 = Casa 29,29 + Mãe 29,29 + Sogra 29,29
+  // + Vô 58,60, com o nome do banco diferente do rótulo de cada parte.
+  const donoTexto = (item) =>
+    String((item && (item.dono != null ? item.dono : item.nometerceiro)) || '').trim().toLowerCase();
+  for (const t of banco) {
+    if (t._casado || t._valor <= 0) continue;
+    const achadas = [];
+    for (const r of recorrencias) {
+      if (!r || r.ativo === false) continue;
+      const totalRec = Number(r.valorTotal || 0);
+      if (!totalRec || Math.abs(totalRec - t._valor) > toleranciaPara(totalRec)) continue;
+      const partes = (r.participantes || [])
+        .map((p) => ({ dono: String((p && p.dono) || '').trim().toLowerCase(), valor: Number((p && p.valor) || 0) }))
+        .filter((p) => p.valor > 0);
+      if (partes.length < 2) continue;
+      const disp = disponiveis();
+      const escolhidos = [];
+      let fecha = true;
+      for (const p of partes) {
+        const item = disp.find(
+          (l) =>
+            !escolhidos.includes(l) &&
+            Math.abs(valorDe(l) - p.valor) <= toleranciaPara(p.valor) &&
+            donoTexto(l) === p.dono &&
+            (similaridade(l._desc, t._desc) >= 0.35 || similaridade(r.descricao, t._desc) >= LIMIAR_ANCORA)
+        );
+        if (!item) {
+          fecha = false;
+          break;
+        }
+        escolhidos.push(item);
+      }
+      if (fecha && escolhidos.length === partes.length) achadas.push({ r, escolhidos });
+    }
+    if (achadas.length !== 1) continue; // sem cadastro que feche ou ambíguo
+    const { r, escolhidos } = achadas[0];
+    for (const item of escolhidos) {
+      const idx = app.findIndex((l, i) => !usados.has(i) && l === item);
+      if (idx >= 0) usados.add(idx);
+    }
+    t._casado = true;
+    rateios.push({ banco: t, apps: escolhidos, motivo: 'rateio_recorrencia', recorrenciaId: r.id });
   }
 
   // ---- Regra 4: rateio (1 cobrança no banco = N lançamentos no app) -----------

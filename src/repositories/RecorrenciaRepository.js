@@ -257,6 +257,58 @@ async function salvarPluggySync(userId, dados) {
   );
 }
 
+// --- Histórico de faturas ----------------------------------------------------
+// Um snapshot por fatura: a aberta é atualizada a cada sync e, quando ela fecha,
+// o registro fica com o último estado observado. Serve para calibrar o motor
+// contra vários meses (o pluggy_sync só tem o mês corrente).
+async function salvarPluggyFatura(userId, dados) {
+  if (!dados || !dados.faturaId) return null;
+  await db.query(
+    `INSERT INTO pluggy_faturas
+       (usuario_id, fatura_id, cartao_label, fatura_total, fatura_vencimento,
+        data_fechamento, transacoes, atualizado_em)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, NOW())
+     ON CONFLICT (usuario_id, fatura_id) DO UPDATE SET
+       cartao_label = EXCLUDED.cartao_label,
+       fatura_total = EXCLUDED.fatura_total,
+       fatura_vencimento = EXCLUDED.fatura_vencimento,
+       data_fechamento = EXCLUDED.data_fechamento,
+       transacoes = EXCLUDED.transacoes,
+       atualizado_em = NOW()`,
+    [
+      userId,
+      String(dados.faturaId),
+      dados.cartaoLabel || null,
+      dados.faturaTotal != null ? Number(dados.faturaTotal) : null,
+      dados.faturaVencimento || null,
+      dados.dataFechamento || null,
+      JSON.stringify(dados.transacoes || []),
+    ]
+  );
+  return String(dados.faturaId);
+}
+
+// Faturas do usuário, da mais recente para a mais antiga (para a bateria de testes).
+async function listarPluggyFaturas(userId) {
+  const res = await db.query(
+    `SELECT fatura_id, cartao_label, fatura_total::float AS fatura_total,
+            fatura_vencimento, data_fechamento, transacoes, atualizado_em
+       FROM pluggy_faturas
+      WHERE usuario_id = $1
+      ORDER BY COALESCE(fatura_vencimento, data_fechamento, atualizado_em::date) DESC, fatura_id DESC`,
+    [userId]
+  );
+  return res.rows.map((row) => ({
+    faturaId: row.fatura_id,
+    cartaoLabel: row.cartao_label,
+    faturaTotal: Number(row.fatura_total) || 0,
+    faturaVencimento: diaISO(row.fatura_vencimento),
+    dataFechamento: diaISO(row.data_fechamento),
+    transacoes: Array.isArray(row.transacoes) ? row.transacoes : [],
+    atualizadoEm: row.atualizado_em,
+  }));
+}
+
 module.exports = {
   listarRecorrencias,
   criarRecorrencia,
@@ -265,4 +317,6 @@ module.exports = {
   gerarLancamentosDoMes,
   getPluggySync,
   salvarPluggySync,
+  salvarPluggyFatura,
+  listarPluggyFaturas,
 };
